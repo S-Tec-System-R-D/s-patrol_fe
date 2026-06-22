@@ -17,6 +17,10 @@ export const paths = {
   serviceLogin: '/login',
   adminLogin: '/admin/login',
 
+  // 에러 상태 (005 결정: 401 별도 페이지 없음 — 인터셉터 refresh→실패 시 로그인 리다이렉트로 흡수)
+  forbidden: '/403',
+  notFound: '/404',
+
   // 현장 사이트(/*)
   service: {
     patrolZones: '/patrol/zones',

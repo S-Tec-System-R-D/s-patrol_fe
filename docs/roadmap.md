@@ -217,7 +217,8 @@ flowchart LR
 | 0 Foundation — 002 lint cleanup | ☑ | 사전 lint 19건 해소 (001 이월). T029 수동 회귀만 003에서 마무리 |
 | 0 Foundation — 003 auth | ☑ | 401 single-flight refresh + 요청 인터셉터 토큰 부착 + `useMe`(MeRaw→MeDto select) + `<RequireRole>` UI 액션 가드 + 토큰/리다이렉트 헬퍼. AuthGuard 본체 연결과 002 T029 수동 회귀는 Phase 1로 이월 |
 | 0 Foundation — 004 dev infra | ☑ | paths SSOT + `.env.example` + Enum SSOT + `useQueryParams` + MSW(auth 핸들러 + browser/server + opt-in `VITE_USE_MSW`) + vitest(jsdom + RTL + jest-dom) + AppFormField(D9) + AppErrorBoundary + 라우트 `errorElement`. AuthGuard 실제화는 Phase 1로 이월 |
-| 1 Layout Plus | ☐ | |
+| 1 Layout Plus — 005 auth/error | ☑ | AuthGuard 실제화(토큰·useMe 분기, 영역별 로그인) + `<RequireRoute>` 신설 + 403/404 페이지 + admin placeholder로 RequireRoute 실라우트 검증 + 401 별도 페이지 미생성 결정 + screens.md §6 Open Q 해소. vitest 13건 추가 |
+| 1 Layout Plus — 006 shell/table | ☐ | 모바일 햄버거+Sheet, 본사 사이드바 config, TopNav 메뉴명, ProfileBadge, AppTable 페이지네이션, AppButton 마이그 |
 | 2 공용 컴포넌트 | ☐ | |
 | 3 현장 코어 | ☐ | screens.md §1-2/1-3 ✓ |
 | 4 현장 신규 | ☐ | screens.md §1-4/1-5 ✓ |
