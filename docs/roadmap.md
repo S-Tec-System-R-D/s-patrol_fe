@@ -215,7 +215,7 @@ flowchart LR
 |---|:-:|---|
 | 0 Foundation — 001 api | ☐ | axios·react-query·sonner |
 | 0 Foundation — 002 lint cleanup | ☑ | 사전 lint 19건 해소 (001 이월). T029 수동 회귀만 003에서 마무리 |
-| 0 Foundation — 003 auth | ☐ | 401 refresh·useMe·`<RequireRole>` |
+| 0 Foundation — 003 auth | ☑ | 401 single-flight refresh + 요청 인터셉터 토큰 부착 + `useMe`(MeRaw→MeDto select) + `<RequireRole>` UI 액션 가드 + 토큰/리다이렉트 헬퍼. AuthGuard 본체 연결과 002 T029 수동 회귀는 Phase 1로 이월 |
 | 0 Foundation — 004 dev infra | ☐ | paths/env/Enum/`useQueryParams`/MSW/vitest/AppFormField/ErrorBoundary |
 | 1 Layout Plus | ☐ | |
 | 2 공용 컴포넌트 | ☐ | |

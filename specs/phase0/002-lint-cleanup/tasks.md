@@ -137,7 +137,7 @@ spec §4 엣지(비동기 도착 깜빡임) 주의 — 데이터 로딩 후 초�
 
 > 다음 spec의 `§0 Carry-over` 입력원. 새 세션은 이 블록만 읽으면 됨.
 
-- [ ] **T029 수동 회귀 미완** — `set-state-in-effect`를 derived/lazy init으로 옮긴 4개 화면(AppTabs / LocationTabs / PointsPage / ZonesPage)의 브라우저 동작 회귀가 미확인. 코드 변환은 effect 의도와 동등하나 라우터·`AuthGuard` 흐름이 003에서 정리되기 전까지 안정적 수동 검증 어려움 → **003-auth-foundation**에서 인증 흐름 연결 후 동시 검증.
+- [ ] **T029 수동 회귀 미완** — `set-state-in-effect`를 derived/lazy init으로 옮긴 4개 화면(AppTabs / LocationTabs / PointsPage / ZonesPage)의 브라우저 동작 회귀가 미확인. 코드 변환은 effect 의도와 동등하나 라우터·`AuthGuard` 흐름이 003에서 정리되기 전까지 안정적 수동 검증 어려움 → ~~003-auth-foundation에서 인증 흐름 연결 후 동시 검증~~. **→ Phase 1 — AuthGuard 실제화로 재이월**(003-auth-foundation은 인증 인프라(`useMe`/`RequireRole`/axios 401 refresh)만 다루고 AuthGuard 본체 연결은 Phase 1 책임이라 003에서 수동 검증 환경이 갖춰지지 않음).
 - [ ] **001 이월 잔여: T011/T012 런타임 미검증** (`src/App.tsx` 데모) — 본 spec 범위 외였음, 그대로 003으로 이월 → **003-auth-foundation**에서 처리.
 - [ ] **001 이월 잔여: Open Q — react-query 기본 옵션** (`staleTime: 30_000`/`retry: 1`) → 그대로 Phase 3 화면 작업 시 확정.
 - [ ] **001 이월 잔여: Open Q — MutationCache 전역 toast 우회** → 그대로 발생 시 검토.
