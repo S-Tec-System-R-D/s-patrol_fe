@@ -1,4 +1,3 @@
-import Button from '@/components/Button'
 import { Switch } from '@/components/ui/switch'
 import { SquarePenIcon } from 'lucide-react'
 import type { ZoneType } from '../types'

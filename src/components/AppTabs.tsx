@@ -1,7 +1,6 @@
-import { Icon, type LucideIcon } from 'lucide-react'
+import { type LucideIcon } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 export interface AppTabsProps {
   tabs: TabItems[]
@@ -15,20 +14,15 @@ export interface TabItems {
   icon: LucideIcon
 }
 
-const AppTabs = ({ tabs, mode = 'path', queryKey = 'tab' }: AppTabsProps) => {
-  const [value, setValue] = useState<string>('')
+const AppTabs = ({ tabs, mode = 'path' }: AppTabsProps) => {
   const navigate = useNavigate()
   const pathname = useLocation()
 
-  useEffect(() => {
-    if (mode === 'path') {
-      /**
-       * url이 동일한 게 있는가 그럼 담는다
-       */
-      const tab = tabs.find((t) => pathname.pathname.startsWith(t.path))
-      if (tab) setValue(tab.path)
-    }
-  }, [pathname.pathname])
+  // pathname → 매칭되는 tab.path. 동일 입력에 동일 결과라 effect 없이 derive.
+  const value =
+    mode === 'path'
+      ? (tabs.find((t) => pathname.pathname.startsWith(t.path))?.path ?? '')
+      : ''
 
   const handleClick = (path: string) => {
     navigate(path)

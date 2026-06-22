@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import z from 'zod'
 
 import Button from '@/components/Button'
@@ -10,15 +10,14 @@ import Button from '@/components/Button'
 import type { ZonePointType } from '../types'
 import { points } from '@/features/points/mock/pointData'
 import AuthenticationBadge from '../components/point-card/AuthenticationBadge'
-import AppCheckbox from '@/components/app/AppCheckbox'
 import { MapPinIcon } from 'lucide-react'
 import AppInput from '@/components/app/AppInput'
 
-export const addPointSchema = z.object({
+const addPointSchema = z.object({
   points: z.array(z.string()).min(1, '최소 1개 이상 선택해주세요.'),
 })
 
-export type FormDataType = z.infer<typeof addPointSchema>
+type FormDataType = z.infer<typeof addPointSchema>
 
 interface AddPointFormProps {
   currentPoints: ZonePointType[]
@@ -28,7 +27,7 @@ const AddPointForm = ({ currentPoints }: AddPointFormProps) => {
   const {
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
     reset,
   } = useForm<FormDataType>({
@@ -42,9 +41,9 @@ const AddPointForm = ({ currentPoints }: AddPointFormProps) => {
     return () => {
       reset()
     }
-  }, [])
+  }, [reset])
 
-  const selectedPoints = watch('points')
+  const selectedPoints = useWatch({ control, name: 'points' }) ?? []
 
   const togglePoint = (id: string) => {
     console.log('동작')

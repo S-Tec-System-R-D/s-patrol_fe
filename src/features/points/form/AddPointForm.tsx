@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { type FormDataType, pointSchema } from './schema'
 import AppInput from '@/components/app/AppInput'
 import Button from '@/components/Button'
@@ -10,7 +10,7 @@ const AddPointForm = () => {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
     reset,
   } = useForm<FormDataType>({
@@ -23,7 +23,7 @@ const AddPointForm = () => {
     },
   })
 
-  const authenticationMethod = watch('authenticationMethod')
+  const authenticationMethod = useWatch({ control, name: 'authenticationMethod' })
 
   const onSubmit = (data: FormDataType) => {
     console.log('============FORM============')
@@ -49,7 +49,7 @@ const AddPointForm = () => {
         {/* 인증수단 */}
         <AuthMethodSelector
           required
-          value={watch('authenticationMethod')}
+          value={authenticationMethod}
           onChange={(v) => {
             if (v === 'QR') setValue('nfcTagId', '')
             setValue('authenticationMethod', v, { shouldValidate: true })

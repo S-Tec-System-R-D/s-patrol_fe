@@ -1,7 +1,6 @@
 import type { ZonePatrolType } from '@/pages/service/patrol/zones/PatrolZonesPage'
 import { createColumnHelper } from '@tanstack/react-table'
 import { format } from 'date-fns'
-import PatrolSheet from './PatrolSheet'
 
 const columnHelper = createColumnHelper<ZonePatrolType>()
 

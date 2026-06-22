@@ -15,11 +15,6 @@ import {
 type AlertDialogVariant = 'default' | 'destructive'
 type AlertDialogSize = 'default' | 'sm'
 
-const variantStyles: Record<AlertDialogVariant, string> = {
-  default: 'bg-primary text-primary-foreground py-2 px-4 hover:bg-primary/90',
-  destructive: 'bg-destructive-bg text-destructive border border-danger/40 hover:bg-danger/10',
-}
-
 const variantColorStyles: Record<AlertDialogVariant, string> = {
   default: 'bg-primary text-primary-foreground ',
   destructive: 'bg-danger-bg text-danger',

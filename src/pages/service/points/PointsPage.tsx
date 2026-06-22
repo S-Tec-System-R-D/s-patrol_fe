@@ -1,5 +1,5 @@
 import PointTopNav from '@/features/points/components/PointTopNav'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import PointEmptyCard from '@/features/points/components/PointEmptyCard'
 import PointDetail from '@/features/points/components/detail/PointDetail'
@@ -9,13 +9,10 @@ import type { PointType } from '@/features/points/types'
 
 const PointsPage = () => {
   // TODO: 선택지점관리를 여기서 할건지 상태로할건지 구분해야함
-  const [selectedPoint, setSelectedPoint] = useState<PointType | null>(null)
-
-  // 데이터 fetch 후 초기 선택지점 할당
-  useEffect(() => {
-    if (points.length <= 0) return
-    setSelectedPoint(points[0])
-  }, [])
+  // mock 동기 import — lazy init으로 첫 렌더부터 첫 항목 선택(기존 effect와 동등).
+  const [selectedPoint, setSelectedPoint] = useState<PointType | null>(
+    () => points[0] ?? null
+  )
 
   return (
     <div className="flex-1 w-full flex min-h-0  overflow-hidden ">

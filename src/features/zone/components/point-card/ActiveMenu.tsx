@@ -13,11 +13,10 @@ import { useState } from 'react'
 
 interface ActiveMenuProps {
   onActive: (active: boolean) => void
-  onEdit: () => void
   onDelete: () => void
 }
 
-export const ActiveMenu = ({ onActive, onEdit, onDelete }: ActiveMenuProps) => {
+export const ActiveMenu = ({ onActive, onDelete }: ActiveMenuProps) => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeOpen, setActiveOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)

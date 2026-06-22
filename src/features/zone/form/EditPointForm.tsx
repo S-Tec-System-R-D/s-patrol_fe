@@ -5,11 +5,11 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import z from 'zod'
 
-export const pointSchema = z.object({
+const pointSchema = z.object({
   timeLimit: z.number().min(1, '1분 이상 입력해주세요.'),
 })
 
-export type FormDataType = z.infer<typeof pointSchema>
+type FormDataType = z.infer<typeof pointSchema>
 
 const EditPointForm = () => {
   const {
@@ -28,7 +28,7 @@ const EditPointForm = () => {
     return () => {
       reset()
     }
-  }, [])
+  }, [reset])
 
   const onSubmit = (data: FormDataType) => {
     console.log('============FORM============')

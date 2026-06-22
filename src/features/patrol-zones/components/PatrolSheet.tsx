@@ -135,7 +135,7 @@ const TimeLineDefaultCard = ({ type, time }: { type: 'START' | 'END'; time: Date
 }
 
 // 순찰카드 타임라인 아이템
-const TimeLineCard = ({ name, status, completedAt, note }: PointPatrolType) => {
+const TimeLineCard = ({ name, status, completedAt }: PointPatrolType) => {
   return (
     <div
       className={`flex items-center border rounded-sm p-4 justify-between

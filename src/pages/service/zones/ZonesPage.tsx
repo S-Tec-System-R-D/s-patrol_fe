@@ -9,10 +9,13 @@ import { ZoneTreeData } from '@/features/zone/mocks/zoneData'
 import type { ZonePointType, ZoneType } from '@/features/zone/types'
 
 import { ClockIcon, MapIcon, PlusIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 const ZonesPage = () => {
-  const [selectedZone, setSelectedZone] = useState<ZoneType | null>(null)
+  // mock 동기 import — lazy init으로 첫 렌더부터 첫 항목 선택(기존 effect와 동등).
+  const [selectedZone, setSelectedZone] = useState<ZoneType | null>(
+    () => ZoneTreeData[0] ?? null
+  )
   // 구역목록 선택 시 state담아서 컨텐츠로 넘겨주야함
 
   /**
@@ -29,11 +32,6 @@ const ZonesPage = () => {
    *
    *
    */
-
-  useEffect(() => {
-    if (ZoneTreeData.length < 1) return
-    setSelectedZone(ZoneTreeData[0])
-  }, [ZoneTreeData])
 
   return (
     <div className="flex flex-1 ">

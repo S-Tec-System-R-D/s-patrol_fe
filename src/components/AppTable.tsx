@@ -13,7 +13,7 @@ import { ChevronUpIcon, ChevronDownIcon, ChevronsUpDownIcon } from 'lucide-react
 
 interface AppTableProps<TData> {
   data: TData[]
-  columns: ColumnDef<TData, any>[]
+  columns: ColumnDef<TData>[]
   onRowClick?: (data: TData) => void
   searchable?: boolean
 }
@@ -22,6 +22,8 @@ const AppTable = <TData,>({ data, columns, searchable, onRowClick }: AppTablePro
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState('')
 
+  // TanStack Table의 useReactTable은 메모이즈 불가한 함수를 반환 — React Compiler skip 경고가 라이브러리 한계이므로 의도적 disable.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

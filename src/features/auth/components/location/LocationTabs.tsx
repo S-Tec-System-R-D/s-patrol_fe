@@ -1,6 +1,5 @@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LayersIcon, MapPinIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 const LOCATION_TABS = ['zones', 'points']
@@ -13,14 +12,11 @@ const LOCATION_TABS = ['zones', 'points']
 
 // FIXME : 삭제해도됨
 const LocationTabs = () => {
-  const [value, setValue] = useState<string>('zones')
   const navigate = useNavigate()
   const pathname = useLocation()
 
-  useEffect(() => {
-    const tab = LOCATION_TABS.find((tab) => pathname.pathname.startsWith(`/${tab}`))
-    if (tab) setValue(tab)
-  }, [pathname.pathname])
+  // 동일 입력에 동일 출력 — effect 없이 derive.
+  const value = LOCATION_TABS.find((tab) => pathname.pathname.startsWith(`/${tab}`)) ?? 'zones'
 
   return (
     <Tabs

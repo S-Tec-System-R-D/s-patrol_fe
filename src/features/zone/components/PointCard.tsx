@@ -27,7 +27,6 @@ const PointCard = ({ data }: { data: ZonePointType }) => {
   const handleActive = (status: boolean) => {
     setIsActive(status)
   }
-  const handleEdit = () => {}
   const handleDelete = () => {}
 
   return (
@@ -58,7 +57,7 @@ const PointCard = ({ data }: { data: ZonePointType }) => {
         </div>
 
         <AuthenticationBadge method={data.authenticationMethod} />
-        <ActiveMenu onActive={handleActive} onEdit={handleEdit} onDelete={handleDelete} />
+        <ActiveMenu onActive={handleActive} onDelete={handleDelete} />
       </div>
       {/* 비활성화시 오버레이로 감싸기 */}
       {!isActive && (

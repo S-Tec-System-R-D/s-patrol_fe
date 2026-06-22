@@ -23,7 +23,7 @@ const AddZoneForm = () => {
     return () => {
       reset()
     }
-  }, [])
+  }, [reset])
 
   const onSubmit = (data: FormDataType) => {
     console.log('============FORM============')
