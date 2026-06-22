@@ -199,10 +199,19 @@ git 변경 상태: `편집 중` → `올림(stage)` → `저장 도장(commit)` 
 
 ### 1층 (태스크마다 자동, 보고 불필요)
 
-- 코드 변경 후 `npm run verify` 자동 실행 (typecheck + lint)
-- `vitest` 단위 테스트(작성된 경우)
-- 에러 있으면 스스로 수정·재실행
-- 통과해야 다음 태스크 진행
+**검증 시점별 도구 분담**
+
+| 시점 | 도구 | 이유 |
+|---|---|---|
+| **파일 작성/편집 직후** (태스크 단위) | `mcp__ide__getDiagnostics(파일)` — IDE TS 서버 진단 1차 | 1~2초로 가볍고 증분 결과라 신선도 ↑. CLI tsc의 buildinfo 캐시로 놓치는 케이스를 즉시 잡음 |
+| **Phase 경계** (여러 파일 변경 후) | `npm run verify` | 풀 typecheck + lint. 스코프 누락 없음 |
+| **테스트 영향 있는 변경** | `vitest`(작성된 경우) | 런타임/회귀 |
+
+**원칙**
+
+- IDE 진단이 0건이어도 **Phase 끝과 DoD 직전에는 `npm run verify`를 반드시 한 번 실행**한다. IDE는 워크스페이스 스코프, CLI는 `tsconfig.app.json` include 스코프라 일치하지 않는 코너 케이스가 있다.
+- IDE MCP가 비활성/미연결이면 1차도 `npm run verify`로 fallback.
+- 에러 있으면 스스로 수정·재실행. 통과해야 다음 태스크 진행.
 
 ### 3회 실패 보류 규칙
 
@@ -213,7 +222,7 @@ git 변경 상태: `편집 중` → `올림(stage)` → `저장 도장(commit)` 
 
 ### 세션 풀세트 (user story 완료 시, 보고 필수)
 
-1. `npm run verify`
+1. `npm run verify` **(의무, IDE 진단으로 대체 X)**
 2. `vitest` 실행 (작성된 테스트)
 3. **`spec.md` DoD 대조표 작성**:
    ```
