@@ -1,3 +1,4 @@
+import type { PatrolPointHistory } from '@/features/patrol-points/types/PatrolPoint'
 import type { PatrolZoneResult } from './PatrolZoneResult'
 
 export interface PatrolZone {
@@ -6,4 +7,5 @@ export interface PatrolZone {
   endedDt: Date
   totalTime: string
   result: PatrolZoneResult
+  points: PatrolPointHistory[]
 }

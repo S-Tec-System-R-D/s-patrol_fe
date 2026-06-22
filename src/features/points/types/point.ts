@@ -3,7 +3,7 @@ export interface PointType {
   title: string
   description: string
   authenticationMethod: PointAuthenticationMethod
-  createdAt: Date
+  createdAt?: Date
 }
 
 export type PointAuthenticationMethod = 'QR' | 'NFC'
