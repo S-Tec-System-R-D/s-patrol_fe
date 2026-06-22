@@ -5,8 +5,11 @@ import { SearchIcon, EyeIcon, EyeOffIcon } from 'lucide-react'
 type InputVariant = 'default' | 'search' | 'password'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  /** @deprecated 004 D9 — `AppFormField`로 옮길 것. 점진 마이그레이션 대상. */
   label?: string
+  /** @deprecated 004 D9 — `AppFormField`로 옮길 것. 점진 마이그레이션 대상. */
   error?: string
+  /** @deprecated 004 D9 — `AppFormField`로 옮길 것. 점진 마이그레이션 대상. */
   required?: boolean
   variant?: InputVariant
 }

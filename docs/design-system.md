@@ -280,6 +280,21 @@ UI 텍스트(라벨, 확인 문구, 빈 상태, 에러)의 한국어 일관성 �
   - **응답대기 + sonner toast**: 모든 CRUD(등록·수정·삭제·배치 변경 등). 위험 액션은 반드시 응답대기.
 - **사유**: 토글은 실패 시 시각적 롤백 비용이 낮고 즉시 반응이 가치 큼. CRUD는 검증 결과를 사용자가 인지해야 하므로 응답 후 toast가 더 안전.
 
+### D9. AppFormField + AppInput 역할 분리
+
+- **결정**:
+  - **폼 영역(label / required / error / hint)은 `AppFormField` 컨테이너**가 책임.
+  - **`AppInput`은 "디자인된 인풋"** 책임만 가짐. 기존 `label` / `error` / `required` props는 보존하되 JSDoc `@deprecated` 마킹 — 점진 마이그레이션, 콘솔 경고는 없음.
+  - 신규 폼(Phase 2 `AppSelect` / `AppDatePicker` 포함)은 **`AppFormField`로 감싸는 패턴이 표준**.
+- **사유**:
+  - Phase 2 신규 폼 컴포넌트가 동일한 label/error/required 처리 로직을 중복하지 않기 위해 컨테이너 단일화.
+  - shadcn `Form` / react-hook-form `Controller` 패턴과 정합. 폼 외부 인풋 사용처(예: 검색바)도 폼 영역 props 없이 사용 가능해짐.
+- **마이그레이션**:
+  - 신규 폼: `AppFormField` + `AppInput`(base props만) 조합 사용.
+  - 기존 6개 폼 파일(`features/{zone,points}/form/*Form.tsx`)은 **각 화면 작업 시 자연 교체**. 일괄 교체 X(A3 최소 변경).
+- **컨벤션**:
+  - `AppFormField`의 helper 영역은 `error`가 있으면 에러 메시지, 없으면 `hint`를 표시. 둘 다 14px 미만 보조 텍스트.
+
 ---
 
 ## 6. Open Questions
@@ -287,7 +302,6 @@ UI 텍스트(라벨, 확인 문구, 빈 상태, 에러)의 한국어 일관성 �
 미언급은 미정으로 본다.
 
 - [ ] **헤딩 위계 미세 조정** — h5/h6가 body(14)와 동일. 별도 운영 안 한다면 사용 금지로 못박을지
-- [ ] **AppFormField 도입 + 구조 분석 필요** — 원래 AppInput의 의도는 폼과 무관한 "디자인된 인풋"이었으나 어쩌다 label/error/required 폼 영역이 흡수됨. 분리(`AppFormField` 신설)할지 현재 구조 유지할지 결정 필요. 결정 시 react-hook-form `Controller` 패턴, shadcn `Form` 패턴, 폼 외 인풋 사용처를 함께 검토
 - [ ] **AppButton 마이그레이션 완료 시점** — 기존 shadcn `Button` 사용처 일괄 교체 일정
 - [ ] **AppEmpty 장식 oklch → 토큰화** — 현재 인라인 oklch. `point` 트리오로 흡수할지, 별도 토큰 추가할지
 - [ ] **그림자 시스템** — 현재 거의 미사용. 필요 시 elevation 토큰 정의할지

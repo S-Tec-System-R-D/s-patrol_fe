@@ -1,17 +1,15 @@
 /**
  * 인증 / 본인 정보 도메인 타입.
- * 출처: docs/data-model.md §2-2 Enum, §4-3 인증/본인 정보.
+ * 출처: docs/data-model.md §4-3.
  *
- * 004 `src/types/enum.ts` SSOT 통합 전까지 도메인 폴더(`features/auth/types/`)에 둔다.
+ * Role / UserStatus 등 도메인 Enum은 004 SSOT(`@/types/enum`)에서 import.
+ * 본 파일은 도메인 DTO(`MeRaw` / `MeDto`)만 책임.
  */
 
-// 권한 — data-model.md §2-2
-export type AdminRole = 'SYSTEM' | 'MASTER' | 'MANAGER'
-export type FieldRole = 'FIELD_MANAGER' | 'WORKER'
-export type Role = AdminRole | FieldRole
+import type { Role, UserStatus } from '@/types/enum'
 
-// 사용자 상태
-export type UserStatus = 'ACTIVE' | 'INACTIVE'
+// 기존 import 호환을 위해 재공개(003에서 작성된 코드가 me.ts를 통해 Role을 가져오던 경로 보존)
+export type { AdminRole, FieldRole, Role, UserStatus } from '@/types/enum'
 
 /**
  * 서버 응답 그대로의 본인 정보(`/auth/me` 응답 페이로드).

@@ -99,15 +99,52 @@ import { PencilIcon } from 'lucide-react'
 
 ## 3. AppInput
 
-라벨·에러·필수 표시·검색·패스워드 토글까지 한 컴포넌트로.
+"디자인된 인풋" 책임. 검색·패스워드 variant 내장.
+
+> **004 D9 이후**: 폼 영역(`label` / `error` / `required`)은 **`AppFormField`로 분리**. AppInput에 그대로 두면 동작하지만 `@deprecated`. 신규 폼은 §3-1 패턴 사용.
 
 ```tsx
 import AppInput from '@/components/app/AppInput'
+import { AppFormField } from '@/components/app/AppFormField'
 
+// ✅ 신규(004 D9 이후)
+<AppFormField label="사번" required error={errors.employeeNumber?.message}>
+  <AppInput placeholder="6자리" {...register('employeeNumber')} />
+</AppFormField>
+
+// 🟡 기존(@deprecated, 동작은 유지)
 <AppInput label="사번" required placeholder="6자리" />
-<AppInput variant="search" placeholder="이름 검색" />
-<AppInput variant="password" label="비밀번호" required />
-<AppInput label="이름" error="이름을 입력해주세요" />
+```
+
+**Props**
+
+| Prop | 타입 | 기본 | 비고 |
+|---|---|---|---|
+| `variant` | `'default' \| 'search' \| 'password'` | `'default'` | — |
+| `label` | `string` | — | `@deprecated` 004 D9 — `AppFormField` 사용 |
+| `error` | `string` | — | `@deprecated` 004 D9 — `AppFormField` 사용 |
+| `required` | `boolean` | `false` | `@deprecated` 004 D9 — `AppFormField` 사용 |
+| 기타 | `InputHTMLAttributes` | — | — |
+
+**가이드**
+
+- 검색 아이콘은 좌측 자동(`variant="search"`). 패스워드 토글은 우측 자동(`variant="password"`).
+- react-hook-form과 함께 쓸 때 `register('field')`를 그대로 전달.
+- 라벨/에러/필수 표시가 필요하면 `AppFormField`로 감싼다(§3-1).
+
+---
+
+## 3-1. AppFormField
+
+폼 영역 컨테이너. `label / required / error / hint`를 책임지고, 자식으로 인풋 컨트롤(`AppInput`, Phase 2 `AppSelect` / `AppDatePicker` 등)을 받는다.
+
+```tsx
+import { AppFormField } from '@/components/app/AppFormField'
+import AppInput from '@/components/app/AppInput'
+
+<AppFormField label="이름" required error={errors.name?.message} hint="실명을 입력해주세요">
+  <AppInput placeholder="홍길동" {...register('name')} />
+</AppFormField>
 ```
 
 **Props**
@@ -115,17 +152,17 @@ import AppInput from '@/components/app/AppInput'
 | Prop | 타입 | 기본 |
 |---|---|---|
 | `label` | `string` | — |
-| `error` | `string` | — |
 | `required` | `boolean` | `false` |
-| `variant` | `'default' \| 'search' \| 'password'` | `'default'` |
-| 기타 | `InputHTMLAttributes` | — |
+| `error` | `string` | — |
+| `hint` | `string` | — |
+| `children` | `ReactNode` | — |
+| `className` | `string` | — |
 
 **가이드**
 
-- 라벨이 있으면 상단에 14px medium으로 노출. 필수는 `*`(danger).
-- 에러가 있으면 하단에 12px danger.
-- 검색 아이콘은 좌측 자동. 패스워드 토글은 우측 자동.
-- react-hook-form과 함께 쓸 때 `register('field')`를 그대로 전달.
+- `error`가 있으면 하단에 12px danger, 없으면 `hint`를 12px secondary로 표시.
+- `label`이 없으면 라벨 영역 자체를 미렌더(폼 외 인풋 케이스 호환).
+- 도입 사유는 `design-system.md` D9 참조.
 
 ---
 
@@ -358,7 +395,8 @@ App* 컴포넌트로 커버되지 않는 경우만 shadcn 원시를 **직접** �
 신규 컴포넌트 개발·기존 컴포넌트 수정은 **추후 task 계획 후 결정**한다.
 
 - [ ] `AppTable` **페이지네이션 UI** — 필요(확정). 현재 페이지 사이즈만 있고 UI 미노출. **추후 task**
-- [ ] `AppSelect` — 미존재. 사업장 선택·권한 선택 등에 필요. **추후 task**
-- [ ] `AppDatePicker` — 사업장 계약기간·이력 필터 등에 필요. **추후 task**
-- [ ] **AppFormField 도입** — 폼 영역(label/error/required)을 별도 컴포넌트로 분리할지 결정 필요. 자세한 분석/결정은 [`design-system.md`](./design-system.md) §6 Open Q 참조
+- [ ] `AppSelect` — 미존재. 사업장 선택·권한 선택 등에 필요. **추후 task**(Phase 2 / `AppFormField` 사용)
+- [ ] `AppDatePicker` — 사업장 계약기간·이력 필터 등에 필요. **추후 task**(Phase 2 / `AppFormField` 사용)
 - [ ] **Toast 래퍼** — Toast 시스템 자체는 **sonner 확정**([`design-system.md`](./design-system.md) D6). App* 래퍼가 필요한지 여부만 추후 결정
+
+> AppFormField 도입은 004 D9에서 해소(§3-1 참고).
