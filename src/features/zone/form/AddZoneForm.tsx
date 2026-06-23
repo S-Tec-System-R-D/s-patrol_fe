@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 import { useEffect } from 'react'
-import Button from '@/components/Button'
+import AppButton from '@/components/app/AppButton'
 import { zoneSchema, type FormDataType } from './schema'
 import AppInput from '@/components/app/AppInput'
 
@@ -40,9 +40,9 @@ const AddZoneForm = () => {
         error={errors.name?.message}
         {...register('name')}
       />
-      <Button size="full" type="submit">
+      <AppButton size="full" type="submit">
         생성
-      </Button>
+      </AppButton>
     </form>
   )
 }

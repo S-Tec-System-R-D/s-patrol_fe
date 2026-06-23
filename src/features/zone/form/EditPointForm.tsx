@@ -1,5 +1,5 @@
 import AppInput from '@/components/app/AppInput'
-import Button from '@/components/Button'
+import AppButton from '@/components/app/AppButton'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -44,9 +44,9 @@ const EditPointForm = () => {
         error={errors.timeLimit?.message}
         {...register('timeLimit')}
       />
-      <Button size="full" type="submit">
+      <AppButton size="full" type="submit">
         저장
-      </Button>
+      </AppButton>
     </form>
   )
 }

@@ -1,5 +1,5 @@
 import AppAlertDialog from '@/components/AppAlertDialog'
-import AppIconButton from '@/components/AppIconButton'
+import AppIconButton from '@/components/app/AppIconButton'
 import { ClockIcon, GripVerticalIcon, LockKeyholeIcon, LockKeyholeOpenIcon } from 'lucide-react'
 import { useState } from 'react'
 

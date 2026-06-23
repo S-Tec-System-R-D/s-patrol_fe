@@ -143,11 +143,11 @@ Tailwind 기본 스케일 그대로 사용(별도 커스텀 없음). 자주 쓰�
 
 ### 2-3. 버튼
 
-- 표준은 **`AppButton`** (단일 표준). `src/components/Button.tsx` 위치.
+- 표준은 **`AppButton`** (단일 표준). `src/components/app/AppButton.tsx` 위치.
   - `variant`: `default` / `sub` / `destructive` / `dash`
   - `size`: `full` / `fit`
   - `icon`(LucideIcon) + `iconPosition`(left/right) 옵션 내장
-- shadcn `components/ui/button.tsx`는 **점진 제거 대상**. 새 화면에서 사용 금지.
+- shadcn `components/ui/button.tsx`는 dialog/sheet/alert-dialog 내부 의존만 남음. 신규 화면에서 직접 import 금지.
 - 마이그레이션 정책은 §5 D1 참고.
 
 ### 2-4. 폼
@@ -226,15 +226,16 @@ UI 텍스트(라벨, 확인 문구, 빈 상태, 에러)의 한국어 일관성 �
 
 ### D1. Button: AppButton 단일 표준
 
-- **결정**: 본 프로젝트의 표준 버튼은 **`AppButton`** (`src/components/Button.tsx`). shadcn `ui/button.tsx`는 점진 제거.
+- **결정**: 본 프로젝트의 표준 버튼은 **`AppButton`** (`src/components/app/AppButton.tsx`). shadcn `ui/button.tsx`는 dialog/sheet/alert-dialog 내부 의존만 남김.
 - **사유**:
   - 본 프로젝트 variant는 4종(`default`/`sub`/`destructive`/`dash`)으로 충분.
   - shadcn `Button`은 size 8종 + variant 6종 + asChild 등 옵션이 과함. A5(단순하게)와 충돌.
   - 아이콘 + label 조합이 거의 모든 버튼에 등장 → `icon`/`iconPosition` 내장 형태가 더 효율.
-- **마이그레이션**:
-  - 신규 화면: AppButton만 사용.
-  - 기존 코드: 화면 작업 시 그 화면 안의 shadcn Button을 함께 교체. 한 번에 전수 교체는 하지 않음(A3 최소 변경).
-  - 완전 제거 시점: 별도 결정(Open Q).
+- **마이그레이션 (006에서 완료)**:
+  - `src/components/Button.tsx` → `src/components/app/AppButton.tsx` 이동 + default export 이름 `AppButton`으로 변경
+  - `src/components/AppIconButton.tsx` → `src/components/app/AppIconButton.tsx` 이동
+  - 11개 import 사이트 일괄 갱신 완료. `@/components/Button` / `@/components/AppIconButton` grep 결과 0건.
+  - shadcn `ui/button.tsx`는 dialog/sheet/alert-dialog 내부 의존만 남음 — Phase 6에서 shadcn 의존 정리 시 함께 검토.
 
 ### D2. 다크 모드: 토큰 유지, 토글 미구현
 
@@ -302,6 +303,6 @@ UI 텍스트(라벨, 확인 문구, 빈 상태, 에러)의 한국어 일관성 �
 미언급은 미정으로 본다.
 
 - [ ] **헤딩 위계 미세 조정** — h5/h6가 body(14)와 동일. 별도 운영 안 한다면 사용 금지로 못박을지
-- [ ] **AppButton 마이그레이션 완료 시점** — 기존 shadcn `Button` 사용처 일괄 교체 일정
+- [x] **AppButton 마이그레이션 완료 시점** — **해소(006)**: 파일 이동·이름 정합화·11개 import 일괄 갱신으로 종결. shadcn `ui/button.tsx`는 dialog/sheet/alert-dialog 내부 의존만 남음(Phase 6에서 별도 검토).
 - [ ] **AppEmpty 장식 oklch → 토큰화** — 현재 인라인 oklch. `point` 트리오로 흡수할지, 별도 토큰 추가할지
 - [ ] **그림자 시스템** — 현재 거의 미사용. 필요 시 elevation 토큰 정의할지

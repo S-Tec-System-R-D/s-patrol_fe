@@ -3,36 +3,37 @@ import type { LucideIcon } from 'lucide-react'
 import type { ButtonHTMLAttributes } from 'react'
 
 /**
- * 1. 아이콘
- * 2. 타입 - 기본, 서브, 삭제
- * 3. 사이즈 - w-full, w-fit
+ * 본 프로젝트 표준 버튼 (design-system.md D1).
+ * - variant: default / sub / destructive / dash
+ * - size: full / fit
+ * - icon + iconPosition 내장
  */
 
-type ButtonVariant = 'default' | 'sub' | 'destructive' | 'dash'
-type ButtonSize = 'full' | 'fit'
+type AppButtonVariant = 'default' | 'sub' | 'destructive' | 'dash'
+type AppButtonSize = 'full' | 'fit'
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant
-  size?: ButtonSize
+interface AppButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: AppButtonVariant
+  size?: AppButtonSize
   icon?: LucideIcon
   iconPosition?: 'left' | 'right'
   iconSize?: number
   iconStrokeWidth?: number
 }
 
-const variantStyles: Record<ButtonVariant, string> = {
+const variantStyles: Record<AppButtonVariant, string> = {
   default: 'bg-primary text-primary-foreground py-2 px-4 hover:bg-primary/90',
   sub: 'bg-transparent text-foreground border border-border hover:bg-muted',
   destructive: 'bg-transparent text-destructive border border-danger/40 hover:bg-danger/10',
   dash: 'bg-none border-1 border-dashed text-muted-foreground hover:border-point hover:bg-point-bg hover:text-point',
 }
 
-const sizeStyles: Record<ButtonSize, string> = {
+const sizeStyles: Record<AppButtonSize, string> = {
   full: 'w-full',
   fit: 'w-fit',
 }
 
-const Button = ({
+const AppButton = ({
   variant = 'default',
   size = 'fit',
   icon: Icon,
@@ -42,7 +43,7 @@ const Button = ({
   children,
   className,
   ...props
-}: ButtonProps) => {
+}: AppButtonProps) => {
   return (
     <button
       className={cn(
@@ -60,4 +61,4 @@ const Button = ({
   )
 }
 
-export default Button
+export default AppButton

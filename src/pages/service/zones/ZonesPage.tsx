@@ -1,6 +1,6 @@
 import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
-import Button from '@/components/Button'
+import AppButton from '@/components/app/AppButton'
 import PointCard from '@/features/zone/components/PointCard'
 import ZoneSideBar from '@/features/zone/components/ZoneSideBar'
 import ZoneTopNav from '@/features/zone/components/ZoneTopNav'
@@ -48,9 +48,9 @@ const ZonesPage = () => {
                 title="구역 내 지점 추가"
                 description="구역 내 신규 지점을 추가합니다."
                 trigger={
-                  <Button icon={PlusIcon} size="full" variant="dash">
+                  <AppButton icon={PlusIcon} size="full" variant="dash">
                     지점 추가
-                  </Button>
+                  </AppButton>
                 }
               >
                 <AddPointForm currentPoints={selectedZone.points} />

@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import z from 'zod'
 
-import Button from '@/components/Button'
+import AppButton from '@/components/app/AppButton'
 
 import type { ZonePointType } from '../types'
 import { points } from '@/features/points/mock/pointData'
@@ -104,9 +104,9 @@ const AddPointForm = ({ currentPoints }: AddPointFormProps) => {
           })}
       </div>
       {errors.points && <p className="text-xs text-danger">{errors.points.message}</p>}
-      <Button size="full" type="submit">
+      <AppButton size="full" type="submit">
         추가
-      </Button>
+      </AppButton>
     </form>
   )
 }

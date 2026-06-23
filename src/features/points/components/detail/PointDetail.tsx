@@ -1,4 +1,4 @@
-import Button from '@/components/Button'
+import AppButton from '@/components/app/AppButton'
 
 import { format } from 'date-fns'
 import { MapPinIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
@@ -39,9 +39,9 @@ const PointDetail = ({ point }: { point: PointType }) => {
           title="지점 수정"
           description="지점 정보를 수정할 수 있습니다."
           trigger={
-            <Button icon={SquarePenIcon} size="full" variant="sub">
+            <AppButton icon={SquarePenIcon} size="full" variant="sub">
               수정
-            </Button>
+            </AppButton>
           }
         >
           <EditPointForm />
@@ -53,9 +53,9 @@ const PointDetail = ({ point }: { point: PointType }) => {
           title="지점을 삭제하시겠습니까?"
           onAction={() => {}}
         >
-          <Button icon={Trash2Icon} size="full" variant="destructive">
+          <AppButton icon={Trash2Icon} size="full" variant="destructive">
             삭제
-          </Button>
+          </AppButton>
         </AppAlertDialog>
       </div>
     </div>

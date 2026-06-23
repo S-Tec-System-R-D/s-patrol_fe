@@ -1,6 +1,6 @@
 import AppDialog from '@/components/app/AppDialog'
 import AppInput from '@/components/app/AppInput'
-import Button from '@/components/Button'
+import AppButton from '@/components/app/AppButton'
 import { PlusIcon } from 'lucide-react'
 import AddPointForm from '../form/AddPointForm'
 
@@ -12,9 +12,9 @@ const PointTopNav = () => {
         title="지점 생성"
         description="신규지점을 생성할 수 있습니다."
         trigger={
-          <Button icon={PlusIcon} iconSize={20} iconStrokeWidth={2}>
+          <AppButton icon={PlusIcon} iconSize={20} iconStrokeWidth={2}>
             지점 추가
-          </Button>
+          </AppButton>
         }
       >
         <AddPointForm />

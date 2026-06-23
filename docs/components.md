@@ -357,7 +357,7 @@ import { zoneColumns } from '@/features/patrol-zones/components/ZoneColumn'
 
 **규칙**
 
-- 기본 pageSize 10. (현재 페이지네이션 UI 미노출 → §10 Open Q)
+- 기본 pageSize 10. 외부 `pageSize` prop 지원. 페이지네이션 UI(이전/다음 + N/M + 전체 N건)는 footer로 자동 노출 — 006에서 도입.
 - 컬럼 정의는 도메인 디렉터리에 둔다(`features/{domain}/components/*Column.tsx`).
 - 정렬 가능 헤더는 자동으로 정렬 아이콘 표시.
 - 빈 상태 메시지: "데이터가 없습니다". 필요 시 컬럼 셀 안 커스터마이즈.
@@ -394,7 +394,7 @@ App* 컴포넌트로 커버되지 않는 경우만 shadcn 원시를 **직접** �
 
 신규 컴포넌트 개발·기존 컴포넌트 수정은 **추후 task 계획 후 결정**한다.
 
-- [ ] `AppTable` **페이지네이션 UI** — 필요(확정). 현재 페이지 사이즈만 있고 UI 미노출. **추후 task**
+- [x] `AppTable` **페이지네이션 UI** — **해소(006)**: footer로 이전/다음 + 페이지 N/M(1-based) + 전체 N건 노출. `pageSize` prop 지원. URL 쿼리 연동은 Phase 3 첫 사용처(`/patrol/zones`)에서 `useQueryParams`와 통합.
 - [ ] `AppSelect` — 미존재. 사업장 선택·권한 선택 등에 필요. **추후 task**(Phase 2 / `AppFormField` 사용)
 - [ ] `AppDatePicker` — 사업장 계약기간·이력 필터 등에 필요. **추후 task**(Phase 2 / `AppFormField` 사용)
 - [ ] **Toast 래퍼** — Toast 시스템 자체는 **sonner 확정**([`design-system.md`](./design-system.md) D6). App* 래퍼가 필요한지 여부만 추후 결정

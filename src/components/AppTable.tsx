@@ -7,18 +7,34 @@ import {
   useReactTable,
   type ColumnDef,
   type SortingState,
+  type Table,
 } from '@tanstack/react-table'
 import { useState } from 'react'
-import { ChevronUpIcon, ChevronDownIcon, ChevronsUpDownIcon } from 'lucide-react'
+import {
+  ChevronUpIcon,
+  ChevronDownIcon,
+  ChevronsUpDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from 'lucide-react'
+import AppButton from '@/components/app/AppButton'
 
 interface AppTableProps<TData> {
   data: TData[]
   columns: ColumnDef<TData>[]
   onRowClick?: (data: TData) => void
   searchable?: boolean
+  /** 페이지당 행 수. 기본 10. */
+  pageSize?: number
 }
 
-const AppTable = <TData,>({ data, columns, searchable, onRowClick }: AppTableProps<TData>) => {
+const AppTable = <TData,>({
+  data,
+  columns,
+  searchable,
+  onRowClick,
+  pageSize = 10,
+}: AppTableProps<TData>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState('')
 
@@ -34,7 +50,7 @@ const AppTable = <TData,>({ data, columns, searchable, onRowClick }: AppTablePro
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 10 } },
+    initialState: { pagination: { pageSize } },
   })
 
   return (
@@ -100,6 +116,9 @@ const AppTable = <TData,>({ data, columns, searchable, onRowClick }: AppTablePro
           </tbody>
         </table>
       </div>
+
+      {/* 페이지네이션 */}
+      <TablePagination table={table} />
     </div>
   )
 }
@@ -110,4 +129,46 @@ const SortIcon = ({ sorted }: { sorted: false | 'asc' | 'desc' }) => {
   if (sorted === 'asc') return <ChevronUpIcon size={14} className="text-primary" />
   if (sorted === 'desc') return <ChevronDownIcon size={14} className="text-primary" />
   return <ChevronsUpDownIcon size={14} className="text-muted-foreground" />
+}
+
+/**
+ * 페이지네이션 footer.
+ * - 1-based 표시 (`pageIndex + 1` / `pageCount`)
+ * - 첫/마지막 페이지에서 이전/다음 버튼 비활성
+ * - 데이터 0건 또는 1페이지만 있는 경우에도 "전체 N건"은 노출
+ */
+const TablePagination = <TData,>({ table }: { table: Table<TData> }) => {
+  const { pageIndex } = table.getState().pagination
+  const pageCount = table.getPageCount()
+  const total = table.getFilteredRowModel().rows.length
+  const currentPage = pageCount === 0 ? 0 : pageIndex + 1
+
+  return (
+    <div className="flex items-center justify-between text-xs text-muted-foreground">
+      <span>전체 {total}건</span>
+      <div className="flex items-center gap-2">
+        <AppButton
+          variant="sub"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+          aria-label="이전 페이지"
+        >
+          <ChevronLeftIcon size={14} />
+          이전
+        </AppButton>
+        <span className="px-2 font-medium text-foreground tabular-nums">
+          {currentPage} / {Math.max(pageCount, 1)}
+        </span>
+        <AppButton
+          variant="sub"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+          aria-label="다음 페이지"
+        >
+          다음
+          <ChevronRightIcon size={14} />
+        </AppButton>
+      </div>
+    </div>
+  )
 }

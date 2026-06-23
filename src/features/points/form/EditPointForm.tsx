@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useWatch } from 'react-hook-form'
 import { type FormDataType, pointSchema } from './schema'
 import AppInput from '@/components/app/AppInput'
-import Button from '@/components/Button'
+import AppButton from '@/components/app/AppButton'
 import AuthMethodSelector from './fields/AuthMethodSelector'
 
 const EditPointForm = () => {
@@ -65,9 +65,9 @@ const EditPointForm = () => {
           {...register('nfcTagId')}
         />
       )}
-      <Button size="full" type="submit">
+      <AppButton size="full" type="submit">
         저장
-      </Button>
+      </AppButton>
     </form>
   )
 }

@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { type FormDataType, zoneSchema } from './schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
-import Button from '@/components/Button'
+import AppButton from '@/components/app/AppButton'
 import AppInput from '@/components/app/AppInput'
 
 const EditZoneForm = () => {
@@ -39,9 +39,9 @@ const EditZoneForm = () => {
         error={errors.name?.message}
         {...register('name')}
       />
-      <Button size="full" type="submit">
+      <AppButton size="full" type="submit">
         수정
-      </Button>
+      </AppButton>
     </form>
   )
 }

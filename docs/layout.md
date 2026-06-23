@@ -251,7 +251,7 @@ export interface MenuGroupType {
 
 추후 task 계획 후 결정.
 
-- [ ] **본사 사이드바 config 분리** — 현재 `sidebar.config.ts`는 현장만. 본사용 별도 export(`AdminMenus`) 추가 필요. **추후 task**
-- [ ] **TopNav 현재 메뉴명 동기화** — 현재 하드코딩. 라우트 → 메뉴명 매핑 데이터 필요. **추후 task**
-- [ ] **ProfileBadge 메뉴** — 로그아웃·내 정보 등 드롭다운 메뉴 미구현. **추후 task**
-- [ ] **알림 시트 본문** — 현재 비어 있음. 알림 목록 형태(읽음/안읽음·시간) 정의 필요. **추후 task**
+- [x] **본사 사이드바 config 분리** — **해소(006)**: `AdminMenus` export 추가(사업장 관리·관리자 관리). `Sidebar.tsx`가 `isAdminArea`로 자동 분기.
+- [x] **TopNav 현재 메뉴명 동기화** — **해소(006)**: `menu-lookup.ts` 신설. `ServiceMenus` + `AdminMenus`에서 자동 도출(정확 매칭 > prefix 매칭 > 빈 문자열).
+- [x] **ProfileBadge 메뉴** — **해소(006)**: shadcn `dropdown-menu` 기반 드롭다운. 사용자명(useMe) + 내 정보(placeholder) + 로그아웃(토큰 clear + invalidate + 영역별 로그인 이동).
+- [ ] **알림 시트 본문** — 현재 비어 있음. 알림 목록 형태(읽음/안읽음·시간) 정의 필요. **Phase 2 공용 컴포넌트 확충**으로 이월.
