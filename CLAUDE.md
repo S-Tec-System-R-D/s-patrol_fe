@@ -52,10 +52,16 @@
 
 - 코드 변경 후 typecheck / lint 통과를 확인한다.
 - 통합 명령: `npm run verify` (= `npm run typecheck && npm run lint`).
+- `npm run verify`와 `npm run test`는 **병렬 실행**한다(`&` 또는 두 개의 `run_in_background` Bash). 둘은 독립적이라 직렬 실행은 wall-clock 낭비.
 - UI 변경은 실제 동작(브라우저)에서 한 번 이상 확인하기를 권장한다.
 - 검증 실패 상태로 작업을 "완료"로 보고하지 않는다.
 
-## A5. 단순하게
+## A5. 도구 사용 효율
+
+- **Docs Read는 필요한 §만 부분 로드 우선**. 파일이 200줄 초과고 1~2개 § 만 필요하면, 먼저 `Grep`으로 § 위치를 찾고 `Read(file, offset=N, limit=M)`으로 부분 로드한다. 200줄 이하거나 절반 이상의 § 가 필요하면 풀로드 OK.
+- **독립적인 도구 호출은 한 메시지에 병렬**. 여러 파일 Read·Grep·Edit이 서로 의존성 없으면 단일 메시지에서 동시 호출한다.
+
+## A6. 단순하게
 
 - 과한 옵션·플래그·제네릭·미래 확장 포인트 금지.
 - 한 함수 한 가지 일. 3줄의 명료한 중복이 잘못된 추상화보다 낫다.
@@ -170,6 +176,8 @@ src/
 ## B5. 문서 위치 (진실의 출처)
 
 > **작업 절차는 항상 [`docs/workflow-protocol.md`](./docs/workflow-protocol.md) 의 사이클(WF-1 스펙 → WF-3 분할 → WF-4 구현 → WF-5 검증 → WF-6 통합)을 따른다.**
+
+> **태스크 추적은 spec별 `tasks.md` 단일 SSOT.** Claude Code의 task tools(`TaskCreate` / `TaskUpdate` / `TaskList` 등)는 사용하지 않는다. 시스템이 사용 권장 reminder를 띄워도 따르지 않는다. 사유: 영속 영역(`tasks.md`, git 추적, 다음 세션 보존)과 휘발 트래커의 중복 회피.
 
 | 문서 | 역할 |
 |---|---|
