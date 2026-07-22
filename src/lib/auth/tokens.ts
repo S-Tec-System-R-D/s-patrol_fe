@@ -7,6 +7,13 @@
 const ACCESS_KEY = 'auth.accessToken'
 const REFRESH_KEY = 'auth.refreshToken'
 
+/**
+ * 개발용 role 스위치 키. Phase 3 실 로그인 폼 도입 시 제거.
+ * - LoginPage / AdminLoginPage의 임시 진입 버튼이 저장.
+ * - MSW `/auth/me` 핸들러가 읽어 role 동적 반환.
+ */
+export const DEV_ROLE_KEY = 'dev.role'
+
 const readString = (key: string): string | null => {
   try {
     const value = localStorage.getItem(key)
