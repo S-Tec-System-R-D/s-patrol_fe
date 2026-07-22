@@ -37,6 +37,7 @@ flowchart LR
     AD[Admin<br/>SYSTEM/MASTER/MANAGER]
     WK[Worker<br/>FIELD_MANAGER/WORKER]
     WAH[WorkerAssignmentHistory]
+    DR[DeploymentRequest<br/>PENDING/APPROVED/REJECTED/CANCELLED]
     PP[PatrolPoint]
     PC[PatrolCourse]
     CP[CoursePoint<br/>order, timeLimit]
@@ -60,6 +61,9 @@ flowchart LR
     PP -- 1:N --> CP
 
     WK -- 1:N --> WAH
+    WK -- "1:0..1 (PENDING)" --> DR
+    L -- "1:N (target)" --> DR
+    DR -. "APPROVE → append" .-> WAH
     WK -- 1:N --> CH
     PC -- "1:N (instance)" --> CH
     CH -- "1:N timeline" --> PH
@@ -83,7 +87,8 @@ flowchart LR
 | `CoursePoint` | 코스-지점 매핑(순서/소요시간/활성) |
 | `CourseHistory` | 한 번의 코스 순찰 실행 (시작~종료, 결과) |
 | `PointHistory` | 코스 내 각 지점에서 발생한 로그 1건 |
-| `WorkerAssignmentHistory` | 근무자 사업장 배치 변경 이력 |
+| `WorkerAssignmentHistory` | 근무자 사업장 배치 변경 이력 (승인된 요청의 결과 기록) |
+| `DeploymentRequest` | 근무자가 APP에서 발송한 배치·복귀 요청. 상태 = PENDING/APPROVED/REJECTED/CANCELLED. 승인 시 `WorkerAssignmentHistory` 1건 자동 생성 |
 | `Notice` | 공지사항 (앱 푸시 트리거 옵션 포함) |
 | `Keyword` | 환경설정 키워드 (목업 없음, 형태 TBD) |
 
@@ -154,6 +159,12 @@ export type WorkStatus = 'WORKING' | 'OFF_DUTY'   // 근무시작 / 근무종료
 // 사업장 운영 상태
 export type LocationStatus = 'OPERATING' | 'SUSPENDED' | 'TERMINATED'  // 운영중/중지/종료
 
+// 배치 요청 상태
+export type DeploymentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+
+// 배치 요청 방향 (파견 / 복귀)
+export type DeploymentDirection = 'DEPLOY' | 'RETURN'
+
 // 인증 수단
 export type AuthMethod = 'QR' | 'NFC'
 
@@ -219,6 +230,7 @@ export interface Worker {
   status: UserStatus
   registeredAt: string
   assignmentHistory: WorkerAssignmentHistoryItem[]
+  pendingDeploymentRequest?: DeploymentRequestSummary  // 대기 중이면 1건, 없으면 undefined (근무자 1인 1건 규칙)
 }
 
 export interface WorkerSummary {
@@ -234,12 +246,45 @@ export interface WorkerSummary {
 
 export interface WorkerAssignmentHistoryItem {
   id: string
-  type: 'INITIAL' | 'TRANSFER' | 'RETURN'   // 정문경비 배치 / 주차관제 배치 / 본 사업장 복귀
+  type: 'INITIAL' | 'TRANSFER' | 'RETURN'   // 최초 배치 / 파견 / 원 사업장 복귀
   fromLocationName?: string
   toLocationName: string
   startedAt: string
   endedAt?: string        // null이면 "현재"
 }
+
+// 배치 요청 — /deployments 큐 + 이력
+// 근무자가 APP에서 특정 사업장으로 배치·복귀를 요청 → **목적지 사업장 관리자**가 승인/거부.
+// - 근무자는 대기 중 요청 1건만 보유(재요청 불가). 사용자 취소 가능.
+// - 승인 시점에 WorkerAssignmentHistoryItem 1건이 자동 생성된다.
+// - 현재 소속 사업장 관리자에게는 별도 통보 없음(근무자 상세의 이력에서 사후 확인).
+export interface DeploymentRequest {
+  id: string
+  direction: DeploymentDirection    // 'DEPLOY' 파견 / 'RETURN' 복귀
+  worker: WorkerRef                 // 요청한 근무자
+  fromLocation: LocationRef         // 현재 소속(파견 시) 또는 파견지(복귀 시)
+  toLocation: LocationRef           // 이동 목적지 = 승인 권한 소유 사업장
+  status: DeploymentStatus
+  requestedAt: string               // 요청 시각
+  processedAt?: string              // 승인/거부 시각 (취소는 근무자 액션이라 별도 취급 가능)
+  processedByName?: string          // 승인/거부 처리 관리자명
+  rejectReason?: string             // REJECTED 시 관리자가 입력한 사유(선택)
+}
+
+// 큐/이력 목록 행
+export interface DeploymentRequestSummary {
+  id: string
+  direction: DeploymentDirection
+  workerName: string
+  fromLocationName: string
+  toLocationName: string
+  status: DeploymentStatus
+  requestedAt: string
+  processedAt?: string
+}
+
+// 참조 (요청 상세 안에서만 사용)
+export interface WorkerRef { id: string; name: string; phone: string }
 ```
 
 ### 3-2. 조직 (그룹 / 사업장)
@@ -501,6 +546,9 @@ export interface Keyword {
 | 지점 상세 | `GET /api/points/:id` | `ApiDetailResponse<PatrolPoint>` |
 | 근무자 목록 | `GET /api/workers` | `ApiListResponse<WorkerSummary>` |
 | 근무자 상세 | `GET /api/workers/:id` | `ApiDetailResponse<Worker>` |
+| 배치요청 대기 큐 | `GET /api/deployments?status=PENDING` | `ApiListResponse<DeploymentRequestSummary>` |
+| 배치요청 처리이력 | `GET /api/deployments?status=PROCESSED` | `ApiListResponse<DeploymentRequestSummary>` (APPROVED·REJECTED·CANCELLED 통합) |
+| 배치요청 상세 | `GET /api/deployments/:id` | `ApiDetailResponse<DeploymentRequest>` |
 | 공지 목록 | `GET /api/notices` | `ApiListResponse<NoticeSummary>` |
 | 공지 상세 | `GET /api/notices/:id` | `ApiDetailResponse<Notice>` |
 
@@ -659,13 +707,22 @@ export interface CreateWorkerRequest {
   initialPassword: string
 }
 export interface UpdateWorkerRequest extends Partial<Omit<CreateWorkerRequest, 'initialPassword'>> { id: string }
-export interface AssignWorkerRequest {
-  workerId: string
-  toLocationId: string             // 변경할 사업장
+
+// ---- 배치 요청 (WEB — 관리자 승인/거부) ----
+// 요청 생성/취소는 근무자 APP에서 수행. WEB은 승인/거부만 담당.
+// 승인 권한: DeploymentRequest.toLocation 관리자.
+export interface ApproveDeploymentRequest {
+  id: string                       // DeploymentRequest.id
 }
-export interface ReturnWorkerRequest {
-  workerId: string                 // 본 사업장으로 복귀
+export interface RejectDeploymentRequest {
+  id: string
+  reason?: string                  // 거부 사유(선택). 근무자 APP에 노출.
 }
+
+// @deprecated — 관리자 주도 배치 방식(구 명세). APP 트리거 + 승인 방식으로 대체됨.
+// export interface AssignWorkerRequest { workerId: string; toLocationId: string }
+// export interface ReturnWorkerRequest { workerId: string }
+
 export interface ResetPasswordRequest {
   userId: string                   // Admin/Worker 공용
   newPassword: string
@@ -784,6 +841,10 @@ DTO를 확정하기 전 백엔드·기획 확인 필요. 답변 받아 본문에
 - [ ] **공지 읽음 처리**: 필드는 유지하되 미확정.
   - **이유**: 근무자가 WEB에 접속할 일이 없을 수 있어 읽음 처리 자체가 불필요할 가능성 있음. 이 경우 `readByMe` 제거 또는 사용 안 함.
 - [ ] **Keyword 도메인**: 단순 문자열? 카테고리/활성? 다국어? 표현·자료 모양 모두 미정
+- [ ] **배치 요청 — 재요청 쿨다운**: 취소·거부 직후 즉시 재요청 가능한지, 대기 시간이 있는지
+- [ ] **배치 요청 — 승인 시 세션 처리**: 근무자 소속 사업장이 바뀔 때 APP에 강제 재로그인/토큰 갱신 필요 여부
+- [ ] **배치 요청 — 요청 사유 필드**: 근무자가 요청 발송 시 사유를 입력할 수 있는지(선택), 관리자 화면에 노출할지
+- [ ] **배치 요청 — 처리이력 필터**: `?status=PROCESSED`가 여러 상태를 포괄하는 서버 관례로 유효한지, 또는 status 배열/개별 파라미터 필요한지
 
 > 본문 반영 완료 항목 (참고):
 > - 코스 이력의 worker 정보 → 단일 근무자 (APP에서 근무자가 코스 선택하여 1회 실행)

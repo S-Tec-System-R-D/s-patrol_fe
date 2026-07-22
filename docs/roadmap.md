@@ -139,7 +139,7 @@ screens.md 진행도 △ 일괄 마무리. 위험도 A 우선.
 |---|---|:-:|---|
 | 근무자 목록 + 상세 | `/users` | B | 검색·필터 + 마스터-디테일 |
 | 근무자 추가/수정 | 모달 | B | 현장관리자만 생성 |
-| 근무자 배치 변경 / 복귀 | 모달 | B | `AssignWorkerRequest` / `ReturnWorkerRequest` |
+| 배치관리(신규) | `/deployments` | A | 근무자 APP 요청 → 목적지 관리자 승인/거부. `ApproveDeploymentRequest` / `RejectDeploymentRequest` |
 | 공지 목록 + 상세 | `/notice` | B | 마스터-디테일 + 첨부 표시 |
 | 공지 작성/수정/삭제 | 모달 | B | "저장 시 앱 푸시" 체크박스 |
 | 환경설정 — 키워드 | `/settings/keywords` | C | UX TBD. 후순위 가능 |
