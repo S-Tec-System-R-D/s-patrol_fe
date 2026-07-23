@@ -2,14 +2,15 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './sidebar'
 import { TopNav } from './topnav'
 
-const AppLayout = () => {
-  /**
-   * 구조 (PC, lg 이상)
-   * SideBar | TopNav
-   *         | Contents
-   *
-   * lg 미만(<1024px): Sidebar는 hidden, MobileSidebar(TopNav 좌측 햄버거 + Sheet)로 대체.
-   */
+/**
+ * 본사 사이트(`/admin/*`) 셸. 리디자인 미적용 — 기존 스펙(006) 구조 그대로.
+ * 구조 (PC, lg 이상)
+ * SideBar | TopNav
+ *         | Contents
+ *
+ * lg 미만(<1024px): Sidebar는 hidden, MobileSidebar(TopNav 좌측 햄버거 + Sheet)로 대체.
+ */
+const AdminLayout = () => {
   return (
     <div className="app-shell">
       <div className="hidden lg:flex">
@@ -25,4 +26,4 @@ const AppLayout = () => {
   )
 }
 
-export default AppLayout
+export default AdminLayout

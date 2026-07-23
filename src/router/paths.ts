@@ -28,6 +28,7 @@ export const paths = {
     zones: '/zones',
     points: '/points',
     users: '/users',
+    deployments: '/deployments',
     notice: '/notice',
     settingsKeywords: '/settings/keywords',
   },

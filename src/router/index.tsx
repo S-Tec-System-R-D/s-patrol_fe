@@ -3,6 +3,8 @@ import AdminLoginPage from '@/pages/auth/AdminLoginPage'
 import { createBrowserRouter } from 'react-router-dom'
 import AuthGuard from './guards/AuthGuard'
 
+import ServiceLayout from '@/components/layout/ServiceLayout'
+import AdminLayout from '@/components/layout/AdminLayout'
 import PointsPage from '@/pages/service/points/PointsPage'
 import ZonesPage from '@/pages/service/zones/ZonesPage'
 import LocationLayout from '@/features/auth/components/location/LocationLayout'
@@ -40,53 +42,67 @@ export const router = createBrowserRouter([
     element: <AuthGuard />,
     errorElement: <PageErrorFallback />,
     children: [
-      //순찰 관리
+      // 현장 사이트 (`/*`) — 리디자인(007) 셸: RailSidebar + 자연 스크롤
       {
-        path: '/patrol',
-        element: <PatrolLayout />,
+        element: <ServiceLayout />,
         errorElement: <PageErrorFallback />,
         children: [
-          //지점 관리
+          //순찰 관리
           {
-            path: paths.service.patrolPoints,
-            element: <PatrolPointsPage />,
+            path: '/patrol',
+            element: <PatrolLayout />,
             errorElement: <PageErrorFallback />,
+            children: [
+              //지점 관리
+              {
+                path: paths.service.patrolPoints,
+                element: <PatrolPointsPage />,
+                errorElement: <PageErrorFallback />,
+              },
+              //구역관리
+              {
+                path: paths.service.patrolZones,
+                element: <PatrolZonesPage />,
+                errorElement: <PageErrorFallback />,
+              },
+            ],
           },
-          //구역관리
           {
-            path: paths.service.patrolZones,
-            element: <PatrolZonesPage />,
+            element: <LocationLayout />,
             errorElement: <PageErrorFallback />,
+            children: [
+              //지점 관리
+              {
+                path: paths.service.points,
+                element: <PointsPage />,
+                errorElement: <PageErrorFallback />,
+              },
+              //구역관리
+              {
+                path: paths.service.zones,
+                element: <ZonesPage />,
+                errorElement: <PageErrorFallback />,
+              },
+            ],
           },
         ],
       },
+      // 본사 사이트 (`/admin/*`) — 기존 셸(w-70 Sidebar + TopNav) 유지, 리디자인 미적용
       {
-        element: <LocationLayout />,
+        element: <AdminLayout />,
         errorElement: <PageErrorFallback />,
         children: [
-          //지점 관리
+          // RequireRoute 적용 (005에서 Admin 3종만 허용. Phase 5에서 실 화면 교체)
           {
-            path: paths.service.points,
-            element: <PointsPage />,
-            errorElement: <PageErrorFallback />,
-          },
-          //구역관리
-          {
-            path: paths.service.zones,
-            element: <ZonesPage />,
+            path: paths.admin.locations,
+            element: (
+              <RequireRoute roles={['SYSTEM', 'MASTER', 'MANAGER']}>
+                <AdminPlaceholderPage />
+              </RequireRoute>
+            ),
             errorElement: <PageErrorFallback />,
           },
         ],
-      },
-      // 본사 영역 — RequireRoute 적용 (005에서 Admin 3종만 허용. Phase 5에서 실 화면 교체)
-      {
-        path: paths.admin.locations,
-        element: (
-          <RequireRoute roles={['SYSTEM', 'MASTER', 'MANAGER']}>
-            <AdminPlaceholderPage />
-          </RequireRoute>
-        ),
-        errorElement: <PageErrorFallback />,
       },
     ],
   },

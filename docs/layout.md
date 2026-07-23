@@ -58,24 +58,25 @@
 
 ---
 
-## 1. AppLayout
+## 1. ServiceLayout / AdminLayout
 
-`src/components/layout/AppLayout.tsx`
+`src/components/layout/ServiceLayout.tsx` + `src/components/layout/AdminLayout.tsx`
 
-전체 셸을 그리고 `<Outlet />`을 컨텐츠 자리에 둔다. `AuthGuard` 통과 시 진입.
+**영역 분기는 라우터 레벨에서 이뤄진다** (007 결정 — `useLocation` 조건분기 아님). `AuthGuard`는 인증 여부만 검사하고 `<Outlet />`만 렌더링한다. 셸은 `router/index.tsx`에서 `AuthGuard`의 두 자식 브랜치가 각각 담당한다.
 
 ```tsx
-// 인증 성공 → AppLayout → 페이지(Outlet)
-<AuthGuard>
-  <AppLayout />
+// 인증 성공 → AuthGuard(Outlet) → 영역별 라우터 브랜치 → 셸(ServiceLayout | AdminLayout) → 페이지(Outlet)
+<AuthGuard>              {/* <Outlet/> */}
+  <ServiceLayout />       {/* 현장(/*) 브랜치의 셸 — RailSidebar + 자연 스크롤 */}
+  <AdminLayout />         {/* 본사(/admin/*) 브랜치의 셸 — Sidebar w-70 + TopNav */}
 </AuthGuard>
 ```
 
 **규칙**
 
-- **영역 분기**: `AppLayout`은 라우트 영역(`/*` vs `/admin/*`)에 따라 셸을 분기한다.
-  - 현장(`/*`): 컴팩트 아이콘 레일 + TopNav 없음 + 페이지 자연 스크롤.
-  - 본사(`/admin/*`): 사이드바 w-70 + TopNav + 컨텐츠 자체 스크롤.
+- **영역 분기**: 라우터가 현장 라우트는 `ServiceLayout` 자식으로, 본사 라우트는 `AdminLayout` 자식으로 각각 묶는다. 단일 컴포넌트 내부 조건분기가 아니라 **라우터 노드 자체가 분리**되어 있다.
+  - `ServiceLayout`(현장, `/*`): `RailSidebar`(68px 컴팩트 아이콘 레일) + TopNav 없음 + 페이지 자연 스크롤.
+  - `AdminLayout`(본사, `/admin/*`): `Sidebar` w-70 + `TopNav` + 컨텐츠 자체 스크롤(`.app-shell`).
 - **현장**: 페이지가 **자체 페이지 헤더**(제목 + 서브텍스트 + 우측 액션)를 그린다. TopNav 없음.
 - **본사**: 페이지가 자체 헤더를 그리지 않는다(헤더는 TopNav가 담당).
 - 페이지는 `<Outlet>` 안에서 `flex-1` 또는 그에 준하는 레이아웃을 가정한다.
@@ -343,11 +344,11 @@ export interface MenuGroupType {
 
 추후 task 계획 후 결정.
 
-- [x] **본사 사이드바 config 분리** — **해소(006)**: `AdminMenus` export 추가(사업장 관리·관리자 관리). `Sidebar.tsx`가 `isAdminArea`로 자동 분기.
-- [x] **TopNav 현재 메뉴명 동기화** — **해소(006)**: `menu-lookup.ts` 신설. `ServiceMenus` + `AdminMenus`에서 자동 도출(정확 매칭 > prefix 매칭 > 빈 문자열).
-- [x] **ProfileBadge 메뉴** — **해소(006)**: shadcn `dropdown-menu` 기반 드롭다운. 사용자명(useMe) + 내 정보(placeholder) + 로그아웃(토큰 clear + invalidate + 영역별 로그인 이동).
+- [x] **본사 사이드바 config 분리** — **해소(006)**: `AdminMenus` export 추가(사업장 관리·관리자 관리). ~~`Sidebar.tsx`가 `isAdminArea`로 자동 분기~~ → **007에서 갱신**: 라우터 레벨 분기로 대체되어 `Sidebar.tsx`는 `AdminMenus` 고정 참조로 단순화(아래 항목 참조).
+- [x] **TopNav 현재 메뉴명 동기화** — **해소(006)**: `menu-lookup.ts` 신설. `ServiceMenus` + `AdminMenus`에서 자동 도출(정확 매칭 > prefix 매칭 > 빈 문자열). **007 갱신**: TopNav가 `AdminLayout` 전용이 되어 `menu-lookup.ts`도 `AdminMenus` 전용으로 단순화.
+- [x] **ProfileBadge 메뉴** — **해소(006)**: shadcn `dropdown-menu` 기반 드롭다운. 사용자명(useMe) + 내 정보(placeholder) + 로그아웃(토큰 clear + invalidate + 영역별 로그인 이동). **007 갱신**: `side`/`align` prop 추가로 현장 레일 하단(우측 오픈)에서도 재사용.
 - [x] **현장 사이트 셸 전환** — **해소(리디자인)**: 컴팩트 아이콘 레일(68px) + TopNav 삭제 + 페이지 자연 스크롤로 결정. 본사 사이트는 기존 유지.
 - [x] **현장 알림 위치** — **해소(리디자인)**: 알림 기능 자체가 아직 없어 제거. 추후 추가 시 사이드바 하단 프로필 위 슬롯 사용.
 - [ ] **알림 시트 본문** — 본사 사이트에서만 사용. 알림 목록 형태(읽음/안읽음·시간) 정의 필요. **Phase 2 공용 컴포넌트 확충**으로 이월.
-- [ ] **`AppLayout` 영역 분기 구현 방식** — 라우트 기반 분기(`useLocation`) vs 별도 `AdminLayout`/`ServiceLayout` 분리 vs Outlet 구조 재편. Phase 진입 시 결정.
+- [x] **`AppLayout` 영역 분기 구현 방식** — **해소(007)**: 별도 `ServiceLayout`/`AdminLayout` 라우터 노드로 분리 확정(`useLocation` 조건분기 아님). `AuthGuard`는 인증만 담당하고 `<Outlet/>`만 렌더 — 셸은 `router/index.tsx`에서 `AuthGuard` 하위 두 브랜치(`ServiceLayout` 자식 = 현장 라우트, `AdminLayout` 자식 = 본사 라우트)가 담당. 구 `AppLayout.tsx`는 제거.
 - [ ] **본사 사이트 리디자인** — 추후 별도 라운드로 이월. 현장과 통일 vs 두 사이트가 다른 셸을 갖는 채로 유지 결정 필요.

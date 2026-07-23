@@ -1,5 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom'
-import { AppLayout } from '@/components/layout'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useMe } from '@/features/auth/hooks/useMe'
 import { getAccessToken } from '@/lib/auth/tokens'
 import { paths, isAdminArea } from '@/router/paths'
@@ -9,7 +8,7 @@ import { paths, isAdminArea } from '@/router/paths'
  * - 토큰 없음 → 영역별 로그인 화면으로 Navigate(`?redirect=` 보존)
  * - 토큰 있음 + useMe 로딩 → null 렌더(깜빡임 방지)
  * - 토큰 있음 + useMe 실패 → 인터셉터 refresh도 실패한 상태. 안전을 위해 로그인으로 Navigate
- * - 토큰 있음 + useMe 성공 → `<AppLayout />`
+ * - 토큰 있음 + useMe 성공 → `<Outlet />` (셸은 라우터 하위의 `ServiceLayout`/`AdminLayout`이 담당 — 007)
  *
  * 005 spec §3 비즈니스 규칙.
  */
@@ -32,7 +31,7 @@ const AuthGuard = () => {
     return <Navigate to={target} replace />
   }
 
-  return <AppLayout />
+  return <Outlet />
 }
 
 export default AuthGuard

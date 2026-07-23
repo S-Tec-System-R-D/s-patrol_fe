@@ -1,4 +1,5 @@
 import {
+  ArrowLeftRightIcon,
   Building2Icon,
   ClockAlertIcon,
   MapPinIcon,
@@ -14,6 +15,8 @@ export interface MenuItemType {
   title: string
   url: string
   activeUrl?: string[]
+  /** 대기 요청 수 등 동적 뱃지 (현장 레일 전용). 미지정 시 뱃지 숨김 */
+  badge?: () => number
 }
 
 export interface MenuGroupType {
@@ -21,33 +24,37 @@ export interface MenuGroupType {
   groups: MenuItemType[]
 }
 
-export const ServiceMenus: MenuGroupType[] = [
+/**
+ * 현장 사이드바(RailSidebar) 메뉴 — flat 5개, 그룹 헤더 없음.
+ * 순서 고정: 순찰이력 → 코스/지점 → 근무자 → 배치관리 → 공지사항 (리디자인 결정 2026-07-23).
+ */
+export const ServiceMenus: MenuItemType[] = [
   {
-    title: '관리',
-    groups: [
-      {
-        icon: ClockAlertIcon,
-        title: '순찰이력',
-        url: paths.service.patrolZones,
-        activeUrl: [paths.service.patrolZones, paths.service.patrolPoints],
-      },
-      {
-        icon: MapPinIcon,
-        title: '구역/지점',
-        url: paths.service.zones,
-        activeUrl: [paths.service.zones, paths.service.points],
-      },
-    ],
+    icon: ClockAlertIcon,
+    title: '순찰이력',
+    url: paths.service.patrolZones,
+    activeUrl: [paths.service.patrolZones, paths.service.patrolPoints],
   },
   {
-    title: '알림',
-    groups: [
-      {
-        icon: MegaphoneIcon,
-        title: '공지사항',
-        url: paths.service.notice,
-      },
-    ],
+    icon: MapPinIcon,
+    title: '코스/지점',
+    url: paths.service.zones,
+    activeUrl: [paths.service.zones, paths.service.points],
+  },
+  {
+    icon: UsersIcon,
+    title: '근무자',
+    url: paths.service.users,
+  },
+  {
+    icon: ArrowLeftRightIcon,
+    title: '배치관리',
+    url: paths.service.deployments,
+  },
+  {
+    icon: MegaphoneIcon,
+    title: '공지사항',
+    url: paths.service.notice,
   },
 ]
 

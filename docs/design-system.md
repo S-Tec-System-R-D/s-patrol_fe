@@ -74,7 +74,7 @@
 | `--rail` / `--rail-2` | 신설 (§1-1 하단 참고) | 다크 사이드바 레일 전용 |
 
 **신설 필요 토큰**
-- `--sidebar` / `--sidebar-foreground`는 이미 존재하지만 리디자인은 **컴팩트 아이콘 레일**용으로 짙은 색이 필요 → `--rail`(레일 배경) / `--rail-2`(호버·활성 하이라이트)를 별도 슬롯으로 신설한다.
+- [x] `--rail` / `--rail-2` — **해소(007)**: `src/index.css`에 신설(`:root`/`.dark` 동일값 — 레일은 항상 다크). `@theme inline`에 `--color-rail`/`--color-rail-2` 연결. `bg-rail`/`bg-rail-2` Tailwind 유틸로 사용.
 - `--text-3`(희미한 라벨·타임스탬프)은 현재 `text-muted-foreground/60~70` 유틸로 대체 가능. 자주 쓰이면 별도 토큰화 검토(§6 Open Q).
 
 **사용 매트릭스 (어디에 어떤 시맨틱?)**
@@ -339,7 +339,7 @@ UI 텍스트(라벨, 확인 문구, 빈 상태, 에러)의 한국어 일관성 �
 
 - **결정**: Geist Variable → **Pretendard**로 교체.
 - **사유**: 국문 렌더링 최적화. 리디자인 목업의 국문 폰트 매칭.
-- **로딩**: `@fontsource-variable/pretendard` (권장) 또는 CDN. `index.css`의 `--font-sans` / `--font-heading` 값 교체.
+- **로딩(007에서 확정)**: `@fontsource-variable/pretendard`는 **존재하지 않는 패키지명**(fontsource의 Pretendard는 Latin 서브셋만 제공, 한글 미포함 — 사용 불가). 공식 **`pretendard`** npm 패키지(`pretendard/dist/web/variable/pretendardvariable.css`)로 채택. `font-family: 'Pretendard Variable'`(한글+라틴 통합 가변 폰트, woff2 단일 파일 2MB). `src/index.css` 최상단 `@import`로 로드, `--font-sans` 값을 `'Pretendard Variable', sans-serif`로 교체.
 
 ### D9. AppFormField + AppInput 역할 분리
 

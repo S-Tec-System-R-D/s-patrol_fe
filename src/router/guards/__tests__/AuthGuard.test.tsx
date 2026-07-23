@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, vi } from 'vitest'
+import { describe, expect, it, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -20,11 +20,6 @@ const ME: MeRaw = {
   registeredAt: '2026-01-01T00:00:00.000Z',
 }
 
-// AppLayout이 Sidebar/TopNav를 그리지만 본 테스트에서 본문 렌더만 확인하므로 mock
-vi.mock('@/components/layout', () => ({
-  AppLayout: () => <div>APP_LAYOUT</div>,
-}))
-
 const renderAt = (initialPath: string) => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -33,8 +28,12 @@ const renderAt = (initialPath: string) => {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
-          <Route path="/admin/*" element={<AuthGuard />} />
-          <Route path="/*" element={<AuthGuard />} />
+          <Route path="/admin/*" element={<AuthGuard />}>
+            <Route path="admin/locations" element={<div>OUTLET_OK</div>} />
+          </Route>
+          <Route path="/*" element={<AuthGuard />}>
+            <Route path="zones" element={<div>OUTLET_OK</div>} />
+          </Route>
           <Route path="/login" element={<div>SERVICE_LOGIN</div>} />
           <Route path="/admin/login" element={<div>ADMIN_LOGIN</div>} />
         </Routes>
@@ -59,12 +58,12 @@ describe('AuthGuard', () => {
     await waitFor(() => expect(screen.getByText('ADMIN_LOGIN')).toBeInTheDocument())
   })
 
-  it('토큰 있음 + useMe 200 → AppLayout 렌더', async () => {
+  it('토큰 있음 + useMe 200 → Outlet 렌더(하위 라우트 통과)', async () => {
     setAccessToken('mock-token')
     server.use(http.get('/api/auth/me', () => HttpResponse.json(ok(ME))))
 
     renderAt('/zones')
-    await waitFor(() => expect(screen.getByText('APP_LAYOUT')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('OUTLET_OK')).toBeInTheDocument())
   })
 
   it('토큰 있음 + useMe 401(refresh도 실패) → 로그인으로 Navigate', async () => {
