@@ -5,12 +5,19 @@
 >
 > **SSOT**
 > - 토큰: [`src/index.css`](../src/index.css)
-> - 1차 시안: [`docs/ui-mock/`](./ui-mock/)
+> - 리디자인 목업: [`docs/ui-mock/현장/**/*-신규.png`](./ui-mock/) (범위: 순찰이력, 코스/지점, 근무자, 배치관리, 공지사항)
+> - 1차 목업(참고, `-신규` 없는 파일): 리디자인 이전 시안. 데이터·문구는 유효, 시각 표현은 폐기.
 >
 > **구현 디테일은 별도 문서**
 > - 컴포넌트 사용법 → [`docs/components.md`](./components.md)
 > - 레이아웃 → [`docs/layout.md`](./layout.md)
 > - 상호작용 패턴 → [`docs/patterns.md`](./patterns.md)
+>
+> **리디자인 반영 상태**
+> - 방향성: Notion / Linear / Vercel 계열 **미니멀·고밀도 SaaS** 스타일.
+> - 대상: 현장 사이트 5개 화면(순찰이력·코스/지점·근무자·배치관리·공지사항).
+> - 범위 밖: `/admin/*` 본사 사이트, 로그인/랜딩. → 이번 라운드 리디자인 미적용 상태 정상.
+> - 데이터·기능 범위·문구는 유지. **UI만 교체**.
 
 ---
 
@@ -50,19 +57,49 @@
 
 > `--destructive`는 `--danger`와 동일. shadcn 호환을 위해 둘 다 노출.
 
+#### 리디자인 팔레트 컨셉 (OKLCH)
+
+리디자인 목업은 **OKLCH 기반**으로 그려졌으나, 프로젝트는 위 4종 시맨틱 트리오 시스템을 그대로 유지한다. **팔레트 컨셉 → 기존 토큰 매핑**은 다음과 같다.
+
+| 리디자인 컨셉 토큰 | 매핑 대상 | 용도 |
+|---|---|---|
+| `--bg` | `--background` / `--contents-bg` | 페이지 베이스 |
+| `--surface` | `--card` | 카드 표면(흰색) |
+| `--border` / `--border-soft` | `--border` (soft = `--border/50`) | 경계 |
+| `--text` / `--text-2` / `--text-3` | `--foreground` / `--muted-foreground` / (신설: `--foreground/50`) | 본문 3단계 |
+| `--accent` / `--accent-bg` / `--accent-dark` | `--point` / `--point-bg` / `--point-foreground` | 선택 상태·프라이머리 |
+| `--success(-bg)` | `--success(-bg)` | 완료·활성 |
+| `--danger(-bg)` | `--danger(-bg)` | 미완료·삭제 |
+| `--amber(-bg)` | `--warning(-bg)` | 주의·대기 |
+| `--rail` / `--rail-2` | 신설 (§1-1 하단 참고) | 다크 사이드바 레일 전용 |
+
+**신설 필요 토큰**
+- `--sidebar` / `--sidebar-foreground`는 이미 존재하지만 리디자인은 **컴팩트 아이콘 레일**용으로 짙은 색이 필요 → `--rail`(레일 배경) / `--rail-2`(호버·활성 하이라이트)를 별도 슬롯으로 신설한다.
+- `--text-3`(희미한 라벨·타임스탬프)은 현재 `text-muted-foreground/60~70` 유틸로 대체 가능. 자주 쓰이면 별도 토큰화 검토(§6 Open Q).
+
 **사용 매트릭스 (어디에 어떤 시맨틱?)**
 
 | 맥락 | 시맨틱 |
 |---|---|
 | 주요 액션 버튼 (등록/저장) | `primary` |
 | 강조 액션/링크/포커스 | `point` |
-| 위험 액션 (삭제/사업장 삭제) | `danger` |
-| 사업장 상태 = 운영중 / 코스 결과 = 완료 / 지점 결과 = 이상없음 | `success` |
-| 시간초과 / 사업장 = 중지 / 진행 중 등 주의 상태 | `warning` |
+| 위험 액션 (삭제/사업장 삭제/거부) | `danger` |
+| 사업장 상태 = 운영중 / 코스 결과 = 완료 / 지점 결과 = 이상없음 / 승인 | `success` |
+| 시간초과 / 사업장 = 중지 / 진행 중 / 대기중 배치요청 등 주의 상태 | `warning` |
 | 미완료 / 이상 / 만료 | `danger` |
 | 대기중 / 비활성 / 비강조 | `muted` |
 | 인증수단 뱃지 = QR | `point-bg` + `point-foreground` |
 | 인증수단 뱃지 = NFC | `success-bg` + `success-foreground` |
+
+**지점 순찰이력 결과 뱃지 (5종 매핑)** — screens.md §1-2 지점 이력에서 사용.
+
+| 결과 | 시맨틱 |
+|---|---|
+| 이상없음 | `success` |
+| 순찰기록 (정보성, 기록 존재) | `point` |
+| 시간초과 | `danger` |
+| 미완료 | `danger` |
+| 순찰제외 | `warning` |
 
 #### 사이드바 / 차트
 
@@ -71,11 +108,15 @@
 
 ### 1-2. 타이포
 
-- **폰트**: Geist Variable (sans + heading 공용). `@fontsource-variable/geist`로 import.
-- **본문**: 14px / line-height 20px (0.875rem / 1.25rem).
-- **헤딩 위계**: h1 24 / h2 20 / h3 17 / h4 15. h5·h6는 body(14)와 동일하므로 별도 운영 X.
+- **폰트**: **Pretendard** (sans + heading 공용). `@fontsource-variable/pretendard` 또는 CDN.
+- **본문**: **13px** / line-height 20px.
+- **테이블 셀**: **12.5px**.
+- **라벨(칩·헤더 셀·타임스탬프 등)**: **10.5~11px uppercase**.
+- **페이지 타이틀**: 17px / 페이지 서브텍스트: 12.5px `text-2`.
+- **섹션 타이틀**: 14~15.5px.
 - **헤딩 weight**: 500. letter-spacing -0.01em.
 - **본문 weight 기준**: 400(기본) / 500(강조 라벨) / 600(헤더 셀·강조 숫자) / 700(아주 강조). 800 이상은 지양.
+- **의도**: Linear/Notion 밀도 재현. 웹 슬라이드/문서 대비 의도적으로 작은 스케일 — 접근성은 명도 대비와 여백으로 보완.
 
 ### 1-3. 라디우스
 
@@ -280,6 +321,25 @@ UI 텍스트(라벨, 확인 문구, 빈 상태, 에러)의 한국어 일관성 �
   - **옵티미스틱 적용**: 단일 boolean 토글류(코스 활성화 / 교대 허용 / 헬스체크 사용 / 지점 사용 등). tanstack-query `onMutate` + 롤백 패턴.
   - **응답대기 + sonner toast**: 모든 CRUD(등록·수정·삭제·배치 변경 등). 위험 액션은 반드시 응답대기.
 - **사유**: 토글은 실패 시 시각적 롤백 비용이 낮고 즉시 반응이 가치 큼. CRUD는 검증 결과를 사용자가 인지해야 하므로 응답 후 toast가 더 안전.
+
+### D10. 리디자인 방향성 (Notion/Linear/Vercel 밀도)
+
+- **결정**: 현장 사이트 5개 화면(순찰이력·코스/지점·근무자·배치관리·공지사항)의 UI를 **미니멀·고밀도 SaaS 스타일**로 전면 교체. 데이터·기능·문구는 유지.
+- **사유**: 1차 시안이 "장난감 같다(toy-like)"는 피드백. 실사용 SaaS 도구의 밀도·정보량에 부합하도록.
+- **범위 밖**: `/admin/*`(본사 사이트), 로그인/랜딩은 이번 라운드 미적용. 추후 별도 라운드.
+- **주요 변화 포인트**:
+  - 좌측 컴팩트 아이콘 레일(68px) + TopNav 제거 (layout.md §2, §3)
+  - Pretendard + 작은 폰트 스케일(본문 13px 등, §1-2)
+  - 페이지 헤더 = 제목 + 서브텍스트 한 줄 (layout.md §5-1)
+  - 우측 상세 패널의 카드화 (layout.md §4-2)
+  - 배치관리 = 마스터-디테일 폐기, KPI + 인라인 액션 대시보드 (screens.md §1-4A)
+  - 코스 상세 = 지점 리스트 → **경로 다이어그램 카드 + 편집 리스트 분리** (screens.md §1-3)
+
+### D11. 폰트 = Pretendard
+
+- **결정**: Geist Variable → **Pretendard**로 교체.
+- **사유**: 국문 렌더링 최적화. 리디자인 목업의 국문 폰트 매칭.
+- **로딩**: `@fontsource-variable/pretendard` (권장) 또는 CDN. `index.css`의 `--font-sans` / `--font-heading` 값 교체.
 
 ### D9. AppFormField + AppInput 역할 분리
 
