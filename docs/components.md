@@ -23,6 +23,12 @@
 | `AppEmpty` | `components/app/AppEmpty.tsx` | 빈 상태 | ✅ 표준 |
 | `AppTabs` | `components/AppTabs.tsx` | URL 연동 탭 | ✅ 표준 |
 | `AppTable` | `components/AppTable.tsx` | tanstack-table 래퍼 | ✅ 표준 |
+| `AppPageHeader` | `components/app/AppPageHeader.tsx` | 페이지 상단 제목+부제+우측 액션 | ✅ 표준 |
+| `AppFilterButton` | `components/app/AppFilterButton.tsx` | 드롭다운/팝오버 필터 트리거 | ✅ 표준 |
+| `AppPagination` | `components/app/AppPagination.tsx` | 신규 페이지네이션(행수 선택+범위+이전/다음) | ✅ 표준 |
+| `AppDetailCard` / `AppDetailRow` | `components/app/AppDetailCard.tsx` / `AppDetailRow.tsx` | 마스터-디테일 우측 상세 패널 | ✅ 표준 |
+| `AppKpiCard` | `components/app/AppKpiCard.tsx` | 통계 타일(아이콘+라벨+숫자) | ✅ 표준 |
+| `AppBadge` | `components/app/AppBadge.tsx` | 상태/결과 뱃지(시맨틱 5색) | ✅ 표준 |
 | `ui/button` | `components/ui/button.tsx` | shadcn 원시 | ⛔ 신규 금지 (점진 제거) |
 | `ui/dialog` | `components/ui/dialog.tsx` | shadcn 원시 | 내부 구현용 |
 | `ui/alert-dialog` | `components/ui/alert-dialog.tsx` | shadcn 원시 | 내부 구현용 |
@@ -361,6 +367,196 @@ import { zoneColumns } from '@/features/patrol-zones/components/ZoneColumn'
 - 컬럼 정의는 도메인 디렉터리에 둔다(`features/{domain}/components/*Column.tsx`).
 - 정렬 가능 헤더는 자동으로 정렬 아이콘 표시.
 - 빈 상태 메시지: "데이터가 없습니다". 필요 시 컬럼 셀 안 커스터마이즈.
+
+---
+
+## 9-1. AppPageHeader
+
+페이지 최상단 제목/부제/우측 액션. 008(R1)에서 신설.
+
+```tsx
+import AppPageHeader from '@/components/app/AppPageHeader'
+import Button from '@/components/app/AppButton'
+import { PlusIcon } from 'lucide-react'
+
+<AppPageHeader
+  title="근무자"
+  subtitle="강동 테크노타워 소속 근무자 8명"
+  action={<Button icon={PlusIcon}>근무자 추가</Button>}
+/>
+```
+
+**Props**
+
+| Prop | 타입 | 기본 |
+|---|---|---|
+| `title` | `string` | (필수) |
+| `subtitle` | `string` | — |
+| `action` | `ReactNode` | — (우측 정렬 슬롯, 보통 주요 액션 버튼) |
+
+---
+
+## 9-2. AppFilterButton
+
+기간/코스/결과 등 드롭다운·팝오버 필터의 트리거 시각. 008(R1)에서 신설.
+
+```tsx
+import AppFilterButton from '@/components/app/AppFilterButton'
+import { CalendarIcon } from 'lucide-react'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+
+<Popover>
+  <PopoverTrigger asChild>
+    <AppFilterButton icon={CalendarIcon} label="기간 선택" active={!!range} />
+  </PopoverTrigger>
+  <PopoverContent>{/* 필터 콘텐츠는 소비 측이 구성 */}</PopoverContent>
+</Popover>
+```
+
+**Props**
+
+| Prop | 타입 | 기본 |
+|---|---|---|
+| `icon` | `LucideIcon` | — |
+| `label` | `string` | (필수) |
+| `active` | `boolean` | `false` — 선택된 필터 강조(테두리+배경 point) |
+| 기타 | `ButtonHTMLAttributes` | — |
+
+**규칙**
+
+- 트리거 시각만 제공. 팝오버/드롭다운 콘텐츠 조립은 소비 측(각 화면) 책임.
+- `asChild`로 radix `PopoverTrigger`/`DropdownMenuTrigger`에 감쌀 수 있도록 ref를 전달한다.
+
+---
+
+## 9-3. AppPagination
+
+리디자인 페이지네이션(페이지당 행수 선택 + 현재 범위 + 이전/다음). 008(R1)에서 신설. **기존 `AppTable` 내장 페이지네이션과 별개** — 테이블 라이브러리 비의존 독립 컴포넌트.
+
+```tsx
+import AppPagination from '@/components/app/AppPagination'
+
+<AppPagination
+  pageIndex={pageIndex}
+  pageSize={pageSize}
+  total={total}
+  onPageChange={setPageIndex}
+  onPageSizeChange={(size) => { setPageSize(size); setPageIndex(0) }}
+/>
+```
+
+**Props**
+
+| Prop | 타입 | 기본 |
+|---|---|---|
+| `pageIndex` | `number` | (필수, 0-based) |
+| `pageSize` | `number` | (필수) |
+| `total` | `number` | (필수) |
+| `onPageChange` | `(pageIndex: number) => void` | (필수) |
+| `onPageSizeChange` | `(pageSize: number) => void` | (필수) |
+| `pageSizeOptions` | `number[]` | `[10, 25, 50]` |
+
+**규칙**
+
+- 페이지 번호 버튼 없음 — "a–b / 전체 N개 항목" 텍스트 + 화살표만.
+- `pageSize` 변경 시 `pageIndex`를 0으로 리셋하는 책임은 **소비 측**에 있다(컴포넌트는 콜백만 발행).
+- `AppTable`에서 이 컴포넌트로 전환하려면 `<AppTable hidePagination>` + 페이지 상태를 직접 들고 `AppPagination`을 별도 렌더 (마이그레이션은 009~015 각 화면에서 개별 진행, `data-model.md` §2-1 1-based API 페이지 번호와 pageIndex(0-based) 변환 주의).
+
+---
+
+## 9-4. AppDetailCard / AppDetailRow
+
+마스터-디테일 우측 상세 패널 표준 컨테이너(`patterns.md` §1, §11). 008(R1)에서 신설.
+
+```tsx
+import AppDetailCard from '@/components/app/AppDetailCard'
+import AppDetailRow from '@/components/app/AppDetailRow'
+import AppBadge from '@/components/app/AppBadge'
+import { LayersIcon } from 'lucide-react'
+
+<AppDetailCard
+  icon={LayersIcon}
+  title="B동 순찰코스"
+  badge={<AppBadge variant="danger">미완료</AppBadge>}
+  footer={<Button variant="destructive" size="full">근무자 삭제</Button>}
+>
+  <AppDetailRow label="시작 일시" value="2026-05-01 10:00:00" />
+  <AppDetailRow label="종료 일시" value="2026-05-01 10:45:00" />
+  <AppDetailRow label="지점 수" value="8개" />
+  {/* 타임라인 등 추가 섹션은 children으로 자유 배치 */}
+</AppDetailCard>
+```
+
+**Props (`AppDetailCard`)**
+
+| Prop | 타입 | 기본 |
+|---|---|---|
+| `icon` | `LucideIcon` | — |
+| `title` | `string` | (필수) |
+| `badge` | `ReactNode` | — 헤더 하단 상태 뱃지(보통 `AppBadge`) |
+| `footer` | `ReactNode` | — 하단 액션 풋터(비밀번호/수정/삭제 등) |
+| `children` | `ReactNode` | (필수) 바디 — `AppDetailRow` 등 자유 조립 |
+
+**Props (`AppDetailRow`)**
+
+| Prop | 타입 |
+|---|---|
+| `label` | `string` |
+| `value` | `ReactNode` |
+
+**규칙**
+
+- 바디는 고정 스키마가 아니라 children 슬롯 — 정보행(`AppDetailRow`) 외 타임라인 등 도메인 컴포넌트도 그대로 끼워 넣을 수 있다.
+- 빈 상태(미선택)는 `AppDetailCard`가 아니라 `AppEmpty`를 사용한다(patterns.md §1).
+
+---
+
+## 9-5. AppKpiCard
+
+통계 타일(아이콘 원형 배지 + 라벨 + 큰 숫자 + 단위). 008(R1)에서 신설.
+
+```tsx
+import AppKpiCard from '@/components/app/AppKpiCard'
+import { ArrowRightIcon } from 'lucide-react'
+
+<AppKpiCard icon={ArrowRightIcon} label="배치 나간 인원" value={1} unit="명" tone="point" />
+```
+
+**Props**
+
+| Prop | 타입 | 기본 |
+|---|---|---|
+| `icon` | `LucideIcon` | (필수) |
+| `label` | `string` | (필수) |
+| `value` | `ReactNode` | (필수) |
+| `unit` | `string` | — |
+| `tone` | `'point' \| 'success' \| 'warning' \| 'danger'` | `'point'` |
+
+---
+
+## 9-6. AppBadge
+
+상태/결과 뱃지. `design-system.md` §1-1 시맨틱 5색(`success`/`point`/`warning`/`danger`/`muted`) 기반. 008(R1)에서 신설.
+
+```tsx
+import AppBadge from '@/components/app/AppBadge'
+
+<AppBadge variant="success">완료</AppBadge>
+<AppBadge variant="danger">미완료</AppBadge>
+<AppBadge variant="warning">순찰제외</AppBadge>
+```
+
+**Props**
+
+| Prop | 타입 | 기본 |
+|---|---|---|
+| `variant` | `'success' \| 'point' \| 'warning' \| 'danger' \| 'muted'` | `'muted'` |
+| `children` | `ReactNode` | (필수) — 색만으로 상태 전달 금지, 텍스트 항상 동반 |
+
+**규칙**
+
+- 라벨→variant 매핑은 화면별로 다르다(예: 코스 이력 `진행중`, 지점 이력 `순찰기록` 등). 각 화면 spec이 `design-system.md` §1-1 매핑표를 참조해 결정 — `AppBadge`는 색 프리미티브만 제공.
+- `cva` variants는 `AppBadge.variants.ts`에 분리(`react-refresh/only-export-components` 회피, CLAUDE.md B4).
 
 ---
 

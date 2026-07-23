@@ -26,6 +26,8 @@ interface AppTableProps<TData> {
   searchable?: boolean
   /** 페이지당 행 수. 기본 10. */
   pageSize?: number
+  /** true면 내장 페이지네이션 footer를 숨긴다 (화면이 AppPagination으로 직접 대체할 때). 기본 false. */
+  hidePagination?: boolean
 }
 
 const AppTable = <TData,>({
@@ -34,6 +36,7 @@ const AppTable = <TData,>({
   searchable,
   onRowClick,
   pageSize = 10,
+  hidePagination = false,
 }: AppTableProps<TData>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState('')
@@ -118,7 +121,7 @@ const AppTable = <TData,>({
       </div>
 
       {/* 페이지네이션 */}
-      <TablePagination table={table} />
+      {!hidePagination && <TablePagination table={table} />}
     </div>
   )
 }

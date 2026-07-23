@@ -272,7 +272,7 @@ flowchart LR
 | 1 Layout Plus — 006 shell/table | ☑ | 모바일 햄버거+Sheet, 본사 사이드바 `AdminMenus`, TopNav 메뉴명 lookup, ProfileBadge 드롭다운+로그아웃, AppTable 페이지네이션(1-based), AppButton 옵션1 마이그(`Button`→`app/AppButton`+11곳 import), 005 액션 AppButton 교체, MSW README 안내. layout.md/components.md/design-system.md Open Q 5건 해소. vitest 15건 추가(누적 28건) |
 | 1 Layout Plus (전체) | ☑ | 005·006 모두 완료. roadmap §4 Phase 1 종료 조건 3건 충족 (모바일 사이드바·페이지네이션·로그인 리다이렉트) |
 | R Redesign — 007 foundation | ☑ | Pretendard(공식 `pretendard` 패키지) + `--rail`/`--rail-2` 토큰 + `ServiceLayout`/`AdminLayout` 라우터 레벨 분리 + `RailSidebar` 68px(5개 flat, 공지사항 포함) + 페이지 자연 스크롤 + `AuthGuard` Outlet 전용화 |
-| R Redesign — 008 shared components | ☐ | AppPageHeader / AppFilterButton / AppPagination / AppDetailCard / AppKpiCard / 결과 뱃지 5종 |
+| R Redesign — 008 shared components | ☑ | `AppPageHeader`/`AppFilterButton`/`AppPagination`(신규 독립, `AppTable`엔 `hidePagination` 탈출구만)/`AppDetailCard`+`AppDetailRow`/`AppKpiCard`/`AppBadge`(시맨틱 5색) 신설. 화면 연동은 009~015로 이월. vitest 8건 추가(누적 36건) |
 | R Redesign — 009 patrol-history-zone | ☐ | `/patrol/zones` 리디자인 |
 | R Redesign — 010 patrol-history-point | ☐ | `/patrol/points` 신설 + 기록 상세 모달 |
 | R Redesign — 011 course-management | ☐ | `/zones` + 경로 다이어그램 카드 |
