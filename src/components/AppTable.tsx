@@ -113,11 +113,11 @@ const AppTable = <TData,>({
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="border-b last:border-0 hover:bg-muted/50 transition-colors"
+                  className={`border-b last:border-0 hover:bg-muted/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
                   onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="text-[13px] font-normal px-3 py-3">
+                    <td key={cell.id} className="text-body font-normal px-3 py-3">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}

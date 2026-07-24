@@ -274,7 +274,7 @@ flowchart LR
 | R Redesign — 007 foundation | ☑ | Pretendard(공식 `pretendard` 패키지) + `--rail`/`--rail-2` 토큰 + `ServiceLayout`/`AdminLayout` 라우터 레벨 분리 + `RailSidebar` 68px(5개 flat, 공지사항 포함) + 페이지 자연 스크롤 + `AuthGuard` Outlet 전용화 |
 | R Redesign — 008 shared components | ☑ | `AppPageHeader`/`AppFilterButton`/`AppPagination`(신규 독립, `AppTable`엔 `hidePagination` 탈출구만)/`AppDetailCard`+`AppDetailRow`/`AppKpiCard`/`AppBadge`(시맨틱 5색) 신설. 화면 연동은 009~015로 이월. vitest 8건 추가(누적 36건) |
 | R Redesign — 009 patrol-history-zone | ☑ | `/patrol/zones` 리디자인 완료(신규 셸+타임라인+상세 카드). `PatrolLayout`/`PatrolSheet` 폐기, `AppTable`→`AppPagination` 실전 교체, 타이포 시맨틱 토큰 10종 신설(`text-page-title`~`text-label`). 필터 팝오버/URL 연동/Export 로직은 Phase 3 이월. vitest 6건 추가(누적 42건) |
-| R Redesign — 010 patrol-history-point | ☐ | `/patrol/points` 신설 + 기록 상세 모달 |
+| R Redesign — 010 patrol-history-point | ☑ | `/patrol/points` 신설(전체 폭 테이블, 상세 패널 없음) — 인증뱃지 QR/NFC, 결과뱃지 5종, 기록건수 버튼형 뱃지 + `PatrolRecordDialog`(기록 N건 리스트 + 첨부사진 "업로드수/3" 그리드). 필터 5종/Export는 009와 동일하게 Phase 3 이월. vitest 6건 추가(누적 48건) |
 | R Redesign — 011 course-management | ☐ | `/zones` + 경로 다이어그램 카드 |
 | R Redesign — 012 point-management | ☐ | `/points` (편집 모달 유지) |
 | R Redesign — 013 workers | ☐ | `/users` 신규 라우트, 배치변경 버튼 제거 |

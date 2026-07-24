@@ -507,7 +507,7 @@ import { LayersIcon } from 'lucide-react'
 **규칙**
 
 - 바디는 고정 스키마가 아니라 children 슬롯 — 정보행(`AppDetailRow`) 외 타임라인 등 도메인 컴포넌트도 그대로 끼워 넣을 수 있다.
-- 빈 상태(미선택)는 `AppDetailCard`가 아니라 `AppEmpty`를 사용한다(patterns.md §1).
+- 빈 상태(미선택)는 `AppDetailCard`가 아니라 `AppEmpty`를 사용한다 — 단, 카드 경계(`rounded-lg border border-border bg-card p-4`)는 유지하도록 감싼다(patterns.md §1, 010에서 결정).
 
 ---
 

@@ -98,11 +98,13 @@ const PatrolZonesPage = () => {
           {selectedPatrol ? (
             <PatrolDetailPanel patrol={selectedPatrol} />
           ) : (
-            <AppEmpty
-              title="순찰이력을 선택해주세요"
-              description="왼쪽 목록에서 이력을 선택하면 상세내용이 표시됩니다."
-              icon={LayersIcon}
-            />
+            <div className="flex h-full flex-col rounded-lg border border-border bg-card p-4">
+              <AppEmpty
+                title="순찰이력을 선택해주세요"
+                description="왼쪽 목록에서 이력을 선택하면 상세내용이 표시됩니다."
+                icon={LayersIcon}
+              />
+            </div>
           )}
         </aside>
       </div>

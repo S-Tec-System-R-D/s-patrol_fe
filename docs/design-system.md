@@ -121,7 +121,7 @@
 | 14.5px / 700 | `text-panel-title` | 상세 패널 타이틀 | `AppDetailCard` title |
 | 14px / 700 | `text-section-title` | 섹션 타이틀 | 페이지 내 큰 섹션 헤딩(배치관리 등 — 향후) |
 | 13px / 400·600 | `text-tab` | 본문 규격 값(참고), 탭 라벨 | `PatrolHistoryTabs`(비활성 600, 활성 700) |
-| 12.5px | `text-body` | 테이블 셀·카드 kv 값·이름·필터 칩·버튼 라벨·타임라인 타이틀 | `AppDetailRow`, `AppFilterButton`, `PatrolTimeline` tl-title, `AppTable` td(이월 — §6 Open Q) |
+| 12.5px | `text-body` | 테이블 셀·카드 kv 값·이름·필터 칩·버튼 라벨·타임라인 타이틀 | `AppDetailRow`, `AppFilterButton`, `PatrolTimeline` tl-title, `AppTable` td(010에서 해소), `PatrolRecordDialog` label/value |
 | 12px | `text-caption` | 페이지 설명·타임라인 노트·footer | `AppPageHeader` subtitle, `PatrolTimeline` tl-note |
 | 11.5px | `text-meta` | 보조 텍스트(시각 등) | `PatrolTimeline` tl-time |
 | 11px | `text-badge` | 뱃지·pill | `AppBadge` |
@@ -129,7 +129,7 @@
 
 - **헤딩 weight**: 표 참조(대부분 700). letter-spacing -0.01em.
 - **본문 weight 기준**: 400(기본) / 500(강조 라벨) / 600(헤더 셀·탭 비활성) / 700(아주 강조·탭 활성). 800 이상은 지양.
-- **적용 상태**: 순찰이력 전용 컴포넌트(`AppPageHeader`/`AppFilterButton`/`AppDetailCard`/`AppDetailRow`/`AppBadge`/섹션 라벨/`PatrolHistoryTabs`/`PatrolTimeline`)는 009에서 시맨틱 토큰(`text-*`)까지 반영 완료. `AppButton`/`AppTable`은 로그인·에러·미리디자인 zone/points 화면과 공유하므로 **미반영**(여전히 `text-sm`/`text-[13px]` 등) — 각 화면이 리디자인되는 Phase(3·5)에서 함께 토큰 전환 예정(§6 Open Q).
+- **적용 상태**: 순찰이력 전용 컴포넌트(`AppPageHeader`/`AppFilterButton`/`AppDetailCard`/`AppDetailRow`/`AppBadge`/섹션 라벨/`PatrolHistoryTabs`/`PatrolTimeline`)는 009에서, `AppTable` td는 010에서 시맨틱 토큰(`text-body`)까지 반영 완료. `AppTable` thead(10.5px 대상)·`AppButton`은 로그인·에러·미리디자인 zone/points 화면과 공유하므로 **미반영**(여전히 `text-xs`/`text-sm` 등) — 각 화면이 리디자인되는 Phase(3·5)에서 함께 토큰 전환 예정(§6 Open Q).
 
 ### 1-3. 라디우스
 
@@ -380,4 +380,8 @@ UI 텍스트(라벨, 확인 문구, 빈 상태, 에러)의 한국어 일관성 �
 - [ ] **AppEmpty 장식 oklch → 토큰화** — 현재 인라인 oklch. `point` 트리오로 흡수할지, 별도 토큰 추가할지
 - [ ] **그림자 시스템** — 현재 거의 미사용. 필요 시 elevation 토큰 정의할지
 - [x] **코스 순찰이력 `진행중` 뱃지 시맨틱** — **해소(009)**: 목업(`docs/ui-mock/현장/순찰이력/코스순찰이력-신규.png`) 재확인 결과 파란색 확정 → `point` 매핑. §1-1 사용 매트릭스에서 `warning` 행의 "진행 중" 제거, `point` 행에 "코스 순찰이력 = 진행중" 추가.
-- [ ] **`AppButton`/`AppTable` 타이포 스케일 미반영** — §1-2 신규 스케일(12.5px 버튼 라벨, 12.5px 테이블 셀, 10.5px uppercase 테이블 헤더)이 두 컴포넌트엔 아직 미적용. 로그인·에러·미리디자인 zone/points 화면과 공유하는 탓에 009에서 범위 제외(사용자 확인). 각 화면이 리디자인되는 Phase(3·5)에서 함께 조정.
+- [x] **`AppTable` td 타이포 스케일 미반영** — **해소(010)**: `text-[13px]` → `text-body`(12.5px)로 전환. 전역 컴포넌트라 로그인·에러·미리디자인 화면의 테이블도 함께 적용됨(의도된 일괄 반영).
+- [ ] **`AppButton`/`AppTable` thead 타이포 스케일 미반영** — §1-2 신규 스케일(12.5px 버튼 라벨, 10.5px uppercase 테이블 헤더)이 두 곳엔 아직 미적용. 로그인·에러·미리디자인 zone/points 화면과 공유하는 탓에 범위 제외 유지. 각 화면이 리디자인되는 Phase(3·5)에서 함께 조정.
+- [x] **뱃지(`AppBadge`) 텍스트 채도** — **해소(010)**: 1차로 채도 상향(예: point 0.12→0.19) 조정 후, 이어서 리디자인 목업 실제 CSS 값(`--success-bg/-foreground`, `--danger-bg/-foreground`, `--point-bg/-foreground`(목업명 accent), `--warning-bg/-foreground`)으로 최종 확정. 메인 토큰(`--point`/`--success`/`--warning`/`--danger`)은 버튼·포커스링·폼 에러 등 기존 용처가 많아 변경하지 않고 `-bg`/`-foreground`만 교체. `AppKpiCard`/`AppFilterButton` 활성 상태/인증뱃지 등 트리오 공유 컴포넌트에도 함께 반영됨(토큰 레벨 변경). `muted`(회색) 뱃지 변형은 `--muted`/`--muted-foreground`를 그대로 사용 — 이 토큰은 훨씬 넓게 공유되어 이번 범위에서 제외.
+- [x] **필터 트리거(`AppFilterButton`) 배경** — **해소(010)**: `bg-background` → `bg-card`(surface)로 변경, 페이지 배경과 시각적으로 분리.
+- [x] **클릭 요소 커서** — **해소(010)**: `src/index.css`에 `button:not(:disabled), [role='button']:not(:disabled) { cursor: pointer }` 전역 규칙 추가(Tailwind가 버튼 기본 커서를 pointer로 주지 않음). `AppTable` 행은 `onRowClick` 존재 시에만 `cursor-pointer`.
