@@ -32,12 +32,17 @@ export const ZoneNode = ({
             size={16}
             strokeWidth={1}
           /> */}
-          <span className="text-xs font-medium">{zone.title}</span>
+          <span
+            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+              zone.isActive ? 'bg-point' : 'border border-muted-foreground/40'
+            }`}
+          />
+          <span className="text-body font-medium">{zone.title}</span>
         </div>
 
         <div
           className={`
-        text-primary text-xs font-medium flex items-center justify-center w-6 h-6 aspect-square rounded-sm
+        text-badge font-medium flex items-center justify-center w-6 h-6 aspect-square rounded-sm
         ${selected === zone ? 'bg-point-bg text-point-foreground' : 'bg-muted text-muted-foreground'}
           `}
         >

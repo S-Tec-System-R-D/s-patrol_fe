@@ -7,7 +7,6 @@ import ServiceLayout from '@/components/layout/ServiceLayout'
 import AdminLayout from '@/components/layout/AdminLayout'
 import PointsPage from '@/pages/service/points/PointsPage'
 import ZonesPage from '@/pages/service/zones/ZonesPage'
-import LocationLayout from '@/features/auth/components/location/LocationLayout'
 import PatrolZonesPage from '@/pages/service/patrol/zones/PatrolZonesPage'
 import PatrolPointsPage from '@/pages/service/patrol/points/PatrolPointsPage'
 import AdminPlaceholderPage from '@/pages/admin/AdminPlaceholderPage'
@@ -57,23 +56,16 @@ export const router = createBrowserRouter([
             element: <PatrolZonesPage />,
             errorElement: <PageErrorFallback />,
           },
+          // 코스/지점 관리 — 두 페이지가 각자 CourseTabs를 렌더링 (별도 레이아웃 wrapper 없음, patrol과 동일 패턴)
           {
-            element: <LocationLayout />,
+            path: paths.service.points,
+            element: <PointsPage />,
             errorElement: <PageErrorFallback />,
-            children: [
-              //지점 관리
-              {
-                path: paths.service.points,
-                element: <PointsPage />,
-                errorElement: <PageErrorFallback />,
-              },
-              //구역관리
-              {
-                path: paths.service.zones,
-                element: <ZonesPage />,
-                errorElement: <PageErrorFallback />,
-              },
-            ],
+          },
+          {
+            path: paths.service.zones,
+            element: <ZonesPage />,
+            errorElement: <PageErrorFallback />,
           },
         ],
       },

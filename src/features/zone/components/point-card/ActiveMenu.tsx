@@ -1,13 +1,7 @@
 import AppDialog from '@/components/app/AppDialog'
 import AppAlertDialog from '@/components/AppAlertDialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { EllipsisVerticalIcon, LockKeyholeIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
+import AppIconButton from '@/components/app/AppIconButton'
+import { LockKeyholeIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
 import EditPointForm from '../../form/EditPointForm'
 import { useState } from 'react'
 
@@ -17,54 +11,15 @@ interface ActiveMenuProps {
 }
 
 export const ActiveMenu = ({ onActive, onDelete }: ActiveMenuProps) => {
-  const [menuOpen, setMenuOpen] = useState(false)
   const [activeOpen, setActiveOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   return (
-    <>
-      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenuTrigger>
-          <div className="p-2  rounded-sm cursor-pointer hover:bg-muted">
-            <EllipsisVerticalIcon size={20} />
-          </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              className="flex items-center gap-2 cursor-pointer"
-              onSelect={() => {
-                setMenuOpen(false)
-                setActiveOpen(true)
-              }}
-            >
-              <LockKeyholeIcon strokeWidth={1.5} />
-              비활성화
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onSelect={() => {
-                setMenuOpen(false)
-                setEditOpen(true)
-              }}
-            >
-              <SquarePenIcon strokeWidth={1.5} />
-              수정
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                setMenuOpen(false)
-                setDeleteOpen(true)
-              }}
-              className="cursor-pointer"
-            >
-              <Trash2Icon strokeWidth={1.5} />
-              삭제
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="flex items-center gap-1">
+      <AppIconButton icon={LockKeyholeIcon} onClick={() => setActiveOpen(true)} />
+      <AppIconButton icon={SquarePenIcon} onClick={() => setEditOpen(true)} />
+      <AppIconButton icon={Trash2Icon} onClick={() => setDeleteOpen(true)} />
 
       <AppAlertDialog
         open={activeOpen}
@@ -91,6 +46,6 @@ export const ActiveMenu = ({ onActive, onDelete }: ActiveMenuProps) => {
         title="지점을 삭제하시겠습니까?"
         onAction={() => onDelete()}
       />
-    </>
+    </div>
   )
 }

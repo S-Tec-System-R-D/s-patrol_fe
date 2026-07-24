@@ -14,10 +14,10 @@ const ZoneSideBar = ({
   onSelect: React.Dispatch<React.SetStateAction<ZoneType | null>>
 }) => {
   return (
-    <div className="bg-background  border-r w-80">
+    <div className="w-72 shrink-0 rounded-lg border border-border bg-card">
       {/* 헤더 */}
-      <div className="flex items-center justify-between border-b p-4">
-        <span>구역목록</span>
+      <div className="flex items-center justify-between border-b border-border p-4">
+        <span className="text-panel-title font-semibold">코스 목록</span>
         <AppDialog
           title="구역 생성"
           description="순찰 구역을 생성합니다."

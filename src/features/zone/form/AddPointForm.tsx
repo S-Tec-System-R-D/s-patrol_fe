@@ -9,7 +9,7 @@ import AppButton from '@/components/app/AppButton'
 
 import type { ZonePointType } from '../types'
 import { points } from '@/features/points/mock/pointData'
-import AuthenticationBadge from '../components/point-card/AuthenticationBadge'
+import AppBadge from '@/components/app/AppBadge'
 import { MapPinIcon } from 'lucide-react'
 import AppInput from '@/components/app/AppInput'
 
@@ -98,7 +98,9 @@ const AddPointForm = ({ currentPoints }: AddPointFormProps) => {
                   </div>
                 </div>
 
-                <AuthenticationBadge method={v.authenticationMethod} />
+                <AppBadge variant={v.authenticationMethod === 'QR' ? 'point' : 'success'}>
+                  {v.authenticationMethod}
+                </AppBadge>
               </div>
             )
           })}

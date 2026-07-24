@@ -21,7 +21,6 @@
 | `AppDialog` | `components/app/AppDialog.tsx` | 일반 다이얼로그(폼·정보) | ✅ 표준 |
 | `AppAlertDialog` | `components/AppAlertDialog.tsx` | 확인/위험 액션 다이얼로그 | ✅ 표준 |
 | `AppEmpty` | `components/app/AppEmpty.tsx` | 빈 상태 | ✅ 표준 |
-| `AppTabs` | `components/AppTabs.tsx` | URL 연동 탭 | ✅ 표준 |
 | `AppTable` | `components/AppTable.tsx` | tanstack-table 래퍼 | ✅ 표준 |
 | `AppPageHeader` | `components/app/AppPageHeader.tsx` | 페이지 상단 제목+부제+우측 액션 | ✅ 표준 |
 | `AppFilterButton` | `components/app/AppFilterButton.tsx` | 드롭다운/팝오버 필터 트리거 | ✅ 표준 |
@@ -304,35 +303,12 @@ import { MapIcon } from 'lucide-react'
 
 ---
 
-## 8. AppTabs
+## 8. (폐기) AppTabs
 
-URL 기반 탭. path 모드(현재 라우트 일치) / query 모드(쿼리스트링).
+`components/AppTabs.tsx` — URL 기반 탭(path/query 모드). **011에서 삭제**(참조 0건). 라우터 레벨 레이아웃(`LocationLayout`)이 렌더하던 탭 방식은 009(`PatrolLayout` 폐기)에 이어 011에서 완전히 대체됨.
 
-```tsx
-import AppTabs from '@/components/AppTabs'
-import { LayersIcon, MapPinIcon } from 'lucide-react'
-
-<AppTabs
-  tabs={[
-    { label: '구역', path: '/zones', icon: LayersIcon },
-    { label: '지점', path: '/points', icon: MapPinIcon },
-  ]}
-/>
-```
-
-**Props**
-
-| Prop | 타입 | 기본 |
-|---|---|---|
-| `tabs` | `{ label: string; path: string; icon: LucideIcon }[]` | (필수) |
-| `mode` | `'path' \| 'query'` | `'path'` |
-| `queryKey` | `string` | `'tab'` (query 모드일 때) |
-
-**규칙**
-
-- 활성 판단: `pathname.startsWith(tab.path)`.
-- 아이콘 stroke 1.5 자동.
-- 탭 클릭은 `navigate(path)`로 라우팅. `LocationLayout`, `PatrolLayout`에서 사용 중.
+- **대체 패턴**: 각 페이지가 자신의 라우트 링크 탭을 직접 렌더(`NavLink` + `border-point` 강조). `PatrolHistoryTabs`(`features/patrol-zones/components/`), `CourseTabs`(`features/zone/components/`) 참조.
+- **사유**: 라우터 레이아웃이 탭을 감싸면 페이지별 헤더(`AppPageHeader`)와 탭의 순서(헤더 → 탭 → 컨텐츠)를 페이지가 통제할 수 없어 리디자인 목업과 어긋남. 페이지 로컬 탭 컴포넌트가 순서 통제 + 라우트 그룹 평탄화(라우터 트리 단순화) 모두에 유리.
 
 ---
 
@@ -569,7 +545,7 @@ App* 컴포넌트로 커버되지 않는 경우만 shadcn 원시를 **직접** �
 | `ui/sheet` | 우측 슬라이드 패널, 알림 시트(`AlarmSheet`), **모바일 사이드바**(layout.md §5-6), **우측 상세 패널 반응형 전환**(patterns.md §8) |
 | `ui/switch` | 토글 단독 사용 (운영중/중지, 코스 활성화 등) |
 | `ui/dropdown-menu` | 행 컨텍스트 메뉴, 트리 노드 메뉴 |
-| `ui/tabs` | AppTabs로 처리 안 되는 비-라우트 탭 |
+| `ui/tabs` | 비-라우트 탭(URL과 무관한 단순 전환) |
 | `ui/dialog` / `ui/alert-dialog` | App* 안에서만 사용. 직접 사용 지양 |
 
 ---

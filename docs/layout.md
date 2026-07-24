@@ -238,13 +238,15 @@ export interface MenuGroupType {
 
 ### 4-3. 탭 레이아웃
 
-`LocationLayout`(구역·지점) / `PatrolLayout`(순찰이력) — `AppTabs` + `<Outlet>` 조합.
+각 페이지가 자신의 `AppPageHeader` 아래에 로컬 탭 컴포넌트(`PatrolHistoryTabs`, `CourseTabs`)를 직접 렌더. 라우터 레벨 공용 레이아웃(구 `LocationLayout`/`PatrolLayout` + `AppTabs`)은 폐기(009·011, `patterns.md` §9).
 
 ```
 ┌──────────────────────────────────────┐
+│  AppPageHeader (제목 + 서브타이틀)    │
+├──────────────────────────────────────┤
 │  [탭1] [탭2]                         │
 ├──────────────────────────────────────┤
-│  (탭의 자식 라우트 Outlet)           │
+│  (페이지 컨텐츠)                     │
 └──────────────────────────────────────┘
 ```
 

@@ -253,23 +253,24 @@ AppEmpty 표시 (icon + title + description + (선택) action)
 ### 동선
 
 ```
-탭 컨테이너(LocationLayout/PatrolLayout) → AppTabs
-   ↓ 클릭
-navigate(tab.path)
+페이지가 직접 탭 컴포넌트 렌더 (PatrolHistoryTabs / CourseTabs)
+   ↓ 클릭 (NavLink)
+라우트 이동 (/zones ↔ /points 등)
    ↓
-<Outlet>에 자식 라우트 렌더
+해당 라우트의 페이지 컴포넌트가 자신의 탭을 다시 렌더(활성 강조만 갱신)
 ```
 
 ### 규칙
 
-- 컴포넌트: `AppTabs` (`components.md` §8).
-- 두 탭이 동일 도메인의 두 관점일 때 사용(구역/지점, 코스 이력/지점 이력).
+- 컴포넌트: 도메인별 로컬 컴포넌트(`PatrolHistoryTabs`, `CourseTabs` 등) — `NavLink` + `border-point` 활성 강조. 라우터 레벨 공용 레이아웃(구 `LocationLayout`/`PatrolLayout` + `AppTabs`)은 **009·011에서 폐기**(`components.md` §8).
+- 두 탭이 동일 도메인의 두 관점일 때 사용(코스/지점, 코스 이력/지점 이력).
 - 탭은 URL 라우트로 표현 → 뒤로가기 보존.
-- 사업장 상세는 `?tab=health` 같은 쿼리 모드도 사용 가능.
+- **사유**: 라우터 레벨 레이아웃이 탭을 감싸면 페이지가 헤더→탭→컨텐츠 순서를 통제할 수 없어 리디자인 목업과 어긋남. 페이지 로컬 컴포넌트로 각 페이지가 순서를 직접 조립.
+- 사업장 상세는 `?tab=health` 같은 쿼리 모드도 사용 가능(`ui/tabs` 직접 사용, `components.md` 참조).
 
 ### 사용 화면
 
-- `/zones` ↔ `/points`, `/patrol/zones` ↔ `/patrol/points`, `/admin/locations/:id`(기본정보/헬스체크).
+- `/zones` ↔ `/points`(`CourseTabs`, 011~), `/patrol/zones` ↔ `/patrol/points`(`PatrolHistoryTabs`, 009~), `/admin/locations/:id`(기본정보/헬스체크).
 
 ---
 
