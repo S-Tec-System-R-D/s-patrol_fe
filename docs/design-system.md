@@ -82,10 +82,10 @@
 | 맥락 | 시맨틱 |
 |---|---|
 | 주요 액션 버튼 (등록/저장) | `primary` |
-| 강조 액션/링크/포커스 | `point` |
+| 강조 액션/링크/포커스 / 코스 순찰이력 = 진행중 | `point` |
 | 위험 액션 (삭제/사업장 삭제/거부) | `danger` |
 | 사업장 상태 = 운영중 / 코스 결과 = 완료 / 지점 결과 = 이상없음 / 승인 | `success` |
-| 시간초과 / 사업장 = 중지 / 진행 중 / 대기중 배치요청 등 주의 상태 | `warning` |
+| 시간초과 / 사업장 = 중지 / 대기중 배치요청 등 주의 상태 | `warning` |
 | 미완료 / 이상 / 만료 | `danger` |
 | 대기중 / 비활성 / 비강조 | `muted` |
 | 인증수단 뱃지 = QR | `point-bg` + `point-foreground` |
@@ -109,14 +109,27 @@
 ### 1-2. 타이포
 
 - **폰트**: **Pretendard** (sans + heading 공용). `@fontsource-variable/pretendard` 또는 CDN.
-- **본문**: **13px** / line-height 20px.
-- **테이블 셀**: **12.5px**.
-- **라벨(칩·헤더 셀·타임스탬프 등)**: **10.5~11px uppercase**.
-- **페이지 타이틀**: 17px / 페이지 서브텍스트: 12.5px `text-2`.
-- **섹션 타이틀**: 14~15.5px.
-- **헤딩 weight**: 500. letter-spacing -0.01em.
-- **본문 weight 기준**: 400(기본) / 500(강조 라벨) / 600(헤더 셀·강조 숫자) / 700(아주 강조). 800 이상은 지양.
+- **본문 기본값(body)**: **12.5px** / line-height 1.4. (009에서 13px 초안을 12.5px로 확정, `src/index.css` `body` 반영)
 - **의도**: Linear/Notion 밀도 재현. 웹 슬라이드/문서 대비 의도적으로 작은 스케일 — 접근성은 명도 대비와 여백으로 보완.
+
+**스케일 (009에서 확정, 목업 CSS 기반 10단계)** — `src/index.css` `@theme inline`에 `--text-*` 토큰으로 등록. weight는 토큰에 미포함, 기존처럼 `font-*` 유틸리티로 분리 적용.
+
+| 크기 / weight | 유틸리티 클래스명 | 용도 | 적용 컴포넌트 예 |
+|---|---|---|---|
+| 17px / 700 | `text-page-title` | 페이지 타이틀 | `AppPageHeader` h1, `.panel__name`(근무자명 — 향후) |
+| 15px / 700 | `text-panel-header` | 상세 패널 헤더 타이틀 | `.pointdetail__head`(코스/지점 페이지 — 향후) |
+| 14.5px / 700 | `text-panel-title` | 상세 패널 타이틀 | `AppDetailCard` title |
+| 14px / 700 | `text-section-title` | 섹션 타이틀 | 페이지 내 큰 섹션 헤딩(배치관리 등 — 향후) |
+| 13px / 400·600 | `text-tab` | 본문 규격 값(참고), 탭 라벨 | `PatrolHistoryTabs`(비활성 600, 활성 700) |
+| 12.5px | `text-body` | 테이블 셀·카드 kv 값·이름·필터 칩·버튼 라벨·타임라인 타이틀 | `AppDetailRow`, `AppFilterButton`, `PatrolTimeline` tl-title, `AppTable` td(이월 — §6 Open Q) |
+| 12px | `text-caption` | 페이지 설명·타임라인 노트·footer | `AppPageHeader` subtitle, `PatrolTimeline` tl-note |
+| 11.5px | `text-meta` | 보조 텍스트(시각 등) | `PatrolTimeline` tl-time |
+| 11px | `text-badge` | 뱃지·pill | `AppBadge` |
+| 10.5px uppercase | `text-label` | 테이블 헤더 라벨·섹션 라벨·플래그 라벨 | 섹션 `<h4>`(순찰 정보/타임라인), `PatrolTimeline` tl-flag, `AppTable` thead(이월 — §6 Open Q) |
+
+- **헤딩 weight**: 표 참조(대부분 700). letter-spacing -0.01em.
+- **본문 weight 기준**: 400(기본) / 500(강조 라벨) / 600(헤더 셀·탭 비활성) / 700(아주 강조·탭 활성). 800 이상은 지양.
+- **적용 상태**: 순찰이력 전용 컴포넌트(`AppPageHeader`/`AppFilterButton`/`AppDetailCard`/`AppDetailRow`/`AppBadge`/섹션 라벨/`PatrolHistoryTabs`/`PatrolTimeline`)는 009에서 시맨틱 토큰(`text-*`)까지 반영 완료. `AppButton`/`AppTable`은 로그인·에러·미리디자인 zone/points 화면과 공유하므로 **미반영**(여전히 `text-sm`/`text-[13px]` 등) — 각 화면이 리디자인되는 Phase(3·5)에서 함께 토큰 전환 예정(§6 Open Q).
 
 ### 1-3. 라디우스
 
@@ -366,4 +379,5 @@ UI 텍스트(라벨, 확인 문구, 빈 상태, 에러)의 한국어 일관성 �
 - [x] **AppButton 마이그레이션 완료 시점** — **해소(006)**: 파일 이동·이름 정합화·11개 import 일괄 갱신으로 종결. shadcn `ui/button.tsx`는 dialog/sheet/alert-dialog 내부 의존만 남음(Phase 6에서 별도 검토).
 - [ ] **AppEmpty 장식 oklch → 토큰화** — 현재 인라인 oklch. `point` 트리오로 흡수할지, 별도 토큰 추가할지
 - [ ] **그림자 시스템** — 현재 거의 미사용. 필요 시 elevation 토큰 정의할지
-- [ ] **코스 순찰이력 `진행중` 뱃지 시맨틱** — §1-1 "사용 매트릭스"는 "진행 중"을 `warning` 버킷에 나열하지만, `docs/ui-mock/현장/순찰이력/코스순찰이력-신규.png` 목업의 `진행중` 뱃지는 파란색(= `point` 계열)으로 그려져 있음. 008(공용 컴포넌트)은 `AppBadge`를 5색 프리미티브로만 제공하고 라벨→variant 매핑을 확정하지 않았으므로, 실제 매핑은 **009(순찰이력-코스 화면)** spec에서 목업 재확인 후 결정 + 본 표 갱신
+- [x] **코스 순찰이력 `진행중` 뱃지 시맨틱** — **해소(009)**: 목업(`docs/ui-mock/현장/순찰이력/코스순찰이력-신규.png`) 재확인 결과 파란색 확정 → `point` 매핑. §1-1 사용 매트릭스에서 `warning` 행의 "진행 중" 제거, `point` 행에 "코스 순찰이력 = 진행중" 추가.
+- [ ] **`AppButton`/`AppTable` 타이포 스케일 미반영** — §1-2 신규 스케일(12.5px 버튼 라벨, 12.5px 테이블 셀, 10.5px uppercase 테이블 헤더)이 두 컴포넌트엔 아직 미적용. 로그인·에러·미리디자인 zone/points 화면과 공유하는 탓에 009에서 범위 제외(사용자 확인). 각 화면이 리디자인되는 Phase(3·5)에서 함께 조정.

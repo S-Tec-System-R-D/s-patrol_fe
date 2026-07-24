@@ -77,6 +77,18 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
+
+  /* 타이포 스케일 (design-system.md §1-2, 10단계) — 크기만. weight는 font-* 유틸리티로 분리 */
+  --text-page-title: 17px;
+  --text-panel-header: 15px;
+  --text-panel-title: 14.5px;
+  --text-section-title: 14px;
+  --text-tab: 13px;
+  --text-body: 12.5px;
+  --text-caption: 12px;
+  --text-meta: 11.5px;
+  --text-badge: 11px;
+  --text-label: 10.5px;
 }
 
 /* ------------------------------------------------------------------ */
@@ -87,7 +99,7 @@
   --background: oklch(0.984 0.003 247); /* 기본배경 #f8fafc */
   --foreground: oklch(0.208 0.042 265); /* 텍스트 #0f172a */
 
-  --contents-bg: oklch(0.955 0.008 247);
+  --contents-bg: oklch(0.985 0.003 260);
 
   /* ── 카드 / 팝오버 ── */
   --card: oklch(1 0 0);
@@ -223,8 +235,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: 12.5px;
+    line-height: 1.4;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

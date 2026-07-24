@@ -6,6 +6,8 @@ import {
   getPaginationRowModel,
   useReactTable,
   type ColumnDef,
+  type OnChangeFn,
+  type PaginationState,
   type SortingState,
   type Table,
 } from '@tanstack/react-table'
@@ -24,10 +26,13 @@ interface AppTableProps<TData> {
   columns: ColumnDef<TData>[]
   onRowClick?: (data: TData) => void
   searchable?: boolean
-  /** 페이지당 행 수. 기본 10. */
+  /** 페이지당 행 수. 기본 10. controlled `pagination` 미지정 시에만 사용. */
   pageSize?: number
   /** true면 내장 페이지네이션 footer를 숨긴다 (화면이 AppPagination으로 직접 대체할 때). 기본 false. */
   hidePagination?: boolean
+  /** controlled pagination. 미지정 시 uncontrolled(내장 상태) 동작. */
+  pagination?: PaginationState
+  onPaginationChange?: OnChangeFn<PaginationState>
 }
 
 const AppTable = <TData,>({
@@ -37,23 +42,32 @@ const AppTable = <TData,>({
   onRowClick,
   pageSize = 10,
   hidePagination = false,
+  pagination,
+  onPaginationChange,
 }: AppTableProps<TData>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState('')
+
+  const isPaginationControlled = pagination !== undefined
 
   // TanStack Table의 useReactTable은 메모이즈 불가한 함수를 반환 — React Compiler skip 경고가 라이브러리 한계이므로 의도적 disable.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter },
+    state: {
+      sorting,
+      globalFilter,
+      ...(isPaginationControlled && { pagination }),
+    },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
+    ...(isPaginationControlled && { onPaginationChange }),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize } },
+    ...(!isPaginationControlled && { initialState: { pagination: { pageSize } } }),
   })
 
   return (
@@ -94,7 +108,7 @@ const AppTable = <TData,>({
               </tr>
             ))}
           </thead>
-          <tbody className="bg-background">
+          <tbody className="bg-card">
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
                 <tr

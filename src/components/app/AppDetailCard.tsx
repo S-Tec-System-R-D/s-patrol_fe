@@ -17,7 +17,7 @@ const AppDetailCard = ({ icon: Icon, title, badge, footer, children }: AppDetail
   return (
     <div className="flex h-full flex-col gap-4 rounded-lg border border-border bg-card p-4">
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+        <div className="flex items-center gap-1.5 text-panel-title font-bold text-foreground">
           {Icon && <Icon size={16} strokeWidth={1.75} />}
           <span>{title}</span>
         </div>

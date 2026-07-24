@@ -8,7 +8,6 @@ import AdminLayout from '@/components/layout/AdminLayout'
 import PointsPage from '@/pages/service/points/PointsPage'
 import ZonesPage from '@/pages/service/zones/ZonesPage'
 import LocationLayout from '@/features/auth/components/location/LocationLayout'
-import PatrolLayout from '@/features/patrol-zones/components/PatrolLayout'
 import PatrolZonesPage from '@/pages/service/patrol/zones/PatrolZonesPage'
 import PatrolPointsPage from '@/pages/service/patrol/points/PatrolPointsPage'
 import AdminPlaceholderPage from '@/pages/admin/AdminPlaceholderPage'
@@ -47,25 +46,16 @@ export const router = createBrowserRouter([
         element: <ServiceLayout />,
         errorElement: <PageErrorFallback />,
         children: [
-          //순찰 관리
+          // 순찰이력 — 지점/코스 두 페이지가 각자 PatrolHistoryTabs를 렌더링 (별도 레이아웃 wrapper 없음)
           {
-            path: '/patrol',
-            element: <PatrolLayout />,
+            path: paths.service.patrolPoints,
+            element: <PatrolPointsPage />,
             errorElement: <PageErrorFallback />,
-            children: [
-              //지점 관리
-              {
-                path: paths.service.patrolPoints,
-                element: <PatrolPointsPage />,
-                errorElement: <PageErrorFallback />,
-              },
-              //구역관리
-              {
-                path: paths.service.patrolZones,
-                element: <PatrolZonesPage />,
-                errorElement: <PageErrorFallback />,
-              },
-            ],
+          },
+          {
+            path: paths.service.patrolZones,
+            element: <PatrolZonesPage />,
+            errorElement: <PageErrorFallback />,
           },
           {
             element: <LocationLayout />,

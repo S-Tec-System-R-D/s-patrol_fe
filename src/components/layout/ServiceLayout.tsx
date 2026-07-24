@@ -9,7 +9,7 @@ import { RailSidebar } from './sidebar/RailSidebar'
  */
 const ServiceLayout = () => {
   return (
-    <div className="min-h-screen flex">
+    <div className="flex">
       <RailSidebar />
       <div className="flex-1 bg-contents-background">
         <Outlet />

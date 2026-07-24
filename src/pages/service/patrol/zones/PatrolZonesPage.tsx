@@ -1,20 +1,35 @@
+import AppBadge from '@/components/app/AppBadge'
+import AppButton from '@/components/app/AppButton'
+import AppDetailCard from '@/components/app/AppDetailCard'
+import AppDetailRow from '@/components/app/AppDetailRow'
 import AppEmpty from '@/components/app/AppEmpty'
+import AppFilterButton from '@/components/app/AppFilterButton'
+import AppPageHeader from '@/components/app/AppPageHeader'
+import AppPagination from '@/components/app/AppPagination'
 import AppTable from '@/components/AppTable'
-import { PatrolContentBody } from '@/features/patrol-zones/components/PatrolSheet'
-
-import { zoneColumns } from '@/features/patrol-zones/components/ZoneColumn'
-import { LayersIcon } from 'lucide-react'
+import PatrolHistoryTabs from '@/features/patrol-zones/components/PatrolHistoryTabs'
+import PatrolTimeline from '@/features/patrol-zones/components/PatrolTimeline'
+import { patrolResultBadge, zoneColumns } from '@/features/patrol-zones/components/ZoneColumn'
+import type { PaginationState } from '@tanstack/react-table'
+import { format } from 'date-fns'
+import {
+  CalendarIcon,
+  DownloadIcon,
+  FilterIcon,
+  LayersIcon,
+  LayoutListIcon,
+  ListIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 
 const PATROL_RESULT = {
   COMPLETE: 'COMPLETE',
   INCOMPLETE: 'INCOMPLETE',
-  IN_PROGRESS: 'IN_COMPLETE',
+  IN_PROGRESS: 'IN_PROGRESS',
 } as const
 
 export type PatrolResultType = (typeof PATROL_RESULT)[keyof typeof PATROL_RESULT]
 
-// 구역 순찰이력 테이블 객체
 export interface ZonePatrolType {
   name: string
   startedAt: Date
@@ -32,42 +47,96 @@ export interface PointPatrolType {
 
 const PatrolZonesPage = () => {
   const [selectedPatrol, setSelectedPatrol] = useState<ZonePatrolType | null>(null)
-  /**
-   * 순찰이력 UI 구조 설계
-   * 1. 구역 / 지점 탭
-   * 2. 테이블 형태 이력 / 필터링은 존재 ( Search, 있으면 추가)
-   * 3. 구역 -> 이력 클릭 시 Sheet 나와서 정보 표시 수직으로 순서도 보여주면 될듯. (1안)
-   * 4. 지점 -> 디테일 페이지가 필요한지 아직 모르겠음 일단 없이.
-   * ※ 이력은 생성, 수정, 삭제 불가. ONLY 조회
-   */
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 50,
+  })
 
   const handleRowClick = (data: ZonePatrolType) => {
     setSelectedPatrol(data)
   }
 
   return (
-    <div className="flex-1 flex overflow-auto">
-      <div className="flex-7 flex flex-col items-center p-8 gap-6">
-        <AppTable columns={zoneColumns} data={zonePatrols} searchable onRowClick={handleRowClick} />
+    <div className="flex flex-col gap-4 p-8">
+      <AppPageHeader title="순찰이력" subtitle="코스·지점 단위 순찰 수행 이력을 확인합니다" />
+
+      <PatrolHistoryTabs />
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <AppFilterButton icon={CalendarIcon} label="기간 선택" />
+          <AppFilterButton icon={LayoutListIcon} label="코스" />
+          <AppFilterButton icon={FilterIcon} label="결과" />
+        </div>
+        <AppButton variant="sub" className="bg-card">
+          <DownloadIcon size={14} />
+          내보내기
+        </AppButton>
       </div>
 
-      <div className="flex-3 flex flex-col gap-8  border-l bg-background">
-        {selectedPatrol ? (
-          <div className="flex flex-col gap-8 px-4 py-8 overflow-auto">
-            <div className="px-4 ">
-              <span className="text-xl font-semibold ">순찰이력</span>
-            </div>
-            <PatrolContentBody patrol={selectedPatrol} />
-          </div>
-        ) : (
-          <AppEmpty
-            title="순찰이력을 선택해주세요"
-            description="왼쪽 목록에서 이력을 선택하면 상세내용이 표시됩니다."
-            icon={LayersIcon}
+      <div className="flex items-start gap-6">
+        <div className="flex-1 min-w-0 flex flex-col gap-4 ">
+          <AppTable
+            columns={zoneColumns}
+            data={zonePatrols}
+            hidePagination
+            pagination={pagination}
+            onPaginationChange={setPagination}
+            onRowClick={handleRowClick}
           />
-        )}
+
+          <AppPagination
+            pageIndex={pagination.pageIndex}
+            pageSize={pagination.pageSize}
+            total={zonePatrols.length}
+            onPageChange={(pageIndex) => setPagination((prev) => ({ ...prev, pageIndex }))}
+            onPageSizeChange={(pageSize) => setPagination({ pageIndex: 0, pageSize })}
+          />
+        </div>
+
+        <aside className="w-100 sticky top-6">
+          {selectedPatrol ? (
+            <PatrolDetailPanel patrol={selectedPatrol} />
+          ) : (
+            <AppEmpty
+              title="순찰이력을 선택해주세요"
+              description="왼쪽 목록에서 이력을 선택하면 상세내용이 표시됩니다."
+              icon={LayersIcon}
+            />
+          )}
+        </aside>
       </div>
     </div>
+  )
+}
+
+const PatrolDetailPanel = ({ patrol }: { patrol: ZonePatrolType }) => {
+  const { variant, label } = patrolResultBadge[patrol.result]
+  const endedValue =
+    patrol.result === 'IN_PROGRESS' ? '—' : format(patrol.endedAt, 'yyyy-MM-dd HH:mm:ss')
+  return (
+    <AppDetailCard
+      icon={ListIcon}
+      title={patrol.name}
+      badge={<AppBadge variant={variant}>{label}</AppBadge>}
+    >
+      <section className="flex flex-col gap-1">
+        <h4 className="text-label font-medium uppercase tracking-wide text-muted-foreground">
+          순찰 정보
+        </h4>
+        <div className="flex flex-col divide-y divide-border/60">
+          <AppDetailRow label="시작 일시" value={format(patrol.startedAt, 'yyyy-MM-dd HH:mm:ss')} />
+          <AppDetailRow label="종료 일시" value={endedValue} />
+          <AppDetailRow label="지점 수" value={`${patrol.points.length}개`} />
+        </div>
+      </section>
+      <section className="flex flex-col gap-2">
+        <h4 className="text-label font-medium uppercase tracking-wide text-muted-foreground">
+          타임라인
+        </h4>
+        <PatrolTimeline patrol={patrol} />
+      </section>
+    </AppDetailCard>
   )
 }
 
