@@ -276,7 +276,7 @@ flowchart LR
 | R Redesign — 009 patrol-history-zone | ☑ | `/patrol/zones` 리디자인 완료(신규 셸+타임라인+상세 카드). `PatrolLayout`/`PatrolSheet` 폐기, `AppTable`→`AppPagination` 실전 교체, 타이포 시맨틱 토큰 10종 신설(`text-page-title`~`text-label`). 필터 팝오버/URL 연동/Export 로직은 Phase 3 이월. vitest 6건 추가(누적 42건) |
 | R Redesign — 010 patrol-history-point | ☑ | `/patrol/points` 신설(전체 폭 테이블, 상세 패널 없음) — 인증뱃지 QR/NFC, 결과뱃지 5종, 기록건수 버튼형 뱃지 + `PatrolRecordDialog`(기록 N건 리스트 + 첨부사진 "업로드수/3" 그리드). 필터 5종/Export는 009와 동일하게 Phase 3 이월. vitest 6건 추가(누적 48건) |
 | R Redesign — 011 course-management | ☑ | `/zones` 리디자인 완료(경로 다이어그램 카드 신규, zigzag+4개줄바꿈, 좁은폭 숨김) + 코스 목록/편집 카드 카드화. 구현 중 `LocationLayout`/`AppTabs`(구 탭 이중렌더) 발견·폐기, 라우터 flat화(009 `PatrolLayout` 폐기와 동일 패턴). 코스 CRUD 모달·드래그 실기능·`/points` 탭 부재는 Phase 2/3/012 이월. vitest 8건 추가(누적 56건) |
-| R Redesign — 012 point-management | ☐ | `/points` (편집 모달 유지) |
+| R Redesign — 012 point-management | ☑ | `/points` 리디자인 완료(지점 목록 카드화 + 상세 카드에 인증수단 읽기전용 표시/NFC TAG ID 신설) + `CourseTabs` 부착(011 carry-over 해소). `PointEmptyCard`→`AppEmpty` 교체, `ZoneRow` 임의색 제거(시맨틱 dot로 통일). 모달(`AddPointForm`/`EditPointForm`)은 완전 유지, 소속 코스 실제 연동은 Phase 3 이월. vitest 7건 추가(누적 63건) |
 | R Redesign — 013 workers | ☐ | `/users` 신규 라우트, 배치변경 버튼 제거 |
 | R Redesign — 014 deployments | ☐ | `/deployments` 신규 라우트. KPI + 인라인 승인/거부 + 거부 사유 모달 |
 | R Redesign — 015 notice | ☐ | `/notice` (다른 화면 컨셉 자동 적용) |

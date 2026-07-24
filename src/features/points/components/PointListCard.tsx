@@ -1,5 +1,4 @@
-// import { MapPinIcon } from 'lucide-react'
-
+import AppBadge from '@/components/app/AppBadge'
 import type { PointType } from '../types'
 
 const PointListCard = ({
@@ -24,18 +23,19 @@ const PointListCard = ({
     >
       {isSelected && <div className={`absolute left-0 top-0 w-1 h-full bg-primary`} />}
 
-      {/* <MapPinIcon className="text-muted-foreground" size={20} strokeWidth={1.5} /> */}
       <div
-        className={` flex items-center justify-center 
-        w-8 h-8 aspect-square bg-background
-        p-2 border rounded-full
-        font-semibold text-muted-foreground
-        
+        className={`flex items-center justify-center
+        w-8 h-8 aspect-square shrink-0 rounded-sm
+        text-body font-medium
+        ${isSelected ? 'bg-point-bg text-point-foreground' : 'bg-muted text-muted-foreground'}
         `}
       >
         {idx}
       </div>
-      <div>{point.title}</div>
+      <div className="flex-1 text-body font-medium">{point.title}</div>
+      <AppBadge variant={point.authenticationMethod === 'QR' ? 'point' : 'success'}>
+        {point.authenticationMethod}
+      </AppBadge>
     </div>
   )
 }

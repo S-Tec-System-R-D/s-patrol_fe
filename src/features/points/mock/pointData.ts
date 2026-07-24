@@ -14,6 +14,7 @@ export const points: PointType[] = [
     title: '로비 1층',
     description: '안내 데스크 및 방문객 대기 공간',
     authenticationMethod: 'NFC',
+    nfcTagId: '04A1B2C3D4E5F6',
     createdAt: new Date(2026, 2, 1),
   },
   {
@@ -35,6 +36,7 @@ export const points: PointType[] = [
     title: '지하 주차장 B2',
     description: 'B2층 차량 출입 및 보안 구역',
     authenticationMethod: 'NFC',
+    nfcTagId: '04B2C3D4E5F607',
     createdAt: new Date(2026, 2, 3),
   },
   {
@@ -42,6 +44,7 @@ export const points: PointType[] = [
     title: 'B동 후문',
     description: 'B동 후측 출입문, 야간 잠금 구역',
     authenticationMethod: 'NFC',
+    nfcTagId: '04C3D4E5F60718',
     createdAt: new Date(2026, 2, 5),
   },
   {
@@ -49,6 +52,7 @@ export const points: PointType[] = [
     title: 'B동 계단실',
     description: 'B동 비상계단 1~10층 입구',
     authenticationMethod: 'NFC',
+    nfcTagId: '04D4E5F6071829',
     createdAt: new Date(2026, 2, 5),
   },
   {
@@ -77,6 +81,7 @@ export const points: PointType[] = [
     title: '외벽 남측',
     description: '건물 남쪽 외벽 순찰 지점',
     authenticationMethod: 'NFC',
+    nfcTagId: '04E5F607182930',
     createdAt: new Date(2026, 2, 10),
   },
   {
@@ -84,6 +89,7 @@ export const points: PointType[] = [
     title: '외벽 동측',
     description: '건물 동쪽 외벽 순찰 지점',
     authenticationMethod: 'NFC',
+    nfcTagId: '04F6071829304A',
     createdAt: new Date(2026, 2, 10),
   },
   {
@@ -91,6 +97,7 @@ export const points: PointType[] = [
     title: '옥상 출입구',
     description: '옥상 진입 출입문, 잠금 여부 확인',
     authenticationMethod: 'NFC',
+    nfcTagId: '0407182930A1B2',
     createdAt: new Date(2026, 2, 12),
   },
   {
@@ -105,6 +112,7 @@ export const points: PointType[] = [
     title: '서버실 입구',
     description: '전산실 출입문, 출입 권한 확인 필요',
     authenticationMethod: 'NFC',
+    nfcTagId: '0829304A1B2C3D',
     createdAt: new Date(2026, 2, 15),
   },
 ]

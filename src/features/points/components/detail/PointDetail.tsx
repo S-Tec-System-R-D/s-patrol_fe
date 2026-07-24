@@ -5,10 +5,17 @@ import { MapPinIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
 import ZoneRow from './ZoneRow'
 import DetailSection from './DetailSection'
 import DetailRow from './DetailRow'
+import AuthMethodDisplay from './AuthMethodDisplay'
 import type { PointType } from '../../types'
 import AppDialog from '@/components/app/AppDialog'
 import EditPointForm from '../../form/EditPointForm'
 import AppAlertDialog from '@/components/AppAlertDialog'
+
+// 소속 코스 데모 상수 — 실제 지점-코스 연동은 Open Question(012 spec 참조)
+const DEMO_BELONGING_COURSES = [
+  { title: 'A동 순찰코스', isActive: true },
+  { title: 'B동 순찰코스', isActive: true },
+]
 
 // 선택지점 정보
 const PointDetail = ({ point }: { point: PointType }) => {
@@ -27,14 +34,25 @@ const PointDetail = ({ point }: { point: PointType }) => {
           <DetailRow label="설명" value={point.description} />
           <DetailRow label="생성일" value={format(point.createdAt, 'yyyy-MM-dd')} />
         </DetailSection>
-        {/* 소속 구역 */}
-        <DetailSection title="소속 구역">
-          <ZoneRow idx={'2'} title="A동 순찰구역" />
-          <ZoneRow idx={'3'} title="B동 순찰구역" />
+        {/* 소속 코스 */}
+        <DetailSection title="소속 코스">
+          {DEMO_BELONGING_COURSES.map((course) => (
+            <ZoneRow key={course.title} title={course.title} isActive={course.isActive} />
+          ))}
+        </DetailSection>
+        {/* 인증 수단 */}
+        <DetailSection title="인증 수단">
+          <AuthMethodDisplay value={point.authenticationMethod} />
+          {point.authenticationMethod === 'NFC' && point.nfcTagId && (
+            <div className="flex items-center justify-between rounded-sm bg-muted px-3 py-2 text-caption">
+              <span className="font-medium text-muted-foreground">TAG ID</span>
+              <span className="font-mono">{point.nfcTagId}</span>
+            </div>
+          )}
         </DetailSection>
       </div>
       {/* 푸터 */}
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex gap-2 p-4">
         <AppDialog
           title="지점 수정"
           description="지점 정보를 수정할 수 있습니다."
