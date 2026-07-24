@@ -27,7 +27,7 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1 w-full">
         {label && (
-          <label className="text-sm font-medium text-text-primary">
+          <label className="text-sm font-medium text-foreground">
             {label}
             {required && <span className="text-danger ml-1">*</span>}
           </label>
@@ -37,7 +37,7 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
           {/* 검색 아이콘 */}
           {isSearch && (
             <SearchIcon
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
               strokeWidth={1.5}
             />
           )}
@@ -46,8 +46,8 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             type={inputType}
             className={cn(
-              'w-full rounded-sm border border-border bg-surface px-3 py-2 text-sm text-text-primary',
-              'placeholder:text-text-secondary',
+              'w-full rounded-sm border border-border bg-card px-3 py-2 text-sm text-foreground',
+              'placeholder:text-muted-foreground',
               'focus:outline-none focus:border-point focus:ring-2 focus:ring-point/20',
               'disabled:cursor-not-allowed disabled:opacity-50',
               isSearch && 'pl-9', // 왼쪽 아이콘 자리 확보
@@ -63,7 +63,7 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               tabIndex={-1}
             >
               {showPassword ? (

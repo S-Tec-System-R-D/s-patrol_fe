@@ -11,7 +11,7 @@ const AppIconButton = ({ icon: Icon, iconSize = 16, className, ...props }: AppIc
   return (
     <button
       className={cn(
-        'p-2 rounded-sm border text-muted-foreground hover:bg-muted hover:cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+        'flex items-center justify-center p-2 rounded-sm border text-muted-foreground hover:bg-muted hover:cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
         className
       )}
       {...props}

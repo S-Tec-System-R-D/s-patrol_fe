@@ -10,7 +10,7 @@ const PointList = ({
   onSelectPoint: React.Dispatch<React.SetStateAction<PointType | null>>
 }) => {
   return (
-    <div className="overflow-auto min-h-0 flex-1 flex flex-col bg-background">
+    <div className="flex flex-col">
       {points.map((v, i) => (
         <PointListCard
           key={`point` + i}

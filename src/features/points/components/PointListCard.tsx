@@ -14,29 +14,28 @@ const PointListCard = ({
 }) => {
   const isSelected = point === selected
   return (
-    <div
-      className={`relative
-    flex items-center gap-4 py-4 px-7.5 not-last:border-b border-border/50 hover:bg-muted cursor-pointer
-    ${isSelected ? 'bg-muted' : ''}
-    `}
+    <button
+      type="button"
       onClick={() => onClick(point)}
+      className={`w-full flex items-center gap-2.5 py-[11px] px-3.5 text-left
+      not-last:border-b border-border/50 transition-colors
+      ${isSelected ? 'bg-point-bg' : 'hover:bg-muted'}
+      `}
     >
-      {isSelected && <div className={`absolute left-0 top-0 w-1 h-full bg-primary`} />}
-
       <div
         className={`flex items-center justify-center
-        w-8 h-8 aspect-square shrink-0 rounded-sm
-        text-body font-medium
-        ${isSelected ? 'bg-point-bg text-point-foreground' : 'bg-muted text-muted-foreground'}
+        w-[22px] h-[22px] aspect-square shrink-0 rounded-md
+        text-[11px] font-medium
+        ${isSelected ? 'bg-point text-white' : 'bg-muted text-muted-foreground'}
         `}
       >
         {idx}
       </div>
-      <div className="flex-1 text-body font-medium">{point.title}</div>
+      <div className="flex-1 min-w-0 truncate text-body font-semibold">{point.title}</div>
       <AppBadge variant={point.authenticationMethod === 'QR' ? 'point' : 'success'}>
         {point.authenticationMethod}
       </AppBadge>
-    </div>
+    </button>
   )
 }
 

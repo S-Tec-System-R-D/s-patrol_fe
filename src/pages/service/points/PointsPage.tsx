@@ -22,24 +22,26 @@ const PointsPage = () => {
 
       <CourseTabs />
 
-      <div className="flex-1 w-full flex min-h-0 overflow-hidden rounded-lg border border-border">
-        {/* 지점목록 */}
-        <div className="flex flex-col w-300 border-r min-h-0 overflow-hidden  ">
-          {/* 헤더 */}
+      <div className="flex items-start gap-6">
+        {/* 지점목록 영역 */}
+        <div className="flex flex-col w-[340px] shrink-0 gap-3">
           <PointTopNav />
-          {/* 바디 */}
-          <PointList onSelectPoint={setSelectedPoint} selected={selectedPoint} />
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            <PointList onSelectPoint={setSelectedPoint} selected={selectedPoint} />
+          </div>
         </div>
-        {/* 선택한 지점정보 */}
-        {selectedPoint ? (
-          <PointDetail point={selectedPoint} />
-        ) : (
-          <AppEmpty
-            icon={MapPinIcon}
-            title="지점을 생성해주세요"
-            description="지점을 생성하여 목록에서 클릭하면 상세정보가 표시됩니다"
-          />
-        )}
+        {/* 선택한 지점정보 카드 */}
+        <div className="flex-1 min-w-0 rounded-lg border border-border bg-card overflow-hidden">
+          {selectedPoint ? (
+            <PointDetail point={selectedPoint} />
+          ) : (
+            <AppEmpty
+              icon={MapPinIcon}
+              title="지점을 생성해주세요"
+              description="지점을 생성하여 목록에서 클릭하면 상세정보가 표시됩니다"
+            />
+          )}
+        </div>
       </div>
     </div>
   )

@@ -37,13 +37,13 @@ describe('PointListCard', () => {
     render(
       <PointListCard point={qrPoint} idx={1} selected={qrPoint} onClick={vi.fn()} />
     )
-    expect(screen.getByText('1')).toHaveClass('bg-point-bg')
+    expect(screen.getByText('1')).toHaveClass('bg-point')
   })
 
   it('선택 안 된 카드는 강조 스타일 미적용', () => {
     render(
       <PointListCard point={qrPoint} idx={1} selected={nfcPoint} onClick={vi.fn()} />
     )
-    expect(screen.getByText('1')).not.toHaveClass('bg-point-bg')
+    expect(screen.getByText('1')).not.toHaveClass('bg-point')
   })
 })

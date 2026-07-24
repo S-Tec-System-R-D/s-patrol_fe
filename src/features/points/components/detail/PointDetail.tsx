@@ -20,7 +20,7 @@ const DEMO_BELONGING_COURSES = [
 // 선택지점 정보
 const PointDetail = ({ point }: { point: PointType }) => {
   return (
-    <div className="flex-1 flex flex-col bg-background">
+    <div className="flex flex-col">
       {/* 헤더 */}
       <div className="flex items-center gap-2  p-4 border-b font-bold">
         <MapPinIcon size={16} strokeWidth={1.5} />
@@ -53,28 +53,32 @@ const PointDetail = ({ point }: { point: PointType }) => {
       </div>
       {/* 푸터 */}
       <div className="flex gap-2 p-4">
-        <AppDialog
-          title="지점 수정"
-          description="지점 정보를 수정할 수 있습니다."
-          trigger={
-            <AppButton icon={SquarePenIcon} size="full" variant="sub">
-              수정
+        <div className="flex-1">
+          <AppDialog
+            title="지점 수정"
+            description="지점 정보를 수정할 수 있습니다."
+            trigger={
+              <AppButton icon={SquarePenIcon} size="full" variant="sub">
+                수정
+              </AppButton>
+            }
+          >
+            <EditPointForm />
+          </AppDialog>
+        </div>
+        <div className="flex-1">
+          <AppAlertDialog
+            size="sm"
+            icon={Trash2Icon}
+            variant="destructive"
+            title="지점을 삭제하시겠습니까?"
+            onAction={() => {}}
+          >
+            <AppButton icon={Trash2Icon} size="full" variant="destructive">
+              삭제
             </AppButton>
-          }
-        >
-          <EditPointForm />
-        </AppDialog>
-        <AppAlertDialog
-          size="sm"
-          icon={Trash2Icon}
-          variant="destructive"
-          title="지점을 삭제하시겠습니까?"
-          onAction={() => {}}
-        >
-          <AppButton icon={Trash2Icon} size="full" variant="destructive">
-            삭제
-          </AppButton>
-        </AppAlertDialog>
+          </AppAlertDialog>
+        </div>
       </div>
     </div>
   )
