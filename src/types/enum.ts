@@ -39,6 +39,12 @@ export type PointResult =
 // 요일
 export type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN'
 
+// 배치 요청 방향 (파견 / 복귀)
+export type DeploymentDirection = 'DEPLOY' | 'RETURN'
+
+// 배치 요청 상태
+export type DeploymentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+
 // ─────────────────────────────────────────────
 // 라벨 매핑 (화면 표시용)
 // 콘텐츠 톤은 docs/design-system.md §4 따름.
@@ -96,4 +102,16 @@ export const dayOfWeekLabel: Record<DayOfWeek, string> = {
   FRI: '금',
   SAT: '토',
   SUN: '일',
+}
+
+export const deploymentDirectionLabel: Record<DeploymentDirection, string> = {
+  DEPLOY: '파견',
+  RETURN: '복귀',
+}
+
+export const deploymentStatusLabel: Record<DeploymentStatus, string> = {
+  PENDING: '대기중',
+  APPROVED: '승인',
+  REJECTED: '거부',
+  CANCELLED: '취소',
 }

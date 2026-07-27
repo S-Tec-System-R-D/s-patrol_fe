@@ -264,6 +264,7 @@ export interface DeploymentRequest {
   worker: WorkerRef                 // 요청한 근무자
   fromLocation: LocationRef         // 현재 소속(파견 시) 또는 파견지(복귀 시)
   toLocation: LocationRef           // 이동 목적지 = 승인 권한 소유 사업장
+  reason: string                    // 근무자가 요청 시 입력한 사유(필수) — 관리자 화면에 노출(014, 목업 근거)
   status: DeploymentStatus
   requestedAt: string               // 요청 시각
   processedAt?: string              // 승인/거부 시각 (취소는 근무자 액션이라 별도 취급 가능)
@@ -278,6 +279,7 @@ export interface DeploymentRequestSummary {
   workerName: string
   fromLocationName: string
   toLocationName: string
+  reason: string                    // DeploymentRequest.reason과 동일(014)
   status: DeploymentStatus
   requestedAt: string
   processedAt?: string
@@ -843,7 +845,7 @@ DTO를 확정하기 전 백엔드·기획 확인 필요. 답변 받아 본문에
 - [ ] **Keyword 도메인**: 단순 문자열? 카테고리/활성? 다국어? 표현·자료 모양 모두 미정
 - [ ] **배치 요청 — 재요청 쿨다운**: 취소·거부 직후 즉시 재요청 가능한지, 대기 시간이 있는지
 - [ ] **배치 요청 — 승인 시 세션 처리**: 근무자 소속 사업장이 바뀔 때 APP에 강제 재로그인/토큰 갱신 필요 여부
-- [ ] **배치 요청 — 요청 사유 필드**: 근무자가 요청 발송 시 사유를 입력할 수 있는지(선택), 관리자 화면에 노출할지
+- [x] **배치 요청 — 요청 사유 필드**: **해소(014)**: 목업(`배치관리-신규.png`)에 사유가 명시적으로 노출되어 필수 입력으로 확정. `DeploymentRequest`/`DeploymentRequestSummary.reason`(필수, §3-1) 추가.
 - [ ] **배치 요청 — 처리이력 필터**: `?status=PROCESSED`가 여러 상태를 포괄하는 서버 관례로 유효한지, 또는 status 배열/개별 파라미터 필요한지
 
 > 본문 반영 완료 항목 (참고):

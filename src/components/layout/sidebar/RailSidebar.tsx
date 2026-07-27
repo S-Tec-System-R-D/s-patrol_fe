@@ -1,3 +1,4 @@
+import { useDeploymentStore } from '@/features/deployments/store/deploymentStore'
 import { cn } from '@/lib/utils'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -13,6 +14,8 @@ import { ServiceMenus } from './sidebar.config'
  */
 export const RailSidebar = () => {
   const location = useLocation()
+  // 배치관리 대기건수 뱃지가 승인/거부 직후(페이지 이동 없이) 갱신되도록 store 변경에 재렌더 트리거.
+  useDeploymentStore((state) => state.pendingRequests.length)
 
   return (
     <div className="w-[68px] shrink-0 h-screen sticky top-0 bg-rail flex flex-col items-center pt-[18px] pb-5">
@@ -46,7 +49,7 @@ export const RailSidebar = () => {
                   )}
                   <Icon size={20} strokeWidth={1.5} />
                   {!!count && count > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-3.5 h-3.5 px-0.5 rounded-full bg-danger text-danger-foreground text-[9px] leading-3.5 text-center">
+                    <span className="absolute -top-1 -right-1 min-w-3.5 h-3.5 px-0.5 rounded-full bg-danger text-white text-[9px] leading-3.5 text-center">
                       {count}
                     </span>
                   )}

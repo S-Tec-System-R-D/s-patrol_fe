@@ -7,6 +7,7 @@ import {
   UsersIcon,
   type LucideIcon,
 } from 'lucide-react'
+import { useDeploymentStore } from '@/features/deployments/store/deploymentStore'
 import { paths } from '@/router/paths'
 
 // 서비스 메뉴, 타입
@@ -50,6 +51,7 @@ export const ServiceMenus: MenuItemType[] = [
     icon: ArrowLeftRightIcon,
     title: '배치관리',
     url: paths.service.deployments,
+    badge: () => useDeploymentStore.getState().pendingRequests.length,
   },
   {
     icon: MegaphoneIcon,

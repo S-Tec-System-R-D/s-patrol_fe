@@ -278,7 +278,7 @@ flowchart LR
 | R Redesign — 011 course-management | ☑ | `/zones` 리디자인 완료(경로 다이어그램 카드 신규, zigzag+4개줄바꿈, 좁은폭 숨김) + 코스 목록/편집 카드 카드화. 구현 중 `LocationLayout`/`AppTabs`(구 탭 이중렌더) 발견·폐기, 라우터 flat화(009 `PatrolLayout` 폐기와 동일 패턴). 코스 CRUD 모달·드래그 실기능·`/points` 탭 부재는 Phase 2/3/012 이월. vitest 8건 추가(누적 56건) |
 | R Redesign — 012 point-management | ☑ | `/points` 리디자인 완료(지점 목록 카드화 + 상세 카드에 인증수단 읽기전용 표시/NFC TAG ID 신설) + `CourseTabs` 부착(011 carry-over 해소). `PointEmptyCard`→`AppEmpty` 교체, `ZoneRow` 임의색 제거(시맨틱 dot로 통일). 모달(`AddPointForm`/`EditPointForm`)은 완전 유지, 소속 코스 실제 연동은 Phase 3 이월. vitest 7건 추가(누적 63건) |
 | R Redesign — 013 workers | ☑ | `/users` 신규 구현(라우트·타입·mock·컴포넌트 전부 신규) — `AppTable`+`AppPagination`+우측 상세 패널(기본정보+배치 변경 이력) + 액션 3종(비밀번호/수정/삭제) + 근무자 추가 모달(소속사업장 `useMe` 읽기전용). 아바타 장식 팔레트 토큰(`--avatar-1~6`) 신설. 배치변경 버튼 제거(§1-4A 배치관리로 이관, 014 예정) |
-| R Redesign — 014 deployments | ☐ | `/deployments` 신규 라우트. KPI + 인라인 승인/거부 + 거부 사유 모달 |
+| R Redesign — 014 deployments | ☑ | `/deployments` 신규 구현 — KPI 3종(이력 파생 계산) + 배치 요청 목록(카드형 row, 인라인 승인/거부) + 거부 사유 모달(필수 입력) + 배치 이력 탭 2개(`?historyTab` 쿼리스트링). 승인/거부는 013과 달리 `zustand` store(`useDeploymentStore`, 프로젝트 최초 사용)로 mock 상태를 실제 갱신(목록·KPI·사이드바 뱃지 즉시 반영). `RailSidebar` 배치관리 아이콘에 대기건수 dot+뱃지 신규 연동. `reason` 필드를 `DeploymentRequest`/`DeploymentRequestSummary`에 신규 추가(목업 근거, data-model.md Open Q 해소). 013 mock과는 통합하지 않고 자체 mock 유지(A3). vitest 6건 추가(누적 77건) |
 | R Redesign — 015 notice | ☐ | `/notice` (다른 화면 컨셉 자동 적용) |
 | R Redesign — 016 regression | ☐ | 본사 사이트 미영향 + 로그인/랜딩 미영향 회귀 |
 | R Redesign (전체) | ☐ | 현장 5개 화면이 신규 셸에서 렌더링, screens.md §1-2~§1-5 동기화 |

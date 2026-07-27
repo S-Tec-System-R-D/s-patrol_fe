@@ -343,6 +343,7 @@ import { zoneColumns } from '@/features/patrol-zones/components/ZoneColumn'
 - 컬럼 정의는 도메인 디렉터리에 둔다(`features/{domain}/components/*Column.tsx`).
 - 정렬 가능 헤더는 자동으로 정렬 아이콘 표시.
 - 빈 상태 메시지: "데이터가 없습니다". 필요 시 컬럼 셀 안 커스터마이즈.
+- **`data` prop은 안정된 배열 참조로 전달할 것(`useMemo`)** — 014에서 확인된 이슈: 렌더마다 `.filter()`/`.map()`으로 새 배열을 만들어 그대로 넘기면(특히 `pagination`/`onPaginationChange`를 컨트롤드로 함께 쓸 때) 실 브라우저에서 무한 재렌더 루프가 발생할 수 있다(jsdom 테스트로는 재현 안 됨 — 브라우저에서만 확인 필요). 원본 배열이 아닌 파생 배열을 넘길 때는 반드시 `useMemo([원본, ...의존값])`로 감쌀 것.
 
 ---
 
