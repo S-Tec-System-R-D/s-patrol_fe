@@ -41,13 +41,14 @@
 ### 규칙
 
 - 좌측 목록은 자체 스크롤. 우측은 컨텐츠 길이에 따라.
-- 행 선택 상태는 컴포넌트 state(useState) — 페이지 단위. URL에 안 박는다(상세 단위 라우트가 따로 있는 경우 제외, 예: 사업장 상세 `/:id`).
+- 행 선택 상태는 컴포넌트 state(useState) — 페이지 단위. URL에 안 박는다(상세 단위 라우트가 따로 있는 경우 제외, 예: 사업장 상세 `/:id`, 공지사항 상세 `/notice/:id` — 015에서 콘텐츠 소비형 화면 특성상 우측 패널 대신 별도 라우트로 결정).
 - 첫 진입 시 첫 행 자동 선택(데이터 있을 때).
 - 빈 상태는 `AppEmpty`를 카드 컨테이너(`rounded-lg border border-border bg-card p-4`, `AppDetailCard` 외곽과 동일 톤)로 감싸 표시 — 선택 상태든 아니든 우측 영역의 카드 경계가 유지되도록(010에서 결정, 콘텐츠 톤은 §4-3 따름).
 
 ### 사용 화면
 
-- `/zones`, `/points`, `/patrol/zones`, `/users`, `/notice`, `/admin/admins`, `/admin/locations`
+- `/zones`, `/points`, `/patrol/zones`, `/users`, `/admin/admins`, `/admin/locations`
+- `/notice`는 좌측 목록+우측 패널이 아니라 **목록(리스트) + 별도 상세 페이지(`/notice/:id`)** 변형(015, 위 규칙의 상세 단위 라우트 예외 참조).
 
 ---
 

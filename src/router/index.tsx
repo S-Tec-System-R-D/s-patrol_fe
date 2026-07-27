@@ -11,10 +11,12 @@ import PatrolZonesPage from '@/pages/service/patrol/zones/PatrolZonesPage'
 import PatrolPointsPage from '@/pages/service/patrol/points/PatrolPointsPage'
 import UsersPage from '@/pages/service/users/UsersPage'
 import DeploymentsPage from '@/pages/service/deployments/DeploymentsPage'
+import NoticeListPage from '@/pages/service/notice/NoticeListPage'
+import NoticeDetailPage from '@/pages/service/notice/NoticeDetailPage'
 import AdminPlaceholderPage from '@/pages/admin/AdminPlaceholderPage'
 import { ForbiddenPage, NotFoundPage } from '@/pages/errors'
 import { RequireRoute } from '@/features/auth/components/RequireRoute'
-import { paths } from './paths'
+import { paths, pathPatterns } from './paths'
 import { PageErrorFallback } from './PageErrorFallback'
 
 export const router = createBrowserRouter([
@@ -77,6 +79,16 @@ export const router = createBrowserRouter([
           {
             path: paths.service.deployments,
             element: <DeploymentsPage />,
+            errorElement: <PageErrorFallback />,
+          },
+          {
+            path: paths.service.notice,
+            element: <NoticeListPage />,
+            errorElement: <PageErrorFallback />,
+          },
+          {
+            path: pathPatterns.noticeDetail,
+            element: <NoticeDetailPage />,
             errorElement: <PageErrorFallback />,
           },
         ],

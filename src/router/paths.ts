@@ -10,6 +10,7 @@
  */
 
 const adminLocationDetail = (id: string) => `/admin/locations/${id}`
+const noticeDetail = (id: string) => `/notice/${id}`
 
 export const paths = {
   // 공개 영역
@@ -30,6 +31,7 @@ export const paths = {
     users: '/users',
     deployments: '/deployments',
     notice: '/notice',
+    noticeDetail: noticeDetail,
     settingsKeywords: '/settings/keywords',
   },
 
@@ -47,6 +49,7 @@ export const paths = {
  */
 export const pathPatterns = {
   adminLocationDetail: '/admin/locations/:id',
+  noticeDetail: '/notice/:id',
 } as const
 
 /**

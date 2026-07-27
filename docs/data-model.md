@@ -479,6 +479,7 @@ export interface NoticeSummary {
   id: string
   index: number                    // 목업의 #
   title: string
+  contentPreview: string           // 목록 1줄 미리보기 (015에서 리스트형 UI로 추가)
   authorName: string
   createdAt: string
   readByMe: boolean
