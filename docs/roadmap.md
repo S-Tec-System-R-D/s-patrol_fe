@@ -280,8 +280,8 @@ flowchart LR
 | R Redesign — 013 workers | ☑ | `/users` 신규 구현(라우트·타입·mock·컴포넌트 전부 신규) — `AppTable`+`AppPagination`+우측 상세 패널(기본정보+배치 변경 이력) + 액션 3종(비밀번호/수정/삭제) + 근무자 추가 모달(소속사업장 `useMe` 읽기전용). 아바타 장식 팔레트 토큰(`--avatar-1~6`) 신설. 배치변경 버튼 제거(§1-4A 배치관리로 이관, 014 예정) |
 | R Redesign — 014 deployments | ☑ | `/deployments` 신규 구현 — KPI 3종(이력 파생 계산) + 배치 요청 목록(카드형 row, 인라인 승인/거부) + 거부 사유 모달(필수 입력) + 배치 이력 탭 2개(`?historyTab` 쿼리스트링). 승인/거부는 013과 달리 `zustand` store(`useDeploymentStore`, 프로젝트 최초 사용)로 mock 상태를 실제 갱신(목록·KPI·사이드바 뱃지 즉시 반영). `RailSidebar` 배치관리 아이콘에 대기건수 dot+뱃지 신규 연동. `reason` 필드를 `DeploymentRequest`/`DeploymentRequestSummary`에 신규 추가(목업 근거, data-model.md Open Q 해소). 013 mock과는 통합하지 않고 자체 mock 유지(A3). vitest 6건 추가(누적 77건) |
 | R Redesign — 015 notice | ☑ | `/notice`+`/notice/:id` 신규 구현 — 목업 없어 013 컨셉 계승하되, 콘텐츠 소비형 특성상 좌측 테이블+우측 패널 대신 **리스트 목록 + 별도 상세 페이지**로 신규 설계(사용자 확인 완료, `patterns.md` §1 "상세 단위 라우트" 예외에 편입). 검색은 013/009/010과 동일하게 비와이어드. 작성/수정 모달 유지(`NoticeForm` 겸용), 삭제는 확인 모달→목록 리다이렉트. vitest 4건 추가(누적 81건) |
-| R Redesign — 016 regression | ☐ | 본사 사이트 미영향 + 로그인/랜딩 미영향 회귀 |
-| R Redesign (전체) | ☐ | 현장 5개 화면이 신규 셸에서 렌더링, screens.md §1-2~§1-5 동기화 |
+| R Redesign — 016 regression | ☑ | 코드 diff 리뷰(007 시작 커밋~HEAD, 136 files)로 본사 페이지/로그인/랜딩 파일 무변경 확인 + `AdminLayout`/`RequireRoute`/`AdminMenus` 라우팅·권한 로직 무변화 확인. **Open Q 신규**: `index.css` 폰트(Pretendard)·기본 폰트사이즈(12.5px)·시맨틱 색상 토큰이 전역(`:root`) 스코프라 `/admin/*`도 함께 적용받음 — 007 spec의 "본사 시각 무변화" 클레임과 불일치(현재는 admin이 placeholder뿐이라 실질 영향 미미, Phase 5 착수 전 재검토 필요, §13에 등재). 접근성/톤은 007~015 각 spec DoD 재확인 수준으로 통과. `npm run verify`+`npm run test`(27 files/81 tests) green |
+| R Redesign (전체) | ☑ | 현장 5개 화면 모두 신규 셸(`ServiceLayout`+`RailSidebar`)에서 렌더링, screens.md §1-2~§1-5 동기화 완료. 위 Open Q(전역 토큰의 본사 side-effect)는 Phase 5 이전 해소 필요 |
 | 2 공용 컴포넌트 | ☐ | |
 | 3 현장 코어 | ☐ | screens.md §1-2/1-3 ✓ (Phase R 완료 후 재확인 필요) |
 | 4 현장 신규 | ☐ | screens.md §1-4/1-5 ✓ (Phase R에서 이미 대부분 처리됨 → 재산정) |
@@ -299,6 +299,7 @@ flowchart LR
 - [ ] **본사·현장 동시 진행** 시 인력 분배 정책
 - [ ] **MSW → 실 API 전환** 트리거 시점(전 Phase 종료 후? Phase 단위?)
 - [ ] `/settings/keywords` UX 확정 시점 (Phase 4 안에 들어갈지, 별도 Phase로 미룰지)
+- [ ] **전역 디자인 토큰의 본사(`/admin/*`) side-effect** (016에서 발견) — `src/index.css`의 폰트(Pretendard)·기본 폰트사이즈(12.5px)·시맨틱 색상 값이 `:root`/`.dark` 전역 스코프라 라우트 분리 없이 본사 사이트에도 그대로 적용됨. 007 spec의 "본사 시각 무변화" DoD와 불일치하나 현재 admin은 placeholder뿐이라 실질 영향 미미. **Phase 5(본사 전체 구현) 착수 전 결정 필요**: (a) 본사 전용 토큰 오버라이드 신설, (b) 본사도 그냥 신규 토큰을 그대로 받아들이고 리디자인 라운드에서 재조정, (c) 현행 유지(문서만 정정)
 - [ ] **본사 사이트의 모바일 대응 수준** — 본사는 사실상 PC 전용일 가능성. 모바일 분기를 Phase 1에 포함할지 결정
 - [ ] **성능 임계치** — 테이블 가상화 도입 기준(예: N행 이상)
 - [ ] **Phase R 이후 Phase 3/4 재산정** — 리디자인이 화면을 이미 만들면 Phase 3(현장 코어 △→✓)와 Phase 4(현장 신규 ✗→✓)의 범위가 대부분 흡수됨. Phase 3/4를 남길지, 흡수해서 Phase R로 통합할지 결정 필요.
