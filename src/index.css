@@ -71,6 +71,14 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
+  /* 아바타 장식 팔레트 — 상태 의미 없음, 이니셜 아바타 배경 순환 배정 전용(013) */
+  --color-avatar-1: var(--avatar-1);
+  --color-avatar-2: var(--avatar-2);
+  --color-avatar-3: var(--avatar-3);
+  --color-avatar-4: var(--avatar-4);
+  --color-avatar-5: var(--avatar-5);
+  --color-avatar-6: var(--avatar-6);
+
   /* 반경 */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -166,6 +174,14 @@
   --chart-4: oklch(0.769 0.188 70);
   --chart-5: oklch(0.637 0.237 25);
 
+  /* ── 아바타 장식 팔레트(013) — 시맨틱 4색(hue 260/150/70/25)과 겹치지 않는 순수 장식색 ── */
+  --avatar-1: oklch(0.58 0.16 285); /* 인디고 */
+  --avatar-2: oklch(0.55 0.15 20); /* 버건디 */
+  --avatar-3: oklch(0.6 0.1 195); /* 틸 */
+  --avatar-4: oklch(0.62 0.14 55); /* 브라운오렌지 */
+  --avatar-5: oklch(0.58 0.12 165); /* 그린틸 */
+  --avatar-6: oklch(0.56 0.1 40); /* 브라운 */
+
   /* ── 기타 ── */
   --radius: 0.5rem;
 }
@@ -225,6 +241,14 @@
   --chart-3: oklch(0.723 0.191 150);
   --chart-4: oklch(0.769 0.188 70);
   --chart-5: oklch(0.637 0.237 25);
+
+  /* 아바타 장식 팔레트 — 라이트와 동일(장식용, 다크 전용 보정 불필요) */
+  --avatar-1: oklch(0.58 0.16 285);
+  --avatar-2: oklch(0.55 0.15 20);
+  --avatar-3: oklch(0.6 0.1 195);
+  --avatar-4: oklch(0.62 0.14 55);
+  --avatar-5: oklch(0.58 0.12 165);
+  --avatar-6: oklch(0.56 0.1 40);
 }
 
 /* ------------------------------------------------------------------ */

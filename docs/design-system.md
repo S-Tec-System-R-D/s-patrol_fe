@@ -106,6 +106,12 @@
 - 사이드바: `--sidebar`, `--sidebar-foreground`, `--sidebar-primary(-foreground)`, `--sidebar-accent(-foreground)`, `--sidebar-border`, `--sidebar-ring`
 - 차트: `--chart-1` ~ `--chart-5` (1=point, 2=청록, 3=success, 4=warning, 5=danger 계열)
 
+#### 아바타 장식 팔레트 (013)
+
+- `--avatar-1` ~ `--avatar-6` — **상태 의미 없는 순수 장식용** 6색. 이니셜 아바타(예: 근무자 목록)의 배경색을 id/name 해시로 순환 배정할 때만 사용.
+- 시맨틱 4색(point/success/warning/danger, hue 260/150/70/25)과 겹치지 않도록 별도 hue(285/20/195/55/165/40)로 구성 — 뱃지·상태 표시와 혼동 금지.
+- 라이트/다크 동일 값(장식용이라 다크 전용 보정 불필요, `--rail`과 동일 원칙).
+
 ### 1-2. 타이포
 
 - **폰트**: **Pretendard** (sans + heading 공용). `@fontsource-variable/pretendard` 또는 CDN.

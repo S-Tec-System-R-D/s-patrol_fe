@@ -20,7 +20,7 @@ const AppFilterButton = forwardRef<HTMLButtonElement, AppFilterButtonProps>(
         type="button"
         data-active={active}
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-body text-foreground transition-colors hover:bg-muted',
+          'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-card px-3 py-1.5 text-body text-foreground transition-colors hover:bg-muted',
           'data-[active=true]:border-point data-[active=true]:bg-point-bg data-[active=true]:text-point-foreground',
           className
         )}

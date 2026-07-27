@@ -9,6 +9,7 @@ import PointsPage from '@/pages/service/points/PointsPage'
 import ZonesPage from '@/pages/service/zones/ZonesPage'
 import PatrolZonesPage from '@/pages/service/patrol/zones/PatrolZonesPage'
 import PatrolPointsPage from '@/pages/service/patrol/points/PatrolPointsPage'
+import UsersPage from '@/pages/service/users/UsersPage'
 import AdminPlaceholderPage from '@/pages/admin/AdminPlaceholderPage'
 import { ForbiddenPage, NotFoundPage } from '@/pages/errors'
 import { RequireRoute } from '@/features/auth/components/RequireRoute'
@@ -65,6 +66,11 @@ export const router = createBrowserRouter([
           {
             path: paths.service.zones,
             element: <ZonesPage />,
+            errorElement: <PageErrorFallback />,
+          },
+          {
+            path: paths.service.users,
+            element: <UsersPage />,
             errorElement: <PageErrorFallback />,
           },
         ],
