@@ -24,7 +24,7 @@ WF-00(개요)·WF-0(골격)은 `docs/`에서 이미 완료. 매 사이클 반복
 
 - 폴더: `specs/phase{N}/{NNN-feature-name}/` (`N`=roadmap Phase 0~6, `NNN`=Phase 무관 글로벌 일련번호 3자리)
 - 템플릿은 Phase 무관 → `specs/_templates/`에 그대로 둔다(Phase 폴더 안에 두지 않음)
-- Phase ↔ spec 매핑은 [`roadmap.md`](./roadmap.md) §3(소속 spec 컬럼)·§11에서 추적
+- Phase ↔ spec 매핑은 [`roadmap.md`](./roadmap.md) §3(소속 spec 컬럼)·§12에서 추적
 
 ### 사전 참조 문서 (단계별 기본)
 
@@ -373,7 +373,7 @@ spec: specs/phase{N}/{NNN-feature}/spec.md
 
 1. `specs/phase{N}/{feature}/tasks.md`의 체크박스 닫기
 2. **`tasks.md` 맨 아래 `## 다음 spec으로 이월` 블록 작성** (아래 규칙) — 다음 spec의 `§0 Carry-over` 입력원
-3. `docs/roadmap.md` §11 진행 추적 매트릭스 갱신
+3. `docs/roadmap.md` §12 진행 추적 매트릭스 갱신
 4. `docs/screens.md` 진행도 ✗/△/✓ 갱신
 5. 아래 **변경 docs 갱신 체크리스트** 검토 후 해당 문서 갱신
 
@@ -405,7 +405,7 @@ spec: specs/phase{N}/{NNN-feature}/spec.md
 | 새 상호작용 패턴 등장 | `patterns.md` (3개 화면 이상 반복 시) |
 | 레이아웃 구조 변경 | `layout.md` |
 | 결정사항 변경 (D1~D8 등) | `design-system.md` §5 |
-| Phase 진행 변동 | `roadmap.md` §11, `screens.md` |
+| Phase 진행 변동 | `roadmap.md` §12, `screens.md` |
 | 의사결정 누적 (Open Q 해소) | 해당 문서 Open Q 섹션 |
 
 ### 다음 세션은 새 컨텍스트로

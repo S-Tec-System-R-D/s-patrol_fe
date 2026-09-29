@@ -304,4 +304,4 @@ flowchart LR
 - [ ] **성능 임계치** — 테이블 가상화 도입 기준(예: N행 이상)
 - [ ] **Phase R 이후 Phase 3/4 재산정** — 리디자인이 화면을 이미 만들면 Phase 3(현장 코어 △→✓)와 Phase 4(현장 신규 ✗→✓)의 범위가 대부분 흡수됨. Phase 3/4를 남길지, 흡수해서 Phase R로 통합할지 결정 필요.
 - [ ] **본사 사이트 리디자인 라운드 시점** — 이번 Phase R 미포함. Phase 5 전에 별도 리디자인 라운드로 넣을지, Phase 5 안에 흡수할지.
-- [ ] **spec 템플릿 §번호 참조** — `specs/_templates/spec.md`의 "roadmap.md §11 미완 ☐ spec" 참조가 §12로 밀림. 신규 spec 진입 전에 템플릿도 §12로 갱신 필요.
+- [x] **spec 템플릿 §번호 참조** — **해소(문서정합)**: `specs/_templates/spec.md`·`workflow-protocol.md` §0/§5의 `roadmap.md §11` 참조를 §12(진행 추적 매트릭스)로 정정. 같은 라운드에서 `CLAUDE.md` B5의 WF 번호(`WF-1→WF-3→WF-4→WF-5→WF-6`)도 `workflow-protocol.md` 실제 사이클(`WF-1→WF-2→WF-3→WF-4→WF-5`)에 맞춰 정정. 완료된 spec 폴더(`phase0`/`phase1`)의 §11 참조는 당시 기록이라 미수정.

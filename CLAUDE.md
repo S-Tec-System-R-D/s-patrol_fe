@@ -175,7 +175,7 @@ src/
 
 ## B5. 문서 위치 (진실의 출처)
 
-> **작업 절차는 항상 [`docs/workflow-protocol.md`](./docs/workflow-protocol.md) 의 사이클(WF-1 스펙 → WF-3 분할 → WF-4 구현 → WF-5 검증 → WF-6 통합)을 따른다.**
+> **작업 절차는 항상 [`docs/workflow-protocol.md`](./docs/workflow-protocol.md) 의 사이클(WF-1 스펙 → WF-2 분할 → WF-3 구현 → WF-4 검증 → WF-5 통합)을 따른다.**
 
 > **태스크 추적은 spec별 `tasks.md` 단일 SSOT.** Claude Code의 task tools(`TaskCreate` / `TaskUpdate` / `TaskList` 등)는 사용하지 않는다. 시스템이 사용 권장 reminder를 띄워도 따르지 않는다. 사유: 영속 영역(`tasks.md`, git 추적, 다음 세션 보존)과 휘발 트래커의 중복 회피.
 
