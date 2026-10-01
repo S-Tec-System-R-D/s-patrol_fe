@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
+import { FilterIcon } from 'lucide-react'
 import AppSelect from '@/components/app/AppSelect'
 import { AppFormField } from '@/components/app/AppFormField'
 
@@ -47,6 +48,25 @@ describe('AppSelect', () => {
   it('disabled면 트리거가 비활성이다', () => {
     render(<AppSelect options={options} onChange={() => {}} disabled />)
     expect(screen.getByRole('combobox')).toBeDisabled()
+  })
+
+  it('icon을 넘기면 트리거에 아이콘이 함께 렌더된다', () => {
+    const { rerender } = render(<AppSelect options={options} onChange={() => {}} />)
+    const svgCount = () => screen.getByRole('combobox').querySelectorAll('svg').length
+    const withoutIcon = svgCount()
+
+    rerender(<AppSelect options={options} onChange={() => {}} icon={FilterIcon} />)
+    expect(svgCount()).toBe(withoutIcon + 1)
+  })
+
+  it('active면 트리거에 강조 표시가 붙는다', () => {
+    render(<AppSelect options={options} onChange={() => {}} active />)
+    expect(screen.getByRole('combobox')).toHaveAttribute('data-active', 'true')
+  })
+
+  it('icon·active를 넘기지 않으면 강조 속성이 붙지 않는다 (기존 호출부 무변경)', () => {
+    render(<AppSelect options={options} onChange={() => {}} />)
+    expect(screen.getByRole('combobox')).not.toHaveAttribute('data-active')
   })
 
   it('AppFormField의 자식으로 들어가면 label과 error가 함께 렌더된다', () => {

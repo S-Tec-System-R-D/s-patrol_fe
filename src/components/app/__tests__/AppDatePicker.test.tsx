@@ -53,6 +53,16 @@ describe('AppDatePicker', () => {
     expect(screen.getByRole('button')).toBeDisabled()
   })
 
+  it('active면 트리거에 강조 표시가 붙는다', () => {
+    render(<AppDatePicker value={{ from: new Date(2026, 4, 1) }} onChange={() => {}} active />)
+    expect(screen.getByRole('button')).toHaveAttribute('data-active', 'true')
+  })
+
+  it('active를 넘기지 않으면 강조 속성이 붙지 않는다 (기존 호출부 무변경)', () => {
+    render(<AppDatePicker value={{}} onChange={() => {}} />)
+    expect(screen.getByRole('button')).not.toHaveAttribute('data-active')
+  })
+
   it('AppFormField의 자식으로 들어가면 label과 hint가 함께 렌더된다', () => {
     render(
       <AppFormField label="조회 기간" hint="최대 3개월">
