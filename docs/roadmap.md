@@ -31,7 +31,7 @@
 | **0** | Foundation | path 상수 / env / axios + `ApiResponse` 인터셉터 / 401 refresh / react-query / enum SSOT / `useQueryParams` / `<RequireRole>` / **sonner toast** / **MSW** / **AppFormField 분석·도입** | A |
 | **1** | Layout Plus | AuthGuard 실제화 / 모바일 햄버거+Sheet / 본사 사이드바 config / TopNav 메뉴명 매핑 / ProfileBadge 메뉴 / 401·403·404 / AppTable 페이지네이션 / AppButton 마이그레이션 착수 | A·B |
 | **R** | **Redesign (현장 사이트)** | **Pretendard + OKLCH 토큰 매핑 / `ServiceLayout` + 68px `RailSidebar` + 페이지 자연 스크롤 / 공용 컴포넌트(AppPageHeader · AppFilterButton · AppPagination · AppDetailCard · AppKpiCard · 결과 뱃지 5종) / 현장 5개 화면(순찰이력·코스/지점·근무자·배치관리·공지사항) UI 전면 교체** | **A·B** |
-| **2** | 공용 컴포넌트 확충 | AppSelect / AppDatePicker / dnd-kit Provider / Notice 첨부 업로드 위젯 / 알림 시트 본문 | B |
+| **2** | 공용 컴포넌트 확충 | **AppSelect / AppDatePicker** (017에서 2종으로 재산정 — dnd-kit·첨부위젯은 수요 화면으로, 알림시트는 Phase 5로 이동. §6 참조) | B |
 | **3** | 현장 코어 △→✓ | `/login` / `/zones` 디테일 / `/points` 디테일 / `/patrol/zones` 디테일 / `/patrol/points` 신규 / Export | A·B |
 | **4** | 현장 신규 영역 ✗→✓ | `/users` / `/notice` / `/settings/keywords` | B·C |
 | **5** | 본사 영역 전체 | `/admin/login` / `/admin/locations`(+상세+헬스체크) / `/admin/admins`(+할당) | A |
@@ -144,18 +144,27 @@ Phase 0은 spec 단위로 4개로 분할: **001-api-foundation** / **002-lint-cl
 
 ## 6. Phase 2 — 공용 컴포넌트 확충
 
-Phase 3 폼·이력 화면이 막히지 않도록 미리.
+> **2026-09-29 재산정(017)**: 원안은 5개 항목을 "Phase 3에서 막히지 않도록 미리" 묶어둔 것이었다. Phase R 완료 후 코드에서 소비처를 실제로 세어 보니 **수요가 복수 화면에 걸친 것은 2종뿐**이었다. 나머지는 단일 화면에 국한되거나(1곳) 현장에서 소멸(0곳)해, 미리 만들면 A3(최소 변경)·A6(미래 확장 포인트 금지)에 어긋난다. 따라서 Phase 2를 2종으로 좁히고 나머지는 이동한다.
 
-| 항목 | 결과물 | 의존성 | 비고 |
+### 6-1. Phase 2 범위 (017)
+
+| 항목 | 결과물 | 확정 수요 | 소속 spec |
 |---|---|---|---|
-| AppSelect | 선택 컴포넌트 (라벨/에러/필수) | Phase 0 AppFormField | 사업장 셀렉트·필터에 광범위 사용 |
-| AppDatePicker | 단일/범위 일자 선택 | AppFormField | 계약기간·이력 필터 |
-| dnd-kit Provider | 정렬 가능한 리스트 추상 (`<SortableList>` 등) | — | `patterns.md` §5 |
-| Notice 첨부 업로드 위젯 | 파일 선택·미리보기·삭제 | — | `data-model.md` `NoticeAttachment` |
-| 알림 시트 본문 | 알림 목록 컴포넌트(읽음·시간) | — | `layout.md` §6 |
+| `AppSelect` | 단일 선택 드롭다운 | **9곳** — 필터 8(`/patrol/zones` 2·`/patrol/points` 4·`/users` 2) + `AppPagination` 행수 1 | 017 |
+| `AppDatePicker` | 날짜 **범위** 선택 | **2곳** — `/patrol/zones`·`/patrol/points` 기간 선택 | 017 |
+
+- `AppSelect` 다중 선택, `AppDatePicker` 단일 날짜는 **확정 수요 0곳이라 미구현**. 필요해질 때 확장(기존 호출부 무변경).
+
+### 6-2. 원안에서 이동한 항목
+
+| 항목 | 확정 수요 | 이동 위치 | 사유 |
+|---|---|---|---|
+| dnd-kit Provider | 1곳 (`/zones` 지점 드래그 정렬) | 해당 화면 실동작 작업 시 | 단일 화면용 추상을 미리 만들 이유 없음 |
+| Notice 첨부 업로드 위젯 | 1곳 (`/notice`) | 해당 화면 첨부 실동작 작업 시 | 상동 |
+| 알림 시트 본문 | **0곳 (현장)** | **Phase 5 (본사)** | `AlarmSheet`는 `TopNav.tsx`에 있고 007에서 `TopNav`가 `AdminLayout` 전용이 됨. 현장 코드에 참조 0건 — 애초에 현장 공용 컴포넌트가 아니었음 |
 
 **Phase 2 종료 조건**
-- 화면 작업 시 추가 공용 컴포넌트가 더 필요해 멈추는 일이 없다.
+- 순찰이력·근무자 화면의 필터 팝오버를 조립할 수 있는 선택 계열 primitive가 갖춰진다(018에서 실제 조립).
 
 ---
 
@@ -282,7 +291,8 @@ flowchart LR
 | R Redesign — 015 notice | ☑ | `/notice`+`/notice/:id` 신규 구현 — 목업 없어 013 컨셉 계승하되, 콘텐츠 소비형 특성상 좌측 테이블+우측 패널 대신 **리스트 목록 + 별도 상세 페이지**로 신규 설계(사용자 확인 완료, `patterns.md` §1 "상세 단위 라우트" 예외에 편입). 검색은 013/009/010과 동일하게 비와이어드. 작성/수정 모달 유지(`NoticeForm` 겸용), 삭제는 확인 모달→목록 리다이렉트. vitest 4건 추가(누적 81건) |
 | R Redesign — 016 regression | ☑ | 코드 diff 리뷰(007 시작 커밋~HEAD, 136 files)로 본사 페이지/로그인/랜딩 파일 무변경 확인 + `AdminLayout`/`RequireRoute`/`AdminMenus` 라우팅·권한 로직 무변화 확인. **Open Q 신규**: `index.css` 폰트(Pretendard)·기본 폰트사이즈(12.5px)·시맨틱 색상 토큰이 전역(`:root`) 스코프라 `/admin/*`도 함께 적용받음 — 007 spec의 "본사 시각 무변화" 클레임과 불일치(현재는 admin이 placeholder뿐이라 실질 영향 미미, Phase 5 착수 전 재검토 필요, §13에 등재). 접근성/톤은 007~015 각 spec DoD 재확인 수준으로 통과. `npm run verify`+`npm run test`(27 files/81 tests) green |
 | R Redesign (전체) | ☑ | 현장 5개 화면 모두 신규 셸(`ServiceLayout`+`RailSidebar`)에서 렌더링, screens.md §1-2~§1-5 동기화 완료. 위 Open Q(전역 토큰의 본사 side-effect)는 Phase 5 이전 해소 필요 |
-| 2 공용 컴포넌트 | ☐ | |
+| 2 공용 컴포넌트 — 017 select/datepicker | ☑ | `AppSelect`(단일 선택) + `AppDatePicker`(범위) 신설, shadcn 원시 3종(`select`/`popover`/`calendar`) 추가, `react-day-picker` v10 도입. §6을 2종으로 재산정(3종 이동). vitest 13건 추가(81→94). **US3 추가(2026-09-29)**: `AppPagination` 행 수 셀렉트를 `AppSelect`로 교체해 현장 5개 화면에서 즉시 확인 가능 — `AppSelect`는 M2 발동·**사용자 시각 확인 완료(2026-10-01)**, `AppDatePicker` 소비처 연결은 018 |
+| 2 공용 컴포넌트 (전체) | ☑ | 재산정된 §6-1 2종(`AppSelect`·`AppDatePicker`) 모두 완료 → Phase 2 종료 조건 충족. 실제 조립·시각 확인은 018 |
 | 3 현장 코어 | ☐ | screens.md §1-2/1-3 ✓ (Phase R 완료 후 재확인 필요) |
 | 4 현장 신규 | ☐ | screens.md §1-4/1-5 ✓ (Phase R에서 이미 대부분 처리됨 → 재산정) |
 | 5 본사 영역 | ☐ | screens.md §2 ✓ |

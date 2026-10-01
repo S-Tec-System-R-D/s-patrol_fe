@@ -17,6 +17,8 @@
 | `AppButton` | `components/Button.tsx` | 기본 액션 버튼 | ✅ 표준 |
 | `AppIconButton` | `components/AppIconButton.tsx` | 아이콘 단독 버튼 | ✅ 표준 |
 | `AppInput` | `components/app/AppInput.tsx` | 텍스트/검색/패스워드 인풋 | ✅ 표준 |
+| `AppSelect` | `components/app/AppSelect.tsx` | 단일 선택 드롭다운 | ✅ 표준 |
+| `AppDatePicker` | `components/app/AppDatePicker.tsx` | 날짜 **범위** 선택 | ✅ 표준 |
 | `AppCheckbox` | `components/app/AppCheckbox.tsx` | 체크박스 | ✅ 표준 |
 | `AppDialog` | `components/app/AppDialog.tsx` | 일반 다이얼로그(폼·정보) | ✅ 표준 |
 | `AppAlertDialog` | `components/AppAlertDialog.tsx` | 확인/위험 액션 다이얼로그 | ✅ 표준 |
@@ -35,6 +37,9 @@
 | `ui/sheet` | `components/ui/sheet.tsx` | shadcn 원시 | 사이드 패널·알림 시트 |
 | `ui/switch` | `components/ui/switch.tsx` | shadcn 원시 | 토글 직접 사용 가능 |
 | `ui/dropdown-menu` | `components/ui/dropdown-menu.tsx` | shadcn 원시 | 컨텍스트 메뉴 직접 사용 가능 |
+| `ui/select` | `components/ui/select.tsx` | shadcn 원시 | 내부 구현용 (`AppSelect` 전용) |
+| `ui/popover` | `components/ui/popover.tsx` | shadcn 원시 | 팝오버 직접 사용 가능 (필터 팝오버 등) |
+| `ui/calendar` | `components/ui/calendar.tsx` | react-day-picker 래퍼 | 내부 구현용 (`AppDatePicker` 전용) |
 
 ---
 
@@ -168,6 +173,75 @@ import AppInput from '@/components/app/AppInput'
 - `error`가 있으면 하단에 12px danger, 없으면 `hint`를 12px secondary로 표시.
 - `label`이 없으면 라벨 영역 자체를 미렌더(폼 외 인풋 케이스 호환).
 - 도입 사유는 `design-system.md` D9 참조.
+
+---
+
+## 3-2. AppSelect
+
+단일 선택 드롭다운. 017(Phase 2)에서 신설.
+
+```tsx
+import AppSelect from '@/components/app/AppSelect'
+
+<AppSelect
+  options={[
+    { value: 'COMPLETE', label: '완료' },
+    { value: 'INCOMPLETE', label: '미완료' },
+  ]}
+  value={result}
+  onChange={setResult}
+  placeholder="결과 선택"
+/>
+```
+
+**Props**
+
+| Prop | 타입 | 기본 |
+|---|---|---|
+| `options` | `{ value: string; label: string }[]` | — |
+| `value` | `string` | `undefined`(= placeholder 표시) |
+| `onChange` | `(value: string) => void` | — |
+| `placeholder` | `string` | `'선택'` |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+| `aria-label` | `string` | — (외부 라벨이 없을 때만) |
+
+**가이드**
+
+- **label / error / hint를 갖지 않는다.** 폼에서 쓸 땐 `AppFormField`로 감쌀 것(D9 분담).
+- 트리거는 `<button role="combobox">`다. `<label>`로 감싸도 이름이 연결되지 않으므로, `AppFormField` 밖에서 쓸 땐 `aria-label`을 준다(예: `AppPagination`의 "페이지당 행 수").
+- **다중 선택 미지원**(017 결정 — 확정 수요가 없었음). 필요해지면 기본값 `false`인 `multiple` prop으로 확장하며, 기존 호출부는 건드리지 않는다.
+- 옵션이 많아도 `ui/select`의 스크롤 버튼이 처리하므로 별도 가상화는 불필요.
+
+---
+
+## 3-3. AppDatePicker
+
+날짜 **범위** 선택. 017(Phase 2)에서 신설.
+
+```tsx
+import AppDatePicker from '@/components/app/AppDatePicker'
+
+<AppDatePicker value={range} onChange={setRange} placeholder="기간 선택" />
+```
+
+**Props**
+
+| Prop | 타입 | 기본 |
+|---|---|---|
+| `value` | `{ from?: Date; to?: Date }` | — |
+| `onChange` | `(range: { from?: Date; to?: Date }) => void` | — |
+| `placeholder` | `string` | `'기간 선택'` |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+
+**가이드**
+
+- **범위 전용**(017 결정 — 단일 날짜 확정 수요 0곳). 단일이 필요해지면 그때 추가.
+- 값은 `Date` 객체로만 다룬다. **쿼리스트링 직렬화는 소비 측 책임** (`patterns.md` §6, `*Query`의 `from`/`to`).
+- 트리거 라벨은 `yyyy-MM-dd ~ yyyy-MM-dd`. `to`가 없으면 시작일만 표시.
+- 기존 선택값이 있으면 그 달로 열린다(`defaultMonth`). 없으면 이번 달.
+- 달력 로케일은 한국어 고정(`react-day-picker/locale`의 `ko`).
 
 ---
 
@@ -410,6 +484,8 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 
 리디자인 페이지네이션(페이지당 행수 선택 + 현재 범위 + 이전/다음). 008(R1)에서 신설. **기존 `AppTable` 내장 페이지네이션과 별개** — 테이블 라이브러리 비의존 독립 컴포넌트.
 
+페이지당 행 수 컨트롤은 017에서 네이티브 `<select>` → `AppSelect`로 교체했다.
+
 ```tsx
 import AppPagination from '@/components/app/AppPagination'
 
@@ -437,6 +513,7 @@ import AppPagination from '@/components/app/AppPagination'
 
 - 페이지 번호 버튼 없음 — "a–b / 전체 N개 항목" 텍스트 + 화살표만.
 - `pageSize` 변경 시 `pageIndex`를 0으로 리셋하는 책임은 **소비 측**에 있다(컴포넌트는 콜백만 발행).
+- 행 수 셀렉트는 `AppSelect` + `aria-label="페이지당 행 수"` + `className="h-7 w-auto text-xs"`(기본 `h-8 w-full text-sm`은 페이지네이션 밀도에 과함). 값은 `number` ↔ `string` 변환만 하고 계약(`pageSizeOptions: number[]`)은 그대로 유지한다.
 - `AppTable`에서 이 컴포넌트로 전환하려면 `<AppTable hidePagination>` + 페이지 상태를 직접 들고 `AppPagination`을 별도 렌더 (마이그레이션은 009~015 각 화면에서 개별 진행, `data-model.md` §2-1 1-based API 페이지 번호와 pageIndex(0-based) 변환 주의).
 
 ---
@@ -568,8 +645,8 @@ App* 컴포넌트로 커버되지 않는 경우만 shadcn 원시를 **직접** �
 신규 컴포넌트 개발·기존 컴포넌트 수정은 **추후 task 계획 후 결정**한다.
 
 - [x] `AppTable` **페이지네이션 UI** — **해소(006)**: footer로 이전/다음 + 페이지 N/M(1-based) + 전체 N건 노출. `pageSize` prop 지원. URL 쿼리 연동은 Phase 3 첫 사용처(`/patrol/zones`)에서 `useQueryParams`와 통합.
-- [ ] `AppSelect` — 미존재. 사업장 선택·권한 선택 등에 필요. **추후 task**(Phase 2 / `AppFormField` 사용)
-- [ ] `AppDatePicker` — 사업장 계약기간·이력 필터 등에 필요. **추후 task**(Phase 2 / `AppFormField` 사용)
+- [x] `AppSelect` — **해소(017)**: §3-2 참조. 단일 선택 전용, `AppFormField`와 분담.
+- [x] `AppDatePicker` — **해소(017)**: §3-3 참조. 범위(from~to) 전용, 단일 날짜는 수요 발생 시.
 - [ ] **Toast 래퍼** — Toast 시스템 자체는 **sonner 확정**([`design-system.md`](./design-system.md) D6). App* 래퍼가 필요한지 여부만 추후 결정
 
 > AppFormField 도입은 004 D9에서 해소(§3-1 참고).

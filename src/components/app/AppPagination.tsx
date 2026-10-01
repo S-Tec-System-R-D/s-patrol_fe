@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
+import AppSelect from '@/components/app/AppSelect'
 
 interface AppPaginationProps {
   /** 0-based 현재 페이지 인덱스 */
@@ -30,20 +31,16 @@ const AppPagination = ({
 
   return (
     <div className="flex items-center justify-between text-xs text-muted-foreground">
-      <label className="flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <span>페이지당 행 수</span>
-        <select
-          value={pageSize}
-          onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          className="rounded-md border border-border bg-background px-2 py-1 text-foreground"
-        >
-          {pageSizeOptions.map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </select>
-      </label>
+        <AppSelect
+          aria-label="페이지당 행 수"
+          options={pageSizeOptions.map((size) => ({ value: String(size), label: String(size) }))}
+          value={String(pageSize)}
+          onChange={(next) => onPageSizeChange(Number(next))}
+          className="h-7 w-auto text-xs"
+        />
+      </div>
 
       <div className="flex items-center gap-3">
         <span className="tabular-nums">

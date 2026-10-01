@@ -60,7 +60,8 @@ describe('AppPagination', () => {
         onPageSizeChange={onPageSizeChange}
       />
     )
-    await userEvent.selectOptions(screen.getByRole('combobox'), '25')
+    await userEvent.click(screen.getByRole('combobox', { name: '페이지당 행 수' }))
+    await userEvent.click(await screen.findByRole('option', { name: '25' }))
     expect(onPageSizeChange).toHaveBeenCalledWith(25)
   })
 
