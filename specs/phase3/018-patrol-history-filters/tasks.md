@@ -26,11 +26,11 @@
 
 > **독립 테스트 기준** (= 세션 검증 게이트): `?result=COMPLETE`를 붙인 URL로 직접 진입하면 완료 행만 보이고 `AppPagination` 총 건수가 그 수와 같다. 기간·코스·결과를 함께 걸면 AND로 좁혀지고, "전체"를 고르면 해당 키가 URL에서 사라진다. 0건이면 `AppEmpty`가 보인다.
 
-- [ ] T152 [US1] 코스 이력 필터 순수 함수 in src/features/patrol-zones/lib/filterCourseHistory.ts — `(rows, query) => rows`. `from`/`to`/`courseId`(코스명)/`result` AND 결합. 알 수 없는 `result` 값은 해당 조건만 무시
-- [ ] T153 [US1] [P] 코스·결과 옵션 유도 in src/features/patrol-zones/lib/courseHistoryOptions.ts — 코스는 목 데이터 `name` 중복 제거, 결과는 `ZoneColumn.tsx:13-16` `patrolResultBadge`의 키·라벨에서. 둘 다 맨 앞에 "전체"(value 빈 문자열) 추가
-- [ ] T154 [US1] T152·T153 단위 테스트 in src/features/patrol-zones/lib/__tests__/filterCourseHistory.test.ts — 단일 조건 4종 / AND 결합 / 알 수 없는 값 무시 / 0건
-- [ ] T155 [US1] `PatrolZonesPage` 필터 배선 in src/pages/service/patrol/zones/PatrolZonesPage.tsx — `AppFilterButton` 3개(`:67-69`) → `AppDatePicker` 1 + `AppSelect` 2로 교체. `useQueryParams`로 읽고 쓰기(**`{ replace: true }`** — spec §3), 필터 통과 행만 `AppTable`에 전달, `AppPagination.total`을 필터 후 건수로, 0건이면 `AppEmpty`, 필터 변경 시 `page` 1로 리셋, 선택된 필터에 `active`
-- [ ] T156 [US1] 화면 레벨 테스트 in src/pages/service/patrol/zones/__tests__/PatrolZonesPage.test.tsx — `MemoryRouter`의 `initialEntries`로 쿼리 있는 URL 직접 진입 복원 / 선택 시 URL 갱신 / "전체" 선택 시 키 제거
+- [x] T152 [US1] 코스 이력 필터 순수 함수 in src/features/patrol-zones/lib/filterCourseHistory.ts — `(rows, query) => rows`. `from`/`to`/`courseId`(코스명)/`result` AND 결합. 알 수 없는 `result` 값은 해당 조건만 무시
+- [x] T153 [US1] [P] 코스·결과 옵션 유도 in src/features/patrol-zones/lib/courseHistoryOptions.ts — 코스는 목 데이터 `name` 중복 제거, 결과는 `ZoneColumn.tsx:13-16` `patrolResultBadge`의 키·라벨에서. 둘 다 맨 앞에 "전체"(value 빈 문자열) 추가
+- [x] T154 [US1] T152·T153 단위 테스트 in src/features/patrol-zones/lib/__tests__/filterCourseHistory.test.ts — 단일 조건 4종 / AND 결합 / 알 수 없는 값 무시 / 0건
+- [x] T155 [US1] `PatrolZonesPage` 필터 배선 in src/pages/service/patrol/zones/PatrolZonesPage.tsx — `AppFilterButton` 3개(`:67-69`) → `AppDatePicker` 1 + `AppSelect` 2로 교체. `useQueryParams`로 읽고 쓰기(**`{ replace: true }`** — spec §3), 필터 통과 행만 `AppTable`에 전달, `AppPagination.total`을 필터 후 건수로, 0건이면 `AppEmpty`, 필터 변경 시 `page` 1로 리셋, 선택된 필터에 `active`
+- [x] T156 [US1] 화면 레벨 테스트 in src/pages/service/patrol/zones/__tests__/PatrolZonesPage.test.tsx — `MemoryRouter`의 `initialEntries`로 쿼리 있는 URL 직접 진입 복원 / 선택 시 URL 갱신 / "전체" 선택 시 키 제거
 
 ## Phase 4: US2 — `/patrol/points` 지점 이력 필터
 
@@ -98,4 +98,15 @@
 - T147~T151 완료. 테스트 **94건 → 116건**(+22: `AppSelect` 3 · `AppDatePicker` 2 · `dateRangeQuery` 17), 파일 29 → 30
 - `npm run verify` 0 errors(경고 1건은 `public/mockServiceWorker.js` 기존 MSW 생성물) + `npm run test` 30 files / 116 tests green
 - **구현 중 판단 1건**: `AppSelect`의 `SelectTrigger`는 기본 클래스에 `justify-between`이 있어(`ui/select.tsx:24`) 아이콘·값·chevron 3형제를 그냥 두면 값이 가운데로 벌어진다. 아이콘과 `SelectValue`를 `<span className="flex min-w-0 items-center gap-1.5">`로 묶어 chevron만 우측으로 밀리게 했다(`AppSelect.tsx:50-54`). 아이콘 없는 기존 호출부도 같은 span을 타지만 자식이 하나뿐이라 외형 변화 없음 — T149 3번째 테스트로 고정
-- 다음: Phase 3(US1, T152~T156)
+- 다음: Phase 3(US1, T152~T156) → 완료
+
+### Phase 3 완료 — US1 `/patrol/zones` (2026-10-01)
+
+- T152~T156 완료. 테스트 **116건 → 136건**(+20: 필터·옵션 12 · 화면 8), 파일 30 → 32
+- `npm run verify` 0 errors + `npm run test` 32 files / 136 tests green
+- **구현 중 판단 2건**
+  1. **"전체" 값에 빈 문자열을 쓸 수 없다** — Radix Select는 `SelectItem`의 빈 문자열 값을 선택 해제용으로 예약해 허용하지 않는다. 계획 단계에서 `value: ''`로 적었으나 센티넬 `ALL_VALUE = 'ALL'`(`courseHistoryOptions.ts:21`)로 바꾸고, **URL에는 쓰지 않는다** — 화면 경계의 `selectValue()`가 `undefined`로 바꿔 키를 지운다(`PatrolZonesPage.tsx`). 테스트로 고정(`filterCourseHistory.test.ts` "전체 센티넬은 빈 문자열이 아니다", 화면 테스트 "전체 선택 시 키 제거")
+  2. **0건 처리** — `AppTable`은 자체적으로 tbody에 "데이터가 없습니다" 셀을 넣지만(`AppTable.tsx:117-121`), `patterns.md` §7과 spec DoD에 맞춰 **테이블 자리를 `AppEmpty`로 교체**했다(0건이면 `AppPagination`도 숨김). `AppTable` 자체는 무변경 — 다른 화면 영향 없음
+- **부수 개선 1건**: 선택된 이력이 필터에서 빠지면 우측 상세 패널도 함께 비운다(`activePatrol` 유도). 필터로 사라진 행의 상세가 남아 있는 상태를 막기 위함
+- `AppFilterButton`은 이 화면에서 빠졌고 `/users` 2곳에는 그대로 남아 있다(spec §3 범위 밖)
+- 다음: Phase 4(US2, T157~T161) `/patrol/points`

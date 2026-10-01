@@ -1,26 +1,28 @@
 import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
 import AppDetailCard from '@/components/app/AppDetailCard'
+import AppDatePicker from '@/components/app/AppDatePicker'
 import AppDetailRow from '@/components/app/AppDetailRow'
 import AppEmpty from '@/components/app/AppEmpty'
-import AppFilterButton from '@/components/app/AppFilterButton'
 import AppPageHeader from '@/components/app/AppPageHeader'
 import AppPagination from '@/components/app/AppPagination'
+import AppSelect from '@/components/app/AppSelect'
 import AppTable from '@/components/AppTable'
 import PatrolHistoryTabs from '@/features/patrol-zones/components/PatrolHistoryTabs'
 import PatrolTimeline from '@/features/patrol-zones/components/PatrolTimeline'
 import { patrolResultBadge, zoneColumns } from '@/features/patrol-zones/components/ZoneColumn'
+import {
+  ALL_VALUE,
+  courseOptions,
+  courseResultOptions,
+} from '@/features/patrol-zones/lib/courseHistoryOptions'
+import { filterCourseHistory } from '@/features/patrol-zones/lib/filterCourseHistory'
+import { useQueryParams } from '@/hooks/useQueryParams'
+import { parseDateRangeQuery, toDateRangeQuery } from '@/lib/dateRangeQuery'
 import type { PaginationState } from '@tanstack/react-table'
 import { format } from 'date-fns'
-import {
-  CalendarIcon,
-  DownloadIcon,
-  FilterIcon,
-  LayersIcon,
-  LayoutListIcon,
-  ListIcon,
-} from 'lucide-react'
-import { useState } from 'react'
+import { DownloadIcon, FilterIcon, LayersIcon, LayoutListIcon, ListIcon } from 'lucide-react'
+import { useMemo, useState } from 'react'
 
 const PATROL_RESULT = {
   COMPLETE: 'COMPLETE',
@@ -45,12 +47,42 @@ export interface PointPatrolType {
   note: string // 특이사항
 }
 
+type FilterKey = 'from' | 'to' | 'courseId' | 'result'
+
 const PatrolZonesPage = () => {
   const [selectedPatrol, setSelectedPatrol] = useState<ZonePatrolType | null>(null)
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 50,
   })
+
+  const [params, setParams] = useQueryParams<FilterKey>()
+  const range = useMemo(() => parseDateRangeQuery(params), [params])
+
+  const filtered = useMemo(
+    () =>
+      filterCourseHistory(zonePatrols, {
+        range,
+        courseId: params.courseId,
+        result: params.result,
+      }),
+    [range, params.courseId, params.result]
+  )
+
+  /**
+   * 필터 변경은 히스토리를 쌓지 않는다(`replace`) — 탭 이동 뒤로가기를 보존하기 위해(spec §3).
+   * 필터가 바뀌면 현재 페이지가 결과 범위를 벗어날 수 있어 첫 페이지로 돌린다.
+   */
+  const updateFilter = (next: Partial<Record<FilterKey, string | undefined>>) => {
+    setParams(next, { replace: true })
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+  }
+
+  /** "전체"는 URL에 남기지 않는다 — 키를 지운다. */
+  const selectValue = (value: string) => (value === ALL_VALUE ? undefined : value)
+
+  // 선택된 이력이 필터에서 빠지면 상세 패널도 함께 비운다.
+  const activePatrol = selectedPatrol && filtered.includes(selectedPatrol) ? selectedPatrol : null
 
   const handleRowClick = (data: ZonePatrolType) => {
     setSelectedPatrol(data)
@@ -64,9 +96,30 @@ const PatrolZonesPage = () => {
 
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <AppFilterButton icon={CalendarIcon} label="기간 선택" />
-          <AppFilterButton icon={LayoutListIcon} label="코스" />
-          <AppFilterButton icon={FilterIcon} label="결과" />
+          <AppDatePicker
+            value={range}
+            onChange={(next) => updateFilter(toDateRangeQuery(next))}
+            active={Boolean(range.from)}
+            className="w-auto"
+          />
+          <AppSelect
+            aria-label="코스"
+            icon={LayoutListIcon}
+            options={courseOptions(zonePatrols)}
+            value={params.courseId ?? ALL_VALUE}
+            onChange={(value) => updateFilter({ courseId: selectValue(value) })}
+            active={Boolean(params.courseId)}
+            className="w-auto"
+          />
+          <AppSelect
+            aria-label="결과"
+            icon={FilterIcon}
+            options={courseResultOptions}
+            value={params.result ?? ALL_VALUE}
+            onChange={(value) => updateFilter({ result: selectValue(value) })}
+            active={Boolean(params.result)}
+            className="w-auto"
+          />
         </div>
         <AppButton variant="sub" className="bg-card">
           <DownloadIcon size={14} />
@@ -76,27 +129,39 @@ const PatrolZonesPage = () => {
 
       <div className="flex items-start gap-6">
         <div className="flex-1 min-w-0 flex flex-col gap-4 ">
-          <AppTable
-            columns={zoneColumns}
-            data={zonePatrols}
-            hidePagination
-            pagination={pagination}
-            onPaginationChange={setPagination}
-            onRowClick={handleRowClick}
-          />
+          {filtered.length > 0 ? (
+            <>
+              <AppTable
+                columns={zoneColumns}
+                data={filtered}
+                hidePagination
+                pagination={pagination}
+                onPaginationChange={setPagination}
+                onRowClick={handleRowClick}
+              />
 
-          <AppPagination
-            pageIndex={pagination.pageIndex}
-            pageSize={pagination.pageSize}
-            total={zonePatrols.length}
-            onPageChange={(pageIndex) => setPagination((prev) => ({ ...prev, pageIndex }))}
-            onPageSizeChange={(pageSize) => setPagination({ pageIndex: 0, pageSize })}
-          />
+              <AppPagination
+                pageIndex={pagination.pageIndex}
+                pageSize={pagination.pageSize}
+                total={filtered.length}
+                onPageChange={(pageIndex) => setPagination((prev) => ({ ...prev, pageIndex }))}
+                onPageSizeChange={(pageSize) => setPagination({ pageIndex: 0, pageSize })}
+              />
+            </>
+          ) : (
+            <div className="flex flex-col rounded-lg border border-border bg-card">
+              <AppEmpty
+                title="조건에 맞는 순찰이력이 없습니다"
+                description="기간·코스·결과 필터를 바꾸거나 전체로 되돌려 보세요."
+                icon={FilterIcon}
+              />
+            </div>
+          )}
         </div>
 
         <aside className="w-100 sticky top-6">
-          {selectedPatrol ? (
-            <PatrolDetailPanel patrol={selectedPatrol} />
+          {activePatrol ? (
+            <PatrolDetailPanel patrol={activePatrol} />
           ) : (
             <div className="flex h-full flex-col rounded-lg border border-border bg-card p-4">
               <AppEmpty
