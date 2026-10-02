@@ -21,5 +21,15 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    /**
+     * 테스트는 `.env.local`에 의존하지 않는다.
+     * MSW 핸들러가 상대 경로(`/api/...`)로 등록돼 jsdom origin에 매칭되므로,
+     * `VITE_API_BASE_URL`이 채워져 있으면 요청이 외부 origin으로 나가 가로채지지 않는다.
+     * 따라서 테스트에서는 항상 빈 base URL로 고정한다.
+     */
+    env: {
+      VITE_API_BASE_URL: '',
+      VITE_USE_MSW: 'true',
+    },
   },
 })
