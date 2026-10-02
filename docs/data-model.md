@@ -16,10 +16,12 @@
 - **타입 이름**: PascalCase. 도메인 모델은 명사형(`Worker`, `PatrolCourse`).
 - **응답 DTO**: 화면 카드명 + 용도. `WorkerSummary`(목록 행), `WorkerDetail`(상세 패널).
 - **요청 DTO**: `Create{Name}Request` / `Update{Name}Request` / `{Action}{Name}Request`.
-- **ID**: 모두 `string`(UUID 가정). 코드의 mock도 string이라 일치.
-- **날짜/시간**: ISO 8601 문자열 (`string`). 화면에서 `Date`로 파싱.
-- **분(min) 단위**: `number`. 시각은 `"HH:mm"` 문자열.
-- **금지**: 화면에 표시 안 되는 필드 DTO에 넣지 않는다. 필요한 것만.
+- **ID**: 모두 `number`(int32), 접미사 `~Seq`. — 실측 확정([`api-spec.md`](./api-spec.md) §1). 기존 `string`(UUID) 가정은 폐기. 코드의 mock도 `number`로 전환 대상.
+- **날짜/시간**: ISO 8601 문자열 (`string`, **타임존 없음** — 로컬시각). 화면에서 `Date`로 파싱.
+- **분(min) 단위**: `number`. 시각은 `"HH:mm:ss"` 문자열(.NET TimeSpan).
+- **서버 우선**: 응답 타입은 **실측 그대로 전량 선언**한다. 화면에서 쓰지 않는 필드도 둔다. 기준은 `api-spec.md`.
+  - 본 문서의 DTO는 **화면이 무엇을 필요로 하는지에 대한 설계 의도**를 담는다. 서버 응답과 어긋나면 `api-spec.md`가 이긴다.
+  - 우리 설계에만 있는 필드는 **화면에 실제 바인딩되는지 확인** → 필요하면 백엔드 요청, 불필요하면 제거.
 
 ---
 
@@ -96,19 +98,28 @@ flowchart LR
 
 ## 2. 공용 타입 / Enum
 
-### 2-1. API 응답 래퍼 (확정)
+### 2-1. API 응답 래퍼 (실측 확정)
 
-모든 API 응답은 `ApiResponse<T>`로 감싼다. 목록은 `ApiListResponse<T>`(= `ApiResponse<PagedData<T>>`), 상세는 `ApiDetailResponse<T>`(= `ApiResponse<T>`).
-페이지네이션은 **페이지 기반**.
+> 아래는 **실측으로 교정된 내용**이다. 세부·전체 목록은 [`api-spec.md`](./api-spec.md) §1~§3 참조.
 
-**`code` 필드 규칙**
-- `code`는 **HTTP status code**를 그대로 담는다.
-- 성공: `code: 200`, `message: '성공'`, `data: <응답 페이로드>`
-- 실패(예: 토큰 만료): `code: 401`, `message: '토큰 만료'`, `data: null`
-- **에러 응답도 동일 wrapper**를 쓴다(별도 `ApiError` 타입을 두지 않음).
+모든 **성공** 응답은 `ApiResponse<T>`로 감싼다. 래퍼 필드명·순서는 당초 설계와 일치했다.
+
+**`code` 필드 규칙 — 🔴 당초 설계 폐기**
+- `code`는 **HTTP status code가 아니다.** 비즈니스/권한 코드다.
+- 로그인 성공은 **사이트 + 권한 단계**를 함께 나타낸다.
+
+  | `code` | 사이트 | 권한 |
+  |---|---|---|
+  | `101` / `102` / `103` | 본사 `/admin/*` | 시스템관리자 / Master / Manager |
+  | `201` / `202` | 현장 `/*` | 현장관리자 / (확인 필요) |
+
+- 일반 조회 성공은 `code: 200`.
+- `message` 문자열은 엔드포인트마다 미세하게 다르다(마침표 유무 등) → **`message` 로 분기 금지.**
 
 **페이지 번호 규칙**
 - `pageNumber`는 **1-based**. 첫 페이지 = `1`. URL 쿼리스트링도 동일(`?pageNumber=1`).
+- ⚠️ **요청 파라미터는 `pageNumber`, 응답 필드는 `page`** — 이름이 다르다.
+- `pageNumber=0` → 400. 범위 초과 → `200` + `items: []`(에러 아님).
 
 ```ts
 /** 기본 API 응답 래퍼 */
@@ -118,18 +129,16 @@ export interface ApiResponse<T> {
   code: number
 }
 
-/** 페이지네이션 메타 정보 */
-export interface PaginationMeta {
-  pageNumber: number
+/**
+ * 페이지네이션된 데이터.
+ * 🔴 당초 `{ meta, data }` 중첩 설계였으나 실제는 **평면 구조**다.
+ */
+export interface PagedData<T> {
+  items: T[]
+  page: number
   pageSize: number
   totalCount: number
   totalPages: number
-}
-
-/** 페이지네이션된 데이터 (배열) */
-export interface PagedData<T> {
-  meta: PaginationMeta
-  data: T[]
 }
 
 /** 목록 API 응답 타입 */
@@ -138,6 +147,8 @@ export type ApiListResponse<T> = ApiResponse<PagedData<T>>
 /** 상세 API 응답 타입 — 단일 객체 T */
 export type ApiDetailResponse<T> = ApiResponse<T>
 ```
+
+> 목록 성격인데 `PagedData` 가 아니라 **배열을 직접** 반환하는 엔드포인트가 있다(`GetClassificationPoint`, `GetGroupAdminList`, `GetCourseHistoryCheckDetails` 등). `api-spec.md` §5-1 의 `data 형태` 열로 확인한다.
 
 ### 2-2. Enum
 
@@ -812,25 +823,49 @@ export interface ExportPatrolHistoryRequest {
 
 ---
 
-## 6. 에러 응답
+## 6. 에러 응답 (실측 확정)
 
-에러도 §2-1 `ApiResponse<T>`를 그대로 사용한다. 별도 타입 없음.
+> 🔴 **당초 "에러도 동일 wrapper 1종" 설계는 폐기.** 실제는 **3종이 섞여 있다.**
+> 전체 사례는 [`api-spec.md`](./api-spec.md) §3 참조.
+
+### (A) `ApiResponse` 래퍼 — 비즈니스 오류
 
 ```ts
-// 예: 토큰 만료
 const example: ApiResponse<null> = {
-  code: 401,
-  message: '토큰 만료',
+  message: '아이디 또는 비밀번호가 올바르지 않습니다.',
   data: null,
+  code: 400,
 }
 ```
+로그인 실패, 없는 ID 조회, `pageNumber=0`, RefreshToken 무효(401).
 
-**클라이언트 처리 규칙(권장)**
+### (B) ASP.NET ProblemDetails — 래퍼 아님
 
-- axios 응답 인터셉터에서 `code`를 검사.
-  - `200` → `data`를 unwrap해 호출부에 반환.
-  - `401` → refresh 시도 → 실패 시 해당 영역 로그인 페이지로 이동.
-  - 그 외 (`400/403/404/409/5xx`) → `Error(message)`로 throw → react-query의 `error`에서 일괄 처리(Toast 등).
+```ts
+interface ProblemDetails {
+  errors?: Record<string, string[]>   // 필드별 유효성 메시지
+  type: string
+  title: string
+  status: number
+  detail?: string
+  traceId: string
+}
+```
+필수 파라미터 누락·타입 불일치(400), 서버 오류(500). **`message` 필드가 없다.**
+
+### (C) 빈 body — 래퍼도 ProblemDetails도 아님
+
+`401`(토큰 없음·무효), `403`(권한 없음) → body가 `""`. **파싱하면 터진다.**
+
+### 클라이언트 처리 규칙
+
+- **HTTP status 를 1차 기준으로 분기한다.** `code` 나 `message` 는 래퍼가 확인된 뒤에만 쓴다.
+  - `401` → refresh 시도 → 실패 시 해당 영역 로그인 페이지로 이동
+  - `403` → body가 비어 있다고 가정. 권한 없음 메시지는 **클라이언트가 생성**
+  - `400` → body를 판별해 (A)면 `message`, (B)면 `errors`/`title` 을 사용자 메시지로
+  - `5xx` → (B) 형태. `detail` 또는 공통 메시지
+- 본문 파싱은 **반드시 방어적으로** — 빈 문자열·비 JSON 응답에서 throw 되지 않아야 한다.
+- 권한 밖 사업장 조회는 **403이 아니라 `200` + 빈 목록**이다. "권한 없음"과 "데이터 없음"을 응답으로 구분할 수 없으므로, 접근 가능 사업장은 `UserSiteSelect`/`AdminSiteSelect` 결과로 클라이언트가 제한한다.
 
 ---
 

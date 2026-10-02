@@ -205,10 +205,14 @@ import AppSelect from '@/components/app/AppSelect'
 | `disabled` | `boolean` | `false` |
 | `className` | `string` | — |
 | `aria-label` | `string` | — (외부 라벨이 없을 때만) |
+| `icon` | `LucideIcon` | — (018 추가, optional) |
+| `active` | `boolean` | `false` (018 추가, optional) |
 
 **가이드**
 
 - **label / error / hint를 갖지 않는다.** 폼에서 쓸 땐 `AppFormField`로 감쌀 것(D9 분담).
+- `icon`·`active`는 **필터 트리거로 쓸 때**만 준다(018 추가). `active`는 `AppFilterButton`과 동일한 강조 토큰(`border-point`/`bg-point-bg`/`text-point-foreground`)을 적용한다. 둘 다 optional이라 기존 호출부(`AppPagination`)는 외형이 변하지 않는다.
+- 아이콘과 `SelectValue`는 한 `<span>`으로 묶여 있다 — `SelectTrigger` 기본 클래스의 `justify-between`(`ui/select.tsx:24`) 때문에 묶지 않으면 값이 가운데로 벌어진다.
 - 트리거는 `<button role="combobox">`다. `<label>`로 감싸도 이름이 연결되지 않으므로, `AppFormField` 밖에서 쓸 땐 `aria-label`을 준다(예: `AppPagination`의 "페이지당 행 수").
 - **다중 선택 미지원**(017 결정 — 확정 수요가 없었음). 필요해지면 기본값 `false`인 `multiple` prop으로 확장하며, 기존 호출부는 건드리지 않는다.
 - 옵션이 많아도 `ui/select`의 스크롤 버튼이 처리하므로 별도 가상화는 불필요.
@@ -234,10 +238,12 @@ import AppDatePicker from '@/components/app/AppDatePicker'
 | `placeholder` | `string` | `'기간 선택'` |
 | `disabled` | `boolean` | `false` |
 | `className` | `string` | — |
+| `active` | `boolean` | `false` (018 추가, optional) |
 
 **가이드**
 
 - **범위 전용**(017 결정 — 단일 날짜 확정 수요 0곳). 단일이 필요해지면 그때 추가.
+- `active`는 필터 트리거로 쓸 때의 선택 강조(018 추가). `CalendarIcon`은 이미 내장돼 있어 `icon` prop은 두지 않았다. 강조 토큰은 `AppSelect`·`AppFilterButton`과 동일.
 - 값은 `Date` 객체로만 다룬다. **쿼리스트링 직렬화는 소비 측 책임** (`patterns.md` §6, `*Query`의 `from`/`to`).
 - 트리거 라벨은 `yyyy-MM-dd ~ yyyy-MM-dd`. `to`가 없으면 시작일만 표시.
 - 기존 선택값이 있으면 그 달로 열린다(`defaultMonth`). 없으면 이번 달.
@@ -477,6 +483,8 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 
 - 트리거 시각만 제공. 팝오버/드롭다운 콘텐츠 조립은 소비 측(각 화면) 책임.
 - `asChild`로 radix `PopoverTrigger`/`DropdownMenuTrigger`에 감쌀 수 있도록 ref를 전달한다.
+- **`AppSelect`·`AppDatePicker`를 `AppFilterButton`으로 감싸지 않는다**(018 결정). 둘은 이미 자체 트리거 버튼을 갖고 있어 감싸면 **버튼 안에 버튼**이 되어 DOM이 무효가 되고 포커스·키보드 동작이 깨진다. 그래서 두 primitive에 `icon`·`active`를 직접 추가해 필터 트리거로 쓴다(§3-2·§3-3).
+- `AppFilterButton`은 **자체 트리거가 없는 커스텀 팝오버 필터**에만 쓴다. 현재 소비처는 `/users` 2곳.
 
 ---
 

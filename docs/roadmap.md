@@ -293,6 +293,7 @@ flowchart LR
 | R Redesign (전체) | ☑ | 현장 5개 화면 모두 신규 셸(`ServiceLayout`+`RailSidebar`)에서 렌더링, screens.md §1-2~§1-5 동기화 완료. 위 Open Q(전역 토큰의 본사 side-effect)는 Phase 5 이전 해소 필요 |
 | 2 공용 컴포넌트 — 017 select/datepicker | ☑ | `AppSelect`(단일 선택) + `AppDatePicker`(범위) 신설, shadcn 원시 3종(`select`/`popover`/`calendar`) 추가, `react-day-picker` v10 도입. §6을 2종으로 재산정(3종 이동). vitest 13건 추가(81→94). **US3 추가(2026-09-29)**: `AppPagination` 행 수 셀렉트를 `AppSelect`로 교체해 현장 5개 화면에서 즉시 확인 가능 — `AppSelect`는 M2 발동·**사용자 시각 확인 완료(2026-10-01)**, `AppDatePicker` 소비처 연결은 018 |
 | 2 공용 컴포넌트 (전체) | ☑ | 재산정된 §6-1 2종(`AppSelect`·`AppDatePicker`) 모두 완료 → Phase 2 종료 조건 충족. 실제 조립·시각 확인은 018 |
+| 3 현장 코어 — 018 patrol-history-filters | ◩ | **부분 완료 후 조기 종료(2026-10-02)**. 완료: Phase 1~2(primitive `icon`/`active` prop + `dateRangeQuery` 순수함수) + Phase 3 US1 `/patrol/zones` 필터 3종 조립·URL 연동(`{replace:true}`). vitest 94→136건. **보류**: Phase 4(US2 `/patrol/points` 필터)·Phase 5(페이지네이션 URL 이관) → 백엔드 실측(`api-spec.md`)으로 **서버가 필터·페이징을 모두 제공**함이 확인되어 클라이언트 필터는 확정 폐기 대상. `spec 022`(지점 이력)·`023`(코스 이력) 연동에서 서버 값 기준으로 수행. M2 시각 검증(T169)도 함께 이월 |
 | 3 현장 코어 | ☐ | screens.md §1-2/1-3 ✓ (Phase R 완료 후 재확인 필요) |
 | 4 현장 신규 | ☐ | screens.md §1-4/1-5 ✓ (Phase R에서 이미 대부분 처리됨 → 재산정) |
 | 5 본사 영역 | ☐ | screens.md §2 ✓ |
@@ -307,7 +308,9 @@ flowchart LR
 
 - [ ] Phase별 **인력·일정** 산정(현재는 순서만)
 - [ ] **본사·현장 동시 진행** 시 인력 분배 정책
-- [ ] **MSW → 실 API 전환** 트리거 시점(전 Phase 종료 후? Phase 단위?)
+- [x] **MSW → 실 API 전환** 트리거 시점 — **해소(2026-10-02)**: 백엔드 테스트 서버 확보 + GET 23개 전수 실측 완료(`docs/api-spec.md`). **화면 단위**로 전환한다. 공통 기반(`spec 019`: 로그인·사업장 선택·인터셉터·공용 타입) 선행 후 `020 순찰지점 → 021 순찰코스 → 022 지점이력 → 023 코스이력 → 024 공지사항` 순. 403(`/users`)·API 미구현(`/deployments`·`/progress`·환경설정)은 뒤로 미룸
+- [ ] **지점 순찰이력 결과 뱃지 5종 ↔ 서버 `status` 불일치** (018 T165에서 등재, 실측으로 범위 확정) — `design-system.md` §1-1은 뱃지 **5종**(이상없음/순찰기록/시간초과/미완료/순찰제외)인데 서버 `status`는 **각 컨텍스트 2종뿐**이고 값 체계도 다르다(코스이력 `1=완료 2=미완료`, 지점이력 `3=미완료 4=완료` — `api-spec.md` §4). 뱃지는 `status` + `overtimeYn` + `hasMemo` **조합 유도**일 가능성이 높으나 "이상없음"·"순찰제외"의 서버 근거가 특정되지 않았다. 함께 정리할 것: SSOT `types/enum.ts`의 `PointResult` **소비처 0개**, feature types는 dead, 실제 사용은 페이지 인라인 — **3중 분기 상태**. `spec 022` 착수 시 (a) 조합 유도 규칙 확정 (b) enum SSOT 일원화 (c) 백엔드에 결과 코드 추가 요청 중 결정
+- [ ] **현장 계정의 근무자 API 403** — `/users`(근무자 관리)의 주 사용자는 현장관리자인데 현장 계정으로 `UserList`/`UserDetail` 호출 시 **403**(`api-spec.md` §5-1). 권한 설계 누락인지 의도인지 백엔드 확인 필요. 그때까지 `/users` 연동은 보류
 - [ ] `/settings/keywords` UX 확정 시점 (Phase 4 안에 들어갈지, 별도 Phase로 미룰지)
 - [ ] **전역 디자인 토큰의 본사(`/admin/*`) side-effect** (016에서 발견) — `src/index.css`의 폰트(Pretendard)·기본 폰트사이즈(12.5px)·시맨틱 색상 값이 `:root`/`.dark` 전역 스코프라 라우트 분리 없이 본사 사이트에도 그대로 적용됨. 007 spec의 "본사 시각 무변화" DoD와 불일치하나 현재 admin은 placeholder뿐이라 실질 영향 미미. **Phase 5(본사 전체 구현) 착수 전 결정 필요**: (a) 본사 전용 토큰 오버라이드 신설, (b) 본사도 그냥 신규 토큰을 그대로 받아들이고 리디자인 라운드에서 재조정, (c) 현행 유지(문서만 정정)
 - [ ] **본사 사이트의 모바일 대응 수준** — 본사는 사실상 PC 전용일 가능성. 모바일 분기를 Phase 1에 포함할지 결정

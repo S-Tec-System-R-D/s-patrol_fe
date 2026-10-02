@@ -32,9 +32,26 @@
 - [x] T155 [US1] `PatrolZonesPage` 필터 배선 in src/pages/service/patrol/zones/PatrolZonesPage.tsx — `AppFilterButton` 3개(`:67-69`) → `AppDatePicker` 1 + `AppSelect` 2로 교체. `useQueryParams`로 읽고 쓰기(**`{ replace: true }`** — spec §3), 필터 통과 행만 `AppTable`에 전달, `AppPagination.total`을 필터 후 건수로, 0건이면 `AppEmpty`, 필터 변경 시 `page` 1로 리셋, 선택된 필터에 `active`
 - [x] T156 [US1] 화면 레벨 테스트 in src/pages/service/patrol/zones/__tests__/PatrolZonesPage.test.tsx — `MemoryRouter`의 `initialEntries`로 쿼리 있는 URL 직접 진입 복원 / 선택 시 URL 갱신 / "전체" 선택 시 키 제거
 
-## Phase 4: US2 — `/patrol/points` 지점 이력 필터
+## Phase 4: US2 — `/patrol/points` 지점 이력 필터 — ⏸ **보류 (spec 022로 이관)**
 
-> **독립 테스트 기준**: US1과 동일 기준을 5개 필터(기간·순찰코스·인증수단·순찰자·결과)에 적용. `?authenticationMethod=QR&result=NORMAL`로 직접 진입하면 두 조건을 모두 만족하는 행만 보인다.
+> **보류 결정 (2026-10-02)** — 백엔드 실측(`docs/api-spec.md`) 결과 서버가 필터를 전부 제공한다.
+> `GET /api/v1/History/W/sign/GetPointHistory` 쿼리: `fromDt` `toDt` `courseSeq` `pointSeq` `authMethod` `userSeq` `status` `courseName` `userName` + 페이징
+> → **US2가 만들려던 5개 필터를 서버가 그대로 커버한다.** 지금 클라이언트 필터 순수 함수를 만들면 연동 시 확정 폐기다.
+>
+> **다만 버려지는 범위는 좁다.** 설계 의도(필터 상태를 URL 쿼리스트링에 담아두면 연동 시 서버 파라미터에 연결만 하면 된다)는 유효하다.
+>
+> | 태스크 | 연동 후 |
+> |---|---|
+> | T157 필터 순수 함수 | ❌ 폐기 — 서버 필터로 대체 |
+> | T159 그 단위 테스트 | ❌ 폐기 |
+> | T158 옵션 유도 | 🔄 유지 — 소스만 mock → 서버 값으로 교체 |
+> | T160 필터 UI 배선 (`AppSelect`/`AppDatePicker` 교체 + `useQueryParams`) | ✅ 그대로 필요 |
+> | T161 화면 레벨 테스트 | ✅ 그대로 필요 |
+>
+> → 전부 **`spec 022` 「순찰이력 — 지점 이력」 연동**에서 서버 값 기준으로 한 번에 수행한다.
+> 참고: Phase 3(US1)에서 이미 만든 `filterCourseHistory.ts` / `courseHistoryOptions.ts` 도 같은 운명이며 `spec 023` 에서 정리한다.
+
+> **독립 테스트 기준**(이관 시 그대로 승계): US1과 동일 기준을 5개 필터(기간·순찰코스·인증수단·순찰자·결과)에 적용. `?authenticationMethod=QR&result=NORMAL`로 직접 진입하면 두 조건을 모두 만족하는 행만 보인다.
 
 - [ ] T157 [US2] 지점 이력 필터 순수 함수 in src/features/patrol-points/lib/filterPointHistory.ts — `from`/`to`/`courseId`(`zoneName`)/`authenticationMethod`/`workerId`(`worker`)/`result` AND 결합
 - [ ] T158 [US2] [P] 코스·순찰자·인증수단·결과 옵션 유도 in src/features/patrol-points/lib/pointHistoryOptions.ts — 코스·순찰자는 목 데이터 중복 제거, 인증수단·결과는 `PointColumn.tsx:14-26` 뱃지맵에서. "전체" 선두 추가
@@ -42,9 +59,16 @@
 - [ ] T160 [US2] `PatrolPointsPage` 필터 배선 in src/pages/service/patrol/points/PatrolPointsPage.tsx — `AppFilterButton` 5개(`:64-68`) → `AppDatePicker` 1 + `AppSelect` 4로 교체. 나머지는 T155와 동일(`{ replace: true }` 포함). 이 화면은 상세 패널이 없어 0건 시 `AppEmpty`가 테이블 자리에 들어간다
 - [ ] T161 [US2] 화면 레벨 테스트 in src/pages/service/patrol/points/__tests__/PatrolPointsPage.test.tsx — T156과 동일 3축 + 2개 조건 동시 진입
 
-## Phase 5: US3 — 페이지네이션 URL 이관
+## Phase 5: US3 — 페이지네이션 URL 이관 — ⏸ **보류 (spec 022·023으로 이관)**
 
-> **독립 테스트 기준**: 두 화면에서 2페이지로 이동하면 URL에 `page=2`가 남고, 그 URL로 새로고침하면 2페이지가 복원된다. 행 수를 바꾸면 `pageSize`가 반영되며 `page`는 1로 리셋된다. 필터를 바꾸면 `page`가 1로 돌아간다. 이 모든 변경이 히스토리를 쌓지 않아 뒤로가기 한 번으로 화면을 벗어난다.
+> **보류 결정 (2026-10-02)** — 서버 페이징과 정합을 맞춰야 하므로 연동과 분리할 수 없다.
+> 실측 확정 사항(`api-spec.md` §1-5): 요청은 `pageNumber`(**1-based**)·`pageSize`, **응답 필드는 `page`**(이름 다름), 응답은 평면 구조 `items`/`page`/`pageSize`/`totalCount`/`totalPages`.
+> `pageNumber=0`은 400, 범위 초과는 `200` + 빈 배열.
+> → 지금 mock 기준으로 URL 이관을 끝내도 서버 붙일 때 `total` 산출·리셋 조건을 다시 손봐야 한다. **T162·T163은 각 이력 화면 연동(`spec 022`·`023`)에 포함한다.**
+>
+> URL ↔ 컴포넌트 경계에서만 1-based 변환한다는 **설계 방침은 그대로 승계**한다(`AppPagination`의 `pageIndex` 0-based 계약 무변경).
+
+> **독립 테스트 기준**(이관 시 그대로 승계): 두 화면에서 2페이지로 이동하면 URL에 `page=2`가 남고, 그 URL로 새로고침하면 2페이지가 복원된다. 행 수를 바꾸면 `pageSize`가 반영되며 `page`는 1로 리셋된다. 필터를 바꾸면 `page`가 1로 돌아간다. 이 모든 변경이 히스토리를 쌓지 않아 뒤로가기 한 번으로 화면을 벗어난다.
 >
 > US1·US2에서 필터만 URL에 올리고 페이지는 `useState`로 남겨두면 `patterns.md` §6("페이지 번호도 URL에 저장")을 어기고, 필터-페이지 리셋 로직이 두 곳으로 갈린다. 그래서 별도 US로 분리해 마지막에 한 번에 이관한다.
 
@@ -53,12 +77,12 @@
 
 ## Phase 6: Polish
 
-- [ ] T164 [P] `docs/screens.md` §1-2 갱신 in docs/screens.md — 두 행의 "필터 팝오버/URL 연동 ... Phase 3 이월" 문구 해소. Export는 미해소로 남기므로 그 부분만 유지
-- [ ] T165 [P] `docs/roadmap.md` 갱신 in docs/roadmap.md — §12에 018 행 추가, **§13에 결과 enum 3중 분기 Open Q 등재**(SSOT `enum.ts` 소비처 0 / feature types dead / 페이지 인라인이 실사용 + `design-system.md` §1-1 뱃지 5종과 SSOT `PointResult` 충돌 → 스웨거 확보 후 결정)
-- [ ] T166 [P] `docs/components.md` 갱신 in docs/components.md — §3-2 `AppSelect`에 `icon`·`active` 행, §3-3 `AppDatePicker`에 `active` 행. **필터 트리거는 primitive를 직접 쓰고 `AppFilterButton`으로 감싸지 않는다**는 근거를 §9 계열에 1~2줄로 명시(중첩 트리거 금지)
-- [ ] T167 `npm run verify` + `npm run test` **병렬 실행** green 확인 (CLAUDE.md A4)
-- [ ] T168 DoD 대조표 작성(증거 `파일:라인`) + 본 파일 하단 "다음 spec으로 이월" 블록 작성
-- [ ] T169 **M2 시각 검증** — dev 서버에서 `/patrol/zones`·`/patrol/points` 필터 8개 동작·강조·목록 반영·0건 빈 상태 확인. **`AppDatePicker`의 첫 시각 검증**(017 이월분 해소). 015 T110(`/notice`)도 같은 세션에서 함께 볼 수 있음. **사용자 승인 필요**
+- [x] T164 [P] `docs/screens.md` §1-2 갱신 — 코스 이력 행은 **018 필터 조립 완료**로 해소, 지점 이력 행은 **Phase 4 보류 → `spec 022` 이관**으로 문구 갱신. Export는 두 행 모두 미해소 유지. 추가로 **결과 뱃지 5종 ↔ 서버 `status` 2종 불일치** 주의 블록 삽입
+- [x] T165 [P] `docs/roadmap.md` 갱신 — §12에 018 행 추가(`◩` 부분 완료 후 조기 종료). §13에 Open Q **3건** 반영: ① "MSW → 실 API 전환 트리거" **해소**(화면 단위 전환 + spec 019~024 순서 확정) ② **결과 뱃지 5종 ↔ 서버 `status` 불일치** 신규 등재(원래 "스웨거 확보 후 결정"이었고, 실측으로 범위가 확정됨 — enum 3중 분기 정리도 함께) ③ **현장 계정 `/users` 403** 신규 등재
+- [x] T166 [P] `docs/components.md` 갱신 — §3-2 `AppSelect`에 `icon`·`active` Props 행 + 아이콘/`SelectValue` 묶음 사유, §3-3 `AppDatePicker`에 `active` 행, §9-2 `AppFilterButton`에 **중첩 트리거 금지**(버튼 안 버튼 → DOM 무효·포커스 깨짐) 근거와 잔존 소비처(`/users` 2곳) 명시
+- [x] T167 `npm run verify` + `npm run test` 병렬 실행 green 확인 — verify 0 errors(경고 1건은 `public/mockServiceWorker.js` 기존 MSW 생성물), test **32 files / 136 tests** green
+- [x] T168 DoD 대조표 + "다음 spec으로 이월" 블록 작성 — 본 파일 하단
+- [ ] T169 **M2 시각 검증** — ⏸ **보류 → `spec 022`·`023` 으로 이월**. 사유: 두 이력 화면이 연동 과정에서 서버 필터로 재배선되므로 지금 시각 검증을 해도 같은 화면을 다시 봐야 한다. `AppDatePicker` 첫 시각 검증(017 이월분)도 함께 이월. **단, 현재 구현 상태는 `docs/ui-current/` baseline 캡쳐로 고정돼 있다**(`/patrol/zones` 필터 UI 포함) — 연동 후 비교 기준으로 사용
 
 ---
 
@@ -109,4 +133,40 @@
   2. **0건 처리** — `AppTable`은 자체적으로 tbody에 "데이터가 없습니다" 셀을 넣지만(`AppTable.tsx:117-121`), `patterns.md` §7과 spec DoD에 맞춰 **테이블 자리를 `AppEmpty`로 교체**했다(0건이면 `AppPagination`도 숨김). `AppTable` 자체는 무변경 — 다른 화면 영향 없음
 - **부수 개선 1건**: 선택된 이력이 필터에서 빠지면 우측 상세 패널도 함께 비운다(`activePatrol` 유도). 필터로 사라진 행의 상세가 남아 있는 상태를 막기 위함
 - `AppFilterButton`은 이 화면에서 빠졌고 `/users` 2곳에는 그대로 남아 있다(spec §3 범위 밖)
-- 다음: Phase 4(US2, T157~T161) `/patrol/points`
+- 다음: Phase 4(US2, T157~T161) `/patrol/points` → **보류 결정됨. 아래 "조기 종료" 참조**
+
+### 조기 종료 — Phase 4·5 보류 (2026-10-02)
+
+**계기**: 백엔드 테스트 서버가 확보되어 GET 23개를 전수 실측했다(`docs/api-spec.md` 신설).
+
+**결정**: Phase 1~3까지를 018의 성과로 확정하고 **Phase 4·5를 보류**한 뒤 spec을 닫는다.
+
+**근거**
+- `GetPointHistory` 가 `fromDt`·`toDt`·`courseSeq`·`pointSeq`·`authMethod`·`userSeq`·`status`·`courseName`·`userName` + 페이징을 **전부 쿼리로 받는다.** US2가 만들려던 필터 5종을 서버가 그대로 커버한다
+- 페이징도 서버가 처리하며 응답 구조가 실측 확정됐다(`items`/`page`/`pageSize`/`totalCount`/`totalPages`, 요청은 `pageNumber` 1-based). mock 기준으로 URL 이관을 끝내도 서버 연결 시 `total` 산출·리셋 조건을 다시 손봐야 한다
+- 즉 지금 Phase 4·5를 진행하면 **폐기가 확정된 코드를 한 세트 더 만드는 것**이 된다
+
+**버려지지 않는 것** — 필터 상태를 URL 쿼리스트링에 담는 설계 의도는 유효하다. 연동 시 쿼리키를 서버 파라미터에 **연결만** 하면 된다. 실제 폐기 대상은 클라이언트 필터 순수 함수 2개(`filterCourseHistory.ts` + 미작성분 `filterPointHistory.ts`)와 그 테스트뿐이다.
+
+**018 최종 성과**
+- `AppSelect`·`AppDatePicker`에 필터 트리거용 `icon`·`active` prop (optional, 기존 호출부 무영향)
+- `src/lib/dateRangeQuery.ts` — 날짜범위 ↔ 쿼리스트링 양방향 순수 함수 (**서버 `fromDt`/`toDt` 변환에 그대로 재사용**)
+- `/patrol/zones` 필터 3종 조립 + URL 연동(`{ replace: true }`) + 0건 `AppEmpty` + 상세 패널 동기화
+- vitest **94 → 136건**, 파일 29 → 32
+
+---
+
+## 다음 spec으로 이월
+
+| 항목 | 이월처 | 비고 |
+|---|---|---|
+| T157·T159 지점이력 클라이언트 필터 + 테스트 | — | **폐기.** 서버 필터로 대체 |
+| T158 옵션 유도(코스·순찰자·인증수단·결과) | `spec 022` | 소스를 mock → 서버 값으로 교체해 재작성 |
+| T160·T161 `/patrol/points` 필터 UI 배선 + 화면 테스트 | `spec 022` | UI 교체·`useQueryParams` 배선은 그대로 필요 |
+| T162·T163 페이지네이션 URL 이관 + 테스트 | `spec 022`·`023` | 서버 페이징과 함께. "경계에서만 1-based 변환" 방침 승계 |
+| T169 M2 시각 검증 | `spec 022`·`023` | `AppDatePicker` 첫 시각 검증(017 이월분) 포함 |
+| Phase 3 산출물 `filterCourseHistory.ts`·`courseHistoryOptions.ts` 정리 | `spec 023` | 서버 필터로 전환하며 제거 |
+| 순찰이력 **Export**(Excel/PDF) | 미정 | 009·010부터 계속 이월 중. 서버 지원 여부 미확인 |
+| 결과 뱃지 5종 ↔ 서버 `status` 2종 불일치 + enum 3중 분기 | `spec 022` | `roadmap.md` §13 등재 |
+
+**선행 조건**: `spec 019`(로그인·사업장 선택·인터셉터·공용 타입)가 끝나야 `022`·`023`에 착수할 수 있다. `siteSeq` 가 두 이력 API 모두의 필수 파라미터다.

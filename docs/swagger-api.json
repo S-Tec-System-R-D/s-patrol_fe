@@ -1,0 +1,2053 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "STSP 순찰 API",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/Course/W/sign/GetCourseList": {
+      "get": {
+        "tags": ["Course"],
+        "summary": "코스 목록 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "searchKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "useYn",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "switchYn",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "courseStatus",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/W/sign/GetClassificationPoint": {
+      "get": {
+        "tags": ["Course"],
+        "summary": "코스 추가시 지점 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/W/sign/AddCourse": {
+      "post": {
+        "tags": ["Course"],
+        "summary": "코스 추가",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_AddCourseDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_AddCourseDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_AddCourseDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_AddCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/W/sign/GetCourseDetail": {
+      "get": {
+        "tags": ["Course"],
+        "summary": "코스 상세조회",
+        "parameters": [
+          {
+            "name": "courseSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/W/sign/UpdateCourse": {
+      "put": {
+        "tags": ["Course"],
+        "summary": "코스 수정",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdateCourseDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdateCourseDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdateCourseDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdateCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/W/sign/DeleteCourse": {
+      "delete": {
+        "tags": ["Course"],
+        "summary": "코스 삭제",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Group/W/sign/GetGroupList": {
+      "get": {
+        "tags": ["Group"],
+        "summary": "그룹 리스트 조회",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Group/W/sign/AddGroup": {
+      "post": {
+        "tags": ["Group"],
+        "summary": "그룹 추가",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Group_Request_AddGroupDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Group_Request_AddGroupDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Group_Request_AddGroupDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Group_Request_AddGroupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Group/W/sign/UpdateGroup": {
+      "put": {
+        "tags": ["Group"],
+        "summary": "그룹 수정",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Group_Request_UpdateGroupDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Group_Request_UpdateGroupDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Group_Request_UpdateGroupDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Group_Request_UpdateGroupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Group/W/sign/DeleteGroup": {
+      "delete": {
+        "tags": ["Group"],
+        "summary": "그룹 삭제 (하위 그룹 포함, 사업장 있으면 삭제불가)",
+        "parameters": [
+          {
+            "name": "groupSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Group/W/sign/GetGroupAdminList": {
+      "get": {
+        "tags": ["Group"],
+        "summary": "그룹 관리자 리스트 조회, 그룹 추가, 수정에 쓰임.",
+        "parameters": [
+          {
+            "name": "groupSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/W/sign/GetCourseHistory": {
+      "get": {
+        "tags": ["History"],
+        "summary": "코스 이력 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fromDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "courseSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "eventType",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "userName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/W/sign/GetPointHistory": {
+      "get": {
+        "tags": ["History"],
+        "summary": "지점 이력 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fromDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "courseSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pointSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "authMethod",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "userSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "courseName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/W/sign/GetPointHistoryDetail": {
+      "get": {
+        "tags": ["History"],
+        "summary": "지점 이력 상세 조회",
+        "parameters": [
+          {
+            "name": "detailSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/W/sign/GetPointCurrentList": {
+      "get": {
+        "tags": ["History"],
+        "summary": "지점 최근 이력 조회",
+        "parameters": [
+          {
+            "name": "pointSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/W/sign/GetPointUsedCount": {
+      "get": {
+        "tags": ["History"],
+        "summary": "지점 인증 수단 및 사용 코스 수 조회",
+        "parameters": [
+          {
+            "name": "pointSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/W/sign/GetCourseHistoryDetail": {
+      "get": {
+        "tags": ["History"],
+        "summary": "코스 이력 상세 조회",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/W/sign/GetCourseHistoryCheckDetails": {
+      "get": {
+        "tags": ["History"],
+        "summary": "코스 이력 지점별 인증 상세 조회",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/W/sign/GetCourseHistoryHandOvers": {
+      "get": {
+        "tags": ["History"],
+        "summary": "코스 이력 교대 기록 조회",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Login/W/Login": {
+      "post": {
+        "tags": ["Login"],
+        "summary": "웹 로그인",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Login_Request_LoginDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Login_Request_LoginDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Login_Request_LoginDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Login_Request_LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Login/W/sign/RefreshToken": {
+      "post": {
+        "tags": ["Login"],
+        "summary": "웹 리프레시 토큰",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Login_Request_RefreshTokenDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Login_Request_RefreshTokenDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Login_Request_RefreshTokenDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Login_Request_RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Login/W/sign/Logout": {
+      "post": {
+        "tags": ["Login"],
+        "summary": "웹 로그아웃",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Login/W/sign/AdminSiteSelect": {
+      "get": {
+        "tags": ["Login"],
+        "summary": "관리자 사업장 선택",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Login/W/sign/UserSiteSelect": {
+      "get": {
+        "tags": ["Login"],
+        "summary": "현장 사용자 사업장 선택",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notice/W/sign/AddNotice": {
+      "post": {
+        "tags": ["Notice"],
+        "summary": "공지사항 추가",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": ["description", "isPin", "siteSeq", "title"],
+                "type": "object",
+                "properties": {
+                  "siteSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "isPin": {
+                    "type": "boolean"
+                  },
+                  "file": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "siteSeq": {
+                  "style": "form"
+                },
+                "title": {
+                  "style": "form"
+                },
+                "description": {
+                  "style": "form"
+                },
+                "isPin": {
+                  "style": "form"
+                },
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notice/W/sign/GetNoticeList": {
+      "get": {
+        "tags": ["Notice"],
+        "summary": "공지사항 목록 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fromDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notice/W/sign/DetailNotice": {
+      "get": {
+        "tags": ["Notice"],
+        "summary": "공지사항 상세조회",
+        "parameters": [
+          {
+            "name": "noticeSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notice/W/sign/UpsertNotice": {
+      "patch": {
+        "tags": ["Notice"],
+        "summary": "공지사항 수정",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": ["noticeSeq"],
+                "type": "object",
+                "properties": {
+                  "noticeSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "isPin": {
+                    "type": "boolean"
+                  },
+                  "attachList": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Notice_Request_UpdateNoticeAttachDto"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "noticeSeq": {
+                  "style": "form"
+                },
+                "title": {
+                  "style": "form"
+                },
+                "description": {
+                  "style": "form"
+                },
+                "isPin": {
+                  "style": "form"
+                },
+                "attachList": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notice/W/sign/DeleteNotice": {
+      "delete": {
+        "tags": ["Notice"],
+        "summary": "공지사항 삭제",
+        "parameters": [
+          {
+            "name": "noticeSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Point/W/sign/GetPointList": {
+      "get": {
+        "tags": ["Point"],
+        "summary": "지점 목록 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "authMethod",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "useYn",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "searchKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Point/W/sign/AddPoint": {
+      "post": {
+        "tags": ["Point"],
+        "summary": "지점 등록",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Point_Request_AddPointDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Point_Request_AddPointDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Point_Request_AddPointDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Point_Request_AddPointDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Point/W/sign/DetailPoint": {
+      "get": {
+        "tags": ["Point"],
+        "summary": "지점 상세 조회",
+        "parameters": [
+          {
+            "name": "pointSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Point/W/sign/UpdatePoint": {
+      "patch": {
+        "tags": ["Point"],
+        "summary": "지점 수정",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdatePointDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdatePointDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdatePointDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdatePointDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Point/W/sign/DeletePoint": {
+      "delete": {
+        "tags": ["Point"],
+        "summary": "지점 삭제",
+        "parameters": [
+          {
+            "name": "pointSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Site/W/sign/AddSite": {
+      "post": {
+        "tags": ["Site"],
+        "summary": "사업장 추가",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_AddSiteDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_AddSiteDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_AddSiteDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_AddSiteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Site/W/sign/UpdateSite": {
+      "put": {
+        "tags": ["Site"],
+        "summary": "사업장 수정 ",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_UpdateSiteDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_UpdateSiteDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_UpdateSiteDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_UpdateSiteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Site/W/sign/GetSiteDetail": {
+      "get": {
+        "tags": ["Site"],
+        "summary": "사업장 상세정보 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Site/W/sign/DeleteSite": {
+      "delete": {
+        "tags": ["Site"],
+        "summary": "사업장 삭제 (하위 사업장 포함)",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": ["StspPatrolWebService"],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/W/sign/UserList": {
+      "get": {
+        "tags": ["User"],
+        "summary": "사용자 목록 조회",
+        "parameters": [
+          {
+            "name": "siteId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "searchKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "codeSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "originSiteSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "workYn",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/W/sign/UserDetail": {
+      "get": {
+        "tags": ["User"],
+        "summary": "사용자 상세 조회",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/W/sign/AddUser": {
+      "post": {
+        "tags": ["User"],
+        "summary": "유저 추가",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": ["loginId", "loginPw", "name", "phone", "siteSeq"],
+                "type": "object",
+                "properties": {
+                  "siteSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "codeSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "loginId": {
+                    "type": "string"
+                  },
+                  "loginPw": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "siteSeq": {
+                  "style": "form"
+                },
+                "codeSeq": {
+                  "style": "form"
+                },
+                "loginId": {
+                  "style": "form"
+                },
+                "loginPw": {
+                  "style": "form"
+                },
+                "name": {
+                  "style": "form"
+                },
+                "phone": {
+                  "style": "form"
+                },
+                "image": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/W/sign/UpdateUser": {
+      "post": {
+        "tags": ["User"],
+        "summary": "사용자 수정",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": ["userSeq"],
+                "type": "object",
+                "properties": {
+                  "userSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "loginPw": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "isRemove": {
+                    "type": "boolean"
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "userSeq": {
+                  "style": "form"
+                },
+                "loginPw": {
+                  "style": "form"
+                },
+                "name": {
+                  "style": "form"
+                },
+                "phone": {
+                  "style": "form"
+                },
+                "isRemove": {
+                  "style": "form"
+                },
+                "image": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/W/sign/RemoveUser": {
+      "delete": {
+        "tags": ["User"],
+        "summary": "유저 삭제",
+        "parameters": [
+          {
+            "name": "userSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StspPatrolWebService_Comm_Dto_v1_Admin_Group_Request_AddGroupDto": {
+        "required": ["groupName"],
+        "type": "object",
+        "properties": {
+          "parentGroupSeq": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "groupName": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "userSeq": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Admin_Group_Request_UpdateGroupDto": {
+        "required": ["groupName", "groupSeq"],
+        "type": "object",
+        "properties": {
+          "groupSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "parentGroupSeq": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "groupName": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "userSeq": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_AddSiteDto": {
+        "required": ["groupSeq", "siteName"],
+        "type": "object",
+        "properties": {
+          "groupSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "parentSiteSeq": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "siteName": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "tel": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "healthCheckYn": {
+            "type": "boolean"
+          },
+          "healthCheckInterval": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "healthCheckTimeout": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "healthCheckRetry": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "healthCheckStartTime": {
+            "type": "string",
+            "format": "date-span",
+            "nullable": true
+          },
+          "healthCheckEndTime": {
+            "type": "string",
+            "format": "date-span",
+            "nullable": true
+          },
+          "exceptionTime": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_ExceptionHealthCheckTimeDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_ExceptionHealthCheckTimeDto": {
+        "required": ["exceptionEndTime", "exceptionStartTime"],
+        "type": "object",
+        "properties": {
+          "exceptionStartTime": {
+            "type": "string",
+            "format": "date-span"
+          },
+          "exceptionEndTime": {
+            "type": "string",
+            "format": "date-span"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_UpdateExceptionHealthCheckTimeDto": {
+        "required": ["detailSeq", "exceptionEndTime", "exceptionStartTime"],
+        "type": "object",
+        "properties": {
+          "detailSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "exceptionStartTime": {
+            "type": "string",
+            "format": "date-span"
+          },
+          "exceptionEndTime": {
+            "type": "string",
+            "format": "date-span"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_UpdateSiteDto": {
+        "required": ["siteSeq"],
+        "type": "object",
+        "properties": {
+          "siteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "groupSeq": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "siteName": {
+            "type": "string",
+            "nullable": true
+          },
+          "tel": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "healthCheckYn": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "healthCheckInterval": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "healthCheckTimeout": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "healthCheckRetry": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "healthCheckStartTime": {
+            "type": "string",
+            "format": "date-span",
+            "nullable": true
+          },
+          "healthCheckEndTime": {
+            "type": "string",
+            "format": "date-span",
+            "nullable": true
+          },
+          "exceptionTime": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_Site_Request_UpdateExceptionHealthCheckTimeDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Course_Request_AddCourseDto": {
+        "required": ["courseName", "siteSeq"],
+        "type": "object",
+        "properties": {
+          "siteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "courseName": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "useYn": {
+            "type": "boolean"
+          },
+          "switchYn": {
+            "type": "boolean"
+          },
+          "totalMin": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_AddCoursePointDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Course_Request_AddCoursePointDto": {
+        "required": ["orderNo", "pointSeq"],
+        "type": "object",
+        "properties": {
+          "pointSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orderNo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "courseMin": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdateCourseDto": {
+        "type": "object",
+        "properties": {
+          "siteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "courseSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "courseName": {
+            "type": "string",
+            "nullable": true
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "useYn": {
+            "type": "boolean"
+          },
+          "switchYn": {
+            "type": "boolean"
+          },
+          "totalMin": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdateCoursePointDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdateCoursePointDto": {
+        "type": "object",
+        "properties": {
+          "pointSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coursePointSeq": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "orderNo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "courseMin": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Course_Request_UpdatePointDto": {
+        "required": ["pointSeq"],
+        "type": "object",
+        "properties": {
+          "pointSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "authMethod": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "reissueQrYn": {
+            "type": "boolean"
+          },
+          "nfcTagId": {
+            "type": "string",
+            "nullable": true
+          },
+          "gpsLat": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gpsLng": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "useYn": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Login_Request_LoginDto": {
+        "required": ["loginId", "loginPw"],
+        "type": "object",
+        "properties": {
+          "loginId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "loginPw": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Login_Request_RefreshTokenDto": {
+        "required": ["refreshToken"],
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Notice_Request_UpdateNoticeAttachDto": {
+        "type": "object",
+        "properties": {
+          "attachSeq": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isRemove": {
+            "type": "boolean"
+          },
+          "files": {
+            "type": "string",
+            "format": "binary",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Point_Request_AddPointDto": {
+        "required": ["authMethod", "useYn"],
+        "type": "object",
+        "properties": {
+          "siteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "authMethod": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "qrCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "nfcTagId": {
+            "type": "string",
+            "nullable": true
+          },
+          "gpsLat": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gpsLng": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "useYn": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "입력양식 - 'Bearer' [space] and then your token.\r\n                예: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Course"
+    },
+    {
+      "name": "Group"
+    },
+    {
+      "name": "History"
+    },
+    {
+      "name": "Login"
+    },
+    {
+      "name": "Notice"
+    },
+    {
+      "name": "Point"
+    },
+    {
+      "name": "Site"
+    },
+    {
+      "name": "StspPatrolWebService"
+    },
+    {
+      "name": "User"
+    }
+  ]
+}

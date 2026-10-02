@@ -141,8 +141,10 @@ src/
 
 - 타입: `PascalCase`. 도메인 모델은 명사형(`Worker`, `PatrolCourse`).
 - DTO 접미사: `Summary`(목록 행) / `Detail`(상세 패널) / `Create*Request` / `Update*Request` / `{Action}*Request`.
-- ID: 모두 `string`(UUID 가정). 날짜/시간: ISO 8601 문자열. 분 단위: `number`. 시각: `"HH:mm"` 문자열.
-- 화면에 표시되지 않는 필드는 DTO에 넣지 않는다.
+- ID: 모두 `number`(int32), 접미사 `~Seq`. 날짜/시간: ISO 8601 문자열(**타임존 없음**). 분 단위: `number`. 시각: `"HH:mm:ss"` 문자열. — 실측 확정, [`docs/api-spec.md`](./docs/api-spec.md) §1 참조.
+- **서버 응답이 메인이다.** 응답 타입은 **실측 그대로 전량 선언**한다(안 쓰는 필드도 둔다). 기준은 `api-spec.md`.
+  - 우리가 설계했던 필드 중 서버에 없는 것은 **화면에 실제로 바인딩되는지 확인** → 필요하면 **백엔드에 요청**, 불필요하면 **제거**한다. 서버 이름을 우리 옛 이름으로 되돌리지 않는다.
+  - 어댑터는 **서버 내부 불일치만** 흡수한다: ① 목록↔상세 필드명 차이 ② 정수 enum → 표시용 값 ③ 타입·포맷 차이. 셋 다 없으면 어댑터를 만들지 않는다.
 - `cva` variants 분리: `react-refresh/only-export-components` 회피를 위해 동일 폴더의 인접 파일 `./{컴포넌트명}.variants.ts`로 분리한다 (예: `button.tsx` ↔ `button.variants.ts`). 002-lint-cleanup에서 결정.
 
 ### API 응답 / 인증
@@ -150,11 +152,15 @@ src/
 - 모든 응답은 `ApiResponse<T>` 래퍼 안에 들어온다.
   - 목록: `ApiListResponse<T>` (= `ApiResponse<PagedData<T>>`)
   - 상세: `ApiDetailResponse<T>` (= `ApiResponse<T>`)
-- `code` 필드는 **HTTP status code** 그대로 사용. 성공 200, 실패 4xx/5xx.
-- 에러도 동일 wrapper(`data: null` + `code` + `message`). 별도 `ApiError` 타입 없음.
-- 페이지 번호: **1-based** (`?pageNumber=1`이 첫 페이지).
-- 인증: `accessToken` + `refreshToken`. 만료 시 axios 인터셉터가 자동으로 refresh 요청.
-- 세부 규약은 [`docs/data-model.md`](./docs/data-model.md) §2-1 참조.
+- `code` 필드는 **HTTP status code가 아니다.** 비즈니스/권한 코드다. 로그인 성공은 사이트+권한을 함께 나타낸다(본사 `101`/`102`/`103`, 현장 `201`/`202`), 일반 조회 성공은 `200`. — 실측 확정.
+- **에러 응답은 3종이 섞여 있다.** `message` 문자열이나 `code` 만으로 분기하면 안 된다.
+  - (A) `ApiResponse` 래퍼 — 비즈니스 오류(로그인 실패, 없는 ID 등)
+  - (B) ASP.NET **ProblemDetails**(`errors`/`title`/`status`/`traceId`) — 유효성 400, 서버 500. `message` 필드 없음
+  - (C) **빈 body** — 401(토큰 없음·무효), 403(권한 없음). 파싱하면 터진다. status code로만 분기
+- 페이지 번호: **1-based** (`?pageNumber=1`이 첫 페이지). 요청은 `pageNumber`, **응답 필드는 `page`**.
+- 인증: `accessToken`(수명 3시간) + `refreshToken`(**회전 없음**). 만료 시 axios 인터셉터가 자동으로 refresh 요청.
+- 사용자 정보 조회 엔드포인트는 **없다.** `accessToken` JWT 클레임을 디코딩해서 얻는다.
+- **응답 형태의 SSOT는 [`docs/api-spec.md`](./docs/api-spec.md)** (swagger에 응답 스키마가 없음). 요청 DTO는 `docs/swagger-api.json`. 화면이 요구하는 DTO 설계 의도는 [`docs/data-model.md`](./docs/data-model.md) §2-1.
 
 ### URL / 상태
 
@@ -188,6 +194,7 @@ src/
 | [`docs/screens.md`](./docs/screens.md) | 화면 인벤토리(위험도·진행도·라우트 매핑) |
 | [`docs/flow.md`](./docs/flow.md) | 네비게이션·시나리오 Mermaid |
 | [`docs/data-model.md`](./docs/data-model.md) | DTO·요청·응답·엔티티 |
+| [`docs/api-spec.md`](./docs/api-spec.md) | **백엔드 실측 응답 스펙. 응답 형태의 SSOT**(swagger에 응답 스키마 없음) |
 | [`docs/design-system.md`](./docs/design-system.md) | 디자인 토큰·컨벤션·접근성·콘텐츠 톤·의사결정 |
 | [`docs/components.md`](./docs/components.md) | App* 컴포넌트 + shadcn 원시 사용 가이드 |
 | [`docs/layout.md`](./docs/layout.md) | AppShell / Sidebar / TopNav / 컨텐츠 레이아웃 |
