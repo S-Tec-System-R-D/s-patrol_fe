@@ -2,24 +2,14 @@ import { describe, expect, it, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { http, HttpResponse } from 'msw'
-import { REFRESH_PATH } from '@/lib/axios'
 import { server } from '@/mocks/server'
 import AuthGuard from '../AuthGuard'
-import { setAccessToken, setRefreshToken, clearTokens } from '@/lib/auth/tokens'
-import type { MeRaw } from '@/features/auth/types/me'
-import type { ApiResponse } from '@/types/api'
+import { setAccessToken, clearTokens } from '@/lib/auth/tokens'
+import { MS_ROLE_CLAIM } from '@/features/auth/types/claims'
+import { makeAccessToken } from '@/test/jwt'
 
-const ok = <T,>(data: T): ApiResponse<T> => ({ code: 200, message: '성공', data })
-
-const ME: MeRaw = {
-  id: 'u1',
-  name: 'tester',
-  phone: '010-0000-0000',
-  role: 'FIELD_MANAGER',
-  status: 'ACTIVE',
-  registeredAt: '2026-01-01T00:00:00.000Z',
-}
+// 020: 사용자 정보의 출처가 JWT 클레임이다. 토큰을 심는 것이 곧 로그인 상태다.
+const FIELD_TOKEN = makeAccessToken({ userName: 'tester' })
 
 const renderAt = (initialPath: string) => {
   const queryClient = new QueryClient({
@@ -59,27 +49,26 @@ describe('AuthGuard', () => {
     await waitFor(() => expect(screen.getByText('ADMIN_LOGIN')).toBeInTheDocument())
   })
 
-  it('토큰 있음 + useMe 200 → Outlet 렌더(하위 라우트 통과)', async () => {
-    setAccessToken('mock-token')
-    server.use(http.get('/api/auth/me', () => HttpResponse.json(ok(ME))))
+  it('유효한 토큰 → Outlet 렌더(하위 라우트 통과)', async () => {
+    setAccessToken(FIELD_TOKEN)
 
     renderAt('/zones')
     await waitFor(() => expect(screen.getByText('OUTLET_OK')).toBeInTheDocument())
   })
 
-  it('토큰 있음 + useMe 401(refresh도 실패) → 로그인으로 Navigate', async () => {
-    setAccessToken('mock-token')
-    // refreshToken이 없으면 인터셉터가 재발급을 아예 건너뛴다 → 아래 재발급 핸들러가 걸리지 않는다.
-    // 이 테스트의 의도는 "재발급까지 시도했으나 실패" 경로이므로 둘 다 깐다
-    setRefreshToken('mock-refresh')
-    server.use(
-      http.get('/api/auth/me', () =>
-        HttpResponse.json({ code: 401, message: '인증 필요', data: null }, { status: 401 })
-      ),
-      http.post(REFRESH_PATH, () =>
-        HttpResponse.json({ code: 401, message: '재발급 실패', data: null }, { status: 401 })
-      )
-    )
+  // 020: 디코딩 불가한 토큰은 "사용자를 특정할 수 없음" → 가드가 로그인으로 보낸다.
+  // 019까지는 /api/auth/me의 401이 이 경로를 만들었다.
+  it('손상된 토큰 → 로그인으로 Navigate', async () => {
+    setAccessToken('not-a-jwt')
+
+    renderAt('/zones')
+    await waitFor(() => expect(screen.getByText('SERVICE_LOGIN')).toBeInTheDocument())
+  })
+
+  // 토큰 자체는 멀쩡한데 role 문자열이 미실측 값인 경우(OQ-D). 권한을 특정할 수 없으므로
+  // 통과시키지 않는다 — spec 020 §3 규칙 6. Master·Manager 계정이 생기면 이 경로가 사라진다.
+  it('매핑에 없는 role 클레임 → 로그인으로 Navigate', async () => {
+    setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: 'Master' }))
 
     renderAt('/zones')
     await waitFor(() => expect(screen.getByText('SERVICE_LOGIN')).toBeInTheDocument())

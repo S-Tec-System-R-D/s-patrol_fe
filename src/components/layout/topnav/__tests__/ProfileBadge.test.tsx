@@ -3,23 +3,19 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { http, HttpResponse } from 'msw'
 import { server } from '@/mocks/server'
 import { ProfileBadge } from '../ProfileBadge'
 import { setAccessToken, clearTokens, getAccessToken } from '@/lib/auth/tokens'
-import type { MeRaw } from '@/features/auth/types/me'
-import type { ApiResponse } from '@/types/api'
+import { MS_ROLE_CLAIM } from '@/features/auth/types/claims'
+import { makeAccessToken } from '@/test/jwt'
 
-const ok = <T,>(data: T): ApiResponse<T> => ({ code: 200, message: '성공', data })
-
-const ME: MeRaw = {
-  id: 'u1',
-  name: '홍길동',
-  phone: '010-0000-0000',
-  role: 'FIELD_MANAGER',
-  status: 'ACTIVE',
-  registeredAt: '2026-01-01T00:00:00.000Z',
-}
+// 020: 본인 정보가 /api/auth/me(실재하지 않는 엔드포인트)에서 JWT 클레임으로 바뀌었다.
+// 사용자를 만드는 방법 = 토큰을 심는 것.
+const FIELD_TOKEN = makeAccessToken({ userName: '홍길동' })
+const ADMIN_TOKEN = makeAccessToken({
+  userName: '홍길동',
+  [MS_ROLE_CLAIM]: 'SystemManager',
+})
 
 const renderAt = (initialPath: string) => {
   const queryClient = new QueryClient({
@@ -45,8 +41,7 @@ describe('ProfileBadge', () => {
   })
 
   it('로그인 사용자명이 드롭다운 라벨에 노출', async () => {
-    setAccessToken('mock-token')
-    server.use(http.get('/api/auth/me', () => HttpResponse.json(ok(ME))))
+    setAccessToken(FIELD_TOKEN)
 
     renderAt('/zones')
     const trigger = await screen.findByLabelText('프로필 메뉴 열기')
@@ -57,8 +52,7 @@ describe('ProfileBadge', () => {
   })
 
   it('로그아웃 클릭 시 토큰 clear + 로그인 페이지로 이동', async () => {
-    setAccessToken('mock-token')
-    server.use(http.get('/api/auth/me', () => HttpResponse.json(ok(ME))))
+    setAccessToken(FIELD_TOKEN)
 
     renderAt('/zones')
     const trigger = await screen.findByLabelText('프로필 메뉴 열기')
@@ -72,10 +66,7 @@ describe('ProfileBadge', () => {
   })
 
   it('admin 영역에서 로그아웃 시 /admin/login으로 이동', async () => {
-    setAccessToken('mock-token')
-    server.use(
-      http.get('/api/auth/me', () => HttpResponse.json(ok({ ...ME, role: 'SYSTEM' })))
-    )
+    setAccessToken(ADMIN_TOKEN)
 
     renderAt('/admin/locations')
     const trigger = await screen.findByLabelText('프로필 메뉴 열기')

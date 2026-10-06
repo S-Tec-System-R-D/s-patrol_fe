@@ -2,30 +2,18 @@ import { describe, expect, it, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { http, HttpResponse } from 'msw'
-import { REFRESH_PATH } from '@/lib/axios'
-import { setAccessToken, setRefreshToken, clearTokens } from '@/lib/auth/tokens'
+import { setAccessToken, clearTokens } from '@/lib/auth/tokens'
 import { server } from '@/mocks/server'
 import { RequireRoute } from '../RequireRoute'
-import type { MeRaw } from '@/features/auth/types/me'
-import type { ApiResponse } from '@/types/api'
+import { MS_ROLE_CLAIM } from '@/features/auth/types/claims'
+import { makeAccessToken } from '@/test/jwt'
 
-const ok = <T,>(data: T): ApiResponse<T> => ({ code: 200, message: '성공', data })
-
-const ADMIN_ME: MeRaw = {
-  id: 'admin-1',
-  name: 'admin',
-  phone: '010-0000-0000',
-  role: 'SYSTEM',
-  status: 'ACTIVE',
-  registeredAt: '2026-01-01T00:00:00.000Z',
-}
-
-const FIELD_ME: MeRaw = {
-  ...ADMIN_ME,
-  id: 'field-1',
-  role: 'FIELD_MANAGER',
-}
+// 020: 권한의 출처가 JWT role 클레임이다. 토큰을 심어 권한을 만든다.
+const ADMIN_TOKEN = makeAccessToken({
+  userName: 'admin',
+  [MS_ROLE_CLAIM]: 'SystemManager',
+})
+const FIELD_TOKEN = makeAccessToken({ [MS_ROLE_CLAIM]: 'FieldManager' })
 
 const renderWithRouter = (initialPath: string, ui: React.ReactNode) => {
   const queryClient = new QueryClient({
@@ -51,7 +39,7 @@ describe('RequireRoute', () => {
   })
 
   it('role 일치 시 children 렌더', async () => {
-    server.use(http.get('/api/auth/me', () => HttpResponse.json(ok(ADMIN_ME))))
+    setAccessToken(ADMIN_TOKEN)
 
     renderWithRouter(
       '/admin/anything',
@@ -64,7 +52,7 @@ describe('RequireRoute', () => {
   })
 
   it('role 불일치 시 /403으로 리다이렉트', async () => {
-    server.use(http.get('/api/auth/me', () => HttpResponse.json(ok(FIELD_ME))))
+    setAccessToken(FIELD_TOKEN)
 
     renderWithRouter(
       '/admin/anything',
@@ -77,17 +65,8 @@ describe('RequireRoute', () => {
     expect(screen.queryByText('PROTECTED')).not.toBeInTheDocument()
   })
 
-  it('미인증(useMe 실패) 시 /login으로 리다이렉트', async () => {
-    // refreshToken이 없으면 재발급을 건너뛰어 아래 재발급 핸들러가 걸리지 않는다
-    setAccessToken('mock-token')
-    setRefreshToken('mock-refresh')
-    server.use(
-      http.get('/api/auth/me', () => HttpResponse.json({ code: 401, message: '인증 필요', data: null }, { status: 401 })),
-      // refresh도 실패시켜 인터셉터의 재시도가 막히도록
-      // 경로는 axios의 REFRESH_PATH를 그대로 참조한다 — 하드코딩하면 조용히 어긋나 이 핸들러가 안 걸린다
-      http.post(REFRESH_PATH, () => HttpResponse.json({ code: 401, message: '재발급 실패', data: null }, { status: 401 }))
-    )
-
+  // 020: useMe 실패 = 토큰이 없거나 디코딩 불가. 네트워크 401이 아니다.
+  it('미인증(토큰 없음) 시 /login으로 리다이렉트', async () => {
     renderWithRouter(
       '/admin/anything',
       <RequireRoute roles={['SYSTEM', 'MASTER', 'MANAGER']}>
@@ -98,14 +77,11 @@ describe('RequireRoute', () => {
     await waitFor(() => expect(screen.getByText('LOGIN_PAGE')).toBeInTheDocument())
   })
 
-  it('로딩 중에는 children 렌더 안 함(빈 화면)', () => {
-    // 응답을 지연시켜 로딩 상태 유지
-    server.use(
-      http.get('/api/auth/me', async () => {
-        await new Promise((r) => setTimeout(r, 1000))
-        return HttpResponse.json(ok(ADMIN_ME))
-      })
-    )
+  // 019까지는 "응답 지연 → 로딩 상태"를 검증했으나, 020에서 useMe가 동기가 되어
+  // isLoading이 항상 false다. 로딩 상태 자체가 사라졌으므로 남은 계약인
+  // "data를 특정할 수 없으면 children을 렌더하지 않는다"를 손상된 토큰으로 고정한다.
+  it('사용자를 특정할 수 없으면 children 렌더 안 함', () => {
+    setAccessToken('not-a-jwt')
 
     const { container } = renderWithRouter(
       '/admin/anything',

@@ -1,6 +1,5 @@
 import { LogOutIcon, UserCircle2Icon, UserIcon } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useMe, meQueryKey } from '@/features/auth/hooks/useMe'
+import { useMe } from '@/features/auth/hooks/useMe'
 import { clearTokens } from '@/lib/auth/tokens'
 import { isAdminArea, paths } from '@/router/paths'
 
@@ -24,9 +23,10 @@ interface ProfileBadgeProps {
 
 /**
  * 프로필 뱃지 + 드롭다운. 본사 TopNav 우측 / 현장 RailSidebar 하단 양쪽에서 재사용.
- * - useMe 캐시 공유. 별도 fetch 없음.
+ * - useMe는 JWT 클레임을 읽는 동기 훅. fetch 없음(020).
  * - 메뉴: 사용자명(disabled label) / 내 정보(placeholder) / 로그아웃
- * - 로그아웃: 토큰 clear + meQueryKey invalidate + 영역별 로그인 이동
+ * - 로그아웃: 토큰 clear + 영역별 로그인 이동. 토큰이 사라지면 useMe가 바로 isError가
+ *   되므로 별도 캐시 무효화가 필요 없다(020에서 react-query 제거)
  */
 export const ProfileBadge = ({
   side = 'bottom',
@@ -34,13 +34,11 @@ export const ProfileBadge = ({
   variant = 'default',
 }: ProfileBadgeProps = {}) => {
   const { data } = useMe()
-  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
 
   const handleLogout = () => {
     clearTokens()
-    void queryClient.invalidateQueries({ queryKey: meQueryKey })
     const loginPath = isAdminArea(location.pathname) ? paths.adminLogin : paths.serviceLogin
     navigate(loginPath, { replace: true })
   }
