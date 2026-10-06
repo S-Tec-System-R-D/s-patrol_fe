@@ -3,6 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { http, HttpResponse } from 'msw'
+import { REFRESH_PATH } from '@/lib/axios'
+import { setAccessToken, setRefreshToken, clearTokens } from '@/lib/auth/tokens'
 import { server } from '@/mocks/server'
 import { RequireRoute } from '../RequireRoute'
 import type { MeRaw } from '@/features/auth/types/me'
@@ -44,6 +46,7 @@ const renderWithRouter = (initialPath: string, ui: React.ReactNode) => {
 
 describe('RequireRoute', () => {
   beforeEach(() => {
+    clearTokens()
     server.resetHandlers()
   })
 
@@ -75,10 +78,14 @@ describe('RequireRoute', () => {
   })
 
   it('미인증(useMe 실패) 시 /login으로 리다이렉트', async () => {
+    // refreshToken이 없으면 재발급을 건너뛰어 아래 재발급 핸들러가 걸리지 않는다
+    setAccessToken('mock-token')
+    setRefreshToken('mock-refresh')
     server.use(
       http.get('/api/auth/me', () => HttpResponse.json({ code: 401, message: '인증 필요', data: null }, { status: 401 })),
       // refresh도 실패시켜 인터셉터의 재시도가 막히도록
-      http.post('/api/auth/refresh', () => HttpResponse.json({ code: 401, message: '재발급 실패', data: null }, { status: 401 }))
+      // 경로는 axios의 REFRESH_PATH를 그대로 참조한다 — 하드코딩하면 조용히 어긋나 이 핸들러가 안 걸린다
+      http.post(REFRESH_PATH, () => HttpResponse.json({ code: 401, message: '재발급 실패', data: null }, { status: 401 }))
     )
 
     renderWithRouter(

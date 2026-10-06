@@ -58,12 +58,12 @@
 
 ## Phase 6: Polish
 
-- [ ] T185 MSW 핸들러 실경로 정리 in src/mocks/handlers/auth.ts — `/api/auth/refresh` → 실경로로 교체(`code: 201` 응답). **`/api/auth/me`는 대체 핸들러를 만들지 않고 제거**(엔드포인트 자체가 없음, JWT 디코딩으로 대체 — `spec 020`). `DEV_ROLE_KEY` 스왑 로직은 `useMe`가 살아 있는 동안 유지하되, 제거 예정임을 주석으로 명시
-- [ ] T186 T185로 깨지는 기존 테스트 복구 — `/api/auth/me` 의존 테스트가 있다면(`AuthGuard`·`RequireRoute`·`ProfileBadge`·`DeploymentHistoryTabs` 4파일이 후보) 최소 수정으로 green 복구. **`useMe` 자체 교체는 `spec 020` 범위** — 여기서는 핸들러 변경에 따른 복구만 한다. 복구 범위가 `useMe` 재설계로 번지면 **멈추고 보고**(A3)
-- [ ] T187 [P] `docs/data-model.md` §2-1·§6 갱신 — 구현 결과와 문서 정합 확인. P0에서 이미 교정했으므로 **차이가 없으면 "변경 없음"으로 기록**하고 넘어간다(불필요한 수정 금지)
-- [ ] T188 [P] `docs/roadmap.md` §12에 019 행 추가 — 결과·이월 사항 기록
-- [ ] T189 `npm run verify` + `npm run test` **병렬 실행** green 확인 (CLAUDE.md A4)
-- [ ] T190 DoD 대조표 작성(증거 `파일:라인`) + 본 파일 하단 "다음 spec으로 이월" 블록 작성
+- [x] T185 MSW 핸들러 실경로 정리 in src/mocks/handlers/auth.ts — **축소 실행**(아래 Phase 6 기록 참조). `/api/auth/me` **제거는 `spec 020`으로 이월** — `/api/auth/refresh` → 실경로로 교체(`code: 201` 응답). **`/api/auth/me`는 대체 핸들러를 만들지 않고 제거**(엔드포인트 자체가 없음, JWT 디코딩으로 대체 — `spec 020`). `DEV_ROLE_KEY` 스왑 로직은 `useMe`가 살아 있는 동안 유지하되, 제거 예정임을 주석으로 명시
+- [x] T186 T185로 깨지는 기존 테스트 복구 — **`/api/auth/me` 제거를 이월했으므로 해당 복구는 함께 이월.** 대신 refresh 실경로 교체로 드러난 가짜 green 2건을 복구 — `/api/auth/me` 의존 테스트가 있다면(`AuthGuard`·`RequireRoute`·`ProfileBadge`·`DeploymentHistoryTabs` 4파일이 후보) 최소 수정으로 green 복구. **`useMe` 자체 교체는 `spec 020` 범위** — 여기서는 핸들러 변경에 따른 복구만 한다. 복구 범위가 `useMe` 재설계로 번지면 **멈추고 보고**(A3)
+- [x] T187 [P] `docs/data-model.md` §2-1·§6 갱신 — 구현 결과와 문서 정합 확인. P0에서 이미 교정했으므로 **차이가 없으면 "변경 없음"으로 기록**하고 넘어간다(불필요한 수정 금지)
+- [x] T188 [P] `docs/roadmap.md` §12에 019 행 추가 — 결과·이월 사항 기록
+- [x] T189 `npm run verify` + `npm run test` **병렬 실행** green 확인 (CLAUDE.md A4)
+- [x] T190 DoD 대조표 작성(증거 `파일:라인`) + 본 파일 하단 "다음 spec으로 이월" 블록 작성
 
 ---
 
@@ -155,3 +155,49 @@
 - **테스트 설계**: `runRefresh`는 재귀 회피를 위해 **인터셉터를 타지 않는 전역 axios**를 쓴다. `api.defaults.adapter`만 바꾸면 재발급 요청이 안 잡혀서 `axios.defaults.adapter`도 함께 깔았다(패키지 추가 없음, `afterEach`에서 둘 다 원복)
 - **덮은 케이스 9건**: 재시도 성공 / 실경로 / Bearer 헤더 / refreshToken 무회전 / 동시 401 → 재발급 1회 / 재발급 후 401 → `_retry` 차단(요청 2회로 종료) / 재발급 경로 자체의 401 → 재귀 없음 / refreshToken 부재 / 재발급 실패 시 토큰 클리어
 - 다음: Phase 6(MSW 정리·문서·DoD, T185~T190)
+
+### Phase 6 완료 — MSW 정리·문서·DoD (2026-10-06)
+
+- T185~T190 완료. 테스트 **224건 유지**(35 files) — 신규 테스트 없음. `npm run verify` 0 errors
+- **T185는 계획의 절반만 실행했다.** 계획은 ① refresh 실경로 교체 ② `/api/auth/me` 제거 두 가지였는데, ②를 `spec 020`으로 이월했다(사용자 결정 2026-10-06).
+  - 사유: tasks.md 착수 전 산정은 "테스트 4개 파일이 후보"였으나 **실측 결과가 양쪽으로 달랐다.** 핸들러를 지워보니 깨지는 테스트는 **2건뿐**(`DeploymentHistoryTabs`)이다 — `ProfileBadge`·`RequireRoute`·`AuthGuard`는 각자 `server.use`로 me 핸들러를 직접 깔아서 전역 핸들러에 의존하지 않는다. 반면 **런타임 소비처는 12개 파일**이었다(`AuthGuard`·`RequireRoute`·`RequireRole`·`ProfileBadge`·에러 페이지 2종·배치 3종·워커 폼 2종·`UsersPage`).
+  - `AuthGuard.tsx:28`이 `isError || !data`면 로그인으로 보내므로, me 엔드포인트만 지우면 **MSW dev 환경에서 보호 라우트 진입이 전부 불가능**해진다. 테스트가 green인 것은 테스트가 각자 핸들러를 깔기 때문이지 앱이 동작한다는 뜻이 아니다.
+  - 따라서 제거는 `useMe`의 JWT 디코딩 전환과 **같은 작업이어야 한다** → `spec 020`. 핸들러에 제거 예정 사유를 주석으로 명시해 "없는 엔드포인트의 mock"이 왜 남아 있는지 코드에서 읽히게 했다
+- 🔴 **가짜 green 1건을 발견해 고쳤다** — Phase 5에서 `REFRESH_PATH`를 실경로로 바꿨는데 MSW 핸들러와 테스트 2곳(`RequireRoute.test.tsx`·`AuthGuard.test.tsx`)이 옛 경로 `/api/auth/refresh`를 하드코딩하고 있었다. 그래서 "재발급도 실패시켜 재시도를 막는다"는 핸들러가 **아예 걸리지 않은 채** 테스트가 통과했다. 통과 이유가 의도와 달랐던 것.
+  - 재발 방지로 `REFRESH_PATH`를 **export해 3곳이 공유**하게 했다. 경로 상수 하나가 프로덕션·mock·테스트에 흩어져 있던 것이 원인이라, 이것만은 A3(최소 변경)보다 재발 방지를 택했다. 한 줄 변경이고 소비처 3곳은 모두 **현재 확정 수요**다(A6의 미래 확장 포인트가 아니다)
+  - 추가로 두 테스트가 `refreshToken`을 세팅하지 않아 **재발급을 아예 건너뛰는** 상태였다. 경로만 고쳐도 핸들러가 안 걸린다. `setRefreshToken`을 깔아 의도대로 "재발급 시도 → 401 → 로그인 이동" 경로를 실제로 타게 했다
+- **MSW refresh 핸들러를 실측에 맞췄다**: 성공 `code`를 `200` → **`201`**, `message`를 실측 문구로, `refreshToken`은 **요청받은 값을 그대로 반환**(회전 없음 — §1-3). 기존 `ok()` 헬퍼는 `code: 200` 고정이라 쓰지 않고 별도로 작성
+- **T187 문서 정합**: `data-model.md` §6(에러 3종)은 구현과 **완전 일치 — 변경 없음**. §2-1은 `202`가 `(확인 필요)`로 남아 **틀린 상태**여서 그 표 행과 판정 규칙 3줄만 교정했다(근무자 확정 / 권한 SSOT = JWT `role` / `code` 성공판정 금지). 불필요한 수정은 하지 않았다
+- 다음: `spec 020` 로그인·사업장 선택
+
+---
+
+## DoD 대조표
+
+| # | 완료 조건 | 결과 | 증거 |
+|---|---|---|---|
+| 1 | 성공 응답이 `code` 무관하게 unwrap | ☑ | `src/lib/axios.ts:130`(`isApiResponse` 판정, `code` 미해석) / 테스트: 로그인 code 5종 `it.each` 고정 `src/lib/__tests__/axios.test.ts` |
+| 2 | 에러 3종에서 throw·파싱 예외 없이 메시지 1개 | ☑ | `src/lib/api/normalizeError.ts` / `src/lib/api/__tests__/normalizeError.test.ts`(비정상 body 8종 throw 없음 + `message.length > 0`) |
+| 3 | 빈 body(401·403)를 JSON 파싱하지 않음 | ☑ | `src/lib/api/responseShape.ts` `isEmptyBody` → `normalizeError`가 파싱 전 분기 / 403 테스트가 `SyntaxError`·`TypeError` 아님을 고정 |
+| 4 | `REFRESH_PATH` 실경로 + 재귀 차단이 같은 상수 참조 | ☑ | `src/lib/axios.ts:31`(선언) ↔ `:162` `isRefreshRequest`가 동일 상수 사용 / 재발급 경로 자체의 401이 재귀하지 않음을 테스트로 고정 |
+| 5 | 재발급 요청에 `Authorization` 헤더 | ☑ | `src/lib/axios.ts:90` |
+| 6 | 재발급 성공 판정 2xx + `code: 201` 정상 처리 | ☑ | `src/lib/axios.ts:99`(2xx + 토큰 존재 판정, `code` 미검사) / MSW 핸들러가 `code: 201` 반환 |
+| 7 | `code`가 필요한 호출용 래퍼 탈출구 | ☑ | `src/lib/axios.ts:50`(모듈 확장 `_raw`) ↔ `:136`(래퍼째 반환) |
+| 8 | `ProblemDetails` 타입 + 성공 `code` 상수가 `api-spec.md` §2-1과 일치 | ☑ | `src/types/api.ts:46`(`ProblemDetails`) / `:64`(`LOGIN_CODE` 5종) |
+| 9 | MSW가 실재하지 않는 경로를 참조하지 않음 | **◩ 부분** | `/api/auth/refresh` 해소(실경로 교체). **`/api/auth/me`는 `spec 020`으로 이월** — 런타임 12곳 의존, 사유는 핸들러 주석에 명시 |
+| 10 | 인터셉터 단위 테스트가 엣지 케이스 표 각 행을 덮음 | ☑ | `axios.test.ts` 26건 + `normalizeError.test.ts` 15건 + `responseShape.test.ts` 15건 |
+| 11 | `npm run verify` 0 errors + `npm run test` green | ☑ | verify 0 errors(경고 1건은 `public/mockServiceWorker.js` 기존 MSW 생성물) / test 35 files · 224 tests |
+
+**미충족 1건(#9)** — 의도적 이월. 단독 처리하면 dev 환경이 깨지므로 `useMe` 전환과 묶는다.
+
+---
+
+## 다음 spec으로 이월
+
+- [ ] **`/api/auth/me` MSW 핸들러 제거 + `useMe` JWT 디코딩 전환** → `spec 020`. 둘은 **같은 커밋이어야 한다.** 런타임 소비처 12개 파일(`AuthGuard`·`RequireRoute`·`RequireRole`·`ProfileBadge`·`ForbiddenPage`·`NotFoundPage`·`DeploymentsPage`·`DeploymentHistoryTabs`·`DeploymentKpiRow`·`AddWorkerForm`·`EditWorkerForm`·`UsersPage`). 핸들러 제거 시 깨지는 테스트는 **2건**(`DeploymentHistoryTabs.test.tsx`)으로 실측됨 — 나머지 테스트는 자체 `server.use`를 쓰므로, 전환 시 **각 테스트의 me 핸들러도 JWT 토큰 주입으로 바꿔야 한다**
+- [ ] **`DEV_ROLE_KEY` 스왑 로직 제거** → `spec 020`. 위 항목과 동시(실 로그인 폼이 임시 진입 버튼을 대체할 때)
+- [ ] **OQ-E 변경계 응답 실측** → `spec 022`. "HTTP 200 + 실패 `code`" 패턴이 있으면 성공 인터셉터에 `code` 기반 실패 분기를 **추가**한다. GET 23개엔 없었고 POST/PUT/PATCH/DELETE 19개는 미검증
+- [ ] **OQ-D JWT `role` 문자열 전체 목록** → `spec 020` 이후 계정 생성 기능에서 실측해 `api-spec.md` §1-2 기록. 현재 확인된 2개(`FieldManager`·`SystemManager`)만 매핑하고 나머지는 권한 없음 처리
+- [ ] **OQ-C 에러 toast 위치** → `spec 020`에서 실사용 보고 결정. 현재는 호출부(react-query) 책임 유지
+- [ ] **OQ-B 근무자(`code: 202`) WEB 차단** → `spec 020`. 로그인 직후 토큰 저장 없이 안내 후 중단
+

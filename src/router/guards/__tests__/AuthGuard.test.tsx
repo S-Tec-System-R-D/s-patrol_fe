@@ -3,9 +3,10 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { http, HttpResponse } from 'msw'
+import { REFRESH_PATH } from '@/lib/axios'
 import { server } from '@/mocks/server'
 import AuthGuard from '../AuthGuard'
-import { setAccessToken, clearTokens } from '@/lib/auth/tokens'
+import { setAccessToken, setRefreshToken, clearTokens } from '@/lib/auth/tokens'
 import type { MeRaw } from '@/features/auth/types/me'
 import type { ApiResponse } from '@/types/api'
 
@@ -68,11 +69,14 @@ describe('AuthGuard', () => {
 
   it('토큰 있음 + useMe 401(refresh도 실패) → 로그인으로 Navigate', async () => {
     setAccessToken('mock-token')
+    // refreshToken이 없으면 인터셉터가 재발급을 아예 건너뛴다 → 아래 재발급 핸들러가 걸리지 않는다.
+    // 이 테스트의 의도는 "재발급까지 시도했으나 실패" 경로이므로 둘 다 깐다
+    setRefreshToken('mock-refresh')
     server.use(
       http.get('/api/auth/me', () =>
         HttpResponse.json({ code: 401, message: '인증 필요', data: null }, { status: 401 })
       ),
-      http.post('/api/auth/refresh', () =>
+      http.post(REFRESH_PATH, () =>
         HttpResponse.json({ code: 401, message: '재발급 실패', data: null }, { status: 401 })
       )
     )

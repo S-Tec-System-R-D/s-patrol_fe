@@ -24,8 +24,11 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
  *
  * ⚠️ 이 상수를 바꾸면 아래 `isRefreshRequest` 재귀 차단도 함께 따라와야 한다.
  * 차단이 옛 경로를 보면 재발급 요청의 401이 무한루프가 된다. 같은 상수를 참조해 자동 정합.
+ *
+ * MSW 핸들러·테스트가 같은 경로를 하드코딩하면 조용히 어긋난다(019에서 실제로 발생 —
+ * 핸들러가 옛 경로에 걸려 재발급 실패 테스트가 우연히 통과했다). 그래서 export해 공유한다.
  */
-const REFRESH_PATH = '/api/v1/Login/W/sign/RefreshToken'
+export const REFRESH_PATH = '/api/v1/Login/W/sign/RefreshToken'
 
 /**
  * 401 → refresh 재시도용 확장 config.

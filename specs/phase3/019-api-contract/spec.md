@@ -113,17 +113,21 @@
 
 ## 5. 완료 조건 (DoD)
 
-- [ ] 성공 응답이 `code` 값과 무관하게(`200`/`101`/`201` 전부) unwrap되어 반환된다
-- [ ] 에러 3종(래퍼 / ProblemDetails / **빈 body**)에서 **throw·파싱 예외 없이** 사용자 표시용 메시지가 나온다
-- [ ] 빈 body(401·403) 응답을 JSON 파싱하지 않는다
-- [ ] `REFRESH_PATH`가 `/api/v1/Login/W/sign/RefreshToken` 실경로이고, 재귀 차단 조건이 같은 상수를 참조한다
-- [ ] 재발급 요청에 `Authorization` 헤더가 붙는다
-- [ ] 재발급 성공 판정이 2xx 기준이며 `code: 201` 응답을 정상 처리한다
-- [ ] 로그인·재발급처럼 `code`가 필요한 호출이 **래퍼 전체를 받을 수 있는 탈출구**가 있다
-- [ ] `src/types/api.ts`에 `ProblemDetails` 타입과 성공 `code` 사전 상수가 있고, `api-spec.md` §2-1 표와 값이 일치한다
-- [ ] MSW 핸들러가 실재하지 않는 경로(`/api/auth/me`·`/api/auth/refresh`)를 더는 참조하지 않는다
-- [ ] 인터셉터 단위 테스트가 위 엣지 케이스 표의 **각 행을 덮는다**
-- [ ] `npm run verify` 0 errors + `npm run test` green (CLAUDE.md A4, 병렬 실행)
+- [x] 성공 응답이 `code` 값과 무관하게(`200`/`101`/`201` 전부) unwrap되어 반환된다
+- [x] 에러 3종(래퍼 / ProblemDetails / **빈 body**)에서 **throw·파싱 예외 없이** 사용자 표시용 메시지가 나온다
+- [x] 빈 body(401·403) 응답을 JSON 파싱하지 않는다
+- [x] `REFRESH_PATH`가 `/api/v1/Login/W/sign/RefreshToken` 실경로이고, 재귀 차단 조건이 같은 상수를 참조한다
+- [x] 재발급 요청에 `Authorization` 헤더가 붙는다
+- [x] 재발급 성공 판정이 2xx 기준이며 `code: 201` 응답을 정상 처리한다
+- [x] 로그인·재발급처럼 `code`가 필요한 호출이 **래퍼 전체를 받을 수 있는 탈출구**가 있다
+- [x] `src/types/api.ts`에 `ProblemDetails` 타입과 성공 `code` 사전 상수가 있고, `api-spec.md` §2-1 표와 값이 일치한다
+- [~] MSW 핸들러가 실재하지 않는 경로(`/api/auth/me`·`/api/auth/refresh`)를 더는 참조하지 않는다 — **부분.** `/api/auth/refresh` 해소, `/api/auth/me`는 `spec 020` 이월(런타임 12곳 의존)
+- [x] 인터셉터 단위 테스트가 위 엣지 케이스 표의 **각 행을 덮는다**
+- [x] `npm run verify` 0 errors + `npm run test` green (CLAUDE.md A4, 병렬 실행)
+
+---
+
+> 증거 `파일:라인`은 [`tasks.md`](./tasks.md) "DoD 대조표" 참조. 11개 중 10개 충족, 1개(MSW `me` 경로) 의도적 이월.
 
 ---
 
