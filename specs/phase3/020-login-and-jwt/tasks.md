@@ -74,16 +74,16 @@
 
 ## Phase 6: Polish
 
-- [ ] T209 MSW 인증 핸들러 정리 in src/mocks/handlers/auth.ts — `/api/auth/me` 핸들러 **제거**(019에서 제거 예정 주석을 달아둔 그것) + `buildMockMe`·`readDevRole`·`VALID_ROLES` 제거. 실 로그인 mock이 필요하면 `Login/W/Login` 핸들러를 **실경로·실 code로** 신설. **019 DoD #9 미달분 해소 지점**
-- [ ] T210-A `MeRaw` 타입 제거 in src/features/auth/types/me.ts — **존재하지 않는 응답의 타입**이다. 소비처(MSW 핸들러·테스트 4파일)가 T198·T209에서 모두 사라진 뒤 지운다. 남아 있으면 지우지 않고 **보고**
-- [ ] T210 `DEV_ROLE_KEY` 제거 in src/lib/auth/tokens.ts — 소비처(`LoginPage`·`AdminLoginPage`·`mocks/handlers/auth.ts`)가 T203·T205·T209에서 모두 사라진 뒤 상수를 지운다. 남아 있으면 제거하지 않고 **보고**
-- [ ] T211 [P] `docs/flow.md` §0 교정 — 로그인 랜딩 잠정 가정(`/patrol/zones`)을 코드 실제(`/zones`)와 일치시키고 "Open" 표기 해소(spec §3 규칙 10). 근무자 차단·사업장 선택(021) 흐름도 현재 결정과 맞는지 확인
-- [ ] T212 [P] `docs/screens.md` §1-1 갱신 — `/login`·`/admin/login` 진행도 ✗ → ✓, 비고에 구현 결과 기록
-- [ ] T213 [P] `docs/roadmap.md` 갱신 — §12에 020 행 추가(결과·이월). §7 "로그인 실구현" 항목 상태 갱신. §9 Phase 5 범위에서 **"본사 로그인" 제거**(OQ-E — 본 spec이 흡수)
-- [ ] T214 [P] `docs/data-model.md` §4-3 갱신 — `MeRaw` 폐기 + `MeDto` 변경(`userSeq`) + 출처가 `/auth/me`가 아니라 **JWT 클레임**임을 반영. 차이가 없는 절은 "변경 없음"으로 기록하고 넘어간다
-- [ ] T215 `npm run verify` + `npm run test` **병렬 실행** green 확인 (CLAUDE.md A4)
-- [ ] T216 **브라우저 실제 로그인 확인** — 테스트 서버 계정 `333333`(현장) / `000000`(본사). UI 변경이므로 의무(CLAUDE.md A4). `VITE_API_BASE_URL`이 테스트 서버를 가리키는지 먼저 확인
-- [ ] T217 DoD 대조표 작성(증거 `파일:라인`) + 본 파일 하단 "다음 spec으로 이월" 블록 작성
+- [x] T209 MSW 인증 핸들러 정리 in src/mocks/handlers/auth.ts — `/api/auth/me` 핸들러 **제거**(019에서 제거 예정 주석을 달아둔 그것) + `buildMockMe`·`readDevRole`·`VALID_ROLES` 제거. 실 로그인 mock이 필요하면 `Login/W/Login` 핸들러를 **실경로·실 code로** 신설. **019 DoD #9 미달분 해소 지점**
+- [x] T210-A `MeRaw` 타입 제거 in src/features/auth/types/me.ts — **존재하지 않는 응답의 타입**이다. 소비처(MSW 핸들러·테스트 4파일)가 T198·T209에서 모두 사라진 뒤 지운다. 남아 있으면 지우지 않고 **보고**
+- [x] T210 `DEV_ROLE_KEY` 제거 in src/lib/auth/tokens.ts — 소비처(`LoginPage`·`AdminLoginPage`·`mocks/handlers/auth.ts`)가 T203·T205·T209에서 모두 사라진 뒤 상수를 지운다. 남아 있으면 제거하지 않고 **보고**
+- [x] T211 [P] `docs/flow.md` §0 교정 — 로그인 랜딩 잠정 가정(`/patrol/zones`)을 코드 실제(`/zones`)와 일치시키고 "Open" 표기 해소(spec §3 규칙 10). 근무자 차단·사업장 선택(021) 흐름도 현재 결정과 맞는지 확인
+- [x] T212 [P] `docs/screens.md` §1-1 갱신 — `/login`·`/admin/login` 진행도 ✗ → ✓, 비고에 구현 결과 기록
+- [x] T213 [P] `docs/roadmap.md` 갱신 — §12에 020 행 추가(결과·이월). §7 "로그인 실구현" 항목 상태 갱신. §9 Phase 5 범위에서 **"본사 로그인" 제거**(OQ-E — 본 spec이 흡수)
+- [x] T214 [P] `docs/data-model.md` §4-3 갱신 — `MeRaw` 폐기 + `MeDto` 변경(`userSeq`) + 출처가 `/auth/me`가 아니라 **JWT 클레임**임을 반영. 차이가 없는 절은 "변경 없음"으로 기록하고 넘어간다
+- [x] T215 `npm run verify` + `npm run test` **병렬 실행** green 확인 (CLAUDE.md A4)
+- [x] T216 **브라우저 실제 로그인 확인** — 테스트 서버 계정 `333333`(현장) / `000000`(본사). UI 변경이므로 의무(CLAUDE.md A4). `VITE_API_BASE_URL`이 테스트 서버를 가리키는지 먼저 확인
+- [x] T217 DoD 대조표 작성(증거 `파일:라인`) + 본 파일 하단 "다음 spec으로 이월" 블록 작성
 
 ---
 
@@ -183,3 +183,57 @@
   - 이 판단을 테스트에 "의도된 동작"으로 명시 고정했다. 안 그러면 다음 사람이 버그로 보고 화이트리스트로 좁힐 것이다
 - **본사 화면에 현장 계정이 들어오는 경우를 테스트로 고정했다** — `/admin/login`에서 `code: 201`이면 **현장 홈**으로 간다. 화면이 아니라 code가 착지점을 정한다
 - 다음: Phase 6(Polish, T209~T217) — MSW·`DEV_ROLE_KEY` 제거, 문서 4종, 브라우저 확인
+
+### Phase 6 완료 — Polish (2026-10-06)
+
+- T209~T217 완료. 테스트 **294건 유지**(40 files) — 코드 제거·문서 작업이라 신규 테스트 없음
+- `npm run verify` 0 errors + `npm run test` 40 files / 294 tests green
+- ✅ **019 DoD #9 미달분 해소** — MSW 핸들러에 `/api/auth/me`가 더는 없다. `DEV_ROLE_KEY`·`MeRaw`도 제거했다(소비처 0곳 확인 후)
+- **MSW 로그인 핸들러를 신설하며 dev 계정 체계를 바꿨다** — `dev.role` 스왑 대신 **사번으로 권한을 고른다**(`000000` 시스템관리자 / `333333` 현장관리자 / `222222` 근무자). 백엔드 테스트 서버 실측 계정과 사번을 맞췄다. Master·Manager 계정을 넣지 않은 이유: JWT `role` 문자열이 미실측이라(OQ-D) 추측값을 넣으면 **mock에서는 통과하고 실 서버에서는 막히는** 가장 나쁜 불일치가 된다
+- 🔴 **`npm run capture` 파이프라인이 깨져 있던 것을 발견해 고쳤다** — `e2e/capture.pw.ts`가 `dev.role`과 **의미 없는 문자열 토큰**(`'capture-access-token'`)을 주입하고 있었다. 020 이후 그 토큰은 디코딩에 실패해 `useMe`가 `isError` → AuthGuard가 로그인으로 보내 **12장이 전부 로그인 화면**이 된다.
+  - `capture.pw.ts` 안에 JWT 생성기를 두고(playwright가 vite alias를 해석하지 못해 `MS_ROLE_CLAIM`을 복제, 주석 명시) `docs/ui-current/README.md`도 갱신했다
+  - **`npm run capture`는 `verify`/`test`에 포함되지 않아 자동 검증망 밖**이다. T210에서 `DEV_ROLE_KEY` 소비처를 `src/` 안에서만 grep해 놓쳤다 — 전역 grep이 필요했다
+- **T216 브라우저 확인은 MSW 모드로 수행했다**(포트 5175, `--mode capture`). `npm run capture`를 그대로 돌리면 **baseline을 덮어써** 비교 기준이 사라지므로, scratchpad에 별도 스크립트를 두고 스크린샷도 그쪽에 저장했다. **15/15 PASS**
+  - 로그인 폼 렌더 / 임시 진입 버튼 제거 / 현장 `333333` → `/zones` / accessToken이 JWT 3분절 / **한글 사용자명 렌더** / 본사 `000000` → `/admin/locations` / 근무자 `222222` **토큰 미저장 + 이동 없음 + 안내** / 실패 문구 인라인 + 토큰 미저장 / zod 검증 2종
+  - ✅ **한글 디코딩이 실제 브라우저에서도 동작함을 확인했다.** vitest(jsdom)뿐 아니라 실제 Chromium에서 `홍길동`이 렌더된다 — `atob` 함정이 환경 의존이 아님을 실증
+  - 검증 스크립트 자체의 오류도 1건 있었다(사용자명이 `ProfileBadge` 드롭다운 안에 있는데 트리거만 보고 판정). 드롭다운을 열도록 고쳐 재확인했다
+- ⚠️ **실 서버 로그인은 확인하지 못했다** — `.env.local`이 `VITE_USE_MSW=true`라 요청이 MSW에 가로채인다. 실 서버 확인은 env 변경이 필요해 **사용자 몫으로 남긴다**(아래 이월 블록)
+- 문서 4종 갱신: `flow.md` §0(다이어그램을 `code` 기반 분기로 교정 + 랜딩 Open 해소) / `screens.md` §1-1(✗→✓ 2행) / `roadmap.md`(§7·§7-1·§9·§12) / `data-model.md` §4-3(**전면 재작성** — `MeRaw`·`LoginResult` 폐기, JWT 출처 명시)
+
+---
+
+## DoD 대조표
+
+| # | 완료 조건 | 결과 | 증거 |
+|---|---|---|---|
+| 1 | `/login`에서 실 API 호출 + 토큰 2개 저장 | ☑ | `features/auth/api/login.ts:32` / 브라우저 15/15 "현장 → /zones" |
+| 2 | 사번·비번 zod 검증이 제출 차단 | ☑ | `features/auth/form/schema.ts` / `LoginPage.test.tsx` "형식 위반이면 API를 호출하지 않는다" |
+| 3 | `_raw`로 `code`를 읽어 `1xx`/`2xx` 분기 | ☑ | `login.ts:32`(`_raw: true`) ↔ `loginResult.ts:33·34` |
+| 4 | 🔴 `202`에서 토큰 미저장·이동 없음·안내 | ☑ | `LoginForm.tsx:48`(허용 아니면 저장 전 return) / 브라우저 `access=null` 확인 |
+| 5 | `/admin/login` 실구현 | ☑ | `pages/auth/AdminLoginPage.tsx` / 브라우저 "본사 → /admin/locations" |
+| 6 | `useMe`가 JWT에서 `MeDto` 반환, 네트워크 호출 없음 | ☑ | `hooks/useMe.ts:37`(`resolveMe`) / `useMe.test.ts` "렌더 시 어떤 HTTP 요청도 보내지 않는다" |
+| 7 | 반환 모양 유지 → **소비처 12개 파일 무변경** | **◩ 11/12** | 🔴 `ProfileBadge.tsx` 1곳 수정. `meQueryKey`를 import해 `invalidateQueries`를 호출하고 있었고, react-query를 벗으면 무효화할 캐시가 없다. **반환 모양으로 막을 수 있는 건 `{data,isLoading,isError}` 소비였고 export 소비는 막을 수 없었다** |
+| 8 | `role` 매핑은 실측 2개만, 나머지 권한 없음 | ☑ | `types/claims.ts` `JWT_ROLE_TO_ROLE` / `jwt.test.ts`·`useMe.test.ts`·`AuthGuard.test.tsx` 각각 고정 |
+| 9 | JWT 디코딩이 어떤 입력에도 throw 안 함 | ☑ | `lib/auth/jwt.ts:44·47·52·57` / `jwt.test.ts` 비정상 입력 10종 |
+| 10 | MSW에 `/api/auth/me` 없음 + `DEV_ROLE_KEY` 제거 | ☑ | `mocks/handlers/auth.ts`(로그인·재발급 2개만) / `lib/auth/tokens.ts`에 상수 없음 — **019 DoD #9 해소** |
+| 11 | `/api/auth/me` 의존 테스트 복구 | ☑ | `ProfileBadge`·`RequireRoute`·`AuthGuard`·`DeploymentHistoryTabs` 4파일 전환 완료 |
+| 12 | `flow.md` 랜딩 가정이 코드와 일치 | ☑ | `docs/flow.md` §0 "해소(020)" 블록 |
+| 13 | `verify` 0 errors + `test` green | ☑ | verify 0 errors(경고 1건은 기존 MSW 생성물) / 40 files · 294 tests |
+| 14 | 브라우저 실제 로그인 확인 | **◩ MSW 모드만** | 15/15 PASS. ⚠️ **실 서버(`123.2.156.148:5231`) 확인은 미수행** — `.env.local`이 `VITE_USE_MSW=true`라 env 변경이 필요하다 |
+
+**미충족 2건** — #7은 구조적으로 불가피했고(export 소비), #14는 환경 변경이 필요해 사용자 몫으로 남긴다.
+
+---
+
+## 다음 spec으로 이월
+
+- [ ] **실 서버 로그인 확인** → 사용자 수행. `.env.local`의 `VITE_USE_MSW`를 `false`로 바꾸고 `npm run dev` 후 `333333`(현장)·`000000`(본사)로 로그인한다. 확인할 것: ① 실제 JWT의 한글 클레임이 깨지지 않는지 ② 실 `role` 문자열이 `FieldManager`/`SystemManager`와 일치하는지 ③ 로그인 실패 문구가 실측 문구와 같은지. **여기서 틀어지면 `spec 021` 착수 전에 고쳐야 한다**
+- [ ] **`locationName`·`groupName`이 `undefined`** → `spec 021`. 사업장명은 `UserSiteSelect`에서 온다. 그때까지 배치 화면 전입/전출 판정이 빈 결과다(수용된 일시 퇴행)
+- [ ] 🔴 **`DeploymentHistoryTabs.test.tsx`의 `vi.mock` 스텁 제거** → `spec 021`. 위 항목이 해소되면 스텁이 실제 값을 가리게 된다. **스텁을 남긴 채 021을 끝내면 "동작한다고 착각"하게 된다**
+- [ ] **OQ-D JWT `role` 문자열 3종 미실측**(Master·Manager·근무자) → Phase 5 본사 영역(계정 생성 기능). 그때까지 매핑 밖 `role`은 권한 없음 처리이고, MSW dev 계정에도 Master·Manager가 없다
+- [ ] **OQ-F `AppInput`의 label-input 연결 끊김** → `AppFormField` 도입 작업(`roadmap.md` §6). 접근성 문제이고 소비처가 전역이라 단독 spec이 필요하다
+- [ ] **OQ-A `roleDisplay`(한글 표시명) 사용 여부** → 미실측 3종의 표시명도 모르므로 현행 `roleLabel` 맵 유지. 실측 후 재검토
+- [ ] **OQ-C 이미 로그인된 상태로 `/login` 접근** → 현행 유지(폼이 그대로 보인다). 실사용 불편이 확인되면 처리
+- [x] **OQ-E `AdminLoginPage` Phase 5 선언 정리** — 해소. 코드 주석(T205)과 `roadmap.md` §9(T213) 양쪽 정정 완료
+- [ ] **`npm run capture` baseline 재촬영 여부** → 로그인 화면이 placeholder에서 실 폼으로 바뀌었다. baseline 12장에 로그인 화면은 포함되지 않으나, 캡쳐 파이프라인 수정이 유효한지는 **다음 캡쳐 때 실증**된다
+

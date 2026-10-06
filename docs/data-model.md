@@ -582,63 +582,49 @@ export interface Keyword {
 
 ### 4-3. 공통 — 인증 / 본인 정보
 
-| 화면 | 엔드포인트(예상) | 응답 형태 |
+> 🔴 **당초 설계 전면 폐기(020 실구현, 2026-10-06).** 아래는 실측·구현 결과다.
+> 경로·형태의 근거는 [`api-spec.md`](./api-spec.md) §1-1·§1-2·§2-1.
+
+| 화면 | 실제 엔드포인트 | 응답 `data` |
 |---|---|---|
-| 로그인 | `POST /api/auth/login` | `ApiDetailResponse<LoginResult>` |
-| 토큰 재발급 | `POST /api/auth/refresh` | `ApiDetailResponse<{ accessToken: string; refreshToken: string }>` |
-| 본인 정보 | `GET /api/auth/me` | `ApiDetailResponse<MeRaw>` |
+| 로그인 | `POST /api/v1/Login/W/Login` | `{ accessToken, refreshToken }` — **토큰 2개뿐** |
+| 토큰 재발급 | `POST /api/v1/Login/W/sign/RefreshToken` | `{ accessToken, refreshToken }` |
+| 본인 정보 | **없다** | — |
+
+**🔴 본인 정보 조회 엔드포인트가 존재하지 않는다.**
+
+당초 설계는 `GET /api/auth/me`가 `MeRaw`를 준다고 가정했고, 003~019 동안 MSW mock이 그 가정을 받아주고 있었다. 실측 결과 그런 엔드포인트가 **백엔드에 없다.** 사용자 정보는 `accessToken`의 **JWT 클레임을 디코딩**해서 얻는다.
+
+- 따라서 `MeRaw` 타입은 **폐기**했다(020). 로그인 응답에 `me`가 포함된다는 `LoginResult` 설계도 폐기 — 응답에는 토큰 2개만 있다.
+- 사용자 정보의 실제 형태는 `AccessTokenClaims`다: `src/features/auth/types/claims.ts` / 실측 필드는 `api-spec.md` §1-2.
+- 디코딩은 **검증이 아니다.** 서명 검증은 서버 책임이고 클라이언트는 payload를 읽기만 한다.
+
+```ts
+// 클라이언트 상태용 — JWT 클레임에서 파생. src/features/auth/types/me.ts
+export interface MeDto {
+  userSeq: number        // JWT userSeq. ID는 number + ~Seq (§0 명명 규약)
+  name: string           // JWT userName
+  role: Role             // JWT role 클레임에서 매핑
+  groupName?: string     // 🔴 클레임에 없다
+  locationName?: string  // 🔴 클레임에 없다 — spec 021의 UserSiteSelect가 채운다
+}
+```
+
+**`role` 매핑은 실측된 2개만 있다**
+
+`FieldManager` → `FIELD_MANAGER`, `SystemManager` → `SYSTEM`. Master·Manager·근무자에 해당하는 JWT 문자열은 **해당 계정이 없어 미실측**이고(`api-spec.md` OQ-1), 추측 매핑을 넣지 않았다 — 서버가 다른 문자열을 쓸 때 **엉뚱한 권한으로 통과시키는** 사고가 된다. 매핑에 없는 `role`은 권한 없음으로 처리한다(가드가 막는다).
+
+**권한 판단의 SSOT = JWT `role`**
+
+로그인 응답 `code`(`101`~`202`)는 **1회성 라우팅 힌트**다. 사이트 분기(본사/현장)와 근무자 차단에만 쓰고 **저장하지 않는다.** 가드·메뉴·액션 권한은 전부 `role` 기준(`CLAUDE.md` B4).
 
 **토큰 운영 방식**
 
-- 로그인 응답에 `accessToken` + `refreshToken`이 함께 옴.
-- accessToken 만료 시 axios 인터셉터가 **자동으로 refresh 요청**을 보내고, 신규 토큰으로 원 요청을 재시도.
-- refreshToken까지 만료/거부 시 → 영역에 맞는 로그인 페이지로 이동(`/*` → `/login`, `/admin/*` → `/admin/login`).
-
-```ts
-export interface LoginResult {
-  accessToken: string
-  refreshToken: string
-  me: MeRaw
-}
-```
-
-**MeRaw vs MeDto**
-
-API는 비밀번호를 제외한 **모든 기본 정보**를 응답할 수 있다(= `MeRaw`).
-프론트 상태에는 AuthGuard·표시에 필요한 최소 필드만 추려 **`MeDto`로 변환·저장**한다.
-
-```ts
-// 서버 응답 (API 그대로) — 광역 정보
-export interface MeRaw {
-  id: string
-  name: string
-  phone: string
-  role: Role
-  groupId?: string
-  groupName?: string
-  groupPath?: string
-  locationId?: string
-  locationName?: string
-  status: UserStatus
-  registeredAt: string
-  // ...기타 서버가 주는 부가 필드
-}
-
-// 클라이언트 상태 저장용 — 가드/표시 최소 필드
-export interface MeDto {
-  id: string
-  name: string
-  role: Role
-  groupName?: string                // Admin이면
-  locationName?: string             // Worker/FieldManager면
-}
-
-// 변환 헬퍼 (예시)
-// export const toMeDto = (raw: MeRaw): MeDto => ({
-//   id: raw.id, name: raw.name, role: raw.role,
-//   groupName: raw.groupName, locationName: raw.locationName,
-// })
-```
+- 로그인 응답에 `accessToken`(수명 3시간) + `refreshToken`이 함께 온다.
+- accessToken 만료 시 axios 인터셉터가 **자동으로 refresh 요청**을 보내고 신규 토큰으로 원 요청을 재시도(`spec 019`).
+- **refreshToken은 회전하지 않는다**(실측) — 재발급 후에도 같은 값이 돌아온다.
+- refreshToken까지 거부되면 영역에 맞는 로그인 페이지로 이동(`/*` → `/login`, `/admin/*` → `/admin/login`).
+- 🔴 **근무자(`code: 202`)는 로그인이 성공해도 토큰을 저장하지 않는다.** 서버는 토큰을 발급하지만 근무자는 APP 전용이라 프론트가 막는다. 저장 후 차단이 아니라 저장 자체를 하지 않는다 — 저장하면 새로고침 시 토큰이 살아 있어 가드를 통과할 여지가 생긴다.
 
 ---
 

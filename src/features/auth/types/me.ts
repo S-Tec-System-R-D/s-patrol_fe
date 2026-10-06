@@ -3,32 +3,17 @@
  * 출처: docs/data-model.md §4-3.
  *
  * Role / UserStatus 등 도메인 Enum은 004 SSOT(`@/types/enum`)에서 import.
- * 본 파일은 도메인 DTO(`MeRaw` / `MeDto`)만 책임.
+ * 본 파일은 도메인 DTO(`MeDto`)만 책임.
+ *
+ * (020에서 `MeRaw`를 제거했다. `GET /api/auth/me` 응답 페이로드 타입이었는데 그 엔드포인트가
+ *  **백엔드에 존재하지 않는다** — 사용자 정보는 JWT 클레임에서 오고, 그 형태는
+ *  `features/auth/types/claims.ts`의 `AccessTokenClaims`다.)
  */
 
-import type { Role, UserStatus } from '@/types/enum'
+import type { Role } from '@/types/enum'
 
 // 기존 import 호환을 위해 재공개(003에서 작성된 코드가 me.ts를 통해 Role을 가져오던 경로 보존)
 export type { AdminRole, FieldRole, Role, UserStatus } from '@/types/enum'
-
-/**
- * 서버 응답 그대로의 본인 정보(`/auth/me` 응답 페이로드).
- * - data-model.md §4-3 `MeRaw`와 1:1.
- * - 화면에 직접 노출하지 않는다. `MeDto`로 변환 후 사용.
- */
-export interface MeRaw {
-  id: string
-  name: string
-  phone: string
-  role: Role
-  groupId?: string
-  groupName?: string
-  groupPath?: string
-  locationId?: string
-  locationName?: string
-  status: UserStatus
-  registeredAt: string
-}
 
 /**
  * 클라이언트 상태 저장용 본인 정보(가드·표시 최소 필드).

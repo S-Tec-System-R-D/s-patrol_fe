@@ -47,9 +47,14 @@ Vite env 로딩 순서상 `.env.[mode]` 가 `.env.local` 보다 **뒤에 로드�
 
 ### 인증 처리
 
-실 로그인 폼이 아직 없고 `/login` 은 **개발용 placeholder** 라서,
-`e2e/capture.pw.ts` 가 `localStorage` 에 토큰·role 을 직접 주입해 `AuthGuard` 를 통과시킨다.
-키는 `src/lib/auth/tokens.ts` 와 일치해야 한다 (`auth.accessToken` / `auth.refreshToken` / `dev.role`).
+`e2e/capture.pw.ts` 가 `localStorage` 에 토큰을 직접 주입해 `AuthGuard` 를 통과시킨다.
+키는 `src/lib/auth/tokens.ts` 와 일치해야 한다 (`auth.accessToken` / `auth.refreshToken`).
+
+> 🔴 **`spec 020` 이후 그 토큰은 진짜 JWT여야 한다.** 사용자 정보가 `/api/auth/me`(실재하지 않는
+> 엔드포인트) 에서 **JWT 클레임** 으로 바뀌었다. 의미 없는 문자열을 넣으면 디코딩이 실패해
+> `useMe` 가 `isError` 를 반환하고 **캡쳐가 전부 로그인 화면이 된다.**
+> `capture.pw.ts` 안의 `makeAccessToken()` 이 클레임을 만들어 주며, 권한은 `dev.role` 이 아니라
+> **토큰의 role 클레임** 이 정한다(`dev.role` 은 020에서 제거).
 
 ---
 

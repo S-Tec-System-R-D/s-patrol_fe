@@ -174,7 +174,7 @@ screens.md 진행도 △ 일괄 마무리. 위험도 A 우선.
 
 | 항목 | 라우트 | 위험도 | 상태 | 비고 |
 |---|---|:-:|:-:|---|
-| 로그인 실구현 | `/login` | A | ✗ | 사번 6자리 + 비번 8자리 검증. zod 스키마 |
+| 로그인 실구현 | `/login` | A | ☑ | **020 완료.** zod 검증 + `code` 기반 사이트 분기 + 근무자 차단. `/admin/login`도 같은 폼으로 함께 구현 |
 | 코스 추가/수정/삭제 | `/zones` 모달 | A | △ | 폼 + 확인 모달 |
 | 코스 내 지점 드래그 정렬 | `/zones` | A | △ | dnd-kit + `ReorderCoursePointsRequest` |
 | 코스 내 지점 시간/활성 모달 | `/zones` 모달 | A | △ | `UpdateCoursePointRequest` |
@@ -200,7 +200,7 @@ screens.md 진행도 △ 일괄 마무리. 위험도 A 우선.
 | spec | 범위 | 상태 | 번호 근거 |
 |---|---|:-:|---|
 | **019** | api-contract — 통신 계약(응답 unwrap·에러 정규화·토큰 재발급) | ☑ | — |
-| **020** | **실 로그인 + JWT 전환** — 로그인 폼·`code` 라우팅·근무자(`202`) 차단·`useMe`를 JWT 디코딩으로 교체·MSW `me` 핸들러 및 `DEV_ROLE_KEY` 제거 | ☐ | `019/spec.md:75·82·146`, `019/tasks.md` 이월 블록 |
+| **020** | **실 로그인 + JWT 전환** — 로그인 폼·`code` 라우팅·근무자(`202`) 차단·`useMe`를 JWT 디코딩으로 교체·MSW `me` 핸들러 및 `DEV_ROLE_KEY` 제거 | ☑ | `019/spec.md:75·82·146`, `019/tasks.md` 이월 블록 |
 | **021** | **사업장 선택** — `UserSiteSelect`(현장)/`AdminSiteSelect`(본사)·1개 자동진입 분기·`siteSeq` 저장·목록 밖 값 거부 | ☐ | `019/spec.md:89` "접근 가능 사업장 제한은 `spec 021` 책임" |
 | **022** | 순찰지점 — **변경계(POST/PUT/DELETE) 첫 적용**. OQ-E 실측 지점 | ☐ | `019/spec.md` OQ-E |
 | **023** | 순찰코스 | ☐ | ⚠️ 추론 — 019에 명시 참조 없음. §13 전환 순서(지점→코스)와 전후 번호로 역산 |
@@ -238,7 +238,7 @@ screens.md 진행도 △ 일괄 마무리. 위험도 A 우선.
 
 | 항목 | 라우트 | 위험도 | 비고 |
 |---|---|:-:|---|
-| 본사 로그인 | `/admin/login` | A | URL 직접 접근 |
+| ~~본사 로그인~~ | `/admin/login` | A | **`spec 020`이 흡수(2026-10-06)** — 로그인 엔드포인트가 하나뿐이어서 현장 폼을 그대로 재사용했고, 020의 JWT 전환으로 임시 진입 버튼이 동작 불가가 되어 미룰 수 없었다. Phase 5 범위 아님 |
 | 관리자 목록 + 상세 | `/admin/admins` | B | 검색·필터·마스터-디테일 |
 | 관리자 추가 | 모달 | A | 권한별 생성 제한(시스템→Master, Master→Manager) |
 | 사업장 할당 모달 | 모달 | A | 다중 선택 |
@@ -320,6 +320,7 @@ flowchart LR
 | 2 공용 컴포넌트 (전체) | ☑ | 재산정된 §6-1 2종(`AppSelect`·`AppDatePicker`) 모두 완료 → Phase 2 종료 조건 충족. 실제 조립·시각 확인은 018 |
 | 3 현장 코어 — 018 patrol-history-filters | ◩ | **부분 완료 후 조기 종료(2026-10-02)**. 완료: Phase 1~2(primitive `icon`/`active` prop + `dateRangeQuery` 순수함수) + Phase 3 US1 `/patrol/zones` 필터 3종 조립·URL 연동(`{replace:true}`). vitest 94→136건. **보류**: Phase 4(US2 `/patrol/points` 필터)·Phase 5(페이지네이션 URL 이관) → 백엔드 실측(`api-spec.md`)으로 **서버가 필터·페이징을 모두 제공**함이 확인되어 클라이언트 필터는 확정 폐기 대상. `spec 024`(지점 이력)·`025`(코스 이력) 연동에서 서버 값 기준으로 수행(번호 재정렬 2026-10-06, §7-1). M2 시각 검증(T169)도 함께 이월 |
 | 3 현장 코어 — 019 api-contract | ☑ | **통신 계층을 백엔드 실측에 정합**(화면 없는 기반 작업, 위험도 A). 실측 전 인터셉터는 ① 정상 응답을 에러로 던지고 ② 빈 body에서 파싱 예외가 나고 ③ 토큰 재발급이 아예 불가능했다. 셋 모두 교체: 성공 판정 `code !== 200` → **HTTP 2xx 전담**(로그인 code 101~202가 더는 에러가 아니다) + `code` 필요 호출용 `_raw` 탈출구 / 에러 3종(래퍼·ProblemDetails·빈 body)+네트워크 실패를 `ApiError` 하나로 정규화(`src/lib/api/normalizeError.ts`·`responseShape.ts` 신설) / 재발급 실경로(`Login/W/sign/RefreshToken`)+`Authorization` 헤더+2xx 판정. `REFRESH_PATH`를 export해 MSW·테스트와 공유(하드코딩 불일치로 재발급 실패 테스트가 가짜 green이던 것 해소). vitest **136→224건**(35 files). **이월**: `/api/auth/me` 핸들러 제거 + `useMe` JWT 디코딩 전환 → `spec 020`(런타임 소비처 12곳이 의존해 단독 제거 시 dev 환경 진입 불가). **신규 Open Q**: OQ-E 변경계(POST/PUT/DELETE) 19개에 "HTTP 200 + 실패 `code`" 패턴이 있는지 미검증 → `spec 022`에서 실측 |
+| 3 현장 코어 — 020 login-and-jwt | ☑ | **인증을 mock에서 떼어냈다.** 019까지 앱의 인증은 전부 mock 위에 있었다 — 임시 진입 버튼이 `dev.role`에 역할을 심고 가짜 토큰을 발급했고, `useMe`는 **백엔드에 없는** `/api/auth/me`를 호출하며 MSW가 그것을 받아줬다. ① JWT 디코딩 순수함수 신설(패키지 추가 없이 `atob`+`TextDecoder` — `atob`만 쓰면 **한글 클레임이 깨진다**) ② `useMe`가 react-query를 벗고 동기 훅으로, 반환 모양만 유지해 소비처 12곳·가드 분기 무변경(A3) ③ 현장·본사 **공용** 로그인 폼 — 엔드포인트가 `Login/W/Login` 하나뿐이고 사이트는 `code`로만 갈린다 ④ 근무자(`202`)는 **토큰 저장 자체를 하지 않는다**(저장 후 차단이면 새로고침으로 가드를 통과할 여지) ⑤ MSW `me` 핸들러·`DEV_ROLE_KEY`·`MeRaw` 제거 → **019 DoD #9 미달분 해소**. 랜딩 경로는 `role`이 아니라 **`code`로** 정한다(미실측 role이면 `homePath()`를 구할 수 없다). `/admin/login`은 Phase 5에서 흡수. vitest **224→294건**(40 files). **신규 Open Q**: OQ-F `AppInput`의 label-input 연결 끊김(접근성) → `AppFormField` 작업에서 해소. **이월**: `locationName`은 클레임에 없어 `undefined` → `spec 021`(배치 화면 전입/전출 판정이 그때까지 빈 결과, 테스트는 `vi.mock` 스텁) |
 | 3 현장 코어 | ☐ | screens.md §1-2/1-3 ✓ (Phase R 완료 후 재확인 필요) |
 | 4 현장 신규 | ☐ | screens.md §1-4/1-5 ✓ (Phase R에서 이미 대부분 처리됨 → 재산정) |
 | 5 본사 영역 | ☐ | screens.md §2 ✓ |

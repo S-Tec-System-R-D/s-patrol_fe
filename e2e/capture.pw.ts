@@ -4,18 +4,50 @@ import { test, expect, type Page } from '@playwright/test'
  * UI baseline 캡쳐 — 실 API 연동(spec 019~) 착수 전 현재 구현 상태를 고정한다.
  * 산출물: `docs/ui-current/**`. 조건·목록은 `docs/ui-current/README.md`.
  *
- * 인증: 실 로그인 폼이 아직 없고 `/login`은 개발용 placeholder이므로,
- *       localStorage에 토큰·role을 직접 주입해 AuthGuard를 통과시킨다.
- *       (MSW `/api/auth/me` 핸들러가 `dev.role`을 읽어 role을 반환한다)
+ * 인증: localStorage에 accessToken을 직접 주입해 AuthGuard를 통과시킨다.
+ *
+ * 🔴 **020부터 그 토큰은 진짜 JWT여야 한다.** 사용자 정보가 `/api/auth/me`(실재하지 않는
+ * 엔드포인트)에서 **JWT 클레임**으로 바뀌었다. 의미 없는 문자열을 넣으면 디코딩이 실패해
+ * `useMe`가 `isError`를 반환하고 AuthGuard가 로그인으로 보내 **캡쳐가 전부 로그인 화면이 된다.**
+ * `dev.role` 스왑도 함께 사라졌다 — 권한은 토큰의 role 클레임이 정한다.
  */
 
 const OUT = 'docs/ui-current'
 
+/**
+ * ASP.NET role 클레임 키 — `src/features/auth/types/claims.ts`의 `MS_ROLE_CLAIM`과 같은 값.
+ * playwright는 vite alias(`@/`)를 해석하지 않아 import하지 않고 복제했다.
+ * 바뀌면 양쪽을 함께 고쳐야 한다.
+ */
+const MS_ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+
+const base64url = (value: string) => Buffer.from(value, 'utf8').toString('base64url')
+
+/** 캡쳐용 accessToken. 서명은 의미 없다 — 클라이언트는 payload만 읽는다. */
+const makeAccessToken = (jwtRole: string) => {
+  const now = Math.floor(Date.now() / 1000)
+  const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+  const payload = base64url(
+    JSON.stringify({
+      userSeq: 1,
+      loginId: '333333',
+      userName: '홍길동',
+      uuid: 'a'.repeat(32),
+      roleDisplay: '현장관리자',
+      [MS_ROLE_CLAIM]: jwtRole,
+      nbf: now,
+      exp: now + 10800,
+      iss: 'https://stsp.s-tec.co.kr',
+      aud: 'https://stsp.s-tec.co.kr',
+    })
+  )
+  return `${header}.${payload}.capture-signature`
+}
+
 /** `src/lib/auth/tokens.ts`의 저장 키와 일치해야 한다. */
 const AUTH_SEED = {
-  'auth.accessToken': 'capture-access-token',
+  'auth.accessToken': makeAccessToken('FieldManager'),
   'auth.refreshToken': 'capture-refresh-token',
-  'dev.role': 'FIELD_MANAGER',
 }
 
 test.beforeEach(async ({ context }) => {
