@@ -1,52 +1,14 @@
-import AppButton from '@/components/app/AppButton'
-import { homePath } from '@/features/auth/lib/homePath'
-import {
-  DEV_ROLE_KEY,
-  setAccessToken,
-  setRefreshToken,
-} from '@/lib/auth/tokens'
-import type { AdminRole } from '@/types/enum'
-import { roleLabel } from '@/types/enum'
+import { LoginForm } from '@/features/auth/components/LoginForm'
 
 /**
- * 본사 로그인 placeholder.
- * - 005에서 `/admin/login` 라우트 누락 보완용. AuthGuard의 admin 영역 리다이렉트 착지점.
- * - 실 로그인 폼은 Phase 5 본사 영역 spec에서 함께 구현.
- * - 그 전까지 개발 진입용 임시 버튼: 관리자 role 3종으로 토큰 심고 홈으로 이동.
+ * 본사 로그인 (`/admin/login`). 메뉴로 연결되지 않고 URL 직접 접근(`screens.md` §1-1).
+ *
+ * 현장 로그인과 **같은 폼·같은 엔드포인트**를 쓴다. 로그인 API는 `Login/W/Login` 하나뿐이고
+ * 본사/현장은 응답 `code`로만 갈린다(`api-spec.md` §2-1).
+ *
+ * (당초 본사 로그인 실구현은 Phase 5 본사 영역 spec으로 미뤄 두었으나, 020의 JWT 전환으로
+ *  임시 진입 버튼이 동작할 수 없게 되고 폼 재사용 비용이 거의 없어 `spec 020`이 흡수했다.)
  */
-
-const ADMIN_ROLES: readonly AdminRole[] = ['SYSTEM', 'MASTER', 'MANAGER']
-
-const devSignInAs = (role: AdminRole) => {
-  localStorage.setItem(DEV_ROLE_KEY, role)
-  setAccessToken(`dev-access-${Date.now()}`)
-  setRefreshToken(`dev-refresh-${Date.now()}`)
-  window.location.assign(homePath(role))
-}
-
-const AdminLoginPage = () => {
-  return (
-    <div className="flex min-h-svh items-center justify-center bg-background p-6">
-      <div className="w-full max-w-sm space-y-6 rounded-md border border-border bg-card p-6 shadow-sm">
-        <div className="space-y-1 text-center">
-          <h1 className="text-lg font-semibold">본사 로그인</h1>
-          <p className="text-xs text-muted-foreground">개발용 임시 진입 (Phase 5에서 실폼 교체)</p>
-        </div>
-        <div className="space-y-2">
-          {ADMIN_ROLES.map((role) => (
-            <AppButton
-              key={role}
-              size="full"
-              variant={role === 'SYSTEM' ? 'default' : 'sub'}
-              onClick={() => devSignInAs(role)}
-            >
-              {roleLabel[role]}로 진입
-            </AppButton>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
+const AdminLoginPage = () => <LoginForm title="본사 로그인" />
 
 export default AdminLoginPage

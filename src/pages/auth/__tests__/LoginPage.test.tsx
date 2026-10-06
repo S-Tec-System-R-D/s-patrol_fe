@@ -205,3 +205,51 @@ describe('LoginPage — 실패', () => {
     expect(getAccessToken()).toBeNull()
   })
 })
+
+describe('LoginPage — 근무자 차단 (US3)', () => {
+  beforeEach(() => {
+    clearTokens()
+    server.resetHandlers()
+  })
+
+  /**
+   * 🔴 US3의 전부: **서버가 로그인을 성공시키고 토큰까지 발급하지만 저장하지 않는다.**
+   * 근무자는 APP 전용(CLAUDE.md B1)이고 차단은 프론트 책임이다.
+   * 저장 후 차단이면 새로고침 시 토큰이 살아 있어 가드를 통과할 여지가 생긴다.
+   */
+  it('근무자(202)는 토큰이 저장되지 않는다', async () => {
+    server.use(http.post(LOGIN_PATH, () => loginOk(202)))
+
+    renderLogin()
+    await fillAndSubmit()
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    expect(getAccessToken()).toBeNull()
+    expect(getRefreshToken()).toBeNull()
+  })
+
+  it('근무자(202)는 화면 이동 없이 안내를 보여준다', async () => {
+    server.use(http.post(LOGIN_PATH, () => loginOk(202)))
+
+    renderLogin()
+    await fillAndSubmit()
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/모바일 앱/))
+    // 로그인 화면에 그대로 머문다
+    expect(screen.queryByText('SERVICE_HOME')).not.toBeInTheDocument()
+    expect(screen.queryByText('ADMIN_HOME')).not.toBeInTheDocument()
+  })
+
+  // 사전에 없는 code. 어느 사이트로든 추측해 보내지 않는다(A1).
+  it('사전에 없는 code면 토큰을 저장하지 않고 안내만 한다', async () => {
+    server.use(http.post(LOGIN_PATH, () => loginOk(999)))
+
+    renderLogin()
+    await fillAndSubmit()
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    expect(getAccessToken()).toBeNull()
+    expect(screen.queryByText('SERVICE_HOME')).not.toBeInTheDocument()
+    expect(screen.queryByText('ADMIN_HOME')).not.toBeInTheDocument()
+  })
+})

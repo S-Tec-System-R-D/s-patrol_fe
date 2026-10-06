@@ -58,8 +58,8 @@
 
 > **독립 테스트 기준**: `/admin/login`에서 같은 폼으로 로그인해 `code: 101` 응답이면 `/admin/locations`로 이동한다.
 
-- [ ] T205 [US2] `AdminLoginPage` 교체 in src/pages/auth/AdminLoginPage.tsx — T200 폼 재사용. 임시 버튼 3종·`DEV_ROLE_KEY` 제거. ⚠️ 파일 주석의 "Phase 5에서 구현" 선언을 **본 spec으로 정정**(OQ-E)
-- [ ] T206 [US2] 화면 테스트 in src/pages/auth/__tests__/AdminLoginPage.test.tsx — `code: 101`/`102`/`103` 전부 `/admin/locations` 이동(`it.each`) / 실패 문구 인라인 표시
+- [x] T205 [US2] `AdminLoginPage` 교체 in src/pages/auth/AdminLoginPage.tsx — T200 폼 재사용. 임시 버튼 3종·`DEV_ROLE_KEY` 제거. ⚠️ 파일 주석의 "Phase 5에서 구현" 선언을 **본 spec으로 정정**(OQ-E)
+- [x] T206 [US2] 화면 테스트 in src/pages/auth/__tests__/AdminLoginPage.test.tsx — `code: 101`/`102`/`103` 전부 `/admin/locations` 이동(`it.each`) / 실패 문구 인라인 표시
 
 ---
 
@@ -67,8 +67,8 @@
 
 > **독립 테스트 기준**: `code: 202` 응답에서 **`localStorage`에 토큰이 하나도 저장되지 않고**, 화면 이동도 없고, 안내 문구가 보인다.
 
-- [ ] T207 [US3] `202` 차단 처리 in src/features/auth/lib/loginResult.ts, src/features/auth/components/LoginForm.tsx — 🔴 **토큰 저장 자체를 하지 않는다.** 저장 후 차단이 아니다(spec §3 규칙 4 — 저장하면 새로고침 시 토큰이 살아 있어 가드를 통과할 여지가 생긴다). 안내 문구는 "WEB 접근 불가, APP 사용" 취지
-- [ ] T208 [US3] 차단 테스트 in src/pages/auth/__tests__/LoginPage.test.tsx — `code: 202` → **`getAccessToken()`·`getRefreshToken()`이 둘 다 `null`** / 화면 이동 없음 / 안내 문구 노출. 🔴 "토큰이 저장되지 않음"을 **직접 단정**한다 — 이것이 US3의 전부다
+- [x] T207 [US3] `202` 차단 처리 in src/features/auth/lib/loginResult.ts, src/features/auth/components/LoginForm.tsx — 🔴 **토큰 저장 자체를 하지 않는다.** 저장 후 차단이 아니다(spec §3 규칙 4 — 저장하면 새로고침 시 토큰이 살아 있어 가드를 통과할 여지가 생긴다). 안내 문구는 "WEB 접근 불가, APP 사용" 취지
+- [x] T208 [US3] 차단 테스트 in src/pages/auth/__tests__/LoginPage.test.tsx — `code: 202` → **`getAccessToken()`·`getRefreshToken()`이 둘 다 `null`** / 화면 이동 없음 / 안내 문구 노출. 🔴 "토큰이 저장되지 않음"을 **직접 단정**한다 — 이것이 US3의 전부다
 
 ---
 
@@ -168,4 +168,18 @@
 - **에러 처리는 019 정규화에 전적으로 의존한다** — 폼은 `error.message`를 그대로 꺼내 쓰고 래퍼/ProblemDetails/네트워크 형태를 **다시 분기하지 않는다**. 테스트로 3형태 모두 폼에 문구가 뜨는 것을 고정했다
 - **테스트에서 고정한 것**: 성공 code 4종(201·101·102·103) 라우팅 / 요청 본문이 swagger `LoginDto`(`loginId`/`loginPw`)와 일치 / 형식 위반 시 **API 미호출** / 비번 복잡도 3종 / **숫자 아닌 사번 통과**(숫자 제한을 넣지 않았다는 계약) / 실패 4종(래퍼·ProblemDetails·네트워크·비래퍼 2xx)에서 토큰 미저장
 - ⚠️ **MSW에 `Login/W/Login` 핸들러가 아직 없다.** 테스트는 각자 `server.use`로 깔았다. dev 환경에서 로그인을 해보려면 T209(핸들러 신설) 이후이거나 실 서버를 가리켜야 한다
-- 다음: Phase 4(US2 본사 로그인, T205~T206)
+- 다음: Phase 4(US2 본사 로그인, T205~T206) → 완료
+
+### Phase 4·5 완료 — 본사 로그인 + 근무자 차단 (2026-10-06)
+
+- T205~T208 완료. 테스트 **273 → 294건**(+21), 파일 38 → 40
+- `npm run verify` 0 errors + `npm run test` 40 files / 294 tests green
+- **US 4개 전부 완료.** 남은 것은 Phase 6 Polish
+- **T207(근무자 차단)은 Phase 3에서 이미 구현됐다** — `loginResult.ts`와 `LoginForm`을 만들면서 `outcome.kind !== 'allowed'` 분기에 자연히 포함됐다. Phase 5에서는 **테스트(T208)만** 추가했다. 같은 파일을 두 Phase가 나눠 갖는 분할이었는데, 실제로는 "한 번에 쓰고 나중에 테스트"가 됐다
+- **본사 로그인은 폼 재사용만으로 끝났다**(`AdminLoginPage`가 3줄). 임시 버튼 3종·`DEV_ROLE_KEY` 사용이 사라졌고, 파일 주석의 "Phase 5에서 구현" 선언도 정정했다(OQ-E의 코드 쪽 — `roadmap.md` §9는 T213에서)
+- **계획 외 추가 1건**: `loginResult.ts` 순수함수 테스트(`features/auth/lib/__tests__/loginResult.test.ts`). 화면 테스트보다 싸게 code 사전 전체를 고정할 수 있고, 특히 **202 판정이 사이트 판정보다 먼저인지**를 직접 겨냥한다(순서가 바뀌면 근무자가 현장 사이트로 들어간다)
+- 🔴 **경계 케이스를 하나 잡았다 — `code: 200`** — `200`은 사전상 **일반 조회 성공** code인데 `isServiceLoginCode`의 "2xx = 현장" 범위에 걸려 현장으로 판정된다. 처음엔 `unknown`을 기대하는 테스트를 썼다가 실패했다.
+  - **화이트리스트(실측 5개만 허용)로 좁히지 않고 범위를 유지**하기로 했다. 서버가 `104`·`204` 같은 권한을 추가하면 화이트리스트는 로그인을 막아버린다. 반면 사이트 분기는 **힌트**이고 최종 권한은 JWT `role`이 정하므로 범위를 넓게 잡아도 권한이 새지 않는다(role이 없거나 매핑 밖이면 가드가 막는다)
+  - 이 판단을 테스트에 "의도된 동작"으로 명시 고정했다. 안 그러면 다음 사람이 버그로 보고 화이트리스트로 좁힐 것이다
+- **본사 화면에 현장 계정이 들어오는 경우를 테스트로 고정했다** — `/admin/login`에서 `code: 201`이면 **현장 홈**으로 간다. 화면이 아니라 code가 착지점을 정한다
+- 다음: Phase 6(Polish, T209~T217) — MSW·`DEV_ROLE_KEY` 제거, 문서 4종, 브라우저 확인
