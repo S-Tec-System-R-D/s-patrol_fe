@@ -5,6 +5,8 @@ import type {
 } from 'axios'
 import axios, { AxiosError } from 'axios'
 import type { ApiResponse } from '@/types/api'
+import { isApiResponse } from '@/lib/api/responseShape'
+import { toApiError } from '@/lib/api/normalizeError'
 import {
   clearTokens,
   getAccessToken,
@@ -17,14 +19,34 @@ import { notify } from '@/lib/notify'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
-// 토큰 재발급 엔드포인트 — 401 분기에서 재귀 방지 위해 제외 대상.
-const REFRESH_PATH = '/api/auth/refresh'
+/**
+ * 토큰 재발급 엔드포인트 — 401 분기에서 재귀 방지 위해 제외 대상.
+ *
+ * ⚠️ 이 상수를 바꾸면 아래 `isRefreshRequest` 재귀 차단도 함께 따라와야 한다.
+ * 차단이 옛 경로를 보면 재발급 요청의 401이 무한루프가 된다. 같은 상수를 참조해 자동 정합.
+ */
+const REFRESH_PATH = '/api/v1/Login/W/sign/RefreshToken'
 
 /**
  * 401 → refresh 재시도용 확장 config.
  * `_retry`로 동일 요청의 두 번째 401에서 재시도를 막아 무한루프 방지.
  */
 type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean }
+
+/**
+ * `_raw` — 래퍼 전체를 받기 위한 요청 옵션.
+ *
+ * 성공 응답은 기본적으로 `data`만 남기고 래퍼를 벗기는데, 그러면 `code`가 사라진다.
+ * 로그인은 `code`(본사 1xx / 현장 2xx, 근무자 202 차단)로 분기해야 하므로 예외가 필요하다.
+ *
+ * 확정 수요는 **로그인·토큰 재발급 2곳뿐**이다. 범용 옵션으로 키우지 않는다.
+ * 모듈 확장으로 선언해 호출부가 캐스팅 없이 `{ _raw: true }`를 넘길 수 있게 한다.
+ */
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    _raw?: boolean
+  }
+}
 
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -58,12 +80,24 @@ const runRefresh = async (): Promise<string> => {
   const res = await axios.post<ApiResponse<{ accessToken: string; refreshToken: string }>>(
     `${BASE_URL}${REFRESH_PATH}`,
     { refreshToken },
-    { timeout: 5000 }
+    {
+      timeout: 5000,
+      // 실측상 재발급은 body의 refreshToken과 Bearer 헤더를 **둘 다** 요구한다.
+      // docs/api-spec.md §1-3
+      headers: { Authorization: `Bearer ${getAccessToken() ?? ''}` },
+    }
   )
+
+  // 인터셉터를 타지 않는 호출이라 형식 검증을 직접 한다.
+  // 성공 판정은 HTTP 2xx(여기까지 왔으면 2xx) + 토큰 존재 여부.
+  // `code`로 판정하지 않는다 — 실측 재발급 성공 code는 **201**이라
+  // 기존의 `code !== 200` 검사는 항상 실패했다.
   const body = res.data
-  if (!body || body.code !== 200 || !body.data) {
-    throw new Error(body?.message ?? '토큰 재발급 실패')
+  if (!isApiResponse(body) || !body.data?.accessToken) {
+    throw new Error('토큰 재발급 실패')
   }
+
+  // refreshToken은 회전하지 않는다(실측) — 응답값이 기존과 같아도 정상이다.
   setAccessToken(body.data.accessToken)
   setRefreshToken(body.data.refreshToken)
   return body.data.accessToken
@@ -90,30 +124,28 @@ api.interceptors.response.use(
     }
 
     // ApiResponse 형식 검증 + 자동 unwrap
-    const body = response.data as ApiResponse<unknown> | undefined
-    const isApiResponse =
-      body !== null &&
-      typeof body === 'object' &&
-      typeof (body as ApiResponse<unknown>).code === 'number' &&
-      typeof (body as ApiResponse<unknown>).message === 'string' &&
-      'data' in (body as ApiResponse<unknown>)
-
-    if (!isApiResponse) {
+    if (!isApiResponse(response.data)) {
       console.warn(response)
       throw new Error('알 수 없는 응답 형식')
     }
 
-    if (body!.code !== 200) {
-      throw new Error(body!.message)
+    // `_raw` 요청은 래퍼째로 돌려준다 — `code`가 필요한 로그인·재발급용.
+    if (response.config._raw) {
+      return response
     }
 
-    response.data = body!.data
+    // 성공 판정은 **HTTP status 2xx 전담**이다. `code`로 판정하지 않는다.
+    // 성공 code가 200(조회) / 101·102·103(본사 로그인) / 201·202(현장 로그인) /
+    // 201(재발급)로 갈리므로, `code !== 200`을 실패로 보면 로그인이 전부 실패한다.
+    // `code`는 해석하지 않고 통과시키고, 해석은 소비처(로그인 화면) 책임이다.
+    // 근거: docs/api-spec.md §2 · spec 019 §3 비즈니스 규칙 1
+    response.data = (response.data as ApiResponse<unknown>).data
     return response
   },
   async (error: AxiosError) => {
-    // 네트워크 실패 정규화
+    // 네트워크 실패(응답 없음)도 `toApiError`가 같은 문구로 처리한다.
     if (!error.response) {
-      return Promise.reject(new Error('네트워크 연결을 확인해주세요'))
+      return Promise.reject(toApiError(error))
     }
 
     const status = error.response.status
@@ -129,7 +161,7 @@ api.interceptors.response.use(
       // refreshToken이 아예 없으면 refresh 시도 없이 곧장 종료 처리.
       if (!getRefreshToken()) {
         finalizeAuthFailure()
-        return Promise.reject(error)
+        return Promise.reject(toApiError(error))
       }
       try {
         const newAccess = await ensureRefresh()
@@ -138,11 +170,14 @@ api.interceptors.response.use(
         return api.request(original)
       } catch {
         finalizeAuthFailure()
-        return Promise.reject(error)
+        return Promise.reject(toApiError(error))
       }
     }
 
-    return Promise.reject(error)
+    // 401 재발급 분기를 지나온 나머지 — 403 포함.
+    // 403은 권한 부족이지 만료가 아니므로 재발급을 시도하지 않는다.
+    // 서버가 403·401에 빈 body를 주므로(docs/api-spec.md §3-(C)) 본문 파싱은 하지 않는다.
+    return Promise.reject(toApiError(error))
   }
 )
 

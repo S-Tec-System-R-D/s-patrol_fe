@@ -160,6 +160,7 @@ src/
 - 페이지 번호: **1-based** (`?pageNumber=1`이 첫 페이지). 요청은 `pageNumber`, **응답 필드는 `page`**.
 - 인증: `accessToken`(수명 3시간) + `refreshToken`(**회전 없음**). 만료 시 axios 인터셉터가 자동으로 refresh 요청.
 - 사용자 정보 조회 엔드포인트는 **없다.** `accessToken` JWT 클레임을 디코딩해서 얻는다.
+- **권한 판단의 SSOT는 JWT `role` 클레임**이다. 로그인 응답 `code` 는 **1회성 라우팅 힌트**(사이트 분기 + 근무자 `202` 차단)로만 쓰고 저장하지 않는다. 가드·메뉴·액션 권한은 전부 `role` 기준.
 - **응답 형태의 SSOT는 [`docs/api-spec.md`](./docs/api-spec.md)** (swagger에 응답 스키마가 없음). 요청 DTO는 `docs/swagger-api.json`. 화면이 요구하는 DTO 설계 의도는 [`docs/data-model.md`](./docs/data-model.md) §2-1.
 
 ### URL / 상태
