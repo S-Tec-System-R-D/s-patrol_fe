@@ -46,11 +46,11 @@
 
 > **독립 테스트 기준**: `/login`에서 사번 6자리·비번 8자리를 넣고 제출하면 `POST /api/v1/Login/W/Login`이 호출되고, `code: 201` 응답에서 토큰 2개가 저장된 뒤 `/zones`로 이동한다. 형식 위반은 제출 자체가 막힌다.
 
-- [ ] T200 [US1] 로그인 폼 컴포넌트 in src/features/auth/components/LoginForm.tsx — **현장·본사 공용**(spec §3 규칙 8). `react-hook-form` + `zodResolver`(T192) + `AppInput`·`AppButton`. 제목·안내 문구는 prop으로 받아 사이트별 차이를 흡수한다. 제출 중 버튼 비활성(엣지 케이스 "연타")
-- [ ] T201 [US1] 로그인 API 호출 in src/features/auth/api/login.ts — `POST /api/v1/Login/W/Login`, body `{ loginId, loginPw }`. 🔴 **`_raw: true`로 래퍼째 받는다**(019 탈출구의 첫 소비처 — 래퍼를 벗기면 `code`가 사라진다). 반환은 `{ code, accessToken, refreshToken }`
-- [ ] T202 [US1] `code` 분기 + 토큰 저장 in src/features/auth/lib/loginResult.ts — `1xx`→본사 / `2xx`→현장(`api-spec.md` §2-1). **`code`를 저장하지 않는다**(1회성 라우팅 힌트). `202`는 T206이 담당하므로 여기서는 분기 지점만 둔다. 랜딩 경로는 기존 `homePath()` 재사용(spec §3 규칙 10)
-- [ ] T203 [US1] `LoginPage` 교체 in src/pages/auth/LoginPage.tsx — placeholder 통째로 교체. `devSignInAsField`·`DEV_ROLE_KEY` 사용 제거. 실패 시 `ApiError.message`를 **폼 인라인**에 표시(toast 아님 — spec §3 규칙 9)
-- [ ] T204 [US1] 화면 테스트 in src/pages/auth/__tests__/LoginPage.test.tsx — 형식 위반 → 제출 차단(API 미호출) / 성공(`code: 201`) → 토큰 2개 저장 + `/zones` 이동 / 실패(400 + 래퍼) → 폼 인라인에 서버 문구 / 네트워크 실패 → 019 정규화 문구 / 제출 중 버튼 비활성
+- [x] T200 [US1] 로그인 폼 컴포넌트 in src/features/auth/components/LoginForm.tsx — **현장·본사 공용**(spec §3 규칙 8). `react-hook-form` + `zodResolver`(T192) + `AppInput`·`AppButton`. 제목·안내 문구는 prop으로 받아 사이트별 차이를 흡수한다. 제출 중 버튼 비활성(엣지 케이스 "연타")
+- [x] T201 [US1] 로그인 API 호출 in src/features/auth/api/login.ts — `POST /api/v1/Login/W/Login`, body `{ loginId, loginPw }`. 🔴 **`_raw: true`로 래퍼째 받는다**(019 탈출구의 첫 소비처 — 래퍼를 벗기면 `code`가 사라진다). 반환은 `{ code, accessToken, refreshToken }`
+- [x] T202 [US1] `code` 분기 + 토큰 저장 in src/features/auth/lib/loginResult.ts — `1xx`→본사 / `2xx`→현장(`api-spec.md` §2-1). **`code`를 저장하지 않는다**(1회성 라우팅 힌트). `202`는 T206이 담당하므로 여기서는 분기 지점만 둔다. 랜딩 경로는 기존 `homePath()` 재사용(spec §3 규칙 10)
+- [x] T203 [US1] `LoginPage` 교체 in src/pages/auth/LoginPage.tsx — placeholder 통째로 교체. `devSignInAsField`·`DEV_ROLE_KEY` 사용 제거. 실패 시 `ApiError.message`를 **폼 인라인**에 표시(toast 아님 — spec §3 규칙 9)
+- [x] T204 [US1] 화면 테스트 in src/pages/auth/__tests__/LoginPage.test.tsx — 형식 위반 → 제출 차단(API 미호출) / 성공(`code: 201`) → 토큰 2개 저장 + `/zones` 이동 / 실패(400 + 래퍼) → 폼 인라인에 서버 문구 / 네트워크 실패 → 019 정규화 문구 / 제출 중 버튼 비활성
 
 ---
 
@@ -153,4 +153,19 @@
 - **`DeploymentHistoryTabs.test.tsx`는 `useMe`를 `vi.mock`으로 스텁했다** — 전입/전출 판정이 `locationName` 문자열 비교인데 클레임에 사업장명이 없어 020에서는 빈 결과가 된다. 이 테스트의 관심사는 **탭 전환과 이력 렌더**이고 인증이 아니므로, 사업장명을 스텁해 기능 검증을 보존했다. 🔴 **021에서 실제 `locationName`이 들어오면 이 스텁을 걷어낸다**(이월 등재)
 - **`AuthGuard.tsx:27`의 `if (isLoading) return null`은 죽은 분기가 됐지만 지우지 않았다**(계획대로, A3). 021에서 사업장 선택이 붙으면 비동기 로딩이 다시 생길 수 있다
 - `MeRaw`는 아직 살아 있다 — MSW 핸들러가 쓰고 있어 T209 이후 T210-A에서 제거
-- 다음: Phase 3(US1 현장 로그인, T200~T204)
+- 다음: Phase 3(US1 현장 로그인, T200~T204) → 완료
+
+### Phase 3 완료 — US1 현장 로그인 (2026-10-06)
+
+- T200~T204 완료. 테스트 **259 → 273건**(+14), 파일 37 → 38
+- `npm run verify` 0 errors + `npm run test` 38 files / 273 tests green
+- **`_raw` 탈출구의 첫 실사용** — 019가 만들어 둔 것을 로그인이 처음 쓴다. 래퍼째 받아 `code`를 읽고 즉시 소비한 뒤 버린다(저장하지 않는다)
+- **계획 대비 변경 3건**
+  1. 🔴 **랜딩 경로를 `role`이 아니라 `code`로 정했다.** spec §2 Output은 `homePath(role)`로 적었는데, 미실측 `role`(OQ-D)이면 `toRole`이 `null`이라 **`homePath()`를 구할 수 없다.** `code`는 사이트가 확실히 담겨 있어 그 경우에도 착지점이 결정되고, 권한 차단은 그 뒤 가드가 한다. 결과 경로는 동일(`/zones`·`/admin/locations`)하지만 **미실측 role에서도 로그인이 멈추지 않는다**
+  2. **`LoginForm` props가 3개 → 2개로 줄었다.** 착지 경로를 `code`가 정하므로 prop에서 빠지고 **제목·안내 문구만** 남았다. 공용화 위험(A6, 차이 3개 이상이면 분리 검토)이 오히려 줄었다
+  3. **`navigate`로 이동한다 — 기존 placeholder의 `window.location.assign`(하드 리로드)을 쓰지 않는다.** 하드 리로드의 이유는 "`useMe` 캐시 무효화 + MSW 재초기화"였는데, `useMe`가 동기로 토큰을 읽게 되어 캐시가 없다. SPA 네비게이션으로 충분하고 테스트도 쉬워진다
+- 🔴 **`AppInput`의 label-input 연결이 끊겨 있는 것을 발견했다**(`AppInput.tsx:29` — `<label>`에 `htmlFor` 없음, input에 `id` 없음). 스크린리더가 라벨을 읽지 못하고 `getByLabelText`도 안 먹는다. `AppInput`의 `label`/`error` prop은 `004 D9`에서 이미 `AppFormField` 이전 예정으로 deprecated 처리된 영역이고 소비처가 전역이라 본 spec에서 손대지 않았다(A3) → **spec OQ-F 등재**. 테스트는 placeholder로 우회
+- **에러 처리는 019 정규화에 전적으로 의존한다** — 폼은 `error.message`를 그대로 꺼내 쓰고 래퍼/ProblemDetails/네트워크 형태를 **다시 분기하지 않는다**. 테스트로 3형태 모두 폼에 문구가 뜨는 것을 고정했다
+- **테스트에서 고정한 것**: 성공 code 4종(201·101·102·103) 라우팅 / 요청 본문이 swagger `LoginDto`(`loginId`/`loginPw`)와 일치 / 형식 위반 시 **API 미호출** / 비번 복잡도 3종 / **숫자 아닌 사번 통과**(숫자 제한을 넣지 않았다는 계약) / 실패 4종(래퍼·ProblemDetails·네트워크·비래퍼 2xx)에서 토큰 미저장
+- ⚠️ **MSW에 `Login/W/Login` 핸들러가 아직 없다.** 테스트는 각자 `server.use`로 깔았다. dev 환경에서 로그인을 해보려면 T209(핸들러 신설) 이후이거나 실 서버를 가리켜야 한다
+- 다음: Phase 4(US2 본사 로그인, T205~T206)

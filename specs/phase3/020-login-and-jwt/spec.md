@@ -170,4 +170,5 @@ interface AccessTokenClaims {
 - [x] **OQ-B. `MeDto.id` 타입 불일치** — **해소(WF-2, 2026-10-06): `userSeq: number`로 교체한다.** 소비처를 실측했더니 **0곳**이었다(`useMe.ts:18`에서 매핑만 하고 아무도 읽지 않는다). `CLAUDE.md` B4("ID는 모두 `number`, 접미사 `~Seq`")를 따르는 쪽이 맞고 소비처가 없어 무위험이다. → `tasks.md` T193. 함께 **`MeRaw` 타입도 폐기**한다(존재하지 않는 응답의 타입).
 - [ ] **OQ-C. 이미 로그인된 상태로 `/login` 접근** — 현행은 그냥 폼이 보인다. 홈으로 돌려보낼지 여부. 실사용 불편이 확인되면 처리하고 지금은 현행 유지.
 - [ ] **OQ-D(승계). JWT `role` 문자열 3종 미실측** — Master·Manager·근무자. 계정 생성 기능이 생기는 Phase 5 본사 영역에서 실측해 `api-spec.md` §1-2에 기록한다. 그때까지 권한 없음 처리.
+- [ ] **OQ-F. `AppInput`의 label-input 연결이 끊겨 있다**(WF-3 Phase 3에서 발견) — `AppInput.tsx:29`의 `<label>`에 `htmlFor`가 없고 input에 `id`가 없어 **스크린리더가 라벨을 읽지 못하고** `getByLabelText`도 동작하지 않는다(로그인 테스트는 placeholder로 우회). `AppInput`의 `label`/`error` prop은 `004 D9`에서 이미 **`AppFormField`로 이전 예정(deprecated)** 으로 표시된 영역이라 본 spec에서 손대지 않았다(A3) — 소비처가 전역이라 파급이 크다. `AppFormField` 도입 작업(`roadmap.md` §6)에서 함께 해소한다.
 - [ ] **OQ-E. `AdminLoginPage` Phase 5 선언과의 충돌 정리** — 본 spec이 `/admin/login`을 실구현하므로 `AdminLoginPage.tsx:14` 주석과 `roadmap.md` §9(Phase 5 범위)에서 "본사 로그인"을 빼야 한다. WF-5 통합에서 처리.
