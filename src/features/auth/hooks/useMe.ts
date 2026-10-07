@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { decodeAccessToken } from '@/lib/auth/jwt'
 import { getAccessToken } from '@/lib/auth/tokens'
+import { getSiteName } from '@/lib/auth/site'
 import { toRole } from '@/features/auth/types/claims'
 import type { MeDto } from '@/features/auth/types/me'
 
@@ -12,6 +13,7 @@ import type { MeDto } from '@/features/auth/types/me'
  * 호출하고 MSW mock이 그것을 받아주고 있었다.
  *
  * - **네트워크 호출이 없다.** 디코딩은 동기이므로 react-query를 쓰지 않는다.
+ * - `locationName`은 **선택한 사업장명**이다(021). JWT에 없으므로 로컬 저장값에서 읽는다.
  * - 🔴 **반환 모양 `{ data, isLoading, isError }`는 react-query 시절 그대로 유지**한다.
  *   소비처 12곳과 `AuthGuard`/`RequireRoute`/`RequireRole`의 분기를 건드리지 않기 위한 것이고
  *   (A3), `spec 021`에서 사업장 선택이 붙으면 비동기 로딩이 다시 생길 수 있다.
@@ -34,7 +36,7 @@ const FAILED: UseMeResult = { data: undefined, isLoading: false, isError: true }
  * `useMemo` 콜백 안에서 조건부 early return을 하면 `react-hooks/preserve-manual-memoization`
  * 이 memoization 보존을 보장할 수 없다고 막는다. 계산을 빼내면 콜백이 단일 호출식이 된다.
  */
-const resolveMe = (token: string | null): UseMeResult => {
+const resolveMe = (token: string | null, siteName: string | null): UseMeResult => {
   const claims = decodeAccessToken(token)
   if (!claims) return FAILED
 
@@ -48,7 +50,11 @@ const resolveMe = (token: string | null): UseMeResult => {
       userSeq: claims.userSeq,
       name: claims.userName,
       role,
-      // 클레임에 사업장·그룹 정보가 없다. spec 021이 채운다.
+      // 🔴 사업장명은 클레임이 아니라 **선택 결과**에서 온다(spec 021). 서버는 고른
+      // siteSeq를 기억하지 않고 토큰에도 담지 않으므로, 로컬에 저장한 값이 유일한 출처다.
+      locationName: siteName ?? undefined,
+      // groupName은 여전히 undefined다 — 현장관리자·근무자는 사업장에만 소속되고
+      // 그룹에는 소속되지 않는다(api-spec.md §2-2). 본사 계정 영역은 Phase 5.
     },
     isLoading: false,
     isError: false,
@@ -57,8 +63,9 @@ const resolveMe = (token: string | null): UseMeResult => {
 
 export const useMe = (): UseMeResult => {
   const token = getAccessToken()
+  const siteName = getSiteName()
 
-  // 토큰 문자열이 같으면 같은 객체 참조를 유지한다. 매 렌더마다 새 `data`를 만들면
+  // 토큰·사업장명이 같으면 같은 객체 참조를 유지한다. 매 렌더마다 새 `data`를 만들면
   // 이 값을 의존성에 넣은 소비처가 불필요하게 재계산된다.
-  return useMemo(() => resolveMe(token), [token])
+  return useMemo(() => resolveMe(token, siteName), [token, siteName])
 }

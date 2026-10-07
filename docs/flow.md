@@ -29,6 +29,7 @@ flowchart LR
 
     Guard -- "토큰 없음 + /*" --> Login
     Guard -- "토큰 없음 + /admin/*" --> AdminLogin
+    Guard -- "사업장 미선택 + /*" --> Login
     Guard -- "JWT role 확인" --> Role{"role?"}
 
     Role -- "매핑 밖 role" --> Login
@@ -38,8 +39,15 @@ flowchart LR
     Login --> LoginPost{"응답 code?"}
     AdminLogin --> LoginPost
     LoginPost -- "1xx 본사" --> AdminHome
-    LoginPost -- "201 현장관리자" --> ServiceHome
     LoginPost -- "202 근무자" --> Deny["토큰 저장 안 함<br/>안내 후 중단"]
+    LoginPost -- "201 현장관리자" --> SiteFetch["UserSiteSelect 조회<br/>(토큰 저장 후)"]
+
+    SiteFetch --> SiteCount{"children 개수?"}
+    SiteCount -- "1개" --> SiteSave
+    SiteCount -- "2개 이상" --> SitePick["사업장 선택 단계<br/>(로그인 카드 내)"]
+    SiteCount -- "0개 · 조회 실패 · 403" --> SiteDeny["토큰 삭제<br/>안내 후 중단"]
+    SitePick --> SiteSave["siteSeq · siteName 저장"]
+    SiteSave --> ServiceHome
 
     AdminHome <-->|좌측 하단 '현장 사이트로 이동'| ServiceHome
 ```
@@ -50,6 +58,7 @@ flowchart LR
 - `/login` = 현장 로그인. 현장관리자/Admin 3종 모두 사용.
 - `/admin/login` = 본사 로그인. URL 직접 접근. 시스템관리자/Master/Manager 사용.
 - `/*` 미인증 → `/login`. `/admin/*` 미인증 → `/admin/login`.
+- 🔴 **현장 영역은 사업장 미선택도 차단한다**(021). 토큰이 멀쩡해도 `siteSeq`가 없으면 `/login`으로 되돌린다 — `siteSeq` 없이 조회하면 403이 아니라 `200` + 빈 목록이 와서(`api-spec.md:211`) 정상 응답인 빈 화면이 그려진다. **본사 영역은 이 체크에서 제외**.
 - 🔴 **근무자 차단은 로그인 응답 시점**이다(020 실구현). 가드가 아니라 로그인 화면이 막는다 — 서버는 근무자에게도 토큰을 발급하므로(`code: 202`) **토큰을 저장하지 않고** 안내 후 중단한다. 저장 후 가드로 막으면 새로고침 시 통과할 여지가 생긴다.
 - **착지 사이트는 응답 `code`가 정한다**(`1xx` 본사 / `2xx` 현장). 로그인 화면이 어느 쪽이었는지와 무관하다 — `/admin/login`에서 현장 계정으로 들어오면 현장 홈으로 간다. 로그인 엔드포인트는 `Login/W/Login` **하나뿐**이다(`api-spec.md` §1-1).
 - **권한 판단은 JWT `role`**이 하고, `code`는 저장하지 않는다(`CLAUDE.md` B4). JWT `role`이 매핑 밖 값이면(미실측 3종) 권한을 특정할 수 없어 가드가 로그인으로 보낸다.
@@ -58,7 +67,12 @@ flowchart LR
 
 > **해소(020, 2026-10-06)**: 로그인 직후 첫 화면은 **현장 `/zones` · 본사 `/admin/locations`**다(`homePath()`·`paths`와 일치). 당초 현장 홈을 사이드바 첫 메뉴인 `/patrol/zones`로 잠정 가정했으나 코드는 `/zones`(순찰코스 관리)였고, 코드 쪽을 유지하기로 결정했다.
 >
-> **Open(021)**: 사업장 선택 단계가 로그인과 홈 사이에 들어간다. 현장은 소속 사업장이 1개면 자동 진입, 2개 이상이면 선택 화면이고 본사는 항상 선택 화면이다(`api-spec.md` §2-2). 위 다이어그램에는 아직 반영하지 않았다 — `spec 021`에서 추가한다.
+> **해소(021, 2026-10-07)**: 사업장 선택 단계가 로그인과 홈 사이에 들어갔다(위 다이어그램 반영).
+>
+> - **라우트가 아니라 로그인 카드 안의 단계**다. 선택 중에도 주소는 `/login` 그대로다 — 선택 확정 API가 없어 이 단계는 "목록 1회 조회 + 로컬 저장"뿐이라 라우트·가드를 둘 무게가 아니었다.
+> - 현장은 **1개면 자동 진입**(선택 UI 스킵, 저장은 그대로), 2개 이상이면 선택. **0개·조회 실패·403은 토큰을 지우고 중단**한다.
+> - **본사는 선택 단계가 없다**(현행 유지). 본사 홈이 아직 placeholder라 `siteSeq` 소비처가 0개이고, `AdminSiteSelect` 평면 배열 응답이 미실측이다 → Phase 5에서 추가(`api-spec.md` OQ-1B).
+> - `UserSiteSelect`는 `sign` 엔드포인트라 **토큰 저장이 호출보다 먼저**다. 그래서 "토큰 있음 + `siteSeq` 없음" 중간 상태가 생기고, **`AuthGuard`가 현장 영역에서 그 상태를 로그인으로 되돌린다**(본사 영역은 제외).
 
 ---
 

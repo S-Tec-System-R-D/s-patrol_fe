@@ -4,6 +4,8 @@
  * - 손상/타입 비정상 값은 `null` 취급. 자동 클리어는 하지 않는다(비파괴).
  */
 
+import { clearSite } from '@/lib/auth/site'
+
 const ACCESS_KEY = 'auth.accessToken'
 const REFRESH_KEY = 'auth.refreshToken'
 
@@ -39,7 +41,17 @@ export const setAccessToken = (token: string): void => writeString(ACCESS_KEY, t
 export const getRefreshToken = (): string | null => readString(REFRESH_KEY)
 export const setRefreshToken = (token: string): void => writeString(REFRESH_KEY, token)
 
+/**
+ * 로그아웃·세션 종료. 🔴 **선택한 사업장도 함께 지운다**(`spec 021` §3 규칙 3).
+ *
+ * 남기면 다음 사용자 계정에 이전 사업장이 붙는다. 테스트 다수가 cleanup으로 이 함수를
+ * 쓰므로, 여기서 지우지 않으면 `siteSeq`가 테스트 간에 누설돼 순서 의존 실패가 된다.
+ *
+ * 의존 방향은 `tokens.ts` → `site.ts` **단방향**이다. `site.ts`가 이쪽 헬퍼를
+ * import하지 않는 이유가 이것이다(순환 회피 — `site.ts` 상단 주석).
+ */
 export const clearTokens = (): void => {
   removeKey(ACCESS_KEY)
   removeKey(REFRESH_KEY)
+  clearSite()
 }

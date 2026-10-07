@@ -605,10 +605,19 @@ export interface MeDto {
   userSeq: number        // JWT userSeq. ID는 number + ~Seq (§0 명명 규약)
   name: string           // JWT userName
   role: Role             // JWT role 클레임에서 매핑
-  groupName?: string     // 🔴 클레임에 없다
-  locationName?: string  // 🔴 클레임에 없다 — spec 021의 UserSiteSelect가 채운다
+  groupName?: string     // 🔴 클레임에 없다. 021에서도 채우지 않는다 (아래)
+  locationName?: string  // 선택한 사업장명 — 021이 채웠다 (아래)
 }
 ```
+
+**`locationName`의 출처 = 선택한 사업장명 (021, 2026-10-07)**
+
+클레임에도 없고 서버가 기억하지도 않는다. 사용자가 로그인 직후 고른 사업장명을 `localStorage`(`auth.siteName`)에 보관하고 `useMe`가 그것을 읽는다 — **로컬 저장값이 유일한 출처다.**
+
+- 선택 확정 API가 없다(`api-spec.md` OQ-1A ② 해소). 과거 구현은 선택 시 토큰을 재발급해 담았으나 현 백엔드에는 그 엔드포인트가 없다 → **JWT에서 찾지 말 것.**
+- 저장은 토큰과 **같은 저장소·같은 생애**다. `clearTokens()`가 `siteSeq`·`siteName`을 함께 지운다.
+- 소비처는 배치관리 2곳(`DeploymentHistoryTabs`·`DeploymentKpiRow`)의 전입/전출 판정이다. 020까지 빈 결과였던 일시 퇴행이 이것으로 끝났다.
+- **`groupName`은 여전히 `undefined`다** — 현장관리자·근무자는 사업장에만 소속되고 그룹에는 소속되지 않는다(`api-spec.md` §2-2). 본사 계정 영역은 Phase 5.
 
 **`role` 매핑은 실측된 2개만 있다**
 

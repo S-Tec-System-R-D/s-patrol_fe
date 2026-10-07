@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { LOGIN_CODE } from '@/types/api'
 import { REFRESH_PATH } from '@/lib/axios'
 import { MS_ROLE_CLAIM } from '@/features/auth/types/claims'
+import { decodeAccessToken } from '@/lib/auth/jwt'
 import { makeAccessToken } from '@/test/jwt'
 
 /**
@@ -29,7 +30,39 @@ const DEV_ACCOUNTS: Record<string, { code: number; jwtRole: string; userName: st
   '333333': { code: LOGIN_CODE.FIELD_MANAGER, jwtRole: 'FieldManager', userName: '홍길동' },
   // 근무자 차단(US3)을 dev에서 직접 눌러보기 위한 계정. 서버는 토큰을 주지만 프론트가 막는다.
   '222222': { code: LOGIN_CODE.WORKER, jwtRole: 'Worker', userName: '김근무' },
+  // 021 사업장 선택 0/1/N 분기를 dev에서 직접 눌러보기 위한 현장 계정 2종.
+  // 권한은 333333과 같고 **소속 사업장 수만 다르다**(아래 DEV_SITES).
+  '444444': { code: LOGIN_CODE.FIELD_MANAGER, jwtRole: 'FieldManager', userName: '단일소속' },
+  '555555': { code: LOGIN_CODE.FIELD_MANAGER, jwtRole: 'FieldManager', userName: '무소속' },
 }
+
+/**
+ * 사번별 접근 가능 사업장(`UserSiteSelect`의 `children`).
+ *
+ * 응답 구조는 `api-spec.md` §5-2 실측 그대로다 — 루트(`siteSeq 6`)는 선택 대상이 아니고
+ * `children`의 필드명이 루트와 다르다(`childSiteSeq`).
+ */
+const DEV_SITES: Record<string, { childSiteSeq: number; childSiteName: string; parentSeq: number }[]> =
+  {
+    '333333': [
+      { childSiteSeq: 7, childSiteName: '강동 테크노타워', parentSeq: 6 },
+      { childSiteSeq: 8, childSiteName: '강동 그랜드타워', parentSeq: 6 },
+    ],
+    '444444': [{ childSiteSeq: 7, childSiteName: '강동 테크노타워', parentSeq: 6 }],
+    '555555': [],
+  }
+
+/**
+ * 사번을 알 수 없을 때의 기본값 — **1개(자동 진입)**.
+ *
+ * 🔴 폴백이 "1개"인 이유: 테스트 다수가 `server.use`로 로그인 응답만 덮고 accessToken에
+ * JWT가 아닌 문자열(`'new-access'`)을 쓴다. 그러면 아래 핸들러가 사번을 디코딩할 수 없다.
+ * 폴백이 2개 이상이면 그 테스트들이 전부 선택 단계에서 멈춰, "code가 착지점을 정한다"는
+ * 원래 의도(020)가 사업장 선택 테스트로 변질된다. 1개면 자동 진입이라 의도가 보존된다.
+ */
+const FALLBACK_SITES = [{ childSiteSeq: 7, childSiteName: '강동 테크노타워', parentSeq: 6 }]
+
+const USER_SITE_SELECT_PATH = '/api/v1/Login/W/sign/UserSiteSelect'
 
 export const authHandlers = [
   http.post('/api/v1/Login/W/Login', async ({ request }) => {
@@ -48,12 +81,34 @@ export const authHandlers = [
       message: '요청을 정상 처리하였습니다.',
       data: {
         accessToken: makeAccessToken({
+          // 🔴 `loginId`를 실제 사번으로 심는다. `makeAccessToken`의 기본값이 `'333333'`이라
+          // 심지 않으면 모든 계정이 같은 사번으로 디코딩돼 `UserSiteSelect` 분기가 망가진다.
+          loginId: body?.loginId ?? '',
           userName: account.userName,
           [MS_ROLE_CLAIM]: account.jwtRole,
         }),
         refreshToken: `mock-refresh-${account.jwtRole}`,
       },
       code: account.code,
+    })
+  }),
+
+  /**
+   * 현장 계정의 접근 가능 사업장(`spec 021`).
+   *
+   * 서버는 파라미터를 받지 않고 **토큰의 사용자 기준**으로 목록을 정한다. mock도 같은
+   * 방식으로 `Authorization` 헤더의 JWT에서 `loginId`를 읽어 분기한다 — 사번으로 dev
+   * 계정을 고르는 020의 체계를 그대로 잇는다.
+   */
+  http.get(USER_SITE_SELECT_PATH, ({ request }) => {
+    const token = request.headers.get('Authorization')?.replace(/^Bearer\s+/, '') ?? null
+    const loginId = decodeAccessToken(token)?.loginId ?? ''
+    const children = loginId in DEV_SITES ? DEV_SITES[loginId] : FALLBACK_SITES
+
+    return HttpResponse.json({
+      message: '요청을 정상 처리하였습니다.',
+      data: { siteSeq: 6, siteName: '강동지사', children },
+      code: 200,
     })
   }),
 

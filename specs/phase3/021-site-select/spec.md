@@ -14,9 +14,9 @@
 
 **본 spec에서 해소한다**
 
-- [ ] **`locationName`이 `undefined`** → 선택한 사업장명(`siteName`)을 저장하고 `useMe`가 읽어 채운다. 실소비처 2곳(`DeploymentHistoryTabs.tsx:29`, `DeploymentKpiRow.tsx:16·19`)의 전입/전출 판정이 빈 결과였던 일시 퇴행을 끝낸다.
-- [ ] 🔴 **`DeploymentHistoryTabs.test.tsx`의 `vi.mock` 스텁 제거** — 위 항목이 해소되면 스텁이 실제 값을 가린다. **스텁을 남긴 채 021을 끝내면 "동작한다고 착각"하게 된다**(020 이월 블록의 경고 그대로 승계).
-- [ ] **`npm run capture` baseline 재촬영 여부** → 로그인 화면에 단계가 추가되므로 본 spec에서 판단한다. 020에서 고친 캡쳐 파이프라인(JWT 생성기)이 유효한지도 이번에 실증된다.
+- [x] **`locationName`이 `undefined`** → 선택한 사업장명(`siteName`)을 저장하고 `useMe`가 읽어 채운다. 실소비처 2곳(`DeploymentHistoryTabs.tsx:29`, `DeploymentKpiRow.tsx:16·19`)의 전입/전출 판정이 빈 결과였던 일시 퇴행을 끝낸다.
+- [x] 🔴 **`DeploymentHistoryTabs.test.tsx`의 `vi.mock` 스텁 제거** — 위 항목이 해소되면 스텁이 실제 값을 가린다. **스텁을 남긴 채 021을 끝내면 "동작한다고 착각"하게 된다**(020 이월 블록의 경고 그대로 승계).
+- [x] **`npm run capture` baseline 재촬영 여부** → 로그인 화면에 단계가 추가되므로 본 spec에서 판단한다. 020에서 고친 캡쳐 파이프라인(JWT 생성기)이 유효한지도 이번에 실증된다.
 
 **본 spec 범위 외 → 이월 유지**
 
@@ -121,23 +121,23 @@ interface UserSiteSelectData {
 
 WF-4에서 증거(`파일:라인`) 명시 필요.
 
-- [ ] 1. 현장 로그인 성공 후 `UserSiteSelect`를 호출한다 (토큰 저장 뒤, `Authorization` 포함)
-- [ ] 2. `children` **2개 이상** → 로그인 카드가 목록 단계로 전환되고, 선택 시 `/zones`로 이동한다 (US1)
-- [ ] 3. `children` **1개** → 목록이 보이지 않고 자동 진입한다. 저장은 2번과 **같은 경로**를 탄다 (US2, 규칙 10)
-- [ ] 4. `children` **0개** → 안내 + 토큰 삭제 + 로그인 단계 복귀. 홈으로 가지 않는다 (US3)
-- [ ] 5. 선택 대상에 **루트 `siteSeq`가 포함되지 않는다** (규칙 7)
-- [ ] 6. `childSiteSeq`/`childSiteName` → `SiteOption`으로 정규화된다 (규칙 8)
-- [ ] 7. 🔴 토큰은 있고 `siteSeq`는 없는 상태로 `/zones` 진입 → 로그인으로 리다이렉트 (US4, 규칙 6)
-- [ ] 8. 🔴 본사 영역은 `siteSeq` 체크에서 제외된다 — 본사 로그인이 막히지 않는다 (규칙 6)
-- [ ] 9. `clearTokens()`가 `siteSeq`·`siteName`을 함께 지운다 (규칙 3)
-- [ ] 10. `useMe().data.locationName`이 선택한 `siteName`을 반환한다 (Carry-over)
-- [ ] 11. 🔴 `DeploymentHistoryTabs.test.tsx`의 `vi.mock` 스텁이 제거되고, 전입/전출 판정이 실제 `locationName`으로 통과한다 (Carry-over)
-- [ ] 12. `UserSiteSelect` 실패·403에서 **토큰이 남지 않는다** (§4)
-- [ ] 13. `siteSeq`가 URL에 노출되지 않는다 (규칙 9)
-- [ ] 14. MSW 핸들러가 `UserSiteSelect` 3종(0개·1개·2개 이상)을 제공한다
-- [ ] 15. `npm run verify` 0 errors + `npm run test` green
-- [ ] 16. 브라우저 확인(MSW 모드) — 0/1/N 3분기 + 가드 리다이렉트
-- [ ] 17. 문서 동기화: `api-spec.md`(OQ-1A ② 해소·본사 평면 배열 메모) / `flow.md` §0(선택 단계 반영, `Open(021)` 해소) / `data-model.md` §4-3(`locationName` 출처) / `roadmap.md` §7-1·§12
+- [x] 1. 현장 로그인 성공 후 `UserSiteSelect`를 호출한다 (토큰 저장 뒤, `Authorization` 포함)
+- [x] 2. `children` **2개 이상** → 로그인 카드가 목록 단계로 전환되고, 선택 시 `/zones`로 이동한다 (US1)
+- [x] 3. `children` **1개** → 목록이 보이지 않고 자동 진입한다. 저장은 2번과 **같은 경로**를 탄다 (US2, 규칙 10)
+- [x] 4. `children` **0개** → 안내 + 토큰 삭제 + 로그인 단계 복귀. 홈으로 가지 않는다 (US3)
+- [x] 5. 선택 대상에 **루트 `siteSeq`가 포함되지 않는다** (규칙 7)
+- [x] 6. `childSiteSeq`/`childSiteName` → `SiteOption`으로 정규화된다 (규칙 8)
+- [x] 7. 🔴 토큰은 있고 `siteSeq`는 없는 상태로 `/zones` 진입 → 로그인으로 리다이렉트 (US4, 규칙 6)
+- [x] 8. 🔴 본사 영역은 `siteSeq` 체크에서 제외된다 — 본사 로그인이 막히지 않는다 (규칙 6)
+- [x] 9. `clearTokens()`가 `siteSeq`·`siteName`을 함께 지운다 (규칙 3)
+- [x] 10. `useMe().data.locationName`이 선택한 `siteName`을 반환한다 (Carry-over)
+- [x] 11. 🔴 `DeploymentHistoryTabs.test.tsx`의 `vi.mock` 스텁이 제거되고, 전입/전출 판정이 실제 `locationName`으로 통과한다 (Carry-over)
+- [x] 12. `UserSiteSelect` 실패·403에서 **토큰이 남지 않는다** (§4)
+- [x] 13. `siteSeq`가 URL에 노출되지 않는다 (규칙 9)
+- [x] 14. MSW 핸들러가 `UserSiteSelect` 3종(0개·1개·2개 이상)을 제공한다
+- [x] 15. `npm run verify` 0 errors + `npm run test` green
+- [x] 16. 브라우저 확인(MSW 모드) — 0/1/N 3분기 + 가드 리다이렉트
+- [x] 17. 문서 동기화: `api-spec.md`(OQ-1A ② 해소·본사 평면 배열 메모) / `flow.md` §0(선택 단계 반영, `Open(021)` 해소) / `data-model.md` §4-3(`locationName` 출처) / `roadmap.md` §7-1·§12
 
 ---
 

@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { server } from '@/mocks/server'
 import AuthGuard from '../AuthGuard'
 import { setAccessToken, clearTokens } from '@/lib/auth/tokens'
+import { setSite } from '@/lib/auth/site'
 import { MS_ROLE_CLAIM } from '@/features/auth/types/claims'
 import { makeAccessToken } from '@/test/jwt'
 
@@ -20,7 +21,10 @@ const renderAt = (initialPath: string) => {
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/admin/*" element={<AuthGuard />}>
-            <Route path="admin/locations" element={<div>OUTLET_OK</div>} />
+            {/* 부모가 `/admin/*`이므로 자식은 **상대 경로**여야 한다. 021 이전에는
+                `admin/locations`(= /admin/admin/locations)로 잘못 중첩돼 있었는데,
+                본사 통과 케이스를 검사하는 테스트가 없어 드러나지 않았다. */}
+            <Route path="locations" element={<div>OUTLET_OK</div>} />
           </Route>
           <Route path="/*" element={<AuthGuard />}>
             <Route path="zones" element={<div>OUTLET_OK</div>} />
@@ -49,10 +53,35 @@ describe('AuthGuard', () => {
     await waitFor(() => expect(screen.getByText('ADMIN_LOGIN')).toBeInTheDocument())
   })
 
-  it('유효한 토큰 → Outlet 렌더(하위 라우트 통과)', async () => {
+  it('유효한 토큰 + 사업장 선택됨 → Outlet 렌더(하위 라우트 통과)', async () => {
+    setAccessToken(FIELD_TOKEN)
+    setSite(7, '강동 테크노타워')
+
+    renderAt('/zones')
+    await waitFor(() => expect(screen.getByText('OUTLET_OK')).toBeInTheDocument())
+  })
+
+  /**
+   * 🔴 021: "토큰 있음 + siteSeq 없음"은 로그인 도중 **반드시 생기는** 중간 상태다 —
+   * `UserSiteSelect`가 `sign` 엔드포인트라 토큰을 먼저 저장해야 호출되기 때문이다.
+   * 그 상태로 새로고침하면 여기서 막지 않는 한 홈이 siteSeq 없이 조회를 날리고,
+   * 그 응답은 403이 아니라 200 + 빈 목록이라(api-spec.md:211) 조용히 틀린 화면이 된다.
+   */
+  it('토큰은 있지만 사업장 미선택 → 로그인으로 Navigate', async () => {
     setAccessToken(FIELD_TOKEN)
 
     renderAt('/zones')
+    await waitFor(() => expect(screen.getByText('SERVICE_LOGIN')).toBeInTheDocument())
+  })
+
+  /**
+   * 🔴 본사는 사업장 선택 단계가 없다(siteSeq 소비처 0개, Phase 5).
+   * 여기에 siteSeq를 요구하면 본사 로그인이 그 자리에서 막힌다.
+   */
+  it('본사 영역은 사업장 미선택이어도 통과한다', async () => {
+    setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: 'SystemManager' }))
+
+    renderAt('/admin/locations')
     await waitFor(() => expect(screen.getByText('OUTLET_OK')).toBeInTheDocument())
   })
 

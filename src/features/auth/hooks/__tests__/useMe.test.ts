@@ -4,6 +4,7 @@ import axios from 'axios'
 import { useMe } from '@/features/auth/hooks/useMe'
 import { MS_ROLE_CLAIM } from '@/features/auth/types/claims'
 import { setAccessToken, clearTokens } from '@/lib/auth/tokens'
+import { setSite } from '@/lib/auth/site'
 import { makeAccessToken } from '@/test/jwt'
 import api from '@/lib/axios'
 
@@ -34,13 +35,37 @@ describe('useMe', () => {
     expect(result.current.data?.role).toBe('SYSTEM')
   })
 
-  // 클레임에 사업장·그룹 정보가 없다. 021이 채울 자리 — 지금 값이 들어오면 설계가 어긋난 것이다.
-  it('locationName·groupName은 undefined다 (021에서 채움)', () => {
+  /**
+   * 021: 사업장명은 **클레임이 아니라 선택 결과**에서 온다. 서버는 고른 siteSeq를
+   * 기억하지 않고 토큰에도 담지 않으므로, 로컬 저장값이 유일한 출처다.
+   */
+  it('locationName은 선택한 사업장명을 반환한다 (021)', () => {
+    setAccessToken(makeAccessToken())
+    setSite(8, '강동 그랜드타워')
+
+    const { result } = renderHook(() => useMe())
+
+    expect(result.current.data?.locationName).toBe('강동 그랜드타워')
+  })
+
+  it('사업장 미선택이면 locationName은 undefined다', () => {
     setAccessToken(makeAccessToken())
 
     const { result } = renderHook(() => useMe())
 
     expect(result.current.data?.locationName).toBeUndefined()
+  })
+
+  /**
+   * groupName은 021에서도 채우지 않는다 — 현장관리자·근무자는 사업장에만 소속되고
+   * 그룹에는 소속되지 않는다(api-spec.md §2-2). 본사 계정 영역은 Phase 5.
+   */
+  it('groupName은 여전히 undefined다', () => {
+    setAccessToken(makeAccessToken())
+    setSite(8, '강동 그랜드타워')
+
+    const { result } = renderHook(() => useMe())
+
     expect(result.current.data?.groupName).toBeUndefined()
   })
 

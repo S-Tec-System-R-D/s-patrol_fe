@@ -6,8 +6,10 @@ import { http, HttpResponse } from 'msw'
 import { server } from '@/mocks/server'
 import LoginPage from '../LoginPage'
 import { clearTokens, getAccessToken, getRefreshToken } from '@/lib/auth/tokens'
+import { clearSite, getSiteName, getSiteSeq } from '@/lib/auth/site'
 
 const LOGIN_PATH = '/api/v1/Login/W/Login'
+const USER_SITE_SELECT_PATH = '/api/v1/Login/W/sign/UserSiteSelect'
 
 /** 로그인 성공 응답. code가 사이트·권한을 함께 나타낸다(api-spec.md §2-1) */
 const loginOk = (code: number) =>
@@ -251,5 +253,190 @@ describe('LoginPage — 근무자 차단 (US3)', () => {
     expect(getAccessToken()).toBeNull()
     expect(screen.queryByText('SERVICE_HOME')).not.toBeInTheDocument()
     expect(screen.queryByText('ADMIN_HOME')).not.toBeInTheDocument()
+  })
+})
+
+/**
+ * 사업장 선택 (spec 021 US1·US2).
+ *
+ * 선택은 **라우트가 아니라 로그인 카드 안의 단계**다. 따라서 "현장 홈으로 갔는가"는
+ * 선택을 마친 뒤에만 참이 된다.
+ */
+describe('LoginPage — 사업장 선택 (US1, US2)', () => {
+  beforeEach(() => {
+    clearTokens()
+    clearSite()
+    server.resetHandlers()
+  })
+
+  /** `api-spec.md` §5-2 실측 구조 — 루트 아래 `children`, 필드명이 루트와 다르다 */
+  const siteSelectOk = (children: { childSiteSeq: number; childSiteName: string }[]) =>
+    http.get(USER_SITE_SELECT_PATH, () =>
+      HttpResponse.json({
+        message: '요청을 정상 처리하였습니다.',
+        data: {
+          siteSeq: 6,
+          siteName: '강동지사',
+          children: children.map((child) => ({ ...child, parentSeq: 6 })),
+        },
+        code: 200,
+      })
+    )
+
+  const TWO_SITES = [
+    { childSiteSeq: 7, childSiteName: '강동 테크노타워' },
+    { childSiteSeq: 8, childSiteName: '강동 그랜드타워' },
+  ]
+
+  it('사업장이 2개면 선택 단계로 전환된다 — 아직 홈으로 가지 않는다', async () => {
+    server.use(http.post(LOGIN_PATH, () => loginOk(201)), siteSelectOk(TWO_SITES))
+
+    renderLogin()
+    await fillAndSubmit()
+
+    await waitFor(() => expect(screen.getByText('사업장 선택')).toBeInTheDocument())
+    expect(screen.getByRole('button', { name: '강동 테크노타워' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '강동 그랜드타워' })).toBeInTheDocument()
+    expect(screen.queryByText('SERVICE_HOME')).not.toBeInTheDocument()
+  })
+
+  it('사업장을 선택하면 siteSeq·siteName을 저장하고 현장 홈으로 간다', async () => {
+    server.use(http.post(LOGIN_PATH, () => loginOk(201)), siteSelectOk(TWO_SITES))
+
+    renderLogin()
+    await fillAndSubmit()
+
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: '강동 그랜드타워' }))
+
+    await waitFor(() => expect(screen.getByText('SERVICE_HOME')).toBeInTheDocument())
+    expect(getSiteSeq()).toBe(8)
+    expect(getSiteName()).toBe('강동 그랜드타워')
+  })
+
+  /**
+   * 🔴 1개는 선택 UI를 건너뛰지만 **저장은 건너뛰지 않는다**(spec 021 §3 규칙 10).
+   * 저장 없이 이동하면 siteSeq 없이 홈에 들어가고, 그 조회는 403이 아니라
+   * `200` + 빈 목록으로 돌아와(api-spec.md:211) 조용히 틀린 화면이 된다.
+   */
+  it('사업장이 1개면 선택 화면 없이 자동 진입하고, 저장은 그대로 한다', async () => {
+    server.use(
+      http.post(LOGIN_PATH, () => loginOk(201)),
+      siteSelectOk([{ childSiteSeq: 7, childSiteName: '강동 테크노타워' }])
+    )
+
+    renderLogin()
+    await fillAndSubmit()
+
+    await waitFor(() => expect(screen.getByText('SERVICE_HOME')).toBeInTheDocument())
+    expect(screen.queryByText('사업장 선택')).not.toBeInTheDocument()
+    expect(getSiteSeq()).toBe(7)
+    expect(getSiteName()).toBe('강동 테크노타워')
+  })
+
+  /** 루트는 선택 대상이 아니다(api-spec.md §2-2). children 밖의 siteSeq가 새면 안 된다 */
+  it('루트 사업장(siteSeq 6)은 선택지에 나타나지 않는다', async () => {
+    server.use(http.post(LOGIN_PATH, () => loginOk(201)), siteSelectOk(TWO_SITES))
+
+    renderLogin()
+    await fillAndSubmit()
+
+    await waitFor(() => expect(screen.getByText('사업장 선택')).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: '강동지사' })).not.toBeInTheDocument()
+  })
+
+  /** 본사는 선택 단계가 없다 — siteSeq 소비처가 0개이고 응답 형태도 미실측(Phase 5) */
+  it('본사 계정은 사업장 선택 없이 본사 홈으로 간다', async () => {
+    server.use(http.post(LOGIN_PATH, () => loginOk(101)))
+
+    renderLogin()
+    await fillAndSubmit()
+
+    await waitFor(() => expect(screen.getByText('ADMIN_HOME')).toBeInTheDocument())
+    expect(getSiteSeq()).toBeNull()
+  })
+})
+
+/**
+ * 사업장 확보 실패 (spec 021 US3 · §4).
+ *
+ * 🔴 **세 경우 모두 토큰을 남기지 않는 것이 핵심이다.** 토큰이 남으면
+ * "토큰 있음 + siteSeq 없음" 중간 상태가 되고, 새로고침 시 AuthGuard가 통과시켜
+ * siteSeq 없이 홈이 조회를 날린다. 그 응답은 403이 아니라 `200` + 빈 목록이라
+ * (api-spec.md:211) 에러로 드러나지도 않는다.
+ */
+describe('LoginPage — 사업장 확보 실패 (US3)', () => {
+  beforeEach(() => {
+    clearTokens()
+    clearSite()
+    server.resetHandlers()
+  })
+
+  const expectStuckAtLogin = async (pattern: RegExp) => {
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(pattern))
+    expect(getAccessToken()).toBeNull()
+    expect(getRefreshToken()).toBeNull()
+    expect(getSiteSeq()).toBeNull()
+    expect(screen.queryByText('SERVICE_HOME')).not.toBeInTheDocument()
+    expect(screen.queryByText('사업장 선택')).not.toBeInTheDocument()
+  }
+
+  it('소속 사업장이 0개면 안내하고 토큰을 남기지 않는다', async () => {
+    server.use(
+      http.post(LOGIN_PATH, () => loginOk(201)),
+      http.get(USER_SITE_SELECT_PATH, () =>
+        HttpResponse.json({
+          message: '요청을 정상 처리하였습니다.',
+          data: { siteSeq: 6, siteName: '강동지사', children: [] },
+          code: 200,
+        })
+      )
+    )
+
+    renderLogin()
+    await fillAndSubmit()
+
+    await expectStuckAtLogin(/소속된 사업장이 없습니다/)
+  })
+
+  it('UserSiteSelect가 500이면 토큰을 남기지 않는다', async () => {
+    server.use(
+      http.post(LOGIN_PATH, () => loginOk(201)),
+      http.get(USER_SITE_SELECT_PATH, () => new HttpResponse(null, { status: 500 }))
+    )
+
+    renderLogin()
+    await fillAndSubmit()
+
+    await expectStuckAtLogin(/./)
+  })
+
+  /**
+   * 403은 "현장 code인데 서버는 본사 계정으로 판정"한 경우다 —
+   * `UserSiteSelect`와 `AdminSiteSelect`는 상호 배타(api-spec.md:286·287).
+   * code와 서버 판정이 어긋났다는 뜻이라 추측으로 통과시키지 않는다(A1).
+   */
+  it('UserSiteSelect가 403이면 통과시키지 않고 토큰을 남기지 않는다', async () => {
+    server.use(
+      http.post(LOGIN_PATH, () => loginOk(201)),
+      http.get(USER_SITE_SELECT_PATH, () => new HttpResponse(null, { status: 403 }))
+    )
+
+    renderLogin()
+    await fillAndSubmit()
+
+    await expectStuckAtLogin(/./)
+  })
+
+  it('네트워크 실패면 토큰을 남기지 않는다', async () => {
+    server.use(
+      http.post(LOGIN_PATH, () => loginOk(201)),
+      http.get(USER_SITE_SELECT_PATH, () => HttpResponse.error())
+    )
+
+    renderLogin()
+    await fillAndSubmit()
+
+    await expectStuckAtLogin(/네트워크/)
   })
 })

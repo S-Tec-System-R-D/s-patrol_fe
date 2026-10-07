@@ -48,7 +48,16 @@ Vite env 로딩 순서상 `.env.[mode]` 가 `.env.local` 보다 **뒤에 로드�
 ### 인증 처리
 
 `e2e/capture.pw.ts` 가 `localStorage` 에 토큰을 직접 주입해 `AuthGuard` 를 통과시킨다.
-키는 `src/lib/auth/tokens.ts` 와 일치해야 한다 (`auth.accessToken` / `auth.refreshToken`).
+키는 `src/lib/auth/tokens.ts` · `src/lib/auth/site.ts` 와 일치해야 한다
+(`auth.accessToken` / `auth.refreshToken` / `auth.siteSeq` / `auth.siteName`).
+
+> 🔴 **`spec 021` 이후 `auth.siteSeq` 도 필요하다.** `AuthGuard` 가 현장 영역에서
+> **사업장 미선택** 을 막기 때문에, 이 값이 없으면 보호 라우트가 전부 로그인으로 리다이렉트되어
+> **캡쳐가 전부 로그인 화면이 된다.** 본사 영역(`/admin/*`) 은 이 체크에서 제외된다.
+>
+> ⚠️ `npm run capture` 는 `verify`/`test` 에 포함되지 않아 **자동 검증망 밖** 이다.
+> 가드에 새 조건이 붙을 때마다 seed 를 함께 갱신해야 하고, 빠뜨리면 **다음 캡쳐까지 드러나지 않는다.**
+> 020(토큰) 과 021(사업장) 에서 각각 한 번씩 이 함정을 밟았다.
 
 > 🔴 **`spec 020` 이후 그 토큰은 진짜 JWT여야 한다.** 사용자 정보가 `/api/auth/me`(실재하지 않는
 > 엔드포인트) 에서 **JWT 클레임** 으로 바뀌었다. 의미 없는 문자열을 넣으면 디코딩이 실패해

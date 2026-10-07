@@ -44,10 +44,25 @@ const makeAccessToken = (jwtRole: string) => {
   return `${header}.${payload}.capture-signature`
 }
 
-/** `src/lib/auth/tokens.ts`의 저장 키와 일치해야 한다. */
+/**
+ * `src/lib/auth/tokens.ts`·`src/lib/auth/site.ts`의 저장 키와 일치해야 한다.
+ *
+ * 🔴 **021부터 `auth.siteSeq`도 필요하다.** `AuthGuard`가 현장 영역에서 사업장 미선택을
+ * 막기 때문에, 이 값이 없으면 보호 라우트가 전부 로그인으로 리다이렉트되어
+ * **캡쳐가 전부 로그인 화면이 된다**(020에서 토큰 주입이 깨져 똑같은 일이 났다).
+ *
+ * ⚠️ `npm run capture`는 `verify`/`test`에 포함되지 않아 **자동 검증망 밖**이다.
+ * 가드에 새 조건이 붙을 때마다 이 seed를 함께 갱신해야 하고, 빠뜨리면 다음 캡쳐까지
+ * 드러나지 않는다.
+ *
+ * `siteSeq 7`·`강동 테크노타워`는 mock 데이터(`mocks/handlers/auth.ts`의 `DEV_SITES`)와
+ * 맞춘 값이다.
+ */
 const AUTH_SEED = {
   'auth.accessToken': makeAccessToken('FieldManager'),
   'auth.refreshToken': 'capture-refresh-token',
+  'auth.siteSeq': '7',
+  'auth.siteName': '강동 테크노타워',
 }
 
 test.beforeEach(async ({ context }) => {
