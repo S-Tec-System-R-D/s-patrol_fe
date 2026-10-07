@@ -40,22 +40,22 @@
 >
 > 🔴 **Phase 1은 신설·추가만 한다.** 구 타입 제거(제약 1)와 스키마 변경(제약 4)을 여기서 건드리면 이 기준이 즉시 깨진다.
 
-- [ ] T240 [P] 실측 응답 타입 **추가** in src/features/points/types/point.ts — `PointRow`·`PointDetail`을 `api-spec.md` §5-2 실측 그대로 **전량 선언**(안 쓰는 `gpsLat`/`gpsLng`/`lastPatrolUserSeq`도 둔다, `CLAUDE.md` B4). 🔴 **구 `PointType`·`PointAuthenticationMethod`는 남긴다**(제약 1) — "023에서 제거" 주석 + 참조 3곳을 적어 둔다. 🔴 목록은 `pointName`, 상세는 `name`이다(B-4) — **이름을 맞추지 않는다**
-- [ ] T241 [P] 요청 DTO 타입 in src/features/points/types/request.ts — `AddPointRequest`·`UpdatePointRequest`·`PointListParams`. 접미사는 `{Action}*Request`(`CLAUDE.md` B4). swagger 실측 그대로: Add는 `authMethod`·`useYn` required, Update는 `pointSeq` required
-- [ ] T242 [P] `authMethod` 양방향 매핑 in src/features/points/lib/authMethod.ts — `toAuthMethodCode('QR') → 9` / `toAuthMethodLabel(9) → 'QR'`. 표시는 **서버 `authMethodName` 우선**, 공백·`'Unknown'`이면 매핑표 폴백(B-6). 🔴 **9/10 외 값에 추측 라벨을 만들지 않는다**(A1) — 원문을 그대로 보여준다. 어댑터가 정당한 유일한 자리다(B4 조건 ②, 규칙 5)
+- [x] T240 [P] 실측 응답 타입 **추가** in src/features/points/types/point.ts — `PointRow`·`PointDetail`을 `api-spec.md` §5-2 실측 그대로 **전량 선언**(안 쓰는 `gpsLat`/`gpsLng`/`lastPatrolUserSeq`도 둔다, `CLAUDE.md` B4). 🔴 **구 `PointType`·`PointAuthenticationMethod`는 남긴다**(제약 1) — "023에서 제거" 주석 + 참조 3곳을 적어 둔다. 🔴 목록은 `pointName`, 상세는 `name`이다(B-4) — **이름을 맞추지 않는다**
+- [x] T241 [P] 요청 DTO 타입 in src/features/points/types/request.ts — `AddPointRequest`·`UpdatePointRequest`·`PointListParams`. 접미사는 `{Action}*Request`(`CLAUDE.md` B4). swagger 실측 그대로: Add는 `authMethod`·`useYn` required, Update는 `pointSeq` required
+- [x] T242 [P] `authMethod` 양방향 매핑 in src/features/points/lib/authMethod.ts — `toAuthMethodCode('QR') → 9` / `toAuthMethodLabel(9) → 'QR'`. 표시는 **서버 `authMethodName` 우선**, 공백·`'Unknown'`이면 매핑표 폴백(B-6). 🔴 **9/10 외 값에 추측 라벨을 만들지 않는다**(A1) — 원문을 그대로 보여준다. 어댑터가 정당한 유일한 자리다(B4 조건 ②, 규칙 5)
 
 ## Phase 2: Foundational (모든 US 선행 blocking)
 
 > **독립 테스트 기준**: `npm run test` green. `queryKey` 규약과 파라미터 변환이 **화면 없이** 순수함수 테스트로 고정된다.
 
-- [ ] T243 [P] 🔴 `queryKey` SSOT in src/features/points/queryKeys.ts — `pointKeys.all` / `pointKeys.list(siteSeq, params)` / `pointKeys.detail(pointSeq)`. **`siteSeq`를 키에 반드시 포함**한다(규칙 2) — 빠지면 사업장 전환 시 이전 사업장 캐시가 보인다. ⚠️ **`spec 023~026`이 그대로 따를 컨벤션**이므로 파일 주석에 규약을 명문화한다
-- [ ] T244 [P] 목록 조회 in src/features/points/api/getPointList.ts — `GET /api/v1/Point/W/sign/GetPointList`. `siteSeq` **required**, `pageNumber`(1-based)·`pageSize=20` **명시 전송**(규칙 7 — 기본값 의존 금지). 반환 `PagedData<PointRow>`. 🔴 **`_raw`를 쓰지 않는다** — `code`가 필요 없다(019 경계, `userSiteSelect.ts:15` 주석 승계)
-- [ ] T245 [P] 상세 조회 in src/features/points/api/detailPoint.ts — `GET .../DetailPoint?pointSeq=`
-- [ ] T246 [P] 추가 in src/features/points/api/addPoint.ts — `POST .../AddPoint`, body `AddPointRequest`
-- [ ] T247 [P] 수정 in src/features/points/api/updatePoint.ts — 🔴 **`PATCH`** `.../UpdatePoint`(`PUT`이 아니다 — swagger 실측, 규칙 13). `api.patch`를 쓴다
-- [ ] T248 [P] 삭제 in src/features/points/api/deletePoint.ts — `DELETE .../DeletePoint?pointSeq=`. ⚠️ 파라미터명이 `pointSeq`임을 확인했다(B-12의 `DeleteCourse`만 `courseId`인 함정 — 지점은 해당 없음)
-- [ ] T249 URL↔서버 파라미터 변환 순수함수 in src/features/points/lib/pointListParams.ts — URL 쿼리(`search`·`authMethod`·`useYn`·`page`) → `PointListParams`. 🔴 **`pageNumber`(1-based) ↔ `pageIndex`(0-based) 변환이 여기 한 곳**(규칙 7·10). 응답 필드는 `page`, 요청은 `pageNumber`로 이름이 다르다. 018의 `lib/dateRangeQuery.ts` 선례와 같은 자리
-- [ ] T250 [P] vitest — 매핑·키·파라미터 in src/features/points/lib/\_\_tests\_\_/authMethod.test.ts · src/features/points/\_\_tests\_\_/queryKeys.test.ts · src/features/points/lib/\_\_tests\_\_/pointListParams.test.ts — 9/10 왕복 / 미지 코드 / `authMethodName` 공백·`'Unknown'` 폴백 / `siteSeq`가 키에 포함 / 1-based↔0-based 왕복 / `ALL_VALUE`는 파라미터에서 빠짐
+- [x] T243 [P] 🔴 `queryKey` SSOT in src/features/points/queryKeys.ts — `pointKeys.lists` / `pointKeys.list(siteSeq, params)` / `pointKeys.detail(pointSeq)`. **`siteSeq`를 키에 반드시 포함**한다(규칙 2) — 빠지면 사업장 전환 시 이전 사업장 캐시가 보인다. ⚠️ **`spec 023~026`이 그대로 따를 컨벤션**이므로 파일 주석에 규약을 명문화한다
+- [x] T244 [P] 목록 조회 in src/features/points/api/getPointList.ts — `GET /api/v1/Point/W/sign/GetPointList`. `siteSeq` **required**, `pageNumber`(1-based)·`pageSize=20` **명시 전송**(규칙 7 — 기본값 의존 금지). 반환 `PagedData<PointRow>`. 🔴 **`_raw`를 쓰지 않는다** — `code`가 필요 없다(019 경계, `userSiteSelect.ts:15` 주석 승계)
+- [x] T245 [P] 상세 조회 in src/features/points/api/detailPoint.ts — `GET .../DetailPoint?pointSeq=`
+- [x] T246 [P] 추가 in src/features/points/api/addPoint.ts — `POST .../AddPoint`, body `AddPointRequest`
+- [x] T247 [P] 수정 in src/features/points/api/updatePoint.ts — 🔴 **`PATCH`** `.../UpdatePoint`(`PUT`이 아니다 — swagger 실측, 규칙 13). `api.patch`를 쓴다
+- [x] T248 [P] 삭제 in src/features/points/api/deletePoint.ts — `DELETE .../DeletePoint?pointSeq=`. ⚠️ 파라미터명이 `pointSeq`임을 확인했다(B-12의 `DeleteCourse`만 `courseId`인 함정 — 지점은 해당 없음)
+- [x] T249 URL↔서버 파라미터 변환 순수함수 in src/features/points/lib/pointListParams.ts — URL 쿼리(`search`·`authMethod`·`useYn`·`page`) → `PointListParams`. 🔴 **`pageNumber`(1-based) ↔ `pageIndex`(0-based) 변환이 여기 한 곳**(규칙 7·10). 응답 필드는 `page`, 요청은 `pageNumber`로 이름이 다르다. 018의 `lib/dateRangeQuery.ts` 선례와 같은 자리
+- [x] T250 [P] vitest — 매핑·키·파라미터 in src/features/points/lib/\_\_tests\_\_/authMethod.test.ts · src/features/points/\_\_tests\_\_/queryKeys.test.ts · src/features/points/lib/\_\_tests\_\_/pointListParams.test.ts — 9/10 왕복 / 미지 코드 / `authMethodName` 공백·`'Unknown'` 폴백 / `siteSeq`가 키에 포함 / 1-based↔0-based 왕복 / `ALL_VALUE`는 파라미터에서 빠짐
 
 ## Phase 3: US1 — 목록·상세 조회 전환 (🔴 MSW 묶음 — 쪼개면 mock 모드가 빈 화면)
 
@@ -83,7 +83,7 @@
 - [ ] T261 [US2] 추가 폼 실 전송 in src/features/points/form/AddPointForm.tsx — `useMutation(addPoint)`. 바디에 `siteSeq`(`getSiteSeq()`, 021) + `authMethod` 정수 변환(T242) + `useYn`. `gpsLat`/`gpsLng`는 **전송하지 않는다**(규칙 10, OQ-022-C). `isPending`으로 버튼 `disabled`(연타 차단)
   - 🔴 **에러 바인딩 복붙 수정** — `:46`(설명)·`:64`(NFC TAG ID)가 `errors.name?.message`를 쓰고 있다. 고치지 않으면 **T260의 HEX 검증이 화면에 뜨지 않는다**(규칙 12)
   - 🔴 **실패 토스트를 폼에서 띄우지 않는다** — `queryClient.ts:18-20`의 `MutationCache.onError`가 이미 전역으로 띄운다(규칙 3)
-- [ ] T262 [US2] 모달 제어형 전환 in src/features/points/components/PointTopNav.tsx — `AppDialog`가 현재 비제어다(`:11`). **성공 후에만 닫는다**(§4 — 먼저 닫으면 실패 시 입력값이 사라진다). 성공 시 `pointKeys.all` 무효화
+- [ ] T262 [US2] 모달 제어형 전환 in src/features/points/components/PointTopNav.tsx — `AppDialog`가 현재 비제어다(`:11`). **성공 후에만 닫는다**(§4 — 먼저 닫으면 실패 시 입력값이 사라진다). 성공 시 `pointKeys.lists` 무효화
 - [ ] T263 MSW 추가 핸들러 in src/mocks/handlers/points.ts — `AddPoint`. in-memory 배열에 반영돼 **목록 재조회에 실제로 보이게** 한다(모듈 스코프 배열 + 핸들러가 수정)
 - [ ] T264 [US2] [P] vitest in src/features/points/form/\_\_tests\_\_/AddPointForm.test.tsx — 이름 필수 / NFC 14자리 HEX 실패가 **`nfcTagId` 필드에** 표시(T261 복붙 수정 고정) / 전송 바디에 `siteSeq`·`useYn`·정수 `authMethod` 포함 / 실패 시 모달 유지
 
@@ -94,8 +94,8 @@
 - [ ] T265 MSW 변경계 핸들러 in src/mocks/handlers/points.ts — `UpdatePoint`(PATCH)·`DeletePoint`(DELETE). 🔴 **삭제 거부 케이스 1종**을 포함한다(`usedCount > 0` 지점). ⚠️ 실 서버 동작은 **미실측**(OQ-022-B)이므로 mock은 "거부한다" 가정으로 **UI 경로만 확보**하고, 실측 후 교정한다고 주석에 남긴다 — 추측을 코드에 굳히지 않는다(A1)
 - [ ] T266 [US3] 수정 폼 초기화 + 실 전송 in src/features/points/form/EditPointForm.tsx — 🔴 **`defaultValues`를 상세 값으로 채운다**(현재 빈 문자열 고정 `:18-23` — 수정 폼인데 기존 값이 안 들어온다, 규칙 12). `useMutation(updatePoint)` **PATCH**, `reissueQrYn: false` 고정(규칙 10). 🔴 **`pointSeq`는 모달이 열릴 때의 값으로 고정**한다 — 고정하지 않으면 수정 중 다른 지점을 선택했을 때 **저장이 엉뚱한 지점에 적용된다**(§4)
   - T261과 동일한 에러 바인딩 복붙(`:46`·`:64`)을 함께 고친다
-- [ ] T267 [US3] 수정 모달 연결 in src/features/points/components/detail/PointDetail.tsx — `EditPointForm`에 상세 데이터 전달 + 제어형 닫기. 성공 시 `pointKeys.all`·`pointKeys.detail(pointSeq)` **둘 다** 무효화(규칙 2)
-- [ ] T268 [US4] 삭제 연결 in src/features/points/components/detail/PointDetail.tsx — `AppAlertDialog.onAction`이 현재 **빈 함수**다(`:75` `() => {}`). `useMutation(deletePoint)` 연결. 성공 시 **선택 해제** + `pointKeys.all` 무효화. 🔴 **`usedCount` 기반 선제 차단을 넣지 않는다**(규칙 14 — 서버 규칙 미확인, A1)
+- [ ] T267 [US3] 수정 모달 연결 in src/features/points/components/detail/PointDetail.tsx — `EditPointForm`에 상세 데이터 전달 + 제어형 닫기. 성공 시 `pointKeys.lists`·`pointKeys.detail(pointSeq)` **둘 다** 무효화(규칙 2)
+- [ ] T268 [US4] 삭제 연결 in src/features/points/components/detail/PointDetail.tsx — `AppAlertDialog.onAction`이 현재 **빈 함수**다(`:75` `() => {}`). `useMutation(deletePoint)` 연결. 성공 시 **선택 해제** + `pointKeys.lists` 무효화. 🔴 **`usedCount` 기반 선제 차단을 넣지 않는다**(규칙 14 — 서버 규칙 미확인, A1)
 - [ ] T269 [US4] 삭제 거부 처리 in src/features/points/components/detail/PointDetail.tsx — 서버 거부 시 사유 노출 + **목록 유지**. 전역 토스트와 중복되지 않게 한다(규칙 3)
 - [ ] T270 [P] vitest in src/features/points/form/\_\_tests\_\_/EditPointForm.test.tsx · src/features/points/components/detail/\_\_tests\_\_/PointDetail.test.tsx — 초기값 주입 / PATCH 바디(`pointSeq`·`reissueQrYn: false`) / 모달 열린 뒤 다른 지점 선택해도 `pointSeq` 불변 / 삭제 성공 시 선택 해제 / 삭제 거부 시 목록 유지
 
@@ -156,7 +156,35 @@ Phase 1 (타입·매핑, 신설만)
 
 > WF-3 구현 중 발견·결정 사항을 Phase 단위로 누적한다.
 
-(착수 전)
+### Phase 1 완료 — 타입·매핑 (2026-10-07)
+
+- T240~T242 완료. **신설 2파일 + 기존 2파일 추가 수정**(`types/point.ts` 타입 추가 · `types/index.ts` 재수출 1줄). 신규 패키지 없음
+- `npm run verify` **0 errors**(경고 1건은 기존 MSW 생성물 `public/mockServiceWorker.js`) + `npm run test` **42 files / 320 tests green** — 신설만이라 테스트 수 변동 없음(계획대로)
+- ✅ **제약 1 그대로 적용** — 구 `PointType`·`PointAuthenticationMethod`를 남기고 서버 타입을 나란히 추가했다. 파일 상단 주석에 **참조 3곳과 "023에서 제거"** 를 적어 둬서 다음 세션이 찾아 헤매지 않게 했다
+- **사용자 확인: 목록↔상세 필드명은 분리 유지**(2026-10-07). 질문이 들어와 공용 소비처를 실측했는데 **0곳**이었다 — 상세 하위 컴포넌트(`DetailRow`·`ZoneRow`·`DetailSection`)가 point 객체를 받지 않고 **primitive만**(`{label, value}`·`{title, isActive}`) 받는다. 통일 뷰 타입을 두면 목록에 없는 필드가 optional로 번져 "있는 줄 알고 바인딩"이 컴파일을 통과한다
+  - 합쳐야 하는 **트리거 3종**(상세 로딩 중 목록 이름 선표시 / 낙관적 업데이트 / 목록·상세 모두 받는 공용 컴포넌트)을 `spec.md` 규칙 5에 추가했다. 그때도 통일 타입이 아니라 `pointDisplayName()` **함수 1개**로 해결한다
+- 🔴 **이름 충돌 발견** — 타입 `PointDetail` ↔ 컴포넌트 `components/detail/PointDetail.tsx`. 타입명은 `api-spec.md` 실측 이름을 따르고(B4), **T257에서 `import type { PointDetail as PointDetailData }`** 로 받는다고 타입 주석에 명시해 뒀다
+- **타입명이 B4의 `Summary` 접미사 규칙과 다르다.** 목록 행을 `PointSummary`가 아니라 **`PointRow`** 로 뒀다 — `api-spec.md`가 "응답 형태의 SSOT"이고 거기 실측 이름이 `PointRow`다. 021이 `UserSiteSelectData`로 같은 선택을 한 선례를 이었다(서버 이름을 우리 옛 이름으로 되돌리지 않는다)
+- `resolveAuthMethodLabel`이 `''`를 반환할 수 있게 뒀다. 9·10 외 코드 + `authMethodName`도 비어 있으면 **보여줄 라벨이 없다** — 거기서 추측 라벨을 만들지 않고(A1) 호출부가 뱃지를 숨기는 쪽으로 넘겼다(T255에서 처리)
+- `reissueQrYn`을 `UpdatePointRequest`에서 **생략하지 않고 `false` 명시**로 뒀다. swagger에 nullable이 아닌 `boolean`이라 생략 시 서버 기본값이 미실측이기 때문이다
+- ⚠️ **계획 외 관찰 1건(미조치)** — `npm run verify`와 `npm run test`를 `CLAUDE.md` A4대로 병렬 실행했더니 `PatrolZonesPage.test.tsx`의 **동기** 테스트가 5s 타임아웃으로 flake했다(`setup 286s`·`environment 332s` — 부하). 단독 재실행 8/8 green, 전체 단독 실행 320/320 green. 병렬이 wall-clock은 줄이지만 이 머신에서는 **거짓 실패를 만든다** — 판단 필요
+- 다음: Phase 2(T243~T250) — `queryKey` SSOT + api 5종 + 파라미터 변환 순수함수
+
+### Phase 2 완료 — queryKey · api 5종 · 파라미터 변환 (2026-10-07)
+
+- T243~T250 완료. **신설 9파일**(api 5 + `queryKeys.ts` + `lib/pointListParams.ts` + 테스트 3), 기존 파일 **0건 수정**
+- `npm run verify` **0 errors** + `npm run test` **45 files / 350 tests green**(320 → **+30**)
+- 🔴 **착수 전 발견 — 변경계 성공이 실패로 보고될 수 있다(OQ-022-J 신설).** `axios.ts:131-134`가 성공 응답마다 `isApiResponse`를 검사하고 실패하면 `throw new Error('알 수 없는 응답 형식')` 한다. 판정 기준은 `code`+`message`+`data` **셋 다**(`responseShape.ts:22-26`)라서, 변경계가 **204 No Content**이거나 `data` 없는 바디를 주면 **쓰기는 성공했는데 전역 토스트에 "알 수 없는 응답 형식"** 이 뜬다
+  - OQ-022-A(200+실패 `code` → 실패를 성공으로)와 **반대 방향**의 문제다. 둘을 함께 실측해야 변경계를 신뢰할 수 있다
+  - 실측 전이라 **코드로 분기하지 않았다**(A1). api 4종 주석에 함정을 명시만 했다
+- **api 변경계 3종의 반환을 `Promise<void>`로 뒀다.** 성공 응답 형태가 미실측이라(`api-spec.md` §5-1에 변경계 행이 0건) 응답 본문에 의존하지 않고, 성공 후 목록을 무효화해 다시 읽는다. `AddPoint`가 생성된 `pointSeq`를 주더라도 쓰지 않는다 — 실측 후 필요하면 그때 넓힌다
+- **`queryKeys`의 무효화 단위 이름을 `all` → `lists`로 바꿨다.** 상세 키는 루트가 `'point'`로 달라 `['points']` 접두사에 **걸리지 않는다**. `all`이면 "전부 무효화된다"고 오해해 수정 후 상세가 낡은 값으로 남는 버그가 나온다. `tasks.md`의 T262·T267·T268 표기도 함께 맞췄다
+- **`pointKeys.list`가 `PointListParams`를 통째로 받게 했다.** `(siteSeq, params)` 2인자보다 **`siteSeq` 누락을 타입으로 막는다** — 키에서 `siteSeq`가 빠지면 사업장 전환 시 이전 사업장 목록이 그대로 보이고, 이건 런타임에만 드러난다
+- 🔴 **URL `page`를 서버와 같은 1-based로 뒀다.** 그래서 URL↔서버 변환이 **없고**, 0-based인 `AppPagination` 경계 **한 곳**에서만 변환한다(`toPageIndex`/`toPageNumber`). 양쪽을 0-based로 맞추면 URL의 `page=0`이 1페이지를 뜻해 사용자에게 설명이 안 되고, 서버는 `pageNumber=0`에 400을 준다
+- 파싱 실패는 **전부 기본값으로 수렴**시켰다(`page` → 1, 필터 → 미적용). 손으로 고친 URL이 화면을 깨뜨리지 않게 한다 — `lib/dateRangeQuery.ts`(018)의 방침 승계
+- ⚠️ **`ALL_VALUE = 'ALL'` 중복 1건(미조치).** `features/patrol-zones/lib/courseHistoryOptions.ts:20`에 같은 상수가 있다(018). feature 로컬 중복으로 뒀다 — 두 화면이 서로를 import 하는 것보다 1줄 중복이 낫다(A6). **세 번째 소비처가 생기면 `AppSelect` 옆으로 승격**을 검토한다
+- ⚠️ **Phase 1의 flake 때문에 이번엔 `verify`/`test`를 순차 실행했다.** `CLAUDE.md` A4는 병렬을 요구하지만, 병렬 시 `PatrolZonesPage.test.tsx`의 동기 테스트가 5s 타임아웃으로 거짓 실패한다(Phase 1 기록). wall-clock보다 **결과 신뢰성**을 택했다 — A4 재검토 필요
+- 다음: Phase 3(T251~T259) — 🔴 조회 전환 + MSW **묶음**. 쪼개면 mock 모드 `/points`가 빈 화면이다(제약 3)
 
 ---
 

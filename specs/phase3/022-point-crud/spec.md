@@ -166,6 +166,7 @@ interface PointDetail {
 5. **목록↔상세 필드명 불일치(B-4)에 어댑터를 만들지 않는다.** `PointRow`·`PointDetail`을 각각 실측 그대로 선언하고 소비처가 자기 타입을 쓴다 — `PointListCard`는 `pointName`만, `PointDetail`은 상세 필드 전부를 쓰고 **둘을 함께 받는 공용 컴포넌트가 없다**. 하나로 합치면 목록에 없는 필드(`qrCode`·`courseList`·`gps`)가 optional로 번져 "있는 줄 알고 바인딩"하는 함정이 생긴다. `CLAUDE.md` B4의 "셋 다 없으면 어댑터를 만들지 않는다"에 해당 — 합칠 **수요가 없다**.
    - ⚠️ 단 **`authMethod` 정수 ↔ 표시값은 어댑터가 필요하다**(B4 조건 ②). 폼의 `AuthMethodSelector`와 Enum SSOT(`types/enum.ts:25` `AuthMethod = 'QR' | 'NFC'`)는 문자열을 쓰는데 서버는 `9`/`10`을 주고받는다. `features/points/lib/authMethod.ts`에 **양방향 매핑**을 두고 한 자리에서만 변환한다.
    - 표시는 서버가 주는 `authMethodName`을 우선한다. 다만 `null` 표현이 `''`/`'Unknown'` 두 가지이므로(B-6) 비어 있으면 매핑표로 떨어진다.
+   - ⚠️ **언제 합쳐야 하는가**(사용자 확인 2026-10-07 — "지금은 분리 유지"). 아래 셋 중 하나가 생기면 `pointDisplayName(row | detail)` **함수 1개**를 추가해 해결하고, 그때도 통일 뷰 타입은 만들지 않는다: ① 상세 로딩 중 목록 행의 이름을 헤더에 먼저 표시(스켈레톤 회피 — Phase 7에서 나올 수 있다) ② 낙관적 업데이트(목록을 폼 값으로 선반영) ③ 목록·상세를 **모두 받는** 공용 컴포넌트 신설. 현재 상세 하위 컴포넌트(`DetailRow`·`ZoneRow`·`DetailSection`)는 **point 객체를 받지 않고 primitive만** 받으므로 ③은 아직 0곳이다.
 
 6. **`siteSeq`는 `getSiteSeq()`(021)에서 읽고 URL에 노출하지 않는다.** `GetPointList`의 **required** 파라미터이고 `AddPointDto`도 받는다 — 021이 확보한 값의 **첫 변경계 소비처**다.
    - `null`이면 조회를 **시도하지 않는다**(`enabled: false`). `AuthGuard`가 이미 막지만, 쿼리가 `siteSeq` 없이 나가면 `200` + 빈 목록이 돌아와 **"정상 응답인 빈 화면"**이 된다(`api-spec.md:211` B-9의 함정).
@@ -266,6 +267,7 @@ WF-4에서 증거(`파일:라인`) 명시 필요.
 | OQ-022-F | **`authMethodName` null 표현 2종**(`''` / `'Unknown'`, B-6). 백엔드 통일 요청 대상. 프론트는 매핑표 폴백으로 양쪽을 수용해 두었다 |
 | OQ-022-G | **`useYn: false`(미사용) 지점의 목록 표시 방법** 미결정. 현재 `PointListCard`에 사용여부 표현이 없다. 뱃지 / 흐리게 / 필터 기본값에서 제외 중 선택 — 목업 없음 |
 | OQ-022-H | **`features/zone` 쪽 `PointType` 중복.** 022 동안 지점 타입이 두 벌 존재한다(규칙 17). `spec 023`에서 코스 API와 함께 정리 |
+| OQ-022-J | 🔴 **변경계 응답이 `ApiResponse` 래퍼가 아니면 성공이 실패로 보고된다.** `axios.ts:131-134`가 성공 응답마다 `isApiResponse`를 검사하고 실패하면 `throw new Error('알 수 없는 응답 형식')` 한다. 판정 기준은 `code`(number) + `message`(string) + `data` 키 **셋 다**(`responseShape.ts:22-26`)이므로, 변경계가 **204 No Content**이거나 `data` 없는 바디를 주면 **쓰기는 성공했는데 UI는 실패**가 된다 — 전역 토스트에 "알 수 없는 응답 형식"이 뜬다. 조회계 24종은 전부 래퍼로 실측됐지만 **변경계는 실측이 0건**이다(`api-spec.md` §5-1에 POST/PATCH/DELETE 행이 없다). ⚠️ OQ-022-A(200+실패 `code`)와 **다른 문제**다: A는 실패를 성공으로, J는 성공을 실패로 본다. 백엔드 복귀 시 Add/Update/Delete의 **실제 status code와 바디**를 함께 확인한다. 해당하면 019 영역(인터셉터)이라 별도 판단 |
 | OQ-022-I | 🔴 **서버 응답에 생성일(`createdAt`)이 없다.** 현재 상세 카드는 "생성일" 행을 mock `createdAt`으로 채운다(`PointDetail.tsx:35`). `PointDetail` 실측에 해당 필드가 없고 `GetPointList`에도 없다 → ① 그 행을 **제거**하고 서버가 주는 `lastPatrolDt`·`lastPatrolUserName`(최근 순찰)으로 대체할지 ② 백엔드에 `createdAt` 추가를 요청할지. `CLAUDE.md` B4("우리가 설계했던 필드 중 서버에 없는 것은 화면에 실제로 바인딩되는지 확인 → 필요하면 백엔드에 요청, 불필요하면 제거")의 판단 지점. **구현 중 ①로 진행하고 필요성은 사용자 확인** |
 
 ---
