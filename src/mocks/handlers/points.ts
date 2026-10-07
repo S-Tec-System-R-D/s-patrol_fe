@@ -1,0 +1,189 @@
+import { http, HttpResponse } from 'msw'
+
+import { points as legacyPoints } from '@/features/points/mock/pointData'
+import { toAuthMethodCode } from '@/features/points/lib/authMethod'
+import type { PointDetail, PointRow } from '@/features/points/types'
+
+/**
+ * MSW 순찰지점 핸들러 (`spec 022`).
+ *
+ * 🔴 **조회 전환과 같은 Phase에 들어와야 한다.** `npm run dev`(mock)와
+ * `npm run capture`가 **둘 다 MSW 위에서** 돈다(`.env.capture`: `VITE_USE_MSW=true`).
+ * 이 파일이 없으면 mock 모드의 `/points`가 통째로 빈 화면이 되고 baseline
+ * `현장/points--목록+상세`가 깨진다. `npm run capture`는 `verify`/`test` 밖이라
+ * 빼먹으면 다음 캡쳐까지 드러나지 않는다(`tasks.md` 제약 3).
+ *
+ * 데이터는 **기존 mock(`features/points/mock/pointData.ts`)을 서버 스키마로 변환**해
+ * 재사용한다 — `handlers/index.ts`의 004 방침. 구 mock은 `features/zone`이 아직
+ * 참조하므로 그대로 남아 있다(`tasks.md` 제약 1).
+ *
+ * ⚠️ **변경계(POST/PATCH/DELETE)는 Phase 4·5에서 추가한다.** 지금은 조회 2종뿐이다.
+ */
+
+/** 핸들러 내부 저장 모델. 서버 응답에 없는 필드(`siteSeq`)도 분기용으로 들고 있는다 */
+interface MockPoint {
+  siteSeq: number
+  pointSeq: number
+  name: string
+  memo: string | null
+  authMethod: number
+  nfcTagId: string | null
+  useYn: boolean
+  qrCode: string | null
+  gpsLat: number | null
+  gpsLng: number | null
+  lastPatrolDt: string | null
+  lastPatrolUserSeq: number | null
+  lastPatrolUserName: string | null
+  courseList: { courseSeq: number; courseName: string }[]
+}
+
+/**
+ * 지점이 어느 사업장에 속하는가.
+ *
+ * 🔴 사업장을 **실제로 갈라 둔다.** 권한 밖 사업장 조회가 403이 아니라 `200` + 빈 목록인
+ * 서버 동작(`api-spec.md:211` B-9)을 mock에서도 재현해야, `spec 021`의 사업장 선택이
+ * dev에서 눈에 보이고 "siteSeq 없이 조회 → 정상 응답인 빈 화면" 함정도 드러난다.
+ *
+ * 실측 계정 `333333`은 7·8 두 곳에 소속돼 있다(`handlers/auth.ts` `DEV_SITES`).
+ */
+const SITE_OF = (pointSeq: number): number => (pointSeq <= 10 ? 7 : 8)
+
+/**
+ * 지점이 쓰이는 코스. `usedCount`의 출처이고, Phase 5의 **삭제 거부 케이스**가 여기 걸린다.
+ * 구 mock에는 코스 연결 정보가 없어 결정적으로 배분한다(실 데이터 아님).
+ */
+const COURSES_OF = (pointSeq: number): { courseSeq: number; courseName: string }[] => {
+  if (pointSeq === 1 || pointSeq === 2) return [{ courseSeq: 1, courseName: 'A동 순찰코스' }]
+  if (pointSeq === 3)
+    return [
+      { courseSeq: 1, courseName: 'A동 순찰코스' },
+      { courseSeq: 2, courseName: 'B동 순찰코스' },
+    ]
+  return []
+}
+
+/**
+ * 구 mock → 서버 스키마 변환.
+ *
+ * 🔴 **생성일(`createdAt`)은 버린다** — 서버 응답에 없다(OQ-022-I). 대신 서버가 주는
+ * `lastPatrolDt`·`lastPatrolUserName`을 결정적으로 채운다(일부는 `null` — 미순찰 지점).
+ */
+const toMockPoint = (legacy: (typeof legacyPoints)[number]): MockPoint => {
+  const pointSeq = Number(legacy.id)
+  const patrolled = pointSeq % 3 !== 0 // 1/3은 미순찰로 둔다 — null 경로를 화면에서 보려고
+  return {
+    siteSeq: SITE_OF(pointSeq),
+    pointSeq,
+    name: legacy.title,
+    memo: legacy.description || null,
+    authMethod: toAuthMethodCode(legacy.authenticationMethod),
+    nfcTagId: legacy.nfcTagId ?? null,
+    useYn: pointSeq !== 9, // 미사용 지점 1건 — OQ-022-G 표시 방법을 눈으로 확인하려고
+    qrCode:
+      legacy.authenticationMethod === 'QR'
+        ? `STSP1:${SITE_OF(pointSeq)}:${pointSeq}:1760000000:mockSignature`
+        : null,
+    gpsLat: null, // 실측 미관측 — OQ-022-C
+    gpsLng: null,
+    lastPatrolDt: patrolled ? `2026-10-0${(pointSeq % 7) + 1}T09:${10 + pointSeq}:00` : null,
+    lastPatrolUserSeq: patrolled ? 100 + pointSeq : null,
+    lastPatrolUserName: patrolled ? '김근무' : null,
+    courseList: COURSES_OF(pointSeq),
+  }
+}
+
+/** 모듈 스코프 저장소 — Phase 4·5의 변경계가 이 배열을 직접 고친다 */
+const store: MockPoint[] = legacyPoints.map(toMockPoint)
+
+const toPointRow = (point: MockPoint): PointRow => ({
+  pointSeq: point.pointSeq,
+  pointName: point.name, // 🔴 목록은 pointName (상세는 name) — B-4 실측
+  memo: point.memo,
+  authMethod: point.authMethod,
+  authMethodName: point.authMethod === 9 ? 'QR' : 'NFC',
+  usedCount: point.courseList.length,
+  useYn: point.useYn,
+  nfcTagId: point.nfcTagId,
+  lastPatrolDt: point.lastPatrolDt,
+})
+
+const toPointDetail = (point: MockPoint): PointDetail => ({
+  pointSeq: point.pointSeq,
+  name: point.name,
+  memo: point.memo,
+  authMethod: point.authMethod,
+  authMethodName: point.authMethod === 9 ? 'QR' : 'NFC',
+  qrCode: point.qrCode,
+  nfcTagId: point.nfcTagId,
+  gpsLat: point.gpsLat,
+  gpsLng: point.gpsLng,
+  useYn: point.useYn,
+  lastPatrolDt: point.lastPatrolDt,
+  lastPatrolUserSeq: point.lastPatrolUserSeq,
+  lastPatrolUserName: point.lastPatrolUserName,
+  courseList: point.courseList,
+})
+
+const ok = (data: unknown) =>
+  HttpResponse.json({ message: '요청을 정상 처리하였습니다.', data, code: 200 })
+
+/** 실측 비즈니스 오류 형태 — `ApiResponse` 래퍼 + 4xx (`api-spec.md` §3-(A)) */
+const businessError = (message: string, status = 400) =>
+  HttpResponse.json({ message, data: null, code: status }, { status })
+
+const GET_POINT_LIST_PATH = '/api/v1/Point/W/sign/GetPointList'
+const DETAIL_POINT_PATH = '/api/v1/Point/W/sign/DetailPoint'
+
+export const pointHandlers = [
+  /**
+   * 목록. 🔴 **필터·페이징을 실제로 구현한다** — 전량 반환으로 때우면 Phase 6의
+   * "서버 파라미터로 나간다"는 검증 기준을 세울 수 없다.
+   */
+  http.get(GET_POINT_LIST_PATH, ({ request }) => {
+    const query = new URL(request.url).searchParams
+    const siteSeq = Number(query.get('siteSeq'))
+    const pageNumber = Number(query.get('pageNumber') ?? 1)
+    const pageSize = Number(query.get('pageSize') ?? 20)
+
+    // 실측: pageNumber=0 은 400 (`api-spec.md` §1-5)
+    if (pageNumber < 1) {
+      return businessError('페이지 번호는 1 이상이어야 합니다.')
+    }
+
+    const searchKey = query.get('searchKey')?.trim() ?? ''
+    const authMethod = query.get('authMethod')
+    const useYn = query.get('useYn')
+
+    // 🔴 권한 밖 사업장이어도 403이 아니라 빈 목록이다 (B-9)
+    const filtered = store
+      .filter((point) => point.siteSeq === siteSeq)
+      .filter((point) => (searchKey ? point.name.includes(searchKey) : true))
+      .filter((point) => (authMethod ? point.authMethod === Number(authMethod) : true))
+      .filter((point) => (useYn ? point.useYn === (useYn === 'true') : true))
+
+    // 실측: pageNumber 초과는 에러가 아니라 빈 items + 요청값 그대로 에코
+    const start = (pageNumber - 1) * pageSize
+    const items = filtered.slice(start, start + pageSize).map(toPointRow)
+
+    return ok({
+      items,
+      page: pageNumber,
+      pageSize,
+      totalCount: filtered.length,
+      totalPages: Math.ceil(filtered.length / pageSize),
+    })
+  }),
+
+  /**
+   * 상세. 없는 `pointSeq` 의 실 서버 응답은 **미실측**이라, 비즈니스 오류(A 래퍼)로
+   * 가정했다. 실측 후 교정한다 — 추측을 프론트 분기에 굳히지 않았으므로(019의
+   * `ApiError` 정규화가 형태를 흡수한다) 여기 가정이 바뀌어도 화면은 그대로다.
+   */
+  http.get(DETAIL_POINT_PATH, ({ request }) => {
+    const pointSeq = Number(new URL(request.url).searchParams.get('pointSeq'))
+    const found = store.find((point) => point.pointSeq === pointSeq)
+    if (!found) return businessError('해당 지점을 찾을 수 없습니다.')
+    return ok(toPointDetail(found))
+  }),
+]

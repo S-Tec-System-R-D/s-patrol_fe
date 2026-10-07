@@ -63,15 +63,15 @@
 >
 > 🔴 제약 3 참조 — T251·T252(MSW)를 이 Phase에서 빼면 종료 시점에 mock 모드 `/points`가 통째로 빈 화면이다.
 
-- [ ] T251 🔴 MSW Point 핸들러(조회) in src/mocks/handlers/points.ts — `GetPointList`·`DetailPoint`. 구 `features/points/mock/pointData.ts`를 **import해 서버 스키마로 변환**한다(규칙 16 / 제약 1로 구 mock이 남아 있어 가능). 🔴 **`searchKey`·`authMethod`·`useYn`·페이징을 핸들러에서 실제로 구현**한다 — 안 하면 Phase 6의 필터 검증 기준을 세울 수 없다(021 T235가 Phase 3로 당겨진 것과 같은 이유)
-- [ ] T252 핸들러 등록 in src/mocks/handlers/index.ts — `pointHandlers` 추가. `handlers/index.ts`의 004 주석("도메인별 핸들러는 해당 화면 spec에서 추가")을 이행하는 첫 사례이므로 주석도 갱신한다
-- [ ] T253 [US1] 조회 훅 in src/features/points/hooks/usePointList.ts · usePointDetail.ts — `useQuery` + T243 키. 🔴 `getSiteSeq()`가 `null`이면 `enabled: false`(규칙 6) — `siteSeq` 없이 나가면 `200` + 빈 목록이 "정상 빈 화면"으로 그려진다(`api-spec.md:211`). `pointSeq`가 `null`일 때도 동일
-- [ ] T254 [US1] 🔴 마스터-디테일 구조 변경 in src/pages/service/points/PointsPage.tsx — 선택 상태를 `selectedSeq: number | null`로 바꾼다(`:15`의 `PointType | null` → `pointSeq`만). 첫 행 자동 선택은 `selectedSeq ?? items[0]?.pointSeq`로 **파생**시킨다(규칙 4) — effect로 하면 "로딩 완료 → setState → 재렌더" 한 박자가 생긴다. **mock 직접 import 제거**(`:9`, DoD #1)
-- [ ] T255 [US1] 목록 컴포넌트 전환 in src/features/points/components/PointList.tsx · PointListCard.tsx — props를 `items: PointRow[]`·`selectedSeq: number | null`로. 이름은 `pointName`, 뱃지는 `authMethodName` 우선 + T242 폴백. 🔴 **`AuthMethodDisplay`/`AuthMethodSelector`는 건드리지 않는다**(제약 2)
-- [ ] T256 [US1] 목록 0건·에러 상태 in src/features/points/components/PointList.tsx — 0건은 `AppEmpty`. 🔴 **조회 실패를 빈 목록과 구분되게** 표시한다(§4) — 둘 다 "아무것도 없음"으로 보이면 장애를 데이터 없음으로 오해한다. 현재는 0건 처리가 아예 없다(`:14` 무조건 `map`)
-- [ ] T257 [US1] 상세 패널 바인딩 전환 in src/features/points/components/detail/PointDetail.tsx — `PointDetail` 실측 타입으로. `DEMO_BELONGING_COURSES`(`:15-18` 데모 상수) → 실제 `courseList`. 🔴 **"생성일" 행(`:35`)은 서버에 없다**(OQ-022-I) — 제거하고 `lastPatrolDt`·`lastPatrolUserName`(최근 순찰)으로 대체한다. `CLAUDE.md` B4의 "서버에 없는 필드는 바인딩 확인 → 불필요하면 제거"
-- [ ] T258 [US1] vitest 갱신 in src/features/points/components/\_\_tests\_\_/PointListCard.test.tsx — 🔴 사전 계수 **4건 전부** 깨진다(상단 표). fixture를 `PointRow`로, `selected` → `selectedSeq`로
-- [ ] T259 [US1] [P] vitest 신설 in src/pages/service/points/\_\_tests\_\_/PointsPage.test.tsx — MSW로 목록 렌더 / 첫 행 자동 선택 / 행 선택 시 상세 조회 / 0건 빈 상태 / `siteSeq` 없으면 요청이 나가지 않음
+- [x] T251 🔴 MSW Point 핸들러(조회) in src/mocks/handlers/points.ts — `GetPointList`·`DetailPoint`. 구 `features/points/mock/pointData.ts`를 **import해 서버 스키마로 변환**한다(규칙 16 / 제약 1로 구 mock이 남아 있어 가능). 🔴 **`searchKey`·`authMethod`·`useYn`·페이징을 핸들러에서 실제로 구현**한다 — 안 하면 Phase 6의 필터 검증 기준을 세울 수 없다(021 T235가 Phase 3로 당겨진 것과 같은 이유)
+- [x] T252 핸들러 등록 in src/mocks/handlers/index.ts — `pointHandlers` 추가. `handlers/index.ts`의 004 주석("도메인별 핸들러는 해당 화면 spec에서 추가")을 이행하는 첫 사례이므로 주석도 갱신한다
+- [x] T253 [US1] 조회 훅 in src/features/points/hooks/usePointList.ts · usePointDetail.ts — `useQuery` + T243 키. 🔴 `getSiteSeq()`가 `null`이면 `enabled: false`(규칙 6) — `siteSeq` 없이 나가면 `200` + 빈 목록이 "정상 빈 화면"으로 그려진다(`api-spec.md:211`). `pointSeq`가 `null`일 때도 동일
+- [x] T254 [US1] 🔴 마스터-디테일 구조 변경 in src/pages/service/points/PointsPage.tsx — 선택 상태를 `selectedSeq: number | null`로 바꾼다(`:15`의 `PointType | null` → `pointSeq`만). 첫 행 자동 선택은 `selectedSeq ?? items[0]?.pointSeq`로 **파생**시킨다(규칙 4) — effect로 하면 "로딩 완료 → setState → 재렌더" 한 박자가 생긴다. **mock 직접 import 제거**(`:9`, DoD #1)
+- [x] T255 [US1] 목록 컴포넌트 전환 in src/features/points/components/PointList.tsx · PointListCard.tsx — props를 `items: PointRow[]`·`selectedSeq: number | null`로. 이름은 `pointName`, 뱃지는 `authMethodName` 우선 + T242 폴백. 🔴 **`AuthMethodDisplay`/`AuthMethodSelector`는 건드리지 않는다**(제약 2)
+- [x] T256 [US1] 목록 0건·에러 상태 in src/features/points/components/PointList.tsx — 0건은 `AppEmpty`. 🔴 **조회 실패를 빈 목록과 구분되게** 표시한다(§4) — 둘 다 "아무것도 없음"으로 보이면 장애를 데이터 없음으로 오해한다. 현재는 0건 처리가 아예 없다(`:14` 무조건 `map`)
+- [x] T257 [US1] 상세 패널 바인딩 전환 in src/features/points/components/detail/PointDetail.tsx — `PointDetail` 실측 타입으로. `DEMO_BELONGING_COURSES`(`:15-18` 데모 상수) → 실제 `courseList`. 🔴 **"생성일" 행(`:35`)은 서버에 없다**(OQ-022-I) — 제거하고 `lastPatrolDt`·`lastPatrolUserName`(최근 순찰)으로 대체한다. `CLAUDE.md` B4의 "서버에 없는 필드는 바인딩 확인 → 불필요하면 제거"
+- [x] T258 [US1] vitest 갱신 in src/features/points/components/\_\_tests\_\_/PointListCard.test.tsx — 🔴 사전 계수 **4건 전부** 깨진다(상단 표). fixture를 `PointRow`로, `selected` → `selectedSeq`로
+- [x] T259 [US1] [P] vitest 신설 in src/pages/service/points/\_\_tests\_\_/PointsPage.test.tsx — MSW로 목록 렌더 / 첫 행 자동 선택 / 행 선택 시 상세 조회 / 0건 빈 상태 / `siteSeq` 없으면 요청이 나가지 않음
 
 ## Phase 4: US2 — 추가(POST) + 폼 정합
 
@@ -185,6 +185,26 @@ Phase 1 (타입·매핑, 신설만)
 - ⚠️ **`ALL_VALUE = 'ALL'` 중복 1건(미조치).** `features/patrol-zones/lib/courseHistoryOptions.ts:20`에 같은 상수가 있다(018). feature 로컬 중복으로 뒀다 — 두 화면이 서로를 import 하는 것보다 1줄 중복이 낫다(A6). **세 번째 소비처가 생기면 `AppSelect` 옆으로 승격**을 검토한다
 - ⚠️ **Phase 1의 flake 때문에 이번엔 `verify`/`test`를 순차 실행했다.** `CLAUDE.md` A4는 병렬을 요구하지만, 병렬 시 `PatrolZonesPage.test.tsx`의 동기 테스트가 5s 타임아웃으로 거짓 실패한다(Phase 1 기록). wall-clock보다 **결과 신뢰성**을 택했다 — A4 재검토 필요
 - 다음: Phase 3(T251~T259) — 🔴 조회 전환 + MSW **묶음**. 쪼개면 mock 모드 `/points`가 빈 화면이다(제약 3)
+
+### Phase 3 완료 — 목록·상세 조회 전환 + MSW (2026-10-07)
+
+- T251~T259 완료. 신설 4파일(MSW 핸들러 · 훅 2 · `PointsPage.test.tsx`) + 기존 7파일 수정
+- `npm run verify` **0 errors** + `npm run test` **46 files / 362 tests green**(350 → **+12**)
+- ✅ **깨질 테스트 사전 계수가 정확히 맞았다** — `PointListCard.test.tsx` **4건**만 깨지고 `AuthMethodDisplay.test.tsx` 3건은 **무변경**(제약 2 준수 효과). `CourseDiagramCard.test.tsx`도 무변경
+- 🔴 **참조 동등 함정을 구조로 제거했다.** `PointListCard`의 `selected`를 `PointType | null`(객체)에서 **boolean**으로 바꿨다. 서버 응답은 재조회마다 새 객체라 `point === selected` 비교가 **항상 false**가 되어 선택 표시가 사라진다 — mock 동기 import 시절에만 성립하던 코드였다
+- 🔴 **MSW 핸들러에서 사업장을 실제로 갈라 뒀다**(`siteSeq` 7: pointSeq 1~10 / 8: 11~15). 권한 밖 사업장이 403이 아니라 `200` + 빈 목록인 서버 동작(B-9)을 mock에서도 재현해야 ① 021의 사업장 선택이 dev에서 눈에 보이고 ② "`siteSeq` 없이 조회 → 정상 응답인 빈 화면" 함정이 드러난다. 테스트로도 고정했다(사업장 전환 시 목록이 바뀜 / `siteSeq` 없으면 요청 0건)
+- MSW가 **필터·페이징을 실제로 구현**한다(`searchKey`·`authMethod`·`useYn`·`pageNumber`·`pageSize`). 전량 반환으로 때우면 Phase 6의 검증 기준을 세울 수 없다. `pageNumber=0` → 400, 초과 → 빈 items + 요청값 에코까지 실측대로 재현
+- mock 데이터에 **경계 케이스를 심었다** — 미사용 지점 1건(`pointSeq 9`, OQ-022-G를 눈으로 보려고) · 미순찰 1/3(`lastPatrolDt: null` 경로) · 소속 코스 0건/1건/2건
+- **계획 외 수정 2건**(둘 다 제약 2를 깨지 않는 범위)
+  - `ZoneRow`의 `isActive`를 **선택(optional)** 으로 바꿨다. `DetailPoint.courseList`가 `{ courseSeq, courseName }` 만 주고 **코스 활성여부를 주지 않는다** — 모르는 값을 `true`로 채우면 활성인 것처럼 보인다(A1). 생략 시 중립(테두리) 점으로 그리고, 실제 값은 `spec 023`에서 채운다
+  - `AuthMethodDisplay`의 prop을 `PointAuthenticationMethod | null`로 **넓혔다**. 미실측 코드(9·10 외)면 `toAuthMethodLabel`이 `null`을 주는데, 그걸 받아 **양쪽 비강조**로 그리는 것이 맞다. 🔴 정수로 바꾼 것이 아니므로 제약 2 위반이 아니고 테스트 3건도 그대로 통과한다
+- 🔴 **OQ-022-I를 잠정 처리했다** — "생성일" 행을 제거하고 **최근 순찰**(`lastPatrolDt` + `lastPatrolUserName`)로 대체했다. 서버에 `createdAt`이 없다. 날짜 포맷은 `parseISO` + `isValid` 로 깨진 값도 `'-'`로 수렴시킨다. **생성일이 실제로 필요하면 백엔드 요청 대상**이다(B4) — 사용자 판단 필요
+- 상세에 **사용여부 행을 추가**했다(`useYn`). 폼에 `useYn`이 들어오는데(Phase 4) 상세에서 확인할 수단이 없으면 저장 결과를 볼 수 없다
+- 소속 코스 **0건 안내**를 넣었다. 기존에는 데모 상수 2건이 항상 떠 있어 0건 상태가 존재하지 않았다
+- 로딩·실패·0건 상태를 `PointList` 안으로 모았다. 🔴 **실패와 0건을 다르게 그린다** — 둘 다 "아무것도 없음"이면 장애를 데이터 없음으로 오해해 지점을 새로 만들려 한다
+- 첫 행 자동 선택을 **파생**으로 했다(`items.find(selected) ?? items[0]`). effect+setState 면 "로딩 완료 → setState → 재렌더" 한 박자 동안 우측이 빈 상태로 깜빡인다. 부수효과로 **선택한 지점이 목록에서 사라지면 자동으로 첫 행으로 떨어진다** — Phase 5의 삭제 후 처리와 Phase 6의 필터 이탈 처리가 이 파생에 얹힌다
+- ⚠️ **브라우저 시각 검증(M2) 미수행** → T278(Phase 7)로 이월. 자동 테스트가 MSW로 같은 경로를 덮지만, 레이아웃·로딩 스켈레톤·뱃지 색은 눈으로 봐야 한다. Phase 4·5가 같은 화면을 더 바꾸므로 한 번에 보는 편이 낫다
+- 다음: Phase 4(T260~T264) — 추가(POST) + 스키마·폼 정합. 🔴 **내부 순차**(제약 4) — 스키마만 바꾸고 멈추면 typecheck red
 
 ---
 
