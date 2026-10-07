@@ -27,7 +27,9 @@ export const pointSchema = z
   .object({
     name: z.string().min(2, '두 글자 이상 입력해주세요.'),
     description: z.string(),
-    authenticationMethod: z.enum(['QR', 'NFC']),
+    // 메시지를 붙인 이유: 수정 폼이 미실측 코드(9·10 외)를 **미선택**으로 열어(A1)
+    // 처음으로 "선택 안 함" 이 실제 경로가 됐다. 기본 영문 메시지가 화면에 뜬다.
+    authenticationMethod: z.enum(['QR', 'NFC'], { error: '인증수단을 선택해주세요.' }),
     nfcTagId: z.string(),
     useYn: z.boolean(),
   })
@@ -51,7 +53,7 @@ export const pointSchema = z
 
 export type FormDataType = z.infer<typeof pointSchema>
 
-/** 추가 폼 기본값. 수정 폼은 상세 응답으로 덮는다(T266) */
+/** 추가 폼 기본값. 수정 폼은 상세 응답을 직접 `defaultValues` 로 넣는다 */
 export const pointFormDefaults: FormDataType = {
   name: '',
   description: '',

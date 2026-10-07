@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 
 import { points as legacyPoints } from '@/features/points/mock/pointData'
 import { toAuthMethodCode } from '@/features/points/lib/authMethod'
-import type { PointDetail, PointRow } from '@/features/points/types'
+import type { PointDetail, PointRow, UpdatePointRequest } from '@/features/points/types'
 
 /**
  * MSW 순찰지점 핸들러 (`spec 022`).
@@ -17,7 +17,9 @@ import type { PointDetail, PointRow } from '@/features/points/types'
  * 재사용한다 — `handlers/index.ts`의 004 방침. 구 mock은 `features/zone`이 아직
  * 참조하므로 그대로 남아 있다(`tasks.md` 제약 1).
  *
- * ⚠️ **변경계(POST/PATCH/DELETE)는 Phase 4·5에서 추가한다.** 지금은 조회 2종뿐이다.
+ * ⚠️ **변경계 3종(POST/PATCH/DELETE)의 성공·실패 응답 형태는 전부 미실측이다**
+ * (`api-spec.md` §5-1 의 실측 24종은 모두 조회계). 조회계와 같은 `ApiResponse` 래퍼로
+ * 가정했고, 각 핸들러 주석에 그 가정을 적어 뒀다. 실측 후 교정한다.
  */
 
 /** 핸들러 내부 저장 모델. 서버 응답에 없는 필드(`siteSeq`)도 분기용으로 들고 있는다 */
@@ -50,7 +52,7 @@ interface MockPoint {
 const SITE_OF = (pointSeq: number): number => (pointSeq <= 10 ? 7 : 8)
 
 /**
- * 지점이 쓰이는 코스. `usedCount`의 출처이고, Phase 5의 **삭제 거부 케이스**가 여기 걸린다.
+ * 지점이 쓰이는 코스. `usedCount`의 출처이고, **삭제 거부 케이스**가 여기 걸린다.
  * 구 mock에는 코스 연결 정보가 없어 결정적으로 배분한다(실 데이터 아님).
  */
 const COURSES_OF = (pointSeq: number): { courseSeq: number; courseName: string }[] => {
@@ -93,7 +95,7 @@ const toMockPoint = (legacy: (typeof legacyPoints)[number]): MockPoint => {
   }
 }
 
-/** 모듈 스코프 저장소 — Phase 4·5의 변경계가 이 배열을 직접 고친다 */
+/** 모듈 스코프 저장소 — 변경계 3종이 이 배열을 직접 고친다 */
 const store: MockPoint[] = legacyPoints.map(toMockPoint)
 
 /**
@@ -147,6 +149,8 @@ const businessError = (message: string, status = 400) =>
 const GET_POINT_LIST_PATH = '/api/v1/Point/W/sign/GetPointList'
 const DETAIL_POINT_PATH = '/api/v1/Point/W/sign/DetailPoint'
 const ADD_POINT_PATH = '/api/v1/Point/W/sign/AddPoint'
+const UPDATE_POINT_PATH = '/api/v1/Point/W/sign/UpdatePoint'
+const DELETE_POINT_PATH = '/api/v1/Point/W/sign/DeletePoint'
 
 /** 새 `pointSeq` — 저장소 최대값 + 1. 삭제 후 재사용되지 않게 한다 */
 const nextPointSeq = (): number =>
@@ -241,6 +245,74 @@ export const pointHandlers = [
       courseList: [], // 코스 편성은 코스 관리(spec 023)에서 한다
     })
 
+    return ok(null)
+  }),
+
+  /**
+   * 수정. 🔴 **`PATCH` 다**(`api/updatePoint.ts` — swagger 실측).
+   *
+   * 메서드는 PATCH 지만 **부분 갱신으로 처리하지 않는다.** 폼이 전체 필드를 채워
+   * 보내고(`UpdatePointRequest`), 어떤 필드를 생략했을 때 서버가 "변경 없음" 으로 보는지는
+   * 미실측이다. mock 도 같은 가정을 쓴다 — 받은 필드로 **전부 덮어쓴다**. 생략 시 기존
+   * 값을 유지하도록 만들면 실 서버와 다를 수 있는 동작을 mock 이 먼저 굳힌다(A1).
+   *
+   * `reissueQrYn` 은 받아도 **쓰지 않는다** — QR 재발급은 범위 외(OQ-022-D)이고 프론트는
+   * `false` 고정으로 보낸다. `authMethod` 가 NFC 로 바뀌면 `qrCode` 를 지우고, QR 로
+   * 바뀌면 새로 만든다(인증수단과 `qrCode` 가 어긋난 상태를 저장소에 남기지 않는다).
+   */
+  http.patch(UPDATE_POINT_PATH, async ({ request }) => {
+    const body = (await request.json().catch(() => null)) as Partial<UpdatePointRequest> | null
+    if (typeof body?.pointSeq !== 'number' || !body.name) {
+      return businessError('필수 값이 누락되었습니다.')
+    }
+
+    const index = store.findIndex((point) => point.pointSeq === body.pointSeq)
+    if (index < 0) return businessError('해당 지점을 찾을 수 없습니다.')
+
+    const current = store[index]
+    const authMethod = body.authMethod ?? current.authMethod
+    store[index] = {
+      ...current,
+      name: body.name,
+      memo: body.memo ?? null,
+      authMethod,
+      nfcTagId: body.nfcTagId ?? null,
+      useYn: body.useYn ?? current.useYn,
+      qrCode:
+        authMethod === 9
+          ? (current.qrCode ??
+            `STSP1:${current.siteSeq}:${current.pointSeq}:1760000000:mockSignature`)
+          : null,
+    }
+
+    return ok(null)
+  }),
+
+  /**
+   * 삭제.
+   *
+   * 🔴 **거부 케이스 1종을 포함한다 — 하지만 이것은 가정이다.** `usedCount > 0`(코스에
+   * 편성된) 지점의 삭제를 서버가 거부하는지는 **미실측**이다(OQ-022-B). "거부한다" 로
+   * 가정해 **UI 경로(사유 노출 + 목록 유지)를 확보**하는 것이 목적이고, 실측 후 교정한다.
+   * 사용자 확인 2026-10-08: 이 가정으로 진행.
+   *
+   * ⚠️ 실측에서 거부가 **없다면** 이 분기를 지운다. 거부 사유 문구·상태코드도 추측이므로
+   * 프론트가 문구에 의존하지 않게 해야 한다(019 `ApiError` 정규화가 형태를 흡수한다).
+   *
+   * 거부 지점: `COURSES_OF` 가 코스를 주는 1·2·3번. `pointSeq=3` 은 2개 코스에 걸려 있다.
+   */
+  http.delete(DELETE_POINT_PATH, ({ request }) => {
+    const pointSeq = Number(new URL(request.url).searchParams.get('pointSeq'))
+    const index = store.findIndex((point) => point.pointSeq === pointSeq)
+    if (index < 0) return businessError('해당 지점을 찾을 수 없습니다.')
+
+    const target = store[index]
+    if (target.courseList.length > 0) {
+      const courseNames = target.courseList.map((course) => course.courseName).join(', ')
+      return businessError(`순찰코스(${courseNames})에 편성된 지점은 삭제할 수 없습니다.`)
+    }
+
+    store.splice(index, 1)
     return ok(null)
   }),
 ]

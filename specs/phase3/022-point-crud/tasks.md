@@ -91,13 +91,13 @@
 
 > **독립 테스트 기준**: mock 모드에서 수정 → 목록·상세 모두 반영, 삭제 → 목록 제거 + 선택 해제, 삭제 거부 → 메시지 노출 + 목록 유지. `npm run test` green.
 
-- [ ] T265 MSW 변경계 핸들러 in src/mocks/handlers/points.ts — `UpdatePoint`(PATCH)·`DeletePoint`(DELETE). 🔴 **삭제 거부 케이스 1종**을 포함한다(`usedCount > 0` 지점). ⚠️ 실 서버 동작은 **미실측**(OQ-022-B)이므로 mock은 "거부한다" 가정으로 **UI 경로만 확보**하고, 실측 후 교정한다고 주석에 남긴다 — 추측을 코드에 굳히지 않는다(A1)
-- [ ] T266 [US3] 수정 폼 초기화 + 실 전송 in src/features/points/form/EditPointForm.tsx — 🔴 **`defaultValues`를 상세 값으로 채운다**(현재 빈 문자열 고정 `:18-23` — 수정 폼인데 기존 값이 안 들어온다, 규칙 12). `useMutation(updatePoint)` **PATCH**, `reissueQrYn: false` 고정(규칙 10). 🔴 **`pointSeq`는 모달이 열릴 때의 값으로 고정**한다 — 고정하지 않으면 수정 중 다른 지점을 선택했을 때 **저장이 엉뚱한 지점에 적용된다**(§4)
+- [x] T265 MSW 변경계 핸들러 in src/mocks/handlers/points.ts — `UpdatePoint`(PATCH)·`DeletePoint`(DELETE). 🔴 **삭제 거부 케이스 1종**을 포함한다(`usedCount > 0` 지점). ⚠️ 실 서버 동작은 **미실측**(OQ-022-B)이므로 mock은 "거부한다" 가정으로 **UI 경로만 확보**하고, 실측 후 교정한다고 주석에 남긴다 — 추측을 코드에 굳히지 않는다(A1)
+- [x] T266 [US3] 수정 폼 초기화 + 실 전송 in src/features/points/form/EditPointForm.tsx — 🔴 **`defaultValues`를 상세 값으로 채운다**(현재 빈 문자열 고정 `:18-23` — 수정 폼인데 기존 값이 안 들어온다, 규칙 12). `useMutation(updatePoint)` **PATCH**, `reissueQrYn: false` 고정(규칙 10). 🔴 **`pointSeq`는 모달이 열릴 때의 값으로 고정**한다 — 고정하지 않으면 수정 중 다른 지점을 선택했을 때 **저장이 엉뚱한 지점에 적용된다**(§4)
   - T261과 동일한 에러 바인딩 복붙(`:46`·`:64`)을 함께 고친다
-- [ ] T267 [US3] 수정 모달 연결 in src/features/points/components/detail/PointDetail.tsx — `EditPointForm`에 상세 데이터 전달 + 제어형 닫기. 성공 시 `pointKeys.lists`·`pointKeys.detail(pointSeq)` **둘 다** 무효화(규칙 2)
-- [ ] T268 [US4] 삭제 연결 in src/features/points/components/detail/PointDetail.tsx — `AppAlertDialog.onAction`이 현재 **빈 함수**다(`:75` `() => {}`). `useMutation(deletePoint)` 연결. 성공 시 **선택 해제** + `pointKeys.lists` 무효화. 🔴 **`usedCount` 기반 선제 차단을 넣지 않는다**(규칙 14 — 서버 규칙 미확인, A1)
-- [ ] T269 [US4] 삭제 거부 처리 in src/features/points/components/detail/PointDetail.tsx — 서버 거부 시 사유 노출 + **목록 유지**. 전역 토스트와 중복되지 않게 한다(규칙 3)
-- [ ] T270 [P] vitest in src/features/points/form/\_\_tests\_\_/EditPointForm.test.tsx · src/features/points/components/detail/\_\_tests\_\_/PointDetail.test.tsx — 초기값 주입 / PATCH 바디(`pointSeq`·`reissueQrYn: false`) / 모달 열린 뒤 다른 지점 선택해도 `pointSeq` 불변 / 삭제 성공 시 선택 해제 / 삭제 거부 시 목록 유지
+- [x] T267 [US3] 수정 모달 연결 in src/features/points/components/detail/PointDetail.tsx — `EditPointForm`에 상세 데이터 전달 + 제어형 닫기. 성공 시 `pointKeys.lists`·`pointKeys.detail(pointSeq)` **둘 다** 무효화(규칙 2)
+- [x] T268 [US4] 삭제 연결 in src/features/points/components/detail/PointDetail.tsx — `AppAlertDialog.onAction`이 현재 **빈 함수**다(`:75` `() => {}`). `useMutation(deletePoint)` 연결. 성공 시 **선택 해제** + `pointKeys.lists` 무효화. 🔴 **`usedCount` 기반 선제 차단을 넣지 않는다**(규칙 14 — 서버 규칙 미확인, A1)
+- [x] T269 [US4] 삭제 거부 처리 in src/features/points/components/detail/PointDetail.tsx — 서버 거부 시 사유 노출 + **목록 유지**. 전역 토스트와 중복되지 않게 한다(규칙 3)
+- [x] T270 [P] vitest in src/features/points/form/\_\_tests\_\_/EditPointForm.test.tsx · src/features/points/components/detail/\_\_tests\_\_/PointDetail.test.tsx — 초기값 주입 / PATCH 바디(`pointSeq`·`reissueQrYn: false`) / 모달 열린 뒤 다른 지점 선택해도 `pointSeq` 불변 / 삭제 성공 시 선택 해제 / 삭제 거부 시 목록 유지
 
 ## Phase 6: US5 — 검색·필터·페이지 이동 (전부 서버 위임)
 
@@ -220,6 +220,23 @@ Phase 1 (타입·매핑, 신설만)
 - 🔴 **MSW 저장소 리셋 함수(`resetPointStore`)를 export했다.** `server.resetHandlers()`는 핸들러만 되돌리고 모듈 스코프 배열은 건드리지 않아, 추가·삭제 테스트가 뒤 테스트의 목록 건수를 바꿔 **순서 의존 flaky**가 된다. 021 제약 1에서 `clearTokens()` 누설로 같은 종류의 문제를 겪었다
 - 전송 바디를 **핸들러로 가로채 `toEqual`로 전량 비교**했다. `siteSeq`·`useYn`·정수 `authMethod` 중 하나만 빠져도 서버가 거부하거나 **엉뚱한 사업장에 들어가는데**, 부분 단언이면 누락을 못 잡는다
 - 다음: Phase 5(T265~T270) — 수정(PATCH)·삭제(DELETE). 🔴 T266~T269가 `PointDetail.tsx` 한 파일을 만져 **병렬 금지**
+
+### Phase 5 완료 — 수정(PATCH) · 삭제(DELETE) (2026-10-08)
+
+- T265~T270 완료. 신설 2파일(`EditPointForm.test.tsx` · `PointDetail.test.tsx`) + 기존 5파일 수정
+- `npm run verify` **0 errors** + `npm run test` **49 files / 390 tests green**(372 → **+18**). 기존 테스트 깨짐 **0건**
+- 🔴 **수정 폼이 드디어 기존 값에서 시작한다.** 022 전까지는 수정 폼인데 빈 값으로 열려, 한 필드만 고치려 해도 나머지가 빈 값으로 덮였다. 상세 응답을 `defaultValues` 로 주입했다
+- 🔴 **`pointSeq` 고정 장치는 `useState` 초기값이다.** 모달이 열린 채 뒤쪽 목록은 클릭 가능해서 `point` prop 이 바뀔 수 있다. `useState(point.pointSeq)` 는 첫 렌더에서만 읽히고, 모달은 닫힐 때 언마운트되므로 다음 열림에 새 값이 들어온다. 테스트에서 **prop 을 바꿔 다시 렌더한 뒤 저장**해 `pointSeq` 가 불변임을 고정했다 — 이것 없이는 저장이 엉뚱한 지점에 적용된다
+- 🔴 **계획에 없던 분기를 하나 발견했다 — 미실측 인증수단 코드.** `toAuthMethodLabel` 은 9·10 외에 `null` 을 주는데(A1), 폼 enum 은 `'QR' | 'NFC'` 뿐이다. 임의로 `'QR'` 을 채우면 **사용자가 고르지 않은 인증수단으로 저장된다.** `undefined` 로 둬 **미선택 상태**로 열고 사용자가 고르게 했다. 이 경로가 처음 생겨 `schema.ts` 의 enum 에 한글 메시지를 붙였다(기본 영문 메시지가 화면에 뜬다)
+- **삭제 확인 모달은 제어형으로 만들지 않았다.** 수정 모달은 "성공해야 닫는다"(입력값 보존)지만, 삭제 확인에는 잃을 입력이 없고 거부 사유는 전역 토스트가 전달한다. `AppAlertDialog` 에 닫기 제어를 추가하는 것은 얻는 것 없이 계약만 늘린다(A6)
+- 🔴 **삭제 거부 시 `onDeleted`·무효화를 **둘 다** 부르지 않는다.** 성공 경로에만 뒀다. 거부인데 선택이 풀리면 **삭제되지 않은 지점을 잃은 것처럼 보인다.** 테스트 3건으로 고정했다(선택 유지 / 무효화 0회 / 상세 카드에 사유를 직접 그리지 않음 — 전역 토스트와 중복 금지, 규칙 3)
+- **선택 해제를 무효화보다 먼저 한다.** 목록이 먼저 갱신되면 사라진 지점을 선택한 채 상세를 재조회해 "찾을 수 없음" 이 한 번 깜빡인다
+- **삭제 후 선택 해제는 Phase 3의 파생에 얹혔다.** `PointsPage` 가 `setSelectedSeq(null)` 만 하면 `activeSeq` 파생이 첫 행으로 떨어뜨린다 — 별도 로직이 없다
+- MSW `UpdatePoint` 는 **받은 필드로 전부 덮는다.** PATCH 지만 부분 갱신으로 처리하지 않았다 — 필드 생략 시 서버가 "변경 없음" 으로 보는지 미실측이고, mock 이 먼저 굳히면 실 서버와 달라진다(A1). `authMethod` 가 NFC 로 바뀌면 `qrCode` 를 지운다(인증수단과 `qrCode` 가 어긋난 상태를 저장소에 남기지 않는다)
+- ⚠️ **삭제 거부는 가정이다**(OQ-022-B, 사용자 확인 2026-10-08 "이대로 진행"). mock 은 `usedCount > 0` 지점을 거부하고 **UI 경로만 확보**했다. 실측에서 거부가 없으면 핸들러의 그 분기를 지운다 — 프론트는 거부 **문구에 의존하지 않는다**(019 `ApiError` 정규화가 형태를 흡수)
+- **계획에서 빼기로 한 것 1건** — 삭제 확인 모달에 "순찰코스 N개에 편성된 지점입니다" 안내를 넣었다가 **되돌렸다.** 요청 범위 밖이고(A3), 규칙 14의 "`usedCount` 선제 차단 금지" 경계에 가깝다. 필요하면 별도로 판단
+- ⚠️ **브라우저 시각 검증(M2) 미수행** → T278(Phase 7) 유지. Phase 3·4에서 이월된 것과 한 번에 본다
+- 다음: Phase 6(T271~T275) — 검색·필터·페이지 이동. 🔴 **클라이언트 필터 함수가 0건**이다(규칙 8) — 전부 서버 위임
 
 ---
 

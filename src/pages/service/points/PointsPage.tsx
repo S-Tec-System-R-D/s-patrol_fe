@@ -71,7 +71,7 @@ const PointsPage = () => {
               description={detail.error?.message}
             />
           ) : detail.data ? (
-            <PointDetail point={detail.data} />
+            <PointDetail point={detail.data} onDeleted={() => setSelectedSeq(null)} />
           ) : (
             <AppEmpty
               icon={MapPinIcon}
