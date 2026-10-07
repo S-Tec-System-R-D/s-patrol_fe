@@ -96,6 +96,18 @@ const toMockPoint = (legacy: (typeof legacyPoints)[number]): MockPoint => {
 /** 모듈 스코프 저장소 — Phase 4·5의 변경계가 이 배열을 직접 고친다 */
 const store: MockPoint[] = legacyPoints.map(toMockPoint)
 
+/**
+ * 저장소를 초기 상태로 되돌린다.
+ *
+ * 🔴 **테스트 격리에 필요하다.** `server.resetHandlers()` 는 핸들러만 되돌리고 이 배열은
+ * 건드리지 않으므로, 추가·삭제 테스트가 뒤 테스트의 목록 건수를 바꿔 **순서 의존
+ * flaky** 가 된다. 변경계를 다루는 테스트는 `beforeEach` 에서 이것을 부른다.
+ */
+export const resetPointStore = (): void => {
+  store.length = 0
+  store.push(...legacyPoints.map(toMockPoint))
+}
+
 const toPointRow = (point: MockPoint): PointRow => ({
   pointSeq: point.pointSeq,
   pointName: point.name, // 🔴 목록은 pointName (상세는 name) — B-4 실측
@@ -134,6 +146,11 @@ const businessError = (message: string, status = 400) =>
 
 const GET_POINT_LIST_PATH = '/api/v1/Point/W/sign/GetPointList'
 const DETAIL_POINT_PATH = '/api/v1/Point/W/sign/DetailPoint'
+const ADD_POINT_PATH = '/api/v1/Point/W/sign/AddPoint'
+
+/** 새 `pointSeq` — 저장소 최대값 + 1. 삭제 후 재사용되지 않게 한다 */
+const nextPointSeq = (): number =>
+  store.reduce((max, point) => Math.max(max, point.pointSeq), 0) + 1
 
 export const pointHandlers = [
   /**
@@ -185,5 +202,45 @@ export const pointHandlers = [
     const found = store.find((point) => point.pointSeq === pointSeq)
     if (!found) return businessError('해당 지점을 찾을 수 없습니다.')
     return ok(toPointDetail(found))
+  }),
+
+  /**
+   * 추가. 🔴 **저장소에 실제로 넣는다** — 목록을 무효화해 재조회하면 보여야
+   * "추가 → 목록 반영" 을 눈으로·테스트로 확인할 수 있다.
+   *
+   * ⚠️ 성공 응답 형태는 **미실측**이다(`api-spec.md` §5-1 에 변경계 행이 없다).
+   * 조회계와 같은 `ApiResponse` 래퍼 + `data: null` 로 가정했다. 프론트가 응답 본문에
+   * 의존하지 않으므로(`api/addPoint.ts` 가 `void`) 실측으로 형태가 달라도 화면은 그대로다.
+   * 단 **래퍼 자체가 아니면**(예: 204) 인터셉터가 터진다 — OQ-022-J.
+   */
+  http.post(ADD_POINT_PATH, async ({ request }) => {
+    const body = (await request.json().catch(() => null)) as Partial<MockPoint> | null
+    if (!body?.name || typeof body.siteSeq !== 'number') {
+      // 유효성 오류의 실 응답은 ProblemDetails(B-3)지만, 프론트가 세 형태를 019에서
+      // 정규화하므로 여기서는 비즈니스 오류로 가정해도 화면 경로가 같다.
+      return businessError('필수 값이 누락되었습니다.')
+    }
+
+    const pointSeq = nextPointSeq()
+    const authMethod = body.authMethod ?? 9
+    store.push({
+      siteSeq: body.siteSeq,
+      pointSeq,
+      name: body.name,
+      memo: body.memo ?? null,
+      authMethod,
+      nfcTagId: body.nfcTagId ?? null,
+      useYn: body.useYn ?? true,
+      qrCode:
+        authMethod === 9 ? `STSP1:${body.siteSeq}:${pointSeq}:1760000000:mockSignature` : null,
+      gpsLat: null,
+      gpsLng: null,
+      lastPatrolDt: null, // 새 지점은 순찰 기록이 없다
+      lastPatrolUserSeq: null,
+      lastPatrolUserName: null,
+      courseList: [], // 코스 편성은 코스 관리(spec 023)에서 한다
+    })
+
+    return ok(null)
   }),
 ]

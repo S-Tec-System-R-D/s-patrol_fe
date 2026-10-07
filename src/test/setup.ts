@@ -27,3 +27,18 @@ if (!Element.prototype.hasPointerCapture) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {}
 }
+
+/**
+ * jsdom 미구현 API stub (022).
+ * radix `Switch`는 thumb 크기 측정에 `ResizeObserver`를 쓰는데 jsdom엔 없어
+ * 렌더 즉시 `ReferenceError`로 죽는다. 017의 `Select` stub과 같은 환경 공백이다.
+ * 측정값이 필요한 단언은 없으므로 no-op으로 충분하다.
+ */
+if (!('ResizeObserver' in globalThis)) {
+  class ResizeObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver
+}

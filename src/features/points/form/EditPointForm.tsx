@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useWatch } from 'react-hook-form'
-import { type FormDataType, pointSchema } from './schema'
+import { pointFormDefaults, type FormDataType, pointSchema } from './schema'
 import AppInput from '@/components/app/AppInput'
 import AppButton from '@/components/app/AppButton'
 import AuthMethodSelector from './fields/AuthMethodSelector'
@@ -15,12 +15,10 @@ const EditPointForm = () => {
     reset,
   } = useForm<FormDataType>({
     resolver: zodResolver(pointSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      authenticationMethod: 'QR',
-      nfcTagId: '',
-    },
+    // ⚠️ 022 Phase 4에서 `useYn` 이 스키마 required 가 되어 기본값을 공용 상수로 바꿨다.
+    // 🔴 **아직 기존 값으로 초기화되지 않는다** — 수정 폼인데 빈 값에서 시작한다.
+    // 상세 응답 주입과 실 전송(PATCH)은 Phase 5(T266)에서 한다.
+    defaultValues: pointFormDefaults,
   })
 
   const authenticationMethod = useWatch({ control, name: 'authenticationMethod' })

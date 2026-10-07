@@ -79,13 +79,13 @@
 >
 > 🔴 제약 4 — T260(스키마)과 T261(폼)은 **같은 Phase 안에서 연속**이어야 한다. 쪼개면 중간에 typecheck가 red다.
 
-- [ ] T260 zod 스키마 갱신 in src/features/points/form/schema.ts — `useYn: z.boolean()` 추가(`AddPointDto` required) + `nfcTagId` **14자리 HEX** `/^[0-9A-Fa-f]{14}$/`(규칙 11). 기존 refine("NFC인데 비어 있으면")은 유지하고 형식 검증을 더한다
-- [ ] T261 [US2] 추가 폼 실 전송 in src/features/points/form/AddPointForm.tsx — `useMutation(addPoint)`. 바디에 `siteSeq`(`getSiteSeq()`, 021) + `authMethod` 정수 변환(T242) + `useYn`. `gpsLat`/`gpsLng`는 **전송하지 않는다**(규칙 10, OQ-022-C). `isPending`으로 버튼 `disabled`(연타 차단)
+- [x] T260 zod 스키마 갱신 in src/features/points/form/schema.ts — `useYn: z.boolean()` 추가(`AddPointDto` required) + `nfcTagId` **14자리 HEX** `/^[0-9A-Fa-f]{14}$/`(규칙 11). 기존 refine("NFC인데 비어 있으면")은 유지하고 형식 검증을 더한다
+- [x] T261 [US2] 추가 폼 실 전송 in src/features/points/form/AddPointForm.tsx — `useMutation(addPoint)`. 바디에 `siteSeq`(`getSiteSeq()`, 021) + `authMethod` 정수 변환(T242) + `useYn`. `gpsLat`/`gpsLng`는 **전송하지 않는다**(규칙 10, OQ-022-C). `isPending`으로 버튼 `disabled`(연타 차단)
   - 🔴 **에러 바인딩 복붙 수정** — `:46`(설명)·`:64`(NFC TAG ID)가 `errors.name?.message`를 쓰고 있다. 고치지 않으면 **T260의 HEX 검증이 화면에 뜨지 않는다**(규칙 12)
   - 🔴 **실패 토스트를 폼에서 띄우지 않는다** — `queryClient.ts:18-20`의 `MutationCache.onError`가 이미 전역으로 띄운다(규칙 3)
-- [ ] T262 [US2] 모달 제어형 전환 in src/features/points/components/PointTopNav.tsx — `AppDialog`가 현재 비제어다(`:11`). **성공 후에만 닫는다**(§4 — 먼저 닫으면 실패 시 입력값이 사라진다). 성공 시 `pointKeys.lists` 무효화
-- [ ] T263 MSW 추가 핸들러 in src/mocks/handlers/points.ts — `AddPoint`. in-memory 배열에 반영돼 **목록 재조회에 실제로 보이게** 한다(모듈 스코프 배열 + 핸들러가 수정)
-- [ ] T264 [US2] [P] vitest in src/features/points/form/\_\_tests\_\_/AddPointForm.test.tsx — 이름 필수 / NFC 14자리 HEX 실패가 **`nfcTagId` 필드에** 표시(T261 복붙 수정 고정) / 전송 바디에 `siteSeq`·`useYn`·정수 `authMethod` 포함 / 실패 시 모달 유지
+- [x] T262 [US2] 모달 제어형 전환 in src/features/points/components/PointTopNav.tsx — `AppDialog`가 현재 비제어다(`:11`). **성공 후에만 닫는다**(§4 — 먼저 닫으면 실패 시 입력값이 사라진다). 성공 시 `pointKeys.lists` 무효화
+- [x] T263 MSW 추가 핸들러 in src/mocks/handlers/points.ts — `AddPoint`. in-memory 배열에 반영돼 **목록 재조회에 실제로 보이게** 한다(모듈 스코프 배열 + 핸들러가 수정)
+- [x] T264 [US2] [P] vitest in src/features/points/form/\_\_tests\_\_/AddPointForm.test.tsx — 이름 필수 / NFC 14자리 HEX 실패가 **`nfcTagId` 필드에** 표시(T261 복붙 수정 고정) / 전송 바디에 `siteSeq`·`useYn`·정수 `authMethod` 포함 / 실패 시 모달 유지
 
 ## Phase 5: US3 + US4 — 수정(PATCH) · 삭제(DELETE)
 
@@ -205,6 +205,21 @@ Phase 1 (타입·매핑, 신설만)
 - 첫 행 자동 선택을 **파생**으로 했다(`items.find(selected) ?? items[0]`). effect+setState 면 "로딩 완료 → setState → 재렌더" 한 박자 동안 우측이 빈 상태로 깜빡인다. 부수효과로 **선택한 지점이 목록에서 사라지면 자동으로 첫 행으로 떨어진다** — Phase 5의 삭제 후 처리와 Phase 6의 필터 이탈 처리가 이 파생에 얹힌다
 - ⚠️ **브라우저 시각 검증(M2) 미수행** → T278(Phase 7)로 이월. 자동 테스트가 MSW로 같은 경로를 덮지만, 레이아웃·로딩 스켈레톤·뱃지 색은 눈으로 봐야 한다. Phase 4·5가 같은 화면을 더 바꾸므로 한 번에 보는 편이 낫다
 - 다음: Phase 4(T260~T264) — 추가(POST) + 스키마·폼 정합. 🔴 **내부 순차**(제약 4) — 스키마만 바꾸고 멈추면 typecheck red
+
+### Phase 4 완료 — 추가(POST) + 폼 정합 (2026-10-07)
+
+- T260~T264 완료. 신설 1파일(`AddPointForm.test.tsx`) + 기존 6파일 수정
+- `npm run verify` **0 errors** + `npm run test` **47 files / 372 tests green**(362 → **+10**)
+- ✅ **제약 4가 실제로 발동했다.** `schema.ts`에 `useYn`을 넣는 순간 `EditPointForm`의 `defaultValues`가 타입 에러가 났다. 같은 Phase 안이라 바로 닫았다 — `pointFormDefaults` 공용 상수를 만들어 두 폼이 공유한다. **`EditPointForm`은 여전히 빈 값에서 시작**하며(수정 폼인데 기존 값이 안 들어온다) 그 해소는 Phase 5(T266)다. 주석에 명시해 뒀다
+- 🔴 **복붙 결함을 고쳤고, 그것이 실제로 기능을 죽이고 있었음을 테스트로 고정했다.** `AddPointForm:46·64`가 `description`·`nfcTagId` 자리에 `errors.name?.message`를 넣고 있었다 → **14자리 HEX 검증 메시지가 화면에 뜰 자리가 없었다.** T260의 정규식을 넣어도 보이지 않는 상태였으므로 둘은 한 작업이어야 했다(계획대로)
+- **NFC 형식 검증을 refine 2개로 분리했다.** "비어 있음"(기존)과 "형식 틀림"(신규)을 한 refine에 합치면 빈 값일 때 두 메시지가 경쟁한다. 형식 refine은 **값이 있을 때만** 본다
+- ⚠️ **NFC TAG ID 대소문자를 변환하지 않는다.** 서버가 대문자만 받는지 미실측이고, 실측 없이 값을 바꾸면 **사용자가 입력한 것과 저장된 것이 달라진다**(A1). 정규식은 양쪽을 허용한다 — 실 서버 검증 시 확인 대상에 추가
+- `AppDialog`가 **이미 `open`/`onOpenChange`를 지원하고 있었다**(`:16-17`). 제어형 전환에 컴포넌트 수정이 필요 없었다 — `PointTopNav`에서 state만 들었다. 닫기 권한은 부모가 갖고 폼은 `onSuccess`만 알린다
+- `AppIconButton`에 `aria-label="지점 생성"`을 넣었다. 아이콘만 있는 버튼이라 접근 가능한 이름이 없었고, 테스트에서 고를 수단도 없었다
+- 🔴 **계획 외 조치 1건 — `src/test/setup.ts`에 `ResizeObserver` stub 추가.** radix `Switch`(지점사용 토글)가 thumb 크기 측정에 `ResizeObserver`를 쓰는데 jsdom에 없어 **렌더 즉시 `ReferenceError`로 10건이 전부 죽었다.** 017이 radix `Select` 때문에 `hasPointerCapture`·`scrollIntoView`를 stub한 것과 같은 환경 공백이라 같은 자리에 같은 방식으로 넣었다(측정값 단언이 없어 no-op으로 충분)
+- 🔴 **MSW 저장소 리셋 함수(`resetPointStore`)를 export했다.** `server.resetHandlers()`는 핸들러만 되돌리고 모듈 스코프 배열은 건드리지 않아, 추가·삭제 테스트가 뒤 테스트의 목록 건수를 바꿔 **순서 의존 flaky**가 된다. 021 제약 1에서 `clearTokens()` 누설로 같은 종류의 문제를 겪었다
+- 전송 바디를 **핸들러로 가로채 `toEqual`로 전량 비교**했다. `siteSeq`·`useYn`·정수 `authMethod` 중 하나만 빠져도 서버가 거부하거나 **엉뚱한 사업장에 들어가는데**, 부분 단언이면 누락을 못 잡는다
+- 다음: Phase 5(T265~T270) — 수정(PATCH)·삭제(DELETE). 🔴 T266~T269가 `PointDetail.tsx` 한 파일을 만져 **병렬 금지**
 
 ---
 
