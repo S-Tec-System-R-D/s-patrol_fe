@@ -63,13 +63,13 @@ describe('PointDetailPage — 진입', () => {
   it('🔴 URL 로 직접 들어가도 상세가 뜬다 — 새로고침에서 날아가지 않는다', async () => {
     renderAt('/points/1')
 
-    expect(await screen.findByText('정문 입구')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '정문 입구' })).toBeInTheDocument()
   })
 
   it('🔴 브레드크럼이 "어느 화면인가", 제목이 "어느 지점인가" 를 답한다', async () => {
     renderAt('/points/1')
 
-    await screen.findByText('정문 입구')
+    await screen.findByRole('heading', { name: '정문 입구' })
     // 브레드크럼 — 첫 조각이 목록 링크를 겸한다
     expect(screen.getByRole('link', { name: '코스/지점' })).toBeInTheDocument()
     expect(screen.getByText('지점 상세')).toBeInTheDocument()
@@ -80,7 +80,7 @@ describe('PointDetailPage — 진입', () => {
   it('제목 옆에 사용 뱃지가 있다', async () => {
     renderAt('/points/1')
 
-    await screen.findByText('정문 입구')
+    await screen.findByRole('heading', { name: '정문 입구' })
     expect(screen.getByText('사용')).toBeInTheDocument()
   })
 
@@ -95,7 +95,7 @@ describe('PointDetailPage — 진입', () => {
     // mock 의 pointSeq 9 는 useYn: false
     renderAt('/points/9')
 
-    expect(await screen.findByText('비상구 B')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '비상구 B' })).toBeInTheDocument()
     expect(screen.getByText('미사용')).toBeInTheDocument()
   })
 })
@@ -130,7 +130,7 @@ describe('PointDetailPage — 삭제 후 이동', () => {
     const user = userEvent.setup()
     // pointSeq 4 는 코스에 편성돼 있지 않아 삭제가 허용된다
     renderAt('/points/4')
-    await screen.findByText('지하 주차장 B1')
+    await screen.findByRole('heading', { name: '지하 주차장 B1' })
 
     await confirmDelete(user)
 
@@ -141,13 +141,13 @@ describe('PointDetailPage — 삭제 후 이동', () => {
     const user = userEvent.setup()
     // pointSeq 1 은 코스에 편성돼 있어 mock 이 거부한다
     renderAt('/points/1')
-    await screen.findByText('정문 입구')
+    await screen.findByRole('heading', { name: '정문 입구' })
 
     await confirmDelete(user)
 
     await waitFor(() => expect(screen.getByRole('button', { name: '삭제' })).toBeEnabled())
     expect(screen.queryByText('LIST_ROUTE')).not.toBeInTheDocument()
-    expect(screen.getByText('정문 입구')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '정문 입구' })).toBeInTheDocument()
   })
 
   it('확인하지 않고 취소하면 요청이 나가지 않는다', async () => {
@@ -160,7 +160,7 @@ describe('PointDetailPage — 삭제 후 이동', () => {
       })
     )
     renderAt('/points/4')
-    await screen.findByText('지하 주차장 B1')
+    await screen.findByRole('heading', { name: '지하 주차장 B1' })
 
     await user.click(screen.getByRole('button', { name: '삭제' }))
     await user.click(await screen.findByRole('button', { name: '취소' }))
@@ -176,7 +176,7 @@ describe('PointDetailPage — 수정 모달', () => {
   it('수정 모달은 상세 값이 채워진 폼으로 열린다', async () => {
     const user = userEvent.setup()
     renderAt('/points/1')
-    await screen.findByText('정문 입구')
+    await screen.findByRole('heading', { name: '정문 입구' })
 
     await user.click(screen.getByRole('button', { name: '수정' }))
 
@@ -191,7 +191,7 @@ describe('PointDetailPage — 수정 모달', () => {
       )
     )
     renderAt('/points/1')
-    await screen.findByText('정문 입구')
+    await screen.findByRole('heading', { name: '정문 입구' })
 
     await user.click(screen.getByRole('button', { name: '수정' }))
     await user.click(await screen.findByRole('button', { name: '저장' }))
@@ -209,7 +209,7 @@ describe('PointDetailPage — 수정 모달', () => {
       )
     )
     renderAt('/points/1')
-    await screen.findByText('정문 입구')
+    await screen.findByRole('heading', { name: '정문 입구' })
 
     await user.click(screen.getByRole('button', { name: '수정' }))
     const name = await screen.findByPlaceholderText('지점명을 입력해주세요')

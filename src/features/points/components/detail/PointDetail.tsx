@@ -21,9 +21,11 @@ import type { PointDetail as PointDetailData } from '../../types'
  * 세 덩어리의 경계가 흐려진다 — 기본정보·인증수단·소속 코스는 **읽는 목적이 다르고**
  * 길이도 제각각이다. `xl` 이상 2단, 미만 1단(`design-system.md` §2-5).
  *
- * 🔴 **중복을 두지 않는다** — "이름" 행은 페이지 제목과 같은 값이고, "사용여부" 는 제목
- * 옆 뱃지로 올라갔다. **생성일 행도 없다**: 서버 응답에 `createdAt` 이 없다(OQ-022-I,
- * 실측 확인). 대신 서버가 주는 **최근 순찰**을 보여준다.
+ * **"지점명" 행은 페이지 제목과 중복이지만 의도적으로 둔다**(사용자 결정 2026-10-08) —
+ * 기본정보 블록만 따로 읽거나 캡쳐할 때 이름이 없으면 무엇의 정보인지 알 수 없다.
+ * 반면 **"사용여부" 는 제목 옆 뱃지**로 올라가 본문에 두지 않는다(상태는 한 곳에서만).
+ * **생성일 행도 없다**: 서버 응답에 `createdAt` 이 없다(OQ-022-I, 실측 확인).
+ * 대신 서버가 주는 **최근 순찰**을 보여준다.
  * ⚠️ 목업(`지점관리-신규.png`)에는 생성일이 있어 **갈라진 지점**이다(OQ-027-B).
  */
 
@@ -49,13 +51,19 @@ const PointDetail = ({ point }: { point: PointDetailData }) => {
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
       <Card>
         <DetailSection title="기본정보">
+          {/* 제목과 중복이지만 **의도적으로 둔다**(사용자 결정 2026-10-08) — 기본정보
+              블록만 따로 읽거나 캡쳐할 때 이름이 없으면 무엇의 정보인지 알 수 없다 */}
+          <DetailRow label="지점명" value={point.name} />
           <DetailRow label="설명" value={point.memo?.trim() || '-'} />
           <DetailRow label="최근 순찰" value={lastPatrol} />
         </DetailSection>
       </Card>
 
       <Card>
-        <DetailSection title="인증 수단">
+        <DetailSection
+          title="인증 수단"
+          description="근무자가 이 지점에서 순찰을 인증하는 방식입니다."
+        >
           <AuthMethodDisplay value={method} />
           {method === 'NFC' && point.nfcTagId && (
             <div className="flex items-center justify-between rounded-sm bg-muted px-3 py-2 text-caption">

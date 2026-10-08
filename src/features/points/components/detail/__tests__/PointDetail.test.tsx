@@ -34,12 +34,20 @@ const renderDetail = (point = detail()) => render(<PointDetail point={point} />)
 
 
 describe('PointDetail — 레이아웃 결정(027)', () => {
-  it('🔴 본문에 지점명이 없다 — 페이지 제목이 갖는다', () => {
+  it('기본정보에 지점명 행이 있다 — 제목과 중복이지만 의도된 것(사용자 결정 2026-10-08)', () => {
+    // 기본정보 블록만 따로 읽거나 캡쳐할 때 이름이 없으면 무엇의 정보인지 알 수 없다
     renderDetail()
 
-    // 제목과 본문에 같은 값이 두 번 보이면 안 된다
-    expect(screen.queryByText('정문 입구')).not.toBeInTheDocument()
-    expect(screen.queryByText('이름')).not.toBeInTheDocument()
+    expect(screen.getByText('지점명')).toBeInTheDocument()
+    expect(screen.getByText('정문 입구')).toBeInTheDocument()
+  })
+
+  it('인증 수단 섹션에 설명 한 줄이 있다', () => {
+    renderDetail()
+
+    expect(
+      screen.getByText('근무자가 이 지점에서 순찰을 인증하는 방식입니다.')
+    ).toBeInTheDocument()
   })
 
   it('🔴 본문에 사용여부 행이 없다 — 페이지 제목 옆 뱃지가 갖는다', () => {

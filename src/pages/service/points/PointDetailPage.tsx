@@ -24,7 +24,7 @@ import { paths } from '@/router/paths'
  *
  * 🔴 **브레드크럼 + 제목을 둘 다 둔다**(사용자 결정 2026-10-08). 질문이 둘이기 때문이다:
  * - **브레드크럼**(`코스/지점 › 지점 상세`) = "여기가 **어느 화면**인가"
- * - **제목**(지점명 + 사용 뱃지) = "**어느 지점**인가"
+ * - **제목**(지도 아이콘 + 지점명 + 사용 뱃지) = "**어느 지점**인가"
  *
  * 하나만 두면 반쪽이다 — 브레드크럼만이면 어느 지점인지 카드를 읽어야 하고, 제목만이면
  * `정문 입구` 가 **지점인지 코스인지** 알 수 없다(둘 다 이름만으로는 구분되지 않는다).
@@ -82,6 +82,15 @@ const PointDetailPage = () => {
         <>
           <AppPageHeader
             title={point.name}
+            icon={MapPinIcon}
+            // 상태는 제목 옆, 액션은 헤더 맨 우측 — 성격이 달라 자리를 섞지 않는다
+            titleSuffix={
+              point.useYn ? (
+                <AppBadge variant="success">사용</AppBadge>
+              ) : (
+                <AppBadge variant="muted">미사용</AppBadge>
+              )
+            }
             action={
               <div className="flex items-center gap-2">
                 <AppDialog
@@ -90,7 +99,7 @@ const PointDetailPage = () => {
                   title="지점 수정"
                   description="지점 정보를 수정할 수 있습니다."
                   trigger={
-                    <AppButton icon={SquarePenIcon} variant="sub">
+                    <AppButton icon={SquarePenIcon} variant="sub" className="bg-card">
                       수정
                     </AppButton>
                   }
@@ -108,22 +117,18 @@ const PointDetailPage = () => {
                   title="지점을 삭제하시겠습니까?"
                   onAction={() => removal.mutate(point.pointSeq)}
                 >
-                  <AppButton icon={Trash2Icon} variant="destructive" disabled={removal.isPending}>
+                  <AppButton
+                    icon={Trash2Icon}
+                    variant="destructive"
+                    className="bg-card"
+                    disabled={removal.isPending}
+                  >
                     삭제
                   </AppButton>
                 </AppAlertDialog>
               </div>
             }
           />
-
-          {/* 사용여부는 제목 옆 뱃지로 — 목록 테이블과 같은 표현이다 */}
-          <div className="-mt-2">
-            {point.useYn ? (
-              <AppBadge variant="success">사용</AppBadge>
-            ) : (
-              <AppBadge variant="muted">미사용</AppBadge>
-            )}
-          </div>
 
           <PointDetail point={point} />
         </>
