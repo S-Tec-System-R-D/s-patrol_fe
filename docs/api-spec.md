@@ -740,6 +740,7 @@ interface NoticeAttach {
 | B-15 | 🔴 **`UpdatePoint` 로 값을 비울 수 없다.** `null` 과 `''` 를 "변경하지 않음" 으로 해석해 무시한다(실측 2026-10-08). → ① 사용자가 **설명을 비워도 지워지지 않는다** ② NFC → QR 로 바꿔도 `nfcTagId` 가 남아 **인증수단과 어긋난 데이터**가 된다. `memo` 는 공백 1칸(`' '`)을 보내면 지워지지만 `nfcTagId` 는 `null`·`''`·`' '` **전부 무시**되어 지울 방법이 없었다. **"비우기" 를 표현할 수 있는 규약이 필요하다** | 🔴 |
 | B-16 | **유효성 오류가 400 이 아니라 500 으로 샌다**(실측 2026-10-08). `AddPoint` 에서 `name` 누락은 400 ProblemDetails 로 오지만, **`siteSeq` 누락은 500**(ProblemDetails + `detail`), **`authMethod: 99`(enum 밖)는 500 + 빈 body** 다. 필수값·enum 검증이 일부 누락돼 있다 | 🟡 |
 | B-17 | **변경계 실패 문구가 전부 `"잘못된 요청입니다."`** 하나다(실측 2026-10-08, 없는 `pointSeq` 로 `UpdatePoint`·`DeletePoint`). 호출부가 사유를 구분할 수 없고 사용자에게 보여줄 문구로도 불충분하다 | 🟡 |
+| B-18 | 🔴 **CORS 설정이 없다** — `Access-Control-Allow-Origin` 을 **전혀 주지 않는다**(실측 2026-10-08). preflight(OPTIONS)에는 204 를 주지만 CORS 헤더가 없어 **브라우저가 응답을 버린다.** `curl` 은 CORS 를 적용하지 않아 API 계약 실측에서는 드러나지 않았고, 브라우저로 앱을 돌리는 순간 전부 실패했다. → 프론트는 **vite dev 프록시**로 우회했다(`vite.config.ts` · `.env.real`). 운영은 same-origin(도메인 + 백엔드 prefix)이라 문제가 없으므로 **로컬 개발 환경을 위한 설정 요청**이다 | 🟡 |
 
 ### 6-2. Open Questions
 
