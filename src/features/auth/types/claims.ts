@@ -48,14 +48,27 @@ export interface AccessTokenClaims {
 /**
  * JWT role 문자열 → 앱 `Role`.
  *
- * 🔴 **실측된 2개만 넣는다.** Master·Manager·근무자에 해당하는 문자열은 해당 계정이 없어
- * 확인하지 못했다(`api-spec.md` OQ-1). `'Master'`처럼 그럴듯한 값을 추측으로 넣으면,
- * 서버가 다른 문자열을 쓸 때 **엉뚱한 권한으로 통과**시키게 된다. 모르는 값은 통과시키지 않는 쪽이 안전하다.
- * 나머지 3종은 계정 생성 기능이 생기는 시점에 실측해 채운다.
+ * 🔴 **실측된 값만 넣는다.** 추측값을 넣으면 서버가 다른 문자열을 쓸 때 **엉뚱한 권한으로
+ * 통과**시킨다. 모르는 값은 통과시키지 않는 쪽이 안전하다(매핑 밖 → `null` → 권한 없음).
+ *
+ * 실측 현황(`spec 022` Phase 8 R1, 2026-10-08):
+ * - `SystemManager`(code 101) · `FieldManager`(code 201) — 020 에서 실측
+ * - **`Master`(code 102)** — 계정 `222222` 로 실측. 🔴 **매핑이 없던 동안 Master 계정은
+ *   로그인에 성공해도 `toRole` 이 `null` 이라 `useMe` 가 실패를 반환하고 `AuthGuard` 가
+ *   로그인 화면으로 되돌렸다** — 들어갈 수 없었다. 020 spec §4 가 "OQ-D 해소까지 의도된
+ *   동작" 으로 적어 둔 상태이며, 실측된 지금 해소한다
+ * - `Manager`(code 103) — **여전히 미실측.** 해당 계정이 없다
+ *
+ * 🔴 **`FieldWorker`(code 202, 근무자)는 실측됐지만 의도적으로 넣지 않는다.**
+ * `AuthGuard` 는 role 값으로 분기하지 않고 **"매핑되면 통과"** 이므로, 넣는 순간 근무자가
+ * WEB 을 통과한다 — 근무자는 APP 전용이다(`CLAUDE.md` B1). 근무자 차단은 로그인 단계의
+ * `code 202` 가 담당하고(토큰을 저장조차 하지 않는다), 이 매핑 부재가 **2중 방어**로 남는다.
+ * 역할별 접근 제어가 생기면 그때 함께 다룬다.
  */
 const JWT_ROLE_TO_ROLE: Record<string, Role> = {
   FieldManager: 'FIELD_MANAGER',
   SystemManager: 'SYSTEM',
+  Master: 'MASTER',
 }
 
 /** 클레임의 role 문자열을 앱 `Role`로. 매핑에 없으면 `null`(= 권한 없음 처리). */

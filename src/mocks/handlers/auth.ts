@@ -29,12 +29,36 @@ const DEV_ACCOUNTS: Record<string, { code: number; jwtRole: string; userName: st
   '000000': { code: LOGIN_CODE.SYSTEM, jwtRole: 'SystemManager', userName: '시스템관리자' },
   '333333': { code: LOGIN_CODE.FIELD_MANAGER, jwtRole: 'FieldManager', userName: '홍길동' },
   // 근무자 차단(US3)을 dev에서 직접 눌러보기 위한 계정. 서버는 토큰을 주지만 프론트가 막는다.
-  '222222': { code: LOGIN_CODE.WORKER, jwtRole: 'Worker', userName: '김근무' },
+  // 🔴 `jwtRole` 을 추측값 `'Worker'` 에서 실측값 `'FieldWorker'` 로 교정했다(Phase 8 R1).
+  '222222': { code: LOGIN_CODE.WORKER, jwtRole: 'FieldWorker', userName: '김근무' },
+  // Master 권한을 dev에서 눌러보기 위한 본사 계정. `'Master'` 는 **실측값**이다(Phase 8 R1).
+  // Manager(code 103)는 해당 계정이 없어 role 문자열이 미실측이라 넣지 않는다 — 추측값을
+  // 넣으면 mock 에서는 통과하고 실 서버에서는 막히는 가장 나쁜 불일치가 된다.
+  '111111': { code: LOGIN_CODE.MASTER, jwtRole: 'Master', userName: '마스터' },
   // 021 사업장 선택 0/1/N 분기를 dev에서 직접 눌러보기 위한 현장 계정 2종.
   // 권한은 333333과 같고 **소속 사업장 수만 다르다**(아래 DEV_SITES).
   '444444': { code: LOGIN_CODE.FIELD_MANAGER, jwtRole: 'FieldManager', userName: '단일소속' },
   '555555': { code: LOGIN_CODE.FIELD_MANAGER, jwtRole: 'FieldManager', userName: '무소속' },
 }
+
+/**
+ * ⚠️ **같은 사번의 실 서버 권한과 다르다**(실측 2026-10-08, `spec 022` Phase 8 R1).
+ *
+ * | 사번 | mock | 실 서버 |
+ * |---|---|---|
+ * | `000000` | 시스템관리자 101 | **일치** |
+ * | `333333` | 현장관리자 201 | **일치** |
+ * | `222222` | 근무자 202 | **Master 102** |
+ * | `444444`·`555555` | 현장관리자 201 (단일·무소속) | **근무자 202** |
+ *
+ * 🔴 **일부러 맞추지 않는다.** 이 계정들의 목적은 "dev 에서 분기를 직접 눌러보는 것"이고,
+ * 실측에 맞추면 **021 의 사업장 선택 0/1/N 분기를 눌러볼 수단이 사라진다**(444444·555555 가
+ * 근무자가 되어 로그인 단계에서 차단된다). 사번이 겹친 것은 020 당시 실측 계정과 맞추려
+ * 한 결과이며, 권한까지 같다는 보장은 없었다.
+ *
+ * ⚠️ 따라서 **mock 로그인 결과로 실 서버 권한을 추측하지 말 것.** 실 서버 확인은
+ * `npm run dev:real` 로 한다.
+ */
 
 /**
  * 사번별 접근 가능 사업장(`UserSiteSelect`의 `children`).

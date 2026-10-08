@@ -83,8 +83,20 @@ describe('useMe', () => {
     expect(result.current.isLoading).toBe(false)
   })
 
-  // 토큰은 멀쩡하지만 role 문자열이 미실측 값(OQ-D). 권한을 특정할 수 없으므로 통과시키지 않는다.
-  it.each(['Master', 'Manager', 'Worker'])(
+  it('실측된 Master role 을 MASTER 로 매핑한다 (022 Phase 8 R1)', () => {
+    // 🔴 매핑이 없던 동안 Master 계정은 로그인에 성공해도 여기서 isError 가 되어
+    // AuthGuard 가 로그인 화면으로 되돌렸다 — 들어갈 수 없었다.
+    setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: 'Master', userName: '마스터' }))
+
+    const { result } = renderHook(() => useMe())
+
+    expect(result.current.isError).toBe(false)
+    expect(result.current.data?.role).toBe('MASTER')
+  })
+
+  // 토큰은 멀쩡하지만 role 문자열이 미실측이거나(Manager) 의도적으로 매핑하지 않은
+  // 값(FieldWorker — 근무자는 WEB 접근 불가)인 경우. 권한을 특정할 수 없으므로 통과 금지.
+  it.each(['Manager', 'Worker', 'FieldWorker'])(
     '매핑에 없는 role(%s)은 isError — 권한 없음 처리',
     (jwtRole) => {
       setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: jwtRole }))
