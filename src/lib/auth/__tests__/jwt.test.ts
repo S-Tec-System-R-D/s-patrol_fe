@@ -8,7 +8,8 @@ describe('decodeAccessToken', () => {
     const claims = decodeAccessToken(makeAccessToken())
 
     expect(claims).not.toBeNull()
-    expect(claims?.userSeq).toBe(1)
+    // 🔴 서버가 문자열로 준다(실측 2026-10-08). 숫자 변환은 useMe 가 한다.
+    expect(claims?.userSeq).toBe('1')
     expect(claims?.loginId).toBe('333333')
     expect(claims?.uuid).toHaveLength(32)
     expect(claims?.[MS_ROLE_CLAIM]).toBe('FieldManager')

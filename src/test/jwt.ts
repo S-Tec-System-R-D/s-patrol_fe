@@ -29,7 +29,7 @@ const ISSUER = 'https://stsp.s-tec.co.kr'
 const defaultClaims = (): AccessTokenClaims => {
   const now = Math.floor(Date.now() / 1000)
   return {
-    userSeq: 1,
+    userSeq: '1', // 🔴 실측은 문자열이다(2026-10-08)
     loginId: '333333',
     userName: '홍길동',
     uuid: 'a'.repeat(32),

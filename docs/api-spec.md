@@ -32,11 +32,13 @@
 - `Authorization: Bearer {accessToken}`
 - **accessToken 수명 10800초 (3시간)** — `exp - nbf` 실측
 - 로그인 응답 `data` 에는 **토큰 2개뿐**. 사용자 정보는 **JWT 클레임 디코딩**으로 획득
+- ✅ **재실측 2026-10-08**(`spec 022` Phase 8 R1, 계정 `333333`·`000000`): 클레임 필드 구성·`role` 문자열(`FieldManager`/`SystemManager`)·수명 10800초 모두 일치. 🔴 **`userSeq` 만 `number` 로 잘못 적혀 있었다** — 실제는 문자열이다. 우리 모델(`MeDto.userSeq: number`)로의 변환은 어댑터 한 자리(`useMe`)에서 한다
+- 🔴 **payload 에 non-ASCII 바이트가 실제로 들어온다**(`userName`·`roleDisplay` 한글). `atob` 결과를 그대로 `JSON.parse` 하면 `'현장 관리자 테스트'` → `'íì¥ ê´ë¦¬ì íì¤í¸'` 로 깨지는 것을 실 토큰으로 확인했다 — `TextDecoder` 경로(`lib/auth/jwt.ts`)가 필수다
 
 ```ts
 /** accessToken JWT payload (실측) */
 interface AccessTokenClaims {
-  userSeq: number
+  userSeq: string               // 🔴 문자열이다 ('13'·'1' 실측 2026-10-08)
   loginId: string
   userName: string
   uuid: string                  // 하이픈 없는 32자 hex
@@ -216,6 +218,12 @@ interface PagedData<T> {
 | 권한 없는 엔드포인트 호출 | 403 | `""` |
 
 → 파싱 시도하면 터진다. **status code만으로 분기해야 한다.**
+
+✅ **재실측 2026-10-08** (`spec 022` Phase 8 R0·R1) — 세 형태 전부 확인했다.
+- **(A)** 로그인 실패 → HTTP **400** + `{"message":"아이디 또는 비밀번호가 올바르지 않습니다.","data":null,"code":400}`
+- **(B)** 로그인 요청에서 필드 누락 → HTTP **400** + ProblemDetails(`errors`/`type`/`title`/`status`/`traceId`). 🔴 **`message` 필드 없음**이 확인됐다
+- **(C)** 토큰 없음·엉뚱한 토큰 → **401** + `Content-Length: 0`. 🔴 **변경계(`DeletePoint`)도 동일** — 인증 실패 경로는 조회계와 같다. **403 도 빈 body** 확인(본사 토큰으로 `UserSiteSelect`, 현장 토큰으로 `AdminSiteSelect` 교차 호출)
+- 🔴 **두 SiteSelect 의 상호 배타가 실측됐다**(§5-1 의 403 표기 확인) — 사이트가 다른 토큰으로 호출하면 **403 + 빈 body**. `LoginForm` 이 본사(1xx)에서 `UserSiteSelect` 를 부르지 않는 것은 미룬 것이 아니라 **필요한 분기**였다
 
 ### 권한 범위는 403이 아니다 (주의)
 
@@ -679,7 +687,7 @@ interface NoticeAttach {
 |---|---|
 | OQ-1 | `code` 사전은 §2-1에 **전부 확정**(`202` = 근무자, 2026-10-02). **남은 것**: JWT `role` 문자열의 전체 목록 — 실측된 것은 `FieldManager`(현장관리자)·`SystemManager`(시스템관리자) **2개뿐**이고, Master·Manager·근무자에 해당하는 문자열은 미확인(해당 계정이 없어 실측 불가). 라우트 가드를 `role` 기준으로 삼으려면 필요. **해소 방향**: 백엔드에 묻지 않고 **계정 생성 기능을 만들 때 직접 만들어 로그인해 실측**하고 §1-2에 기록한다(결정 2026-10-02). 그때까지 알 수 없는 `role`은 권한 없음 처리 |
 | OQ-1A | 사업장 선택 규칙은 §2-2에 확정. ② **해소(2026-10-07, `spec 021`)** — 서버는 선택한 `siteSeq` 를 **기억하지 않는다.** 선택 확정 엔드포인트가 swagger에 없고(`Login` 태그는 `Login`/`RefreshToken`/`Logout`/`AdminSiteSelect`/`UserSiteSelect` **5개뿐**), 두 SiteSelect는 **파라미터 없는 조회 GET**이다. 따라서 클라이언트가 보관하고 **매 요청 쿼리로 전달**한다(기존 가정이 맞았음 → `spec 022~026` 쿼리 설계 변경 없음). 🔴 **과거 구현은 선택 시 토큰을 재발급해 거기에 담았으나 현 백엔드에는 그 엔드포인트가 없다**(사용자 전달) — **JWT 클레임에서 `siteSeq` 를 찾지 말 것.** **남은 것**: ① 현장계정 `children` 이 **0개**일 때(소속 사업장 없는 현장관리자) 서버가 무엇을 주는지 — 빈 배열인지 에러인지. 0개 계정이 테스트 데이터에 없어 **계정 생성이 필요**하다. 프론트는 양쪽을 동일 처리로 수렴시켜 뒀다(`spec 021` §4) |
-| OQ-1B | **`AdminSiteSelect` 가 평면 배열로 바뀐다**(사용자 전달 2026-10-06, **미실측**). 아래 §5-2의 실측 기록은 `GroupNode` 이중 재귀 트리다. 필드명 미정이라 본사 사업장 선택은 Phase 5(본사 영역)로 미뤘다 — 본사 홈이 아직 placeholder라 `siteSeq` 소비처가 0개이기도 하다(`spec 021` §1). 실 응답 확보 시 §5-2를 교정하고 본사 선택 단계를 추가한다 |
+| OQ-1B | ✅ **해소(실측 2026-10-08, `spec 022` Phase 8 R1)** — "평면 배열로 바뀐다"던 전달(2026-10-06)은 **반영되지 않았다.** 본사 계정 `000000` 으로 호출한 `AdminSiteSelect` 는 여전히 **`GroupNode` 이중 재귀 트리**다(§5-2 기록이 맞다): 그룹이 `children` 으로 재귀하고 각 그룹의 `sites[]` 안에서 사업장이 또 `children` 으로 재귀한다(실측: 그룹 `에스텍시스템`(1) → `테스트사업장(수정)`(2) → `강동지사`(3), 사업장 `테테테(수정)1`(3) → `수정사업장테테`(4)). → **본사 사업장 선택(Phase 5)은 트리 평탄화 어댑터가 필요하다**. 평면 배열을 기다릴 이유가 없어졌다 |
 | OQ-2 | `authMethod` 에 GPS 코드가 있는가? (9=QR, 10=NFC만 관측) |
 | OQ-3 | `courseStatusCode` 전체 값 (0=대기중만 관측) |
 | OQ-4 | `codeSeq` 목록을 주는 API — 사용자 등록 폼에 필요한데 없음 |

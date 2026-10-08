@@ -47,7 +47,8 @@ const resolveMe = (token: string | null, siteName: string | null): UseMeResult =
 
   return {
     data: {
-      userSeq: claims.userSeq,
+      // 클레임은 문자열('13'), 우리 모델은 number(B4) — 변환은 이 한 자리에서만.
+      userSeq: Number(claims.userSeq),
       name: claims.userName,
       role,
       // 🔴 사업장명은 클레임이 아니라 **선택 결과**에서 온다(spec 021). 서버는 고른

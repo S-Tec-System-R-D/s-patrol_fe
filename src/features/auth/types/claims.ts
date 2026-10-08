@@ -23,7 +23,13 @@ export const MS_ROLE_CLAIM =
  * 서버가 환경별로 달리 줄 수 있고, 이 타입의 역할은 식별이 아니라 읽기다.
  */
 export interface AccessTokenClaims {
-  userSeq: number
+  /**
+   * 🔴 **문자열이다.** 실측(2026-10-08): `'13'`·`'1'`. `CLAUDE.md` B4 "ID는 number" 는
+   * 우리 모델(`MeDto.userSeq`)에 적용되고, **클레임 타입은 실측 그대로 선언**한다
+   * ("서버 응답이 메인"). 변환은 어댑터 한 자리(`useMe`)에서만 한다 — B4 어댑터 조건 ③
+   * "타입·포맷 차이". 022 Phase 8 R1 에서 `number` 로 선언돼 있던 것을 바로잡았다.
+   */
+  userSeq: string
   loginId: string
   userName: string
   /** 하이픈 없는 32자 hex */

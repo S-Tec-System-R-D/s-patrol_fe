@@ -14,7 +14,7 @@ describe('useMe', () => {
   })
 
   it('유효한 토큰에서 MeDto를 반환한다', () => {
-    setAccessToken(makeAccessToken({ userSeq: 42, userName: '김현장' }))
+    setAccessToken(makeAccessToken({ userSeq: '42', userName: '김현장' }))
 
     const { result } = renderHook(() => useMe())
 
