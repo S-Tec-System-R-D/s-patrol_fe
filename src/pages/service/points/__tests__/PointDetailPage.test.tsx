@@ -66,11 +66,22 @@ describe('PointDetailPage — 진입', () => {
     expect(await screen.findByText('정문 입구')).toBeInTheDocument()
   })
 
-  it('목록으로 돌아가는 링크가 있다', async () => {
+  it('🔴 브레드크럼이 "어느 화면인가", 제목이 "어느 지점인가" 를 답한다', async () => {
     renderAt('/points/1')
 
     await screen.findByText('정문 입구')
-    expect(screen.getByRole('link', { name: '목록으로' })).toBeInTheDocument()
+    // 브레드크럼 — 첫 조각이 목록 링크를 겸한다
+    expect(screen.getByRole('link', { name: '코스/지점' })).toBeInTheDocument()
+    expect(screen.getByText('지점 상세')).toBeInTheDocument()
+    // 제목 = 지점명
+    expect(screen.getByRole('heading', { name: '정문 입구' })).toBeInTheDocument()
+  })
+
+  it('제목 옆에 사용 뱃지가 있다', async () => {
+    renderAt('/points/1')
+
+    await screen.findByText('정문 입구')
+    expect(screen.getByText('사용')).toBeInTheDocument()
   })
 
   it('소속 코스·인증수단 섹션을 그린다', async () => {
@@ -95,7 +106,7 @@ describe('PointDetailPage — 찾을 수 없는 지점', () => {
 
     expect(await screen.findByText('지점을 찾을 수 없습니다')).toBeInTheDocument()
     // 🔴 목록으로 돌아갈 수단이 남아 있어야 한다 — 막다른 길이 되면 안 된다
-    expect(screen.getByRole('link', { name: '목록으로' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '코스/지점' })).toBeInTheDocument()
   })
 
   it('🔴 숫자가 아닌 경로는 조회조차 하지 않는다', async () => {
@@ -156,5 +167,57 @@ describe('PointDetailPage — 삭제 후 이동', () => {
 
     expect(requested).toBe(false)
     expect(screen.queryByText('LIST_ROUTE')).not.toBeInTheDocument()
+  })
+})
+
+describe('PointDetailPage — 수정 모달', () => {
+  const UPDATE_POINT_PATH = '/api/v1/Point/W/sign/UpdatePoint'
+
+  it('수정 모달은 상세 값이 채워진 폼으로 열린다', async () => {
+    const user = userEvent.setup()
+    renderAt('/points/1')
+    await screen.findByText('정문 입구')
+
+    await user.click(screen.getByRole('button', { name: '수정' }))
+
+    expect(await screen.findByPlaceholderText('지점명을 입력해주세요')).toHaveValue('정문 입구')
+  })
+
+  it('저장이 성공하면 모달이 닫힌다', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.patch(UPDATE_POINT_PATH, () =>
+        HttpResponse.json({ message: '요청이 정상 처리되었습니다.', data: true, code: 200 })
+      )
+    )
+    renderAt('/points/1')
+    await screen.findByText('정문 입구')
+
+    await user.click(screen.getByRole('button', { name: '수정' }))
+    await user.click(await screen.findByRole('button', { name: '저장' }))
+
+    await waitFor(() =>
+      expect(screen.queryByPlaceholderText('지점명을 입력해주세요')).not.toBeInTheDocument()
+    )
+  })
+
+  it('🔴 저장이 실패하면 모달이 열린 채 남는다 — 입력값이 사라지면 안 된다', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.patch(UPDATE_POINT_PATH, () =>
+        HttpResponse.json({ message: '서버 오류입니다.', data: null, code: 500 }, { status: 500 })
+      )
+    )
+    renderAt('/points/1')
+    await screen.findByText('정문 입구')
+
+    await user.click(screen.getByRole('button', { name: '수정' }))
+    const name = await screen.findByPlaceholderText('지점명을 입력해주세요')
+    await user.clear(name)
+    await user.type(name, '정문 입구(수정)')
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: '저장' })).toBeEnabled())
+    expect(screen.getByPlaceholderText('지점명을 입력해주세요')).toHaveValue('정문 입구(수정)')
   })
 })

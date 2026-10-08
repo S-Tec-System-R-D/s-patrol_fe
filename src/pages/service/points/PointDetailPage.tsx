@@ -1,60 +1,137 @@
-import { ArrowLeftIcon, MapPinIcon, TriangleAlertIcon } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { ChevronRightIcon, MapPinIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
+import AppAlertDialog from '@/components/AppAlertDialog'
+import AppBadge from '@/components/app/AppBadge'
+import AppButton from '@/components/app/AppButton'
+import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
 import AppPageHeader from '@/components/app/AppPageHeader'
+import { deletePoint } from '@/features/points/api/deletePoint'
 import PointDetail from '@/features/points/components/detail/PointDetail'
+import EditPointForm from '@/features/points/form/EditPointForm'
 import { usePointDetail } from '@/features/points/hooks/usePointDetail'
+import { pointKeys } from '@/features/points/queryKeys'
 import { paths } from '@/router/paths'
 
 /**
- * 순찰지점 상세 — **라우트로 분리된 페이지** (`spec 027` Phase 1).
+ * 순찰지점 상세 — **라우트로 분리된 페이지** (`spec 027`).
  *
  * 027 전까지 상세는 `/points` 안의 우측 패널이었고 선택 상태가 `useState` 였다 →
  * **새로고침하면 날아가고** 딥링크·뒤로가기가 없었다. 이제 `pointSeq` 가 URL 에 있다.
  *
- * ⚠️ **본 Phase 는 최소 골격이다.** 기존 `PointDetail` 카드를 그대로 얹었고, 헤더·액션
- * 풋터·섹션 재배치는 Phase 2(T312~T315)에서 한다. 지금 함께 바꾸면 "라우트 전환" 과
- * "UI 재설계" 가 한 커밋에 섞여 무엇이 깨졌는지 분리할 수 없다.
+ * 🔴 **브레드크럼 + 제목을 둘 다 둔다**(사용자 결정 2026-10-08). 질문이 둘이기 때문이다:
+ * - **브레드크럼**(`코스/지점 › 지점 상세`) = "여기가 **어느 화면**인가"
+ * - **제목**(지점명 + 사용 뱃지) = "**어느 지점**인가"
+ *
+ * 하나만 두면 반쪽이다 — 브레드크럼만이면 어느 지점인지 카드를 읽어야 하고, 제목만이면
+ * `정문 입구` 가 **지점인지 코스인지** 알 수 없다(둘 다 이름만으로는 구분되지 않는다).
+ * 브레드크럼의 첫 조각이 목록 링크라 **`← 목록으로` 를 흡수**하므로 요소는 늘지 않는다.
+ *
+ * 🔴 **액션(수정·삭제)은 헤더 우측**이다. `patterns.md` §11(액션 풋터)은 **우측 패널**을
+ * 전제한 패턴이고, 전체 폭 페이지에서는 본문이 길면 **스크롤 아래로 밀려 보이지 않는다**.
  *
  * 🔴 **없는 `pointSeq` 를 `/404` 로 보내지 않는다**(spec §4). 서버는 400 + 래퍼
  * (`"잘못된 요청입니다."`)를 주는데, 이는 "경로가 없다" 가 아니라 **삭제됐거나 다른
  * 사업장의 지점**이라는 뜻이다. 목록으로 돌아갈 수단과 함께 안내한다.
  */
+
+/** `코스/지점 › 지점 상세` — 첫 조각이 목록 링크를 겸한다 */
+const Breadcrumb = () => (
+  <nav aria-label="현재 위치" className="flex items-center gap-1 text-caption">
+    <Link to={paths.service.points} className="text-muted-foreground hover:text-foreground">
+      코스/지점
+    </Link>
+    <ChevronRightIcon size={13} className="text-muted-foreground/60" />
+    <span className="font-medium text-foreground">지점 상세</span>
+  </nav>
+)
+
 const PointDetailPage = () => {
   const { pointSeq: pointSeqParam } = useParams<{ pointSeq: string }>()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [editOpen, setEditOpen] = useState(false)
 
   // URL 세그먼트는 문자열이다. 숫자가 아니면 조회하지 않는다(`/points/abc`).
   const parsed = Number(pointSeqParam)
   const pointSeq = Number.isInteger(parsed) && parsed > 0 ? parsed : null
 
   const detail = usePointDetail(pointSeq)
+  const point = detail.data
+
+  const removal = useMutation({
+    mutationFn: deletePoint,
+    onSuccess: async () => {
+      // 🔴 이동을 **무효화보다 먼저** 한다. 목록이 먼저 갱신되면 사라진 지점의 상세를
+      // 다시 조회해 "찾을 수 없음" 이 한 번 깜빡인다.
+      // 🔴 실패 시에는 호출되지 않으므로 **상세에 머문다** — 거부인데 화면이 바뀌면
+      // 사용자는 삭제된 것으로 오해한다(spec 규칙 13).
+      navigate(paths.service.points, { replace: true })
+      await queryClient.invalidateQueries({ queryKey: pointKeys.lists })
+    },
+  })
 
   return (
     <div className="flex flex-col gap-4 p-8">
-      <Link
-        to={paths.service.points}
-        className="flex w-fit items-center gap-1.5 text-caption text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeftIcon size={14} />
-        목록으로
-      </Link>
+      <Breadcrumb />
 
-      {detail.data ? (
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
-          {/* 🔴 삭제 성공 시 목록으로 돌아간다 — 상세가 페이지라 그 자리에 머물 수 없다.
-              실패 시에는 호출되지 않으므로 화면이 그대로 유지된다(spec 규칙 13). */}
-          <PointDetail
-            point={detail.data}
-            onDeleted={() => navigate(paths.service.points, { replace: true })}
+      {point ? (
+        <>
+          <AppPageHeader
+            title={point.name}
+            action={
+              <div className="flex items-center gap-2">
+                <AppDialog
+                  open={editOpen}
+                  onOpenChange={setEditOpen}
+                  title="지점 수정"
+                  description="지점 정보를 수정할 수 있습니다."
+                  trigger={
+                    <AppButton icon={SquarePenIcon} variant="sub">
+                      수정
+                    </AppButton>
+                  }
+                >
+                  {/* 🔴 성공해야 닫는다 — 먼저 닫으면 실패 시 입력값이 사라진다(§4) */}
+                  <EditPointForm point={point} onSuccess={() => setEditOpen(false)} />
+                </AppDialog>
+
+                {/* 삭제 확인 모달은 확인 즉시 닫는다: 잃을 입력이 없고 거부 사유는
+                    전역 토스트가 전달한다. 닫기 제어는 계약만 늘린다(A6) */}
+                <AppAlertDialog
+                  size="sm"
+                  icon={Trash2Icon}
+                  variant="destructive"
+                  title="지점을 삭제하시겠습니까?"
+                  onAction={() => removal.mutate(point.pointSeq)}
+                >
+                  <AppButton icon={Trash2Icon} variant="destructive" disabled={removal.isPending}>
+                    삭제
+                  </AppButton>
+                </AppAlertDialog>
+              </div>
+            }
           />
-        </div>
+
+          {/* 사용여부는 제목 옆 뱃지로 — 목록 테이블과 같은 표현이다 */}
+          <div className="-mt-2">
+            {point.useYn ? (
+              <AppBadge variant="success">사용</AppBadge>
+            ) : (
+              <AppBadge variant="muted">미사용</AppBadge>
+            )}
+          </div>
+
+          <PointDetail point={point} />
+        </>
       ) : detail.isPending && pointSeq !== null ? (
         <AppPageHeader title="지점 정보를 불러오는 중" subtitle="잠시만 기다려주세요" />
       ) : (
         <AppEmpty
-          icon={pointSeq === null ? MapPinIcon : TriangleAlertIcon}
+          icon={MapPinIcon}
           title="지점을 찾을 수 없습니다"
           description={
             pointSeq === null
