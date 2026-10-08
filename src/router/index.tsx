@@ -6,6 +6,7 @@ import AuthGuard from './guards/AuthGuard'
 import ServiceLayout from '@/components/layout/ServiceLayout'
 import AdminLayout from '@/components/layout/AdminLayout'
 import PointsPage from '@/pages/service/points/PointsPage'
+import PointDetailPage from '@/pages/service/points/PointDetailPage'
 import ZonesPage from '@/pages/service/zones/ZonesPage'
 import PatrolZonesPage from '@/pages/service/patrol/zones/PatrolZonesPage'
 import PatrolPointsPage from '@/pages/service/patrol/points/PatrolPointsPage'
@@ -64,6 +65,11 @@ export const router = createBrowserRouter([
           {
             path: paths.service.points,
             element: <PointsPage />,
+            errorElement: <PageErrorFallback />,
+          },
+          {
+            path: pathPatterns.pointDetail,
+            element: <PointDetailPage />,
             errorElement: <PageErrorFallback />,
           },
           {

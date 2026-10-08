@@ -42,13 +42,13 @@
 
 > **독립 테스트 기준**: `/points`가 전체 폭 테이블이고, 행을 누르면 `/points/:pointSeq`로 이동해 상세가 뜬다. **새로고침해도 그 상세가 유지된다.** 좌/우 2단이 남아 있지 않다. `npm run test` green.
 
-- [ ] T305 라우트 추가 in src/router/paths.ts · src/router/index.tsx — `pointDetail(pointSeq)` 빌더 + `pathPatterns.pointDetail = '/points/:pointSeq'`. 🔴 **`noticeDetail`(`paths.ts:13,52`)과 같은 모양**으로. 새 관례를 만들지 않는다(규칙 1)
-- [ ] T306 `CourseTabs` 활성 판정 수정 in src/features/zone/components/CourseTabs.tsx — 🔴 현재 `end` 때문에 **`/points/49`에서 "지점" 탭이 꺼진다**(규칙 14). `end` 제거 또는 `startsWith` 판정. ⚠️ `/zones`도 같은 문제를 갖게 되므로 **두 탭 모두** 확인
-- [ ] T307 [US2] 상세 페이지 **최소 골격** in src/pages/service/points/PointDetailPage.tsx — `useParams`로 `pointSeq` → `usePointDetail`. 기존 `PointDetail` 카드를 **그대로 얹는다**(본격 UI는 Phase 2). 없는 `pointSeq`·조회 실패는 **안내 + 목록 복귀 수단**(🔴 `/404`로 보내지 않는다 — §4)
-- [ ] T308 [US1] 테이블 컬럼 팩토리 신설 in src/features/points/components/PointColumn.tsx — 7컬럼(지점명·설명·인증수단·TAG ID·소속 코스·최근 순찰·사용여부). `patrol-points/components/PointColumn.tsx` 모양을 따른다. 🔴 **미사용이면 행 톤다운 + 사용여부 뱃지**(규칙 12), 미실측 인증수단 코드면 뱃지 숨김(022 승계)
-- [ ] T309 [US1] 목록 페이지 전환 in src/pages/service/points/PointsPage.tsx — `AppTable` + `hidePagination` + 외부 `AppPagination` 전체 부착(🔴 **OQ-022-E 해소**). `onRowClick` → `navigate(paths.service.pointDetail(seq))`. 🔴 **`PointList.tsx`·`PointListCard.tsx` 제거** + 우측 패널·첫 행 자동 선택 파생 제거
-- [ ] T310 [US1] 깨진 테스트 이설 in src/features/points/components/\_\_tests\_\_/PointColumn.test.tsx · src/pages/service/points/\_\_tests\_\_/PointsPage.test.tsx — 🔴 **`PointListCard.test.tsx` 11건을 버리지 않고 컬럼 테스트로 옮긴다**(제약 2 — 미사용 톤다운·뱃지 숨김·B-6 폴백). `PointsPage.test.tsx`는 "행 클릭 → 라우트 이동"·"빈 목록"·"조회 실패"로 재작성
-- [ ] T311 [US1] `PointTopNav` 재배치 in src/features/points/components/PointTopNav.tsx — 추가 버튼은 유지하되 **검색 input은 Phase 3에서 필터 바로 옮긴다.** 지금은 **자리만 정리**하고 비와이어드 상태를 유지한다(A3 — 한 번에 바꾸지 않는다)
+- [x] T305 라우트 추가 in src/router/paths.ts · src/router/index.tsx — `pointDetail(pointSeq)` 빌더 + `pathPatterns.pointDetail = '/points/:pointSeq'`. 🔴 **`noticeDetail`(`paths.ts:13,52`)과 같은 모양**으로. 새 관례를 만들지 않는다(규칙 1)
+- [x] T306 `CourseTabs` 활성 판정 수정 in src/features/zone/components/CourseTabs.tsx — 🔴 현재 `end` 때문에 **`/points/49`에서 "지점" 탭이 꺼진다**(규칙 14). `end` 제거 또는 `startsWith` 판정. ⚠️ `/zones`도 같은 문제를 갖게 되므로 **두 탭 모두** 확인
+- [x] T307 [US2] 상세 페이지 **최소 골격** in src/pages/service/points/PointDetailPage.tsx — `useParams`로 `pointSeq` → `usePointDetail`. 기존 `PointDetail` 카드를 **그대로 얹는다**(본격 UI는 Phase 2). 없는 `pointSeq`·조회 실패는 **안내 + 목록 복귀 수단**(🔴 `/404`로 보내지 않는다 — §4)
+- [x] T308 [US1] 테이블 컬럼 팩토리 신설 in src/features/points/components/PointColumn.tsx — 7컬럼(지점명·설명·인증수단·TAG ID·소속 코스·최근 순찰·사용여부). `patrol-points/components/PointColumn.tsx` 모양을 따른다. 🔴 **미사용이면 행 톤다운 + 사용여부 뱃지**(규칙 12), 미실측 인증수단 코드면 뱃지 숨김(022 승계)
+- [x] T309 [US1] 목록 페이지 전환 in src/pages/service/points/PointsPage.tsx — `AppTable` + `hidePagination` + 외부 `AppPagination` 전체 부착(🔴 **OQ-022-E 해소**). `onRowClick` → `navigate(paths.service.pointDetail(seq))`. 🔴 **`PointList.tsx`·`PointListCard.tsx` 제거** + 우측 패널·첫 행 자동 선택 파생 제거
+- [x] T310 [US1] 깨진 테스트 이설 in src/features/points/components/\_\_tests\_\_/PointColumn.test.tsx · src/pages/service/points/\_\_tests\_\_/PointsPage.test.tsx — 🔴 **`PointListCard.test.tsx` 11건을 버리지 않고 컬럼 테스트로 옮긴다**(제약 2 — 미사용 톤다운·뱃지 숨김·B-6 폴백). `PointsPage.test.tsx`는 "행 클릭 → 라우트 이동"·"빈 목록"·"조회 실패"로 재작성
+- [x] T311 [US1] `PointTopNav` 재배치 in src/features/points/components/PointTopNav.tsx — 추가 버튼은 유지하되 **검색 input은 Phase 3에서 필터 바로 옮긴다.** 지금은 **자리만 정리**하고 비와이어드 상태를 유지한다(A3 — 한 번에 바꾸지 않는다)
 
 ## Phase 2: US2 — 상세 페이지 UI
 
@@ -127,3 +127,17 @@ Phase 1 (라우트 + 목록 테이블 — 🔴 한 묶음)
 ## 진행 기록
 
 > WF-3 각 Phase 완료 시 추가한다.
+
+### Phase 1 완료 — 라우트 + 목록 테이블 전환 (2026-10-08)
+
+- T305~T311 완료. 신설 3파일(`PointDetailPage.tsx` · `PointColumn.tsx` · `PointColumn.test.tsx`) + **제거 3파일**(`PointList.tsx` · `PointListCard.tsx` · `PointListCard.test.tsx`) + 기존 5파일 수정
+- `npm run verify` **0 errors** + `npm run test` **49 files / 397 tests green**(395 → **+2**)
+- ✅ **깨질 테스트 사전 계수가 정확히 맞았다** — `PointListCard` 11건 전부(파일째 로드 실패), `PointsPage` 9건 중 **5건**. `AuthMethodDisplay` 3건·폼 20건은 **무변경**(제약 3 준수 효과)
+- 🔴 **테스트를 이설했지 버리지 않았다.** `PointColumn.test.tsx` **14건**(11 → +3) — 022가 고정한 계약 3개(미사용 구분·뱃지 숨김·B-6 폴백)를 테이블 기준으로 다시 묶고, 날짜 포맷·깨진 날짜·`'Unknown'` 폴백을 더했다. 카드 고유였던 번호 뱃지 강조·`selected` prop 2건은 **선택 개념이 사라져** 따라오지 않았다
+- 🔴 **계획 외 결함 1건 — `pointColumns()` 를 렌더마다 호출하면 행이 통째로 리마운트된다.** `cell` 함수의 참조가 매번 바뀌고 `flexRender` 가 그것을 **새 컴포넌트 타입**으로 보아 React 가 언마운트→리마운트한다. 화면은 같아 보이지만 DOM 노드가 교체돼 ① 포커스·선택이 날아가고 ② 재조회마다 깜빡인다. **테스트가 "찾은 노드가 document 에서 분리됨" 으로 잡아냈다** — `useMemo` 로 해소. ⚠️ **`/patrol/points` 도 같은 모양**(`pointColumns(setSelectedRecord)` 인라인)이라 024에서 확인 대상
+- **미사용 지점 표시가 뱃지로 승격됐다.** 340px 제약이 사라져 "사용/미사용" 컬럼이 들어갔고, 022에서 넣은 `sr-only` 는 제거했다 — 뱃지가 `design-system.md` §3("색만으로 상태 전달 금지")을 정식으로 충족하므로 중복 낭독이 된다
+- **022의 파생 2개가 함께 사라졌다** — "첫 행 자동 선택" 과 "선택이 목록에서 빠지면 비우기". 선택 개념이 URL 로 옮겨가 목록은 목록만 그린다
+- `CourseTabs` 의 `end` 를 뺐다. 🔴 **`/zones` 도 `spec 023` 에서 같은 구조가 되므로 둘 다 미리 맞췄다**
+- `PointTopNav` 는 **자리만 정리**했다(검색창 고정 폭 + 추가 버튼 우측). 와이어링은 Phase 3 — 지금 옮기면 필터 바가 들어올 때 또 옮긴다(A3)
+- ⚠️ **상세 페이지는 최소 골격이다**(기존 `PointDetail` 카드를 그대로 얹음). 헤더·액션 풋터·섹션 재배치는 Phase 2
+- 다음: Phase 2(T312~T316) — 상세 페이지 UI. 🔴 T312~T315가 **한 파일을 만져 순차**

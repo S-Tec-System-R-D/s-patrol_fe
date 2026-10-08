@@ -11,6 +11,8 @@
 
 const adminLocationDetail = (id: string) => `/admin/locations/${id}`
 const noticeDetail = (id: string) => `/notice/${id}`
+/** 🔴 `pointSeq` 는 number 다(`CLAUDE.md` B4 "ID는 number") — 공지의 `id: string` 과 다르다 */
+const pointDetail = (pointSeq: number) => `/points/${pointSeq}`
 
 export const paths = {
   // 공개 영역
@@ -28,6 +30,7 @@ export const paths = {
     patrolPoints: '/patrol/points',
     zones: '/zones',
     points: '/points',
+    pointDetail: pointDetail,
     users: '/users',
     deployments: '/deployments',
     notice: '/notice',
@@ -50,6 +53,7 @@ export const paths = {
 export const pathPatterns = {
   adminLocationDetail: '/admin/locations/:id',
   noticeDetail: '/notice/:id',
+  pointDetail: '/points/:pointSeq',
 } as const
 
 /**
