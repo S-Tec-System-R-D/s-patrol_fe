@@ -77,6 +77,38 @@ describe('PointListCard', () => {
     expect(screen.getByText('QR')).toBeInTheDocument()
   })
 
+  /**
+   * 🔴 미사용 지점 구분 — 실측(Phase 8)에서 **서버가 목록에서 제외하지 않는 것**이
+   * 확인됐으므로 구분은 프론트 책임이다(OQ-022-G).
+   */
+  describe('미사용(useYn: false) 지점', () => {
+    it('이름을 톤다운한다', () => {
+      const { container } = render(
+        <PointListCard point={row({ useYn: false })} idx={1} selected={false} onClick={vi.fn()} />
+      )
+      expect(container.querySelector('.text-muted-foreground')).not.toBeNull()
+    })
+
+    it('사용 지점은 톤다운하지 않는다', () => {
+      render(<PointListCard point={row({ useYn: true })} idx={1} selected={false} onClick={vi.fn()} />)
+      // 사용 지점에는 미사용 표시가 없다
+      expect(screen.queryByText(/미사용/)).not.toBeInTheDocument()
+    })
+
+    it('🔴 색·명도만으로 전달하지 않는다 — 접근 가능한 이름에 "미사용"이 들어간다', () => {
+      // design-system.md §3 "색만으로 상태 전달 금지". 톤다운만 하면 스크린리더에
+      // 아무 정보도 가지 않는다.
+      render(<PointListCard point={row({ useYn: false })} idx={1} selected={false} onClick={vi.fn()} />)
+      expect(screen.getByRole('button')).toHaveAccessibleName(/미사용/)
+    })
+
+    it('인증수단 뱃지도 함께 톤다운한다 (라벨은 유지)', () => {
+      render(<PointListCard point={row({ useYn: false })} idx={1} selected={false} onClick={vi.fn()} />)
+      // 라벨 자체는 숨기지 않는다 — 인증수단 정보는 여전히 필요하다
+      expect(screen.getByText('QR')).toBeInTheDocument()
+    })
+  })
+
   it('미실측 코드 + 표시명 없음이면 뱃지를 숨긴다 — 없는 라벨을 만들지 않는다', () => {
     render(
       <PointListCard
