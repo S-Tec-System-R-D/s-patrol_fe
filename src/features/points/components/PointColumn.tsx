@@ -10,8 +10,13 @@ import type { PointRow } from '../types'
  * 순찰지점 목록 테이블 컬럼 (`spec 027` Phase 1).
  *
  * 027 전까지 목록은 좌측 340px 의 `PointListCard` 였다. 전체 폭 테이블이 되면서
- * **폭 제약이 사라져** 022 에서 못 넣은 것들이 들어온다 — 설명·TAG ID·소속 코스·
- * 최근 순찰, 그리고 **사용여부 뱃지**.
+ * **폭 제약이 사라져** 022 에서 못 넣은 것들이 들어온다 — 소속 코스·최근 순찰, 그리고
+ * **사용여부 뱃지**.
+ *
+ * 🔴 **설명(`memo`)과 TAG ID 는 넣지 않는다**(사용자 결정 2026-10-08). 목록에서 지점을
+ * **고르는 데 쓰이지 않는 값**이고, 둘 다 길어서 폭만 먹는다. 상세 페이지에는 있다 —
+ * 목록은 식별·상태만 보여주고 내용은 상세가 맡는다. 부수 효과로 컬럼이 5개로 줄어
+ * 분할화면 여유가 생겼다(OQ-027-D).
  *
  * 🔴 **022 에서 고정한 계약 3개를 여기서도 지킨다.** `PointListCard` 와 함께 사라지는
  * 것이 아니라 **이 파일로 옮겨온 것**이다(`tasks.md` 제약 2):
@@ -49,15 +54,6 @@ export const pointColumns = (): ColumnDef<PointRow>[] => [
     ),
   },
   {
-    accessorKey: 'memo',
-    header: '설명',
-    cell: ({ row }) => (
-      <span className={`text-muted-foreground ${dim(row.original.useYn)}`}>
-        {row.original.memo?.trim() || '-'}
-      </span>
-    ),
-  },
-  {
     id: 'authMethod',
     header: '인증수단',
     cell: ({ row }) => {
@@ -78,16 +74,6 @@ export const pointColumns = (): ColumnDef<PointRow>[] => [
 
       return <AppBadge variant={variant}>{label}</AppBadge>
     },
-  },
-  {
-    accessorKey: 'nfcTagId',
-    header: 'TAG ID',
-    cell: ({ row }) => (
-      // ⚠️ NFC 인데 `nfcTagId` 가 null 인 실 데이터가 있다(B-13). 서버가 강제하지 않는다.
-      <span className={`font-mono text-caption text-muted-foreground ${dim(row.original.useYn)}`}>
-        {row.original.nfcTagId || '-'}
-      </span>
-    ),
   },
   {
     accessorKey: 'usedCount',

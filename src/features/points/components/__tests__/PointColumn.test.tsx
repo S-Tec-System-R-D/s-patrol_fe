@@ -46,17 +46,19 @@ describe('pointColumns — 기본 렌더', () => {
     expect(screen.getByText('QR')).toBeInTheDocument()
   })
 
-  it('NFC 지점은 NFC 뱃지와 TAG ID를 그린다', () => {
+  it('NFC 지점은 NFC 뱃지를 그린다', () => {
     renderTable([
       row({ pointSeq: 2, pointName: '로비 1층', authMethod: 10, authMethodName: 'NFC', nfcTagId: '04A1B2C3D4E5F6' }),
     ])
     expect(screen.getByText('NFC')).toBeInTheDocument()
-    expect(screen.getByText('04A1B2C3D4E5F6')).toBeInTheDocument()
   })
 
-  it('설명·TAG ID가 비면 하이픈으로 채운다', () => {
-    renderTable([row({ memo: null, nfcTagId: null })])
-    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(2)
+  it('🔴 설명과 TAG ID는 목록에 나오지 않는다 — 상세 전용(사용자 결정 2026-10-08)', () => {
+    renderTable([row({ memo: '정문 CCTV 앞', nfcTagId: '04A1B2C3D4E5F6' })])
+    expect(screen.queryByText('설명')).not.toBeInTheDocument()
+    expect(screen.queryByText('TAG ID')).not.toBeInTheDocument()
+    expect(screen.queryByText('정문 CCTV 앞')).not.toBeInTheDocument()
+    expect(screen.queryByText('04A1B2C3D4E5F6')).not.toBeInTheDocument()
   })
 
   it('최근 순찰이 없으면 "기록 없음"', () => {

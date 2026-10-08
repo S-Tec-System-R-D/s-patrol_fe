@@ -45,7 +45,7 @@
 - [x] T305 라우트 추가 in src/router/paths.ts · src/router/index.tsx — `pointDetail(pointSeq)` 빌더 + `pathPatterns.pointDetail = '/points/:pointSeq'`. 🔴 **`noticeDetail`(`paths.ts:13,52`)과 같은 모양**으로. 새 관례를 만들지 않는다(규칙 1)
 - [x] T306 `CourseTabs` 활성 판정 수정 in src/features/zone/components/CourseTabs.tsx — 🔴 현재 `end` 때문에 **`/points/49`에서 "지점" 탭이 꺼진다**(규칙 14). `end` 제거 또는 `startsWith` 판정. ⚠️ `/zones`도 같은 문제를 갖게 되므로 **두 탭 모두** 확인
 - [x] T307 [US2] 상세 페이지 **최소 골격** in src/pages/service/points/PointDetailPage.tsx — `useParams`로 `pointSeq` → `usePointDetail`. 기존 `PointDetail` 카드를 **그대로 얹는다**(본격 UI는 Phase 2). 없는 `pointSeq`·조회 실패는 **안내 + 목록 복귀 수단**(🔴 `/404`로 보내지 않는다 — §4)
-- [x] T308 [US1] 테이블 컬럼 팩토리 신설 in src/features/points/components/PointColumn.tsx — 7컬럼(지점명·설명·인증수단·TAG ID·소속 코스·최근 순찰·사용여부). `patrol-points/components/PointColumn.tsx` 모양을 따른다. 🔴 **미사용이면 행 톤다운 + 사용여부 뱃지**(규칙 12), 미실측 인증수단 코드면 뱃지 숨김(022 승계)
+- [x] T308 [US1] 테이블 컬럼 팩토리 신설 in src/features/points/components/PointColumn.tsx — **5컬럼**(지점명·인증수단·소속 코스·최근 순찰·사용여부). 🔴 설명·TAG ID 는 **상세 전용**(사용자 결정 2026-10-08 — 고르는 데 쓰이지 않고 폭만 먹는다). `patrol-points/components/PointColumn.tsx` 모양을 따른다. 🔴 **미사용이면 행 톤다운 + 사용여부 뱃지**(규칙 12), 미실측 인증수단 코드면 뱃지 숨김(022 승계)
 - [x] T309 [US1] 목록 페이지 전환 in src/pages/service/points/PointsPage.tsx — `AppTable` + `hidePagination` + 외부 `AppPagination` 전체 부착(🔴 **OQ-022-E 해소**). `onRowClick` → `navigate(paths.service.pointDetail(seq))`. 🔴 **`PointList.tsx`·`PointListCard.tsx` 제거** + 우측 패널·첫 행 자동 선택 파생 제거
 - [x] T310 [US1] 깨진 테스트 이설 in src/features/points/components/\_\_tests\_\_/PointColumn.test.tsx · src/pages/service/points/\_\_tests\_\_/PointsPage.test.tsx — 🔴 **`PointListCard.test.tsx` 11건을 버리지 않고 컬럼 테스트로 옮긴다**(제약 2 — 미사용 톤다운·뱃지 숨김·B-6 폴백). `PointsPage.test.tsx`는 "행 클릭 → 라우트 이동"·"빈 목록"·"조회 실패"로 재작성
 - [x] T311 [US1] `PointTopNav` 재배치 in src/features/points/components/PointTopNav.tsx — 추가 버튼은 유지하되 **검색 input은 Phase 3에서 필터 바로 옮긴다.** 지금은 **자리만 정리**하고 비와이어드 상태를 유지한다(A3 — 한 번에 바꾸지 않는다)
@@ -140,4 +140,5 @@ Phase 1 (라우트 + 목록 테이블 — 🔴 한 묶음)
 - `CourseTabs` 의 `end` 를 뺐다. 🔴 **`/zones` 도 `spec 023` 에서 같은 구조가 되므로 둘 다 미리 맞췄다**
 - `PointTopNav` 는 **자리만 정리**했다(검색창 고정 폭 + 추가 버튼 우측). 와이어링은 Phase 3 — 지금 옮기면 필터 바가 들어올 때 또 옮긴다(A3)
 - ⚠️ **상세 페이지는 최소 골격이다**(기존 `PointDetail` 카드를 그대로 얹음). 헤더·액션 풋터·섹션 재배치는 Phase 2
+- 🔴 **Phase 1 종료 후 컬럼 2개를 뺐다**(사용자 결정 2026-10-08) — 설명·TAG ID 는 목록에서 지점을 고르는 데 쓰이지 않고 둘 다 길어 폭만 먹는다. **상세 전용**으로 돌렸고 테이블은 5컬럼이 됐다. "목록에 나오지 않는다" 를 테스트로 고정했다(되돌아오는 것을 막는다). 부수 효과로 분할화면 여유가 생겨 OQ-027-D 가 쉬워졌다
 - 다음: Phase 2(T312~T316) — 상세 페이지 UI. 🔴 T312~T315가 **한 파일을 만져 순차**
