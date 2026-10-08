@@ -65,11 +65,9 @@ const PointDetail = ({ point }: { point: PointDetailData }) => {
           description="근무자가 이 지점에서 순찰을 인증하는 방식입니다."
         >
           <AuthMethodDisplay value={method} />
+          {/* TAG ID 도 같은 행 형식으로 — 카드마다 다른 모양을 쓰지 않는다 */}
           {method === 'NFC' && point.nfcTagId && (
-            <div className="flex items-center justify-between rounded-sm bg-muted px-3 py-2 text-caption">
-              <span className="font-medium text-muted-foreground">TAG ID</span>
-              <span className="font-mono">{point.nfcTagId}</span>
-            </div>
+            <DetailRow label="TAG ID" value={point.nfcTagId} />
           )}
           {/* 9·10 외 코드면 세그먼트 둘 다 비강조라 설명이 필요하다 */}
           {method === null && (
