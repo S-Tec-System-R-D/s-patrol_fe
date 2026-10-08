@@ -99,23 +99,44 @@
 - [x] T269 [US4] 삭제 거부 처리 in src/features/points/components/detail/PointDetail.tsx — 서버 거부 시 사유 노출 + **목록 유지**. 전역 토스트와 중복되지 않게 한다(규칙 3)
 - [x] T270 [P] vitest in src/features/points/form/\_\_tests\_\_/EditPointForm.test.tsx · src/features/points/components/detail/\_\_tests\_\_/PointDetail.test.tsx — 초기값 주입 / PATCH 바디(`pointSeq`·`reissueQrYn: false`) / 모달 열린 뒤 다른 지점 선택해도 `pointSeq` 불변 / 삭제 성공 시 선택 해제 / 삭제 거부 시 목록 유지
 
-## Phase 6: US5 — 검색·필터·페이지 이동 (전부 서버 위임)
+## Phase 6: US5 — 검색·필터·페이지 이동 (전부 서버 위임) — ⚠️ **`spec 027` 로 이월 (2026-10-08)**
+
+> 🔴 **022 에서 하지 않는다.** 사용자 결정 2026-10-08: `/points` 를 좌/우 마스터-디테일에서
+> **목록 페이지 + 상세 페이지**로 재구성하기로 했고(`spec 027`), 필터·검색·페이지 이동은
+> **그 새 구조 안에서** 짠다.
+>
+> **이유**: ① 좌측이 340px 이라 필터 2개 + 페이지 이동이 들어가면 레이아웃이 깨진다 —
+> **OQ-022-E 가 이미 이 이유로 배치 확정을 미뤘다**(2026-10-07) ② 지금 짜면 재구성에서
+> T271~T275 를 **두 번 짠다** ③ 분할화면 대응(`CLAUDE.md` B4)에서 마스터-디테일이 가장
+> 먼저 깨진다
+>
+> ✅ **버려지는 지식은 없다.** Phase 8 R2 에서 **필터 3종이 서버에서 실제로 걸리는 것을
+> 실측**했고(`authMethod`·`useYn`·`searchKey`), `lib/pointListParams.ts` 의 파라미터 변환과
+> `queryKey` 규약은 그대로 쓰인다. 아래 태스크는 **027 에서 하위 페이즈로 재배치**한다.
+
 
 > **독립 테스트 기준**: 검색어·인증수단·사용여부·페이지가 URL에 보존되고 **서버 파라미터로** 나간다. 🔴 **클라이언트 필터 함수가 0건**이다(규칙 8).
 
-- [ ] T271 [US5] 검색 연결 + 디바운스 in src/features/points/components/PointTopNav.tsx — `AppInput variant="search"`에 `value`/`onChange`를 붙인다(현재 둘 다 없다 `:10`). **300ms 디바운스**(규칙 9) — 없으면 글자 수만큼 요청이 나간다. URL 키는 `search`
-- [ ] T272 [US5] 필터 UI in src/features/points/components/PointFilters.tsx — 인증수단·사용여부 `AppSelect` 2종. 018 패턴 승계: `ALL_VALUE`("전체"는 URL에 남기지 않음) + `setParams(..., { replace: true })` + **필터 변경 시 첫 페이지 복귀**(`PatrolZonesPage.tsx:76-80`)
-- [ ] T273 [US5] URL↔쿼리 연결 in src/pages/service/points/PointsPage.tsx — `useQueryParams<'search' | 'authMethod' | 'useYn' | 'page'>` + T249 변환. 🔴 **선택된 지점이 필터 결과에서 빠지면 상세 패널을 비운다**(§4, 018 선례 `PatrolZonesPage.tsx:85`)
-- [ ] T274 [US5] 페이지 이동 수단 in src/pages/service/points/PointsPage.tsx — ⚠️ **배치를 확정하지 않는다**(OQ-022-E, 사용자 판단 2026-10-07). 좌측 340px 구조를 유지하고 **이동 수단만** 둔다. `AppPagination` 전체 부착(행수 셀렉트+범위+이전/다음, `justify-between`)은 **하지 않는다** — 340px에 맞지 않고 필터 추가로 레이아웃이 바뀔 수 있다
-- [ ] T275 [US5] [P] vitest in src/pages/service/points/\_\_tests\_\_/PointsPage.test.tsx — 검색어 입력 → URL 반영 + 요청 파라미터 확인 / 필터 변경 시 첫 페이지 복귀 / 뒤로가기에서 필터 보존 / `ALL_VALUE`는 URL에 남지 않음
+- [ ] T271 [US5] 검색 연결 + 디바운스 in src/features/points/components/PointTopNav.tsx — `AppInput variant="search"`에 `value`/`onChange`를 붙인다(현재 둘 다 없다 `:10`). **300ms 디바운스**(규칙 9) — 없으면 글자 수만큼 요청이 나간다. URL 키는 `search` ⚠️ **`spec 027` 이월**
+- [ ] T272 [US5] 필터 UI in src/features/points/components/PointFilters.tsx — 인증수단·사용여부 `AppSelect` 2종. 018 패턴 승계: `ALL_VALUE`("전체"는 URL에 남기지 않음) + `setParams(..., { replace: true })` + **필터 변경 시 첫 페이지 복귀**(`PatrolZonesPage.tsx:76-80`) ⚠️ **`spec 027` 이월**
+- [ ] T273 [US5] URL↔쿼리 연결 in src/pages/service/points/PointsPage.tsx — `useQueryParams<'search' | 'authMethod' | 'useYn' | 'page'>` + T249 변환. 🔴 **선택된 지점이 필터 결과에서 빠지면 상세 패널을 비운다**(§4, 018 선례 `PatrolZonesPage.tsx:85`) ⚠️ **`spec 027` 이월**
+- [ ] T274 [US5] 페이지 이동 수단 in src/pages/service/points/PointsPage.tsx — ⚠️ **배치를 확정하지 않는다**(OQ-022-E, 사용자 판단 2026-10-07). 좌측 340px 구조를 유지하고 **이동 수단만** 둔다. `AppPagination` 전체 부착(행수 셀렉트+범위+이전/다음, `justify-between`)은 **하지 않는다** — 340px에 맞지 않고 필터 추가로 레이아웃이 바뀔 수 있다 ⚠️ **`spec 027` 이월** — OQ-022-E 도 함께 넘어간다
+- [ ] T275 [US5] [P] vitest in src/pages/service/points/\_\_tests\_\_/PointsPage.test.tsx — 검색어 입력 → URL 반영 + 요청 파라미터 확인 / 필터 변경 시 첫 페이지 복귀 / 뒤로가기에서 필터 보존 / `ALL_VALUE`는 URL에 남지 않음 ⚠️ **`spec 027` 이월**
 
-## Phase 7: Polish
+## Phase 7: Polish — ◩ **부분 수행 (2026-10-08)**
 
-- [ ] T276 [P] 로딩 상태 점검 — 목록·상세·변경 각각. 기존 선례(`AppEmpty`·`isPending` disabled)를 따르고 **새 패턴을 만들지 않는다**(A6)
-- [ ] T277 🔴 `npm run capture` baseline 재촬영 in docs/ui-current/ — `현장/points--목록+상세` 1장 변경 + **나머지 11장 무변화 확인**(DoD #17, Carry-over 해소). ⚠️ 020(토큰 seed)·021(`siteSeq` seed)에 이어 **세 번째 같은 자리**다 — 핸들러·seed 누락이면 전 장이 로그인 화면이 된다. 🔴 재촬영 전 scratchpad 스크립트로 먼저 확인하고(021 T237 방식), baseline 덮어쓰기는 이상 없음을 확인한 뒤에 한다
-- [ ] T278 브라우저 확인(MSW 모드) — 목록·상세·추가·수정·삭제·삭제거부·검색·필터·페이지 이동 + 첫 행 자동 선택. DoD #18
-- [ ] T279 [P] 문서 4종 — `roadmap.md`(§7-1 **`UpdatePoint`=PATCH 교정** + §7 `/points` 행 + §12 행 추가) / `screens.md` §1-3 진행도 / 🔴 `patterns.md` 또는 `data-model.md`에 **`queryKey` 규약 1절**(규칙 2 — 023~026이 따를 컨벤션) / `api-spec.md`(변경계 응답은 **미실측임을 명시**, 실측은 백엔드 복귀 후). DoD #19
-- [ ] T280 DoD 19개 대조표 작성 + 미충족 항목 사유 명시 in specs/phase3/022-point-crud/tasks.md
+> T279·T280 은 수행한다(문서·DoD 는 화면 재구성과 무관하고, `queryKey` 규약은 `023~026` 이
+> 따를 컨벤션이라 지금 적어 둘 가치가 있다).
+> 🔴 **T277(캡쳐 재촬영)·T278(브라우저 확인)은 `spec 027` 로 이월** — 화면이 통째로 바뀌므로
+> 지금 찍으면 **두 번 찍는다.** 020·021 에 이어 세 번째 같은 자리라 부담도 큰 작업이다.
+> T276(로딩 상태 점검)도 새 구조에서 다시 보는 편이 낫다.
+
+
+- [ ] T276 [P] 로딩 상태 점검 — 목록·상세·변경 각각. 기존 선례(`AppEmpty`·`isPending` disabled)를 따르고 **새 패턴을 만들지 않는다**(A6) ⚠️ **`spec 027` 이월** — 새 구조에서 다시 본다
+- [ ] T277 🔴 `npm run capture` baseline 재촬영 in docs/ui-current/ — `현장/points--목록+상세` 1장 변경 + **나머지 11장 무변화 확인**(DoD #17, Carry-over 해소). ⚠️ 020(토큰 seed)·021(`siteSeq` seed)에 이어 **세 번째 같은 자리**다 — 핸들러·seed 누락이면 전 장이 로그인 화면이 된다. 🔴 재촬영 전 scratchpad 스크립트로 먼저 확인하고(021 T237 방식), baseline 덮어쓰기는 이상 없음을 확인한 뒤에 한다 ⚠️ **`spec 027` 이월** — 화면이 바뀌므로 두 번 찍지 않는다
+- [ ] T278 브라우저 확인(MSW 모드) — 목록·상세·추가·수정·삭제·삭제거부·검색·필터·페이지 이동 + 첫 행 자동 선택. DoD #18 ⚠️ **`spec 027` 이월**. 단 **실 서버 브라우저 확인은 Phase 8 R6 에서 완료**했다
+- [x] T279 [P] 문서 4종 — `roadmap.md`(§7-1 **`UpdatePoint`=PATCH 교정** + §7 `/points` 행 + §12 행 추가) / `screens.md` §1-3 진행도 / 🔴 `patterns.md` 또는 `data-model.md`에 **`queryKey` 규약 1절**(규칙 2 — 023~026이 따를 컨벤션) / `api-spec.md`(변경계 응답은 **미실측임을 명시**, 실측은 백엔드 복귀 후). DoD #19
+- [x] T280 DoD 19개 대조표 작성 + 미충족 항목 사유 명시 in specs/phase3/022-point-crud/tasks.md
 
 ## Phase 8: 실 백엔드 실측 — 019~022 이월 해소 (2026-10-08 추가)
 
@@ -293,6 +314,47 @@
 | OQ-021-A `children` 0개 응답 | **무소속 현장관리자 계정이 없다.** `555555` 를 그 용도로 보려 했으나 실 서버에서는 **근무자**였다 |
 | 다른 도메인 변경계 16종 | 022 범위 밖. 지점 3종만 실측(§5-1-B 의 "공통 규칙" 은 출발점으로 쓸 수 있다) |
 | `roleDisplay` 사용 여부 (OQ-A) | 실측값이 `roleLabel` 과 다르다(마스터/현장근무자 ↔ Master/근무자). 표시명 변경은 화면 여러 곳에 파급돼 별도 판단 |
+
+## WF-5 마감 — DoD 19개 대조표 (2026-10-08)
+
+> T279(문서 동기화)·T280(본 표) 수행분. 증거는 `파일:라인`.
+> **판정**: ☑ 충족 / ◩ 부분 / ➡ `spec 027` 이월 / ⚠️ 환경 제약으로 보류
+
+| # | 조건 | 판정 | 증거 · 사유 |
+|:-:|---|:-:|---|
+| 1 | 목록이 `GetPointList` 결과를 렌더. mock 직접 import 0건 | ☑ | `pages/service/points/PointsPage.tsx:32` `usePointList`. `features/points` 런타임의 `mock/pointData` import **0건** — 남은 2곳은 MSW 핸들러(`mocks/handlers/points.ts:3`, 004 방침)와 `features/zone`(제약 1, 023에서 정리) |
+| 2 | 행 선택 시 상세 별도 조회 + 첫 행 자동 선택 | ☑ | `PointsPage.tsx:37-40` — 자동 선택은 effect 가 아니라 **파생**(`items.find(selected) ?? items[0]`)이라 깜빡임이 없다 |
+| 3 | `siteSeq` 가 `getSiteSeq()` 에서 오고 URL 미노출. `null` 이면 조회 안 함 | ☑ | `PointsPage.tsx:30` · `PointsPage.test.tsx` "사업장이 선택되지 않았으면 조회를 시도하지 않는다" |
+| 4 | 추가(POST) 성공 → 모달 닫힘 + 목록 반영 | ☑ | `form/AddPointForm.tsx` · `components/PointTopNav.tsx` (성공 후에만 닫는다) |
+| 5 | 수정(PATCH) 성공 → 목록·상세 반영. 폼이 기존 값으로 초기화 | ☑ | `form/EditPointForm.tsx` — `defaultValues` 주입 + `lists`·`detail` 둘 다 무효화 |
+| 6 | 삭제(DELETE) 성공 → 목록에서 사라지고 선택 해제 | ☑ | `components/detail/PointDetail.tsx` — 선택 해제를 무효화보다 **먼저** 한다 |
+| 7 | 삭제 거부 시 메시지 노출 + 목록 유지. 선제 차단 없음 | ◩ | 거부 시 무효화·선택 해제를 **둘 다 안 한다**(`PointDetail.test.tsx` 3건). 사유는 전역 토스트가 전담(규칙 3). ⚠️ **실 서버가 정말 거부하는지는 미실측**(OQ-022-B) — 쓰기 범위 합의상 코스 편성된 실 지점을 지울 수 없었다. 확인은 코스 편성 API(023) 이후 |
+| 8 | `authMethod` 정수↔표시 변환이 한 파일에만 | ☑ | `features/points/lib/authMethod.ts` 전담. 컴포넌트 prop 계약(`'QR' \| 'NFC'`)은 바꾸지 않았다(제약 2) |
+| 9 | 검색·필터가 서버 파라미터로 나가고 URL 보존. 클라이언트 필터 0건 | **➡** | **미구현 → `spec 027` 이월.** ✅ 다만 **서버 필터가 실제로 걸리는 것은 실측**했다(Phase 8 R2: `authMethod=9`→4건 / `useYn=false`→0건 / `searchKey=지점`→6건). 클라이언트 필터 함수는 **0건 유지** |
+| 10 | 페이지 번호 1-based↔0-based 변환이 한 자리. `pageSize=20` 명시 | ◩ | 변환은 `lib/pointListParams.ts` 한 곳 + `pageSize` 명시 전송 ☑. **URL 연결은 #9 와 함께 이월** |
+| 11 | `useYn` 이 폼에 있고 전송됨. `gpsLat/Lng`·`reissueQrYn` 은 폼에 없음 | ☑ | `form/schema.ts` · 전송 바디를 `toEqual` 로 **전량 비교**해 고정(`AddPointForm.test.tsx`) |
+| 12 | NFC TAG ID 14자리 HEX 검증 + 오류가 해당 필드에 표시 | ☑ | `form/schema.ts` refine 2개(빈 값/형식 분리) + 🔴 **복붙 결함 수정** — `:46`·`:64` 가 `errors.name` 을 보고 있어 **메시지가 뜰 자리가 없었다** |
+| 13 | `queryKey` 규약 + 변경 성공 시 무효화 | ☑ | `features/points/queryKeys.ts` · 문서화는 **`data-model.md` §8**(아래 #19) |
+| 14 | mutation 실패 토스트가 1개만 | ☑ | 폼·상세에서 토스트를 띄우지 않는다. `lib/queryClient.ts:18-20` 전역 `MutationCache.onError` 전담 |
+| 15 | MSW 핸들러 Point 5종 전부. mock 모드에서 CRUD 끝까지 동작 | ☑ | `mocks/handlers/points.ts` — 목록·상세·추가·수정·삭제. **실측에 맞춰 교정**(성공 `data: true`, PATCH 의 `null`/`''` 무시 재현) |
+| 16 | `npm run verify` 0 errors + `npm run test` green | ☑ | 0 errors(warning 1 은 MSW 생성 파일) / **49 files · 395 tests**(착수 시 320) |
+| 17 | `npm run capture` baseline 재촬영 | **➡** | **`spec 027` 이월** — 화면이 통째로 재구성되므로 지금 찍으면 **두 번 찍는다** |
+| 18 | 브라우저 확인(MSW 모드) 전체 체크리스트 | ◩ **➡** | **실 서버 브라우저 확인은 Phase 8 R6 에서 완료**(로그인·사업장 선택·지점 CRUD·본사·근무자 차단). **MSW 모드 전체 체크리스트는 027 로 이월** |
+| 19 | 문서 동기화 4종 | ☑ | **`data-model.md` §8 `queryKey` 규약 신설**(§7 이 `spec 015` 에서 참조돼 재번호 회피) / `roadmap.md` §7-1 **`PUT`→`PATCH` 교정** + 027 행 추가 + §7 지점 행 2개 + §12 행 2개 / `screens.md` §1-3 진행도 + 재구성 예고 / `api-spec.md` **§5-1-B 변경계 실측 섹션 신설** + B-13~B-18 |
+
+### 판정 요약
+
+- **☑ 충족 14** · **◩ 부분 3**(#7·#10·#18) · **➡ 이월 2**(#9·#17)
+- **미충족 0.** 이월 2건은 **`spec 027`(화면 재구성)이 같은 화면을 다시 만들기 때문**이고, 거기서 자연히 흡수된다
+- 🔴 **#7 의 "거부" 만 환경 제약으로 남는다** — 코스 편성 API 가 없어 실 지점을 지우지 않고는 확인할 수 없다
+
+### 022 가 남긴 것 (`023~027` 이 쓸 자산)
+
+1. **`queryKey` 규약** — `data-model.md` §8. 프로젝트 첫 규약이고 `023~026` 이 그대로 따른다
+2. **`api-spec.md` §5-1-B 변경계 실측** — 기존 실측 24종이 전부 조회계였다. 변경계의 공통 규칙(200 + `data: true`, 실패는 4xx/5xx, ID 를 주지 않음)을 다른 도메인의 출발점으로 쓸 수 있다
+3. **백엔드 요청 우선순위 6건** — B-9(보안)·B-15(조용히 실패)가 1·2순위
+4. **dev 프록시** — CORS 미설정 우회. 이후 모든 실 서버 작업이 이것 없이는 불가능하다
+5. **실측된 role 3종 + dev 계정 주석** — mock 과 실 서버의 권한 차이를 표로 남겼다
 
 ---
 
