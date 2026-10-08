@@ -43,7 +43,13 @@ const PointTopNav = () => {
             icon={PlusIcon}
             iconSize={14}
             aria-label="지점 생성"
-            className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point-bg/80"
+            /**
+             * 🔴 hover 는 **더 진해져야** 한다. 기존 `hover:bg-point-bg/80` 은 투명도를
+             * 낮추는 것이라 `--point-bg`(oklch 0.955 — 거의 흰색)가 흰 배경에 **더 묻혔다**
+             * — 상호작용이 아니라 비활성처럼 읽힌다. `point` 를 옅게 깔아 한 단계
+             * 진하게 간다(`design-system.md` §2-6 "호버는 절제").
+             */
+            className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
           >
             <span className="hidden xl:inline">지점 생성</span>
           </AppButton>

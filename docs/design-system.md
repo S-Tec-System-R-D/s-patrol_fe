@@ -249,6 +249,11 @@ Tailwind 기본 스케일 그대로 사용(별도 커스텀 없음). 자주 쓰�
 - 토큰을 직접 var()로 부르지 말고 Tailwind 유틸 사용(`bg-point` / `text-point-foreground`).
 - 그림자보다 **border 우선**. 본 디자인은 평면 UI 베이스(목업 전반 확인).
 - 호버 효과는 `hover:bg-muted` / `hover:bg-{semantic}/10` 정도로 절제.
+- 🔴 **틴트 배경 버튼의 hover 는 투명도를 낮추지 않는다**(2026-10-08). `bg-point-bg` 처럼
+  이미 밝은 틴트(`--point-bg` = `oklch(0.955 …)`)에 `hover:bg-point-bg/80` 을 주면 흰 배경에
+  **더 묻혀** 상호작용이 아니라 **비활성처럼** 읽힌다. **한 단계 진해지는 쪽**으로 간다 —
+  `hover:bg-{semantic}/20`. 솔리드 버튼(`bg-primary`)에서 `hover:bg-primary/90` 이 통하는 것은
+  **원색이 어두워서**지 같은 규칙이 아니다.
 
 ---
 
