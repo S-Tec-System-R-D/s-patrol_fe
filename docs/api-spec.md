@@ -216,6 +216,7 @@ interface PagedData<T> {
 | 토큰 없음 | 401 | `""` |
 | 잘못된 토큰 | 401 | `""` |
 | 권한 없는 엔드포인트 호출 | 403 | `""` |
+| 🔴 **서버 내부 오류 일부** | **500** | `""` — 실측 2026-10-08(`AddPoint` 에 `authMethod: 99`). 500 은 ProblemDetails 로 올 때도 있고 **빈 body 로 올 때도 있다.** `normalizeError` 는 `isEmptyBody` → status 기반 문구로 이미 수렴시킨다 |
 
 → 파싱 시도하면 터진다. **status code만으로 분기해야 한다.**
 
@@ -331,6 +332,35 @@ interface PagedData<T> {
 **권한 경계가 깔끔하게 갈린다**: Group / Site / User = admin 전용, Point / Course / History / Notice = 양쪽 공통. `AdminSiteSelect` ↔ `UserSiteSelect` 는 **상호 배타**.
 
 🔴 **`GetGroupList` 는 admin 계정에서 HTTP 500** — 백엔드 버그. 그룹 관리 화면이 막힌다.
+
+### 5-1-B. 변경계 실측 (POST / PATCH / DELETE) — 🔴 신설 2026-10-08
+
+> §5-1 의 실측 24종은 **전부 조회계**였다. `spec 022` 가 프로젝트의 첫 쓰기 호출을 만들면서
+> 실측했다. 대상은 순찰지점 3종이며, **다른 도메인의 변경계는 여전히 미실측**이다 —
+> 다만 아래 "공통 규칙"은 같은 백엔드이므로 출발점으로 쓸 수 있다.
+
+**공통 규칙 (지점 3종에서 관측)**
+
+| 항목 | 실측 |
+|---|---|
+| 성공 | **HTTP 200** + `{"message":"요청이 정상 처리되었습니다.","data":true,"code":200}` |
+| `data` 타입 | **`boolean`** — 성공 `true`. 🔴 **생성된 ID 를 주지 않는다** |
+| 🔴 OQ-022-A | **해당 없음.** "HTTP 200 + 실패 `code`" 는 **관측되지 않았다.** 실패는 전부 4xx/5xx → 019 의 "성공은 2xx 전담" 판정이 변경계에서도 안전하다 |
+| 🔴 OQ-022-J | **해당 없음.** 204 No Content 가 아니라 조회계와 같은 `ApiResponse` 래퍼다 → 인터셉터의 `isApiResponse` 검사를 통과한다 |
+| 비즈니스 실패 | **400 + 래퍼**, `data: false`, `message` 는 **전부 `"잘못된 요청입니다."`** (B-17) |
+| 유효성 실패 | **일관되지 않다** — 400 ProblemDetails / 500 ProblemDetails / 500 빈 body 가 섞인다 (B-16) |
+
+**엔드포인트별**
+
+| 엔드포인트 | 성공 | 특이사항 |
+|---|---|---|
+| `POST Point/W/sign/AddPoint` | 200 / `data: true` | 🔴 `qrCode` 를 **서버가 자동 생성**: `STSP1:{siteSeq}:{pointSeq}:{unix}:{서명}`. `gpsLat`/`gpsLng` 를 보내지 않으면 `null` 로 남는다. 생성된 `pointSeq` 는 응답에 없다 |
+| `PATCH Point/W/sign/UpdatePoint` | 200 / `data: true` | 🔴 **진짜 부분 갱신** — 생략한 필드는 유지된다. 🔴 **그러나 값을 비울 수 없다**(B-15): `null`·`''` 은 무시. `memo` 는 `' '` 로만 지워지고 `nfcTagId` 는 지울 방법이 없다. 인증수단을 바꿔도 `qrCode` 는 그대로 남는다 |
+| `DELETE Point/W/sign/DeletePoint` | 200 / `data: true` | 삭제 후 해당 `DetailPoint` 는 400 + 래퍼(`data: null`). ⚠️ **`usedCount > 0` 지점의 거부 여부는 미실측** — 확인하려면 실 지점을 지울 위험이 있어 보류(OQ-022-B) |
+
+**재현**: `docs/api-spec.md` §7 과 같은 방식. 테스트 지점을 `siteSeq=7`(현장 계정 소속, 지점 0건)에 만들어 생성 → 수정 → 삭제 한 사이클로 확인하고 **마지막에 삭제해 뒷정리**했다.
+
+---
 
 ### 5-2. 응답 타입 (실측 기반 TS)
 
@@ -685,6 +715,9 @@ interface NoticeAttach {
 | B-12 | `DeleteCourse` 만 파라미터명 `courseId`(나머지는 `courseSeq`) / `UserList` 는 `siteId`, `UserDetail` 은 `userId` | ⚪ |
 | B-13 | 🔴 **`authMethod=10`(NFC) 인데 `nfcTagId: null` 인 지점이 실제로 존재**(실측 `pointSeq=30`). 서버가 NFC 지점의 TAG ID 를 강제하지 않는다. 프론트 폼은 필수로 막고 있어 **서버가 더 느슨하다** — 기존 데이터에 빈 TAG 가 있을 수 있다 | 🟡 |
 | B-14 | **`qrCode` 에 QR 페이로드가 아닌 임의 문자열이 들어있다**(실측 `pointSeq=30`: `"수정하면서 넣은 지점"`). 형식(`STSP1:...`)이 강제되지 않고 **NFC 지점에도 값이 들어있다** | 🟡 |
+| B-15 | 🔴 **`UpdatePoint` 로 값을 비울 수 없다.** `null` 과 `''` 를 "변경하지 않음" 으로 해석해 무시한다(실측 2026-10-08). → ① 사용자가 **설명을 비워도 지워지지 않는다** ② NFC → QR 로 바꿔도 `nfcTagId` 가 남아 **인증수단과 어긋난 데이터**가 된다. `memo` 는 공백 1칸(`' '`)을 보내면 지워지지만 `nfcTagId` 는 `null`·`''`·`' '` **전부 무시**되어 지울 방법이 없었다. **"비우기" 를 표현할 수 있는 규약이 필요하다** | 🔴 |
+| B-16 | **유효성 오류가 400 이 아니라 500 으로 샌다**(실측 2026-10-08). `AddPoint` 에서 `name` 누락은 400 ProblemDetails 로 오지만, **`siteSeq` 누락은 500**(ProblemDetails + `detail`), **`authMethod: 99`(enum 밖)는 500 + 빈 body** 다. 필수값·enum 검증이 일부 누락돼 있다 | 🟡 |
+| B-17 | **변경계 실패 문구가 전부 `"잘못된 요청입니다."`** 하나다(실측 2026-10-08, 없는 `pointSeq` 로 `UpdatePoint`·`DeletePoint`). 호출부가 사유를 구분할 수 없고 사용자에게 보여줄 문구로도 불충분하다 | 🟡 |
 
 ### 6-2. Open Questions
 

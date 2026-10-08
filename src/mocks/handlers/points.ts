@@ -140,11 +140,42 @@ const toPointDetail = (point: MockPoint): PointDetail => ({
 })
 
 const ok = (data: unknown) =>
-  HttpResponse.json({ message: '요청을 정상 처리하였습니다.', data, code: 200 })
+  HttpResponse.json({ message: '요청이 정상 처리되었습니다.', data, code: 200 })
 
-/** 실측 비즈니스 오류 형태 — `ApiResponse` 래퍼 + 4xx (`api-spec.md` §3-(A)) */
+/**
+ * 변경계 성공 응답 — **실측(2026-10-08)**: `data` 가 `true`(boolean) 다.
+ *
+ * 🔴 **생성된 `pointSeq` 를 주지 않는다.** `AddPoint` 도 `data: true` 뿐이므로
+ * `api/addPoint.ts` 가 반환을 `void` 로 둔 판단이 맞았다 — 성공 후 목록을 무효화해
+ * 다시 읽는 것이 유일한 길이다.
+ */
+const mutationOk = () => ok(true)
+
+/**
+ * 실측 비즈니스 오류 형태 — `ApiResponse` 래퍼 + 4xx (`api-spec.md` §3-(A)).
+ *
+ * 실측(2026-10-08): 없는 `pointSeq` 로 `UpdatePoint`·`DeletePoint`·`DetailPoint` 를
+ * 호출하면 **400 + `{"message":"잘못된 요청입니다.","data":false,"code":400}`** 가 온다
+ * (`DetailPoint` 는 `data: null`). 문구가 구체적이지 않아 호출부가 사유를 구분할 수 없다.
+ */
 const businessError = (message: string, status = 400) =>
   HttpResponse.json({ message, data: null, code: status }, { status })
+
+/** 실측 문구 — 서버는 "없는 ID" 를 이 한 문장으로만 알린다 */
+const NOT_FOUND_MESSAGE = '잘못된 요청입니다.'
+
+/**
+ * `UpdatePoint` 의 문자열 필드 반영 규칙 — **실측 동작 재현**(2026-10-08).
+ *
+ * 서버는 `undefined`·`null`·`''` 를 전부 "변경하지 않음" 으로 보고, 내용이 있는 문자열만
+ * 반영한다(공백만 있는 문자열은 trim 되어 결과적으로 빈 값이 된다). 즉 **빈 값으로
+ * 되돌릴 수단이 공백 문자뿐**이고, 이것은 서버 버그에 가깝다(B-15).
+ */
+const patchText = (current: string | null, next: string | null | undefined): string | null => {
+  if (next === undefined || next === null || next === '') return current
+  const trimmed = next.trim()
+  return trimmed === '' ? null : trimmed
+}
 
 const GET_POINT_LIST_PATH = '/api/v1/Point/W/sign/GetPointList'
 const DETAIL_POINT_PATH = '/api/v1/Point/W/sign/DetailPoint'
@@ -204,7 +235,7 @@ export const pointHandlers = [
   http.get(DETAIL_POINT_PATH, ({ request }) => {
     const pointSeq = Number(new URL(request.url).searchParams.get('pointSeq'))
     const found = store.find((point) => point.pointSeq === pointSeq)
-    if (!found) return businessError('해당 지점을 찾을 수 없습니다.')
+    if (!found) return businessError(NOT_FOUND_MESSAGE)
     return ok(toPointDetail(found))
   }),
 
@@ -212,10 +243,13 @@ export const pointHandlers = [
    * 추가. 🔴 **저장소에 실제로 넣는다** — 목록을 무효화해 재조회하면 보여야
    * "추가 → 목록 반영" 을 눈으로·테스트로 확인할 수 있다.
    *
-   * ⚠️ 성공 응답 형태는 **미실측**이다(`api-spec.md` §5-1 에 변경계 행이 없다).
-   * 조회계와 같은 `ApiResponse` 래퍼 + `data: null` 로 가정했다. 프론트가 응답 본문에
-   * 의존하지 않으므로(`api/addPoint.ts` 가 `void`) 실측으로 형태가 달라도 화면은 그대로다.
-   * 단 **래퍼 자체가 아니면**(예: 204) 인터셉터가 터진다 — OQ-022-J.
+   * ✅ **실측 완료(2026-10-08).** HTTP **200** + `{"message":...,"data":true,"code":200}`.
+   * 래퍼가 맞고(OQ-022-J 해당 없음) 실패는 4xx/5xx 로 온다(OQ-022-A 해당 없음).
+   * 🔴 **생성된 `pointSeq` 를 주지 않는다** — `data` 는 `true` 뿐이다.
+   * 🔴 **`qrCode` 는 서버가 자동 생성**한다: `STSP1:{siteSeq}:{pointSeq}:{unix}:{서명}`.
+   *   우리는 보내지 않는다. 아래 생성 로직의 형식은 실측과 같다.
+   * 🔴 **`gpsLat`/`gpsLng` 는 보내지 않으면 `null` 로 남는다**(실측). 기존 지점에 좌표가
+   *   있는 것은 다른 경로로 들어간 값이다 — OQ-022-C.
    */
   http.post(ADD_POINT_PATH, async ({ request }) => {
     const body = (await request.json().catch(() => null)) as Partial<MockPoint> | null
@@ -245,20 +279,29 @@ export const pointHandlers = [
       courseList: [], // 코스 편성은 코스 관리(spec 023)에서 한다
     })
 
-    return ok(null)
+    return mutationOk()
   }),
 
   /**
    * 수정. 🔴 **`PATCH` 다**(`api/updatePoint.ts` — swagger 실측).
    *
-   * 메서드는 PATCH 지만 **부분 갱신으로 처리하지 않는다.** 폼이 전체 필드를 채워
-   * 보내고(`UpdatePointRequest`), 어떤 필드를 생략했을 때 서버가 "변경 없음" 으로 보는지는
-   * 미실측이다. mock 도 같은 가정을 쓴다 — 받은 필드로 **전부 덮어쓴다**. 생략 시 기존
-   * 값을 유지하도록 만들면 실 서버와 다를 수 있는 동작을 mock 이 먼저 굳힌다(A1).
+   * ✅ **실측 완료(2026-10-08).** 성공은 200 + `data: true`. 그리고 **진짜 부분 갱신이다** —
+   * 생략한 필드는 기존 값이 **유지**된다(`pointSeq` + `name` 만 보내 확인).
+   *
+   * 🔴🔴 **그런데 "값 비우기" 가 불가능하다.** 서버는 `null` 과 `''`(빈 문자열)을 **"값 없음
+   * = 변경하지 않음"** 으로 해석해 **무시**한다. 실측 결과:
+   * - `memo: null` → 무시(기존 값 유지) / `memo: ''` → 무시 / `memo: ' '`(공백 1칸) → **지워짐**
+   * - `nfcTagId` 는 `null`·`''`·`' '` **전부 무시** — 한 번 설정되면 지울 방법이 없었다
+   *
+   * 영향: ① 사용자가 **설명을 비워도 지워지지 않는다** ② NFC → QR 로 바꿔도 `nfcTagId` 가
+   * 남아 **인증수단과 어긋난 데이터**가 된다(화면에는 안 보인다 — `PointDetail` 이
+   * `method === 'NFC' && point.nfcTagId` 로 막는다). **백엔드 수정 요청 대상**(B-15).
+   * mock 은 **실측 동작을 그대로 재현**한다 — 서버보다 관대하게 만들면 우리 화면에서는
+   * 지워지는데 실 서버에서는 안 지워지는 불일치가 숨는다.
    *
    * `reissueQrYn` 은 받아도 **쓰지 않는다** — QR 재발급은 범위 외(OQ-022-D)이고 프론트는
-   * `false` 고정으로 보낸다. `authMethod` 가 NFC 로 바뀌면 `qrCode` 를 지우고, QR 로
-   * 바뀌면 새로 만든다(인증수단과 `qrCode` 가 어긋난 상태를 저장소에 남기지 않는다).
+   * `false` 고정으로 보낸다. 🔴 **인증수단을 바꿔도 서버는 `qrCode` 를 지우지 않는다**(실측:
+   * QR → NFC 전환 후에도 `qrCode` 유지). mock 도 유지한다.
    */
   http.patch(UPDATE_POINT_PATH, async ({ request }) => {
     const body = (await request.json().catch(() => null)) as Partial<UpdatePointRequest> | null
@@ -267,34 +310,35 @@ export const pointHandlers = [
     }
 
     const index = store.findIndex((point) => point.pointSeq === body.pointSeq)
-    if (index < 0) return businessError('해당 지점을 찾을 수 없습니다.')
+    if (index < 0) return businessError(NOT_FOUND_MESSAGE)
 
     const current = store[index]
-    const authMethod = body.authMethod ?? current.authMethod
     store[index] = {
       ...current,
       name: body.name,
-      memo: body.memo ?? null,
-      authMethod,
-      nfcTagId: body.nfcTagId ?? null,
+      // 🔴 실측 동작: `null`·`''` 은 "변경하지 않음". 공백만 있는 문자열은 지움(trim 후 저장)
+      memo: patchText(current.memo, body.memo),
+      authMethod: body.authMethod ?? current.authMethod,
+      nfcTagId: patchText(current.nfcTagId, body.nfcTagId),
       useYn: body.useYn ?? current.useYn,
-      qrCode:
-        authMethod === 9
-          ? (current.qrCode ??
-            `STSP1:${current.siteSeq}:${current.pointSeq}:1760000000:mockSignature`)
-          : null,
+      // 인증수단을 바꿔도 서버는 qrCode 를 건드리지 않는다(실측)
+      qrCode: current.qrCode,
     }
 
-    return ok(null)
+    return mutationOk()
   }),
 
   /**
    * 삭제.
    *
-   * 🔴 **거부 케이스 1종을 포함한다 — 하지만 이것은 가정이다.** `usedCount > 0`(코스에
-   * 편성된) 지점의 삭제를 서버가 거부하는지는 **미실측**이다(OQ-022-B). "거부한다" 로
-   * 가정해 **UI 경로(사유 노출 + 목록 유지)를 확보**하는 것이 목적이고, 실측 후 교정한다.
-   * 사용자 확인 2026-10-08: 이 가정으로 진행.
+   * ✅ **성공 응답만 실측됐다(2026-10-08)**: 200 + `data: true`. 없는 `pointSeq` 는
+   * **400 + 래퍼**(`"잘못된 요청입니다."`). 삭제 후 그 지점의 `DetailPoint` 도 400 이 된다.
+   *
+   * 🔴 **거부 케이스는 여전히 가정이다.** `usedCount > 0`(코스에 편성된) 지점의 삭제를
+   * 서버가 거부하는지는 **확인하지 않았다** — Phase 8 의 쓰기 범위를 "생성한 지점만" 으로
+   * 합의했고(2026-10-08), 새로 만든 지점은 코스에 편성돼 있지 않아 이 경로를 밟을 수
+   * 없었다. 거부되지 않는다면 실 지점이 삭제되므로 기존 지점으로 시험하지 않았다.
+   * **확정은 코스 편성 API(`spec 023`) 이후.** 그때까지 이 분기는 UI 경로 확보용으로 남긴다.
    *
    * ⚠️ 실측에서 거부가 **없다면** 이 분기를 지운다. 거부 사유 문구·상태코드도 추측이므로
    * 프론트가 문구에 의존하지 않게 해야 한다(019 `ApiError` 정규화가 형태를 흡수한다).
@@ -304,7 +348,7 @@ export const pointHandlers = [
   http.delete(DELETE_POINT_PATH, ({ request }) => {
     const pointSeq = Number(new URL(request.url).searchParams.get('pointSeq'))
     const index = store.findIndex((point) => point.pointSeq === pointSeq)
-    if (index < 0) return businessError('해당 지점을 찾을 수 없습니다.')
+    if (index < 0) return businessError(NOT_FOUND_MESSAGE)
 
     const target = store[index]
     if (target.courseList.length > 0) {
@@ -313,6 +357,6 @@ export const pointHandlers = [
     }
 
     store.splice(index, 1)
-    return ok(null)
+    return mutationOk()
   }),
 ]
