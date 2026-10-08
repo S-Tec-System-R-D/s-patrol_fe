@@ -215,6 +215,9 @@ AppEmpty 표시 (icon + title + description + (선택) action)
 
 ## 8. 사이드 패널 (Sheet) — 반응형 분기
 
+> ✅ 본 패턴의 `xl` 기준은 2026-10-08 확정된 **단일 breakpoint 규칙**과 일치한다
+> (`design-system.md` §2-5 — 단계는 `xl` 하나, 좁은 쪽은 덜어내기만).
+
 ### 동선
 
 **`xl` 이상 (>= 1280px)**

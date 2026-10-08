@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { PlusIcon } from 'lucide-react'
 
 import AppDialog from '@/components/app/AppDialog'
-import AppIconButton from '@/components/app/AppIconButton'
+import AppButton from '@/components/app/AppButton'
 import AppInput from '@/components/app/AppInput'
 
 import AddPointForm from '../form/AddPointForm'
@@ -33,12 +33,20 @@ const PointTopNav = () => {
         title="지점 생성"
         description="신규지점을 생성할 수 있습니다."
         trigger={
-          <AppIconButton
+          /**
+           * 🔴 **아이콘 + 라벨. `xl` 미만에서는 아이콘만**(사용자 결정 2026-10-08).
+           * `aria-label` 은 라벨이 숨겨지는 폭에서도 **접근 가능한 이름을 유지**하기 위해
+           * 남겨 둔다 — 아이콘만 남으면 버튼에 이름이 없어진다.
+           * 좁은 폭에서 좌우 여백이 과하지 않도록 `px` 도 함께 줄인다.
+           */
+          <AppButton
             icon={PlusIcon}
             iconSize={14}
             aria-label="지점 생성"
-            className="h-9 w-9 shrink-0 border-transparent bg-point-bg text-point-foreground hover:bg-point-bg/80"
-          />
+            className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point-bg/80"
+          >
+            <span className="hidden xl:inline">지점 생성</span>
+          </AppButton>
         }
       >
         <AddPointForm onSuccess={() => setAddOpen(false)} />
