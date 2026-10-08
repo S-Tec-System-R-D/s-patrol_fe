@@ -132,6 +132,37 @@ describe('PointDetail — 삭제', () => {
   })
 })
 
+describe('PointDetail — 027 레이아웃 결정', () => {
+  it('🔴 "이름" 행이 없다 — 헤더 제목과 같은 값이라 페이지에서 두 번 보인다', () => {
+    renderDetail()
+
+    // 제목은 하나만 — DetailRow 로 또 그리지 않는다
+    expect(screen.getAllByText('정문 입구')).toHaveLength(1)
+    expect(screen.queryByText('이름')).not.toBeInTheDocument()
+  })
+
+  it('🔴 사용여부는 행이 아니라 헤더 뱃지다', () => {
+    renderDetail()
+
+    expect(screen.getByText('사용')).toBeInTheDocument()
+    expect(screen.queryByText('사용여부')).not.toBeInTheDocument()
+  })
+
+  it('미사용 지점은 미사용 뱃지', () => {
+    renderDetail(detail({ useYn: false }))
+
+    expect(screen.getByText('미사용')).toBeInTheDocument()
+  })
+
+  it('🔴 생성일 행이 없다 — 서버에 createdAt 이 없다(OQ-022-I, 실측 확인)', () => {
+    renderDetail()
+
+    expect(screen.queryByText('생성일')).not.toBeInTheDocument()
+    // 대신 서버가 주는 최근 순찰을 보여준다
+    expect(screen.getByText('최근 순찰')).toBeInTheDocument()
+  })
+})
+
 describe('PointDetail — 수정 모달', () => {
   it('수정 모달은 상세 값이 채워진 폼으로 열린다', async () => {
     const user = userEvent.setup()
