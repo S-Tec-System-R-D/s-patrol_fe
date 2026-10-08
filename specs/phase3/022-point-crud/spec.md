@@ -260,15 +260,15 @@ WF-4에서 증거(`파일:라인`) 명시 필요.
 | ID | 내용 |
 |---|---|
 | OQ-022-A | 🔴 **변경계에 "HTTP 200 + 실패 `code`" 응답이 있는가**(019 **OQ-E** 승계·실측 지점). 019가 성공 판정을 HTTP 2xx 전담으로 바꿔 이런 응답은 조용히 성공 처리된다 — 변경계에서는 "저장 안 됐는데 됐다고 표시"가 된다. **백엔드 복귀 후 Add/Update/Delete 각각 실측.** 존재하면 `axios.ts` 인터셉터 보강이 필요하고, 그건 019 영역이라 별도 판단 |
-| OQ-022-B | **`usedCount > 0` 지점의 `DeletePoint` 서버 동작 미실측.** 거부하는가, 거부하면 어떤 형태(A 래퍼 / B ProblemDetails / 빈 body)인가. 실측 후 `usedCount` 기반 사전 경고(버튼 비활성·확인 문구 강화) 여부 재검토. `screens.md:76`의 "사용 중 코스 영향 확인 필요(Open Question)"가 이 항목 |
+| OQ-022-B | **`usedCount > 0` 지점의 `DeletePoint` 서버 동작 미실측.** 거부하는가, 거부하면 어떤 형태(A 래퍼 / B ProblemDetails / 빈 body)인가. 실측 후 `usedCount` 기반 사전 경고(버튼 비활성·확인 문구 강화) 여부 재검토. `screens.md:76`의 "사용 중 코스 영향 확인 필요(Open Question)"가 이 항목 Phase 5에서 사전 안내를 구현했다가 되돌렸다 — 서버가 거부하지 않으면 안내가 틀린 정보가 된다. **→ 2026-10-08: 실 API 응답 확인 후 확정하기로 결정**(`tasks.md` "사용자 판단 3건"). |
 | OQ-022-C | **GPS 인증수단 코드 미확인**(`api-spec.md` OQ-2 승계). `authMethod` 실측은 9=QR·10=NFC뿐인데 DTO에 `gpsLat`/`gpsLng`가 있다 → GPS 코드가 따로 있을 것. 확인되면 폼·`AuthMethodSelector`·`AuthMethodDisplay`에 3번째 수단 추가 |
 | OQ-022-D | **QR 다운로드 + `reissueQrYn`** → 본 spec 제외(§1). 별도 spec에서 QR 렌더링 라이브러리 선정·DOM→이미지 변환·파일명 규칙·재발급 UI를 함께 다룬다. `axios.ts`의 blob 우회(`:124`)가 이미 있어 서버가 이미지를 주는 방식으로 바뀌면 그 길도 열려 있다 |
 | OQ-022-E | **목록 페이지 이동 UI 배치.** 좌측 340px 컬럼에 `AppPagination`(행수 셀렉트+범위+이전/다음, `justify-between` 가로 레이아웃)이 맞지 않는다. 필터 추가로 레이아웃이 바뀔 수 있다는 사용자 판단(2026-10-07)에 따라 확정하지 않았다. 필터 UI가 들어간 뒤 재배치 검토 |
 | OQ-022-F | **`authMethodName` null 표현 2종**(`''` / `'Unknown'`, B-6). 백엔드 통일 요청 대상. 프론트는 매핑표 폴백으로 양쪽을 수용해 두었다 |
-| OQ-022-G | **`useYn: false`(미사용) 지점의 목록 표시 방법** 미결정. 현재 `PointListCard`에 사용여부 표현이 없다. 뱃지 / 흐리게 / 필터 기본값에서 제외 중 선택 — 목업 없음 |
+| OQ-022-G | **`useYn: false`(미사용) 지점의 목록 표시 방법** 미결정. 현재 `PointListCard`에 사용여부 표현이 없다. 뱃지 / 흐리게 / 필터 기본값에서 제외 중 선택 — 목업 없음 **→ 2026-10-08: 실 API 응답 확인 후 확정하기로 결정**(`tasks.md` "사용자 판단 3건"). |
 | OQ-022-H | **`features/zone` 쪽 `PointType` 중복.** 022 동안 지점 타입이 두 벌 존재한다(규칙 17). `spec 023`에서 코스 API와 함께 정리 |
 | OQ-022-J | 🔴 **변경계 응답이 `ApiResponse` 래퍼가 아니면 성공이 실패로 보고된다.** `axios.ts:131-134`가 성공 응답마다 `isApiResponse`를 검사하고 실패하면 `throw new Error('알 수 없는 응답 형식')` 한다. 판정 기준은 `code`(number) + `message`(string) + `data` 키 **셋 다**(`responseShape.ts:22-26`)이므로, 변경계가 **204 No Content**이거나 `data` 없는 바디를 주면 **쓰기는 성공했는데 UI는 실패**가 된다 — 전역 토스트에 "알 수 없는 응답 형식"이 뜬다. 조회계 24종은 전부 래퍼로 실측됐지만 **변경계는 실측이 0건**이다(`api-spec.md` §5-1에 POST/PATCH/DELETE 행이 없다). ⚠️ OQ-022-A(200+실패 `code`)와 **다른 문제**다: A는 실패를 성공으로, J는 성공을 실패로 본다. 백엔드 복귀 시 Add/Update/Delete의 **실제 status code와 바디**를 함께 확인한다. 해당하면 019 영역(인터셉터)이라 별도 판단 |
-| OQ-022-I | 🔴 **서버 응답에 생성일(`createdAt`)이 없다.** 현재 상세 카드는 "생성일" 행을 mock `createdAt`으로 채운다(`PointDetail.tsx:35`). `PointDetail` 실측에 해당 필드가 없고 `GetPointList`에도 없다 → ① 그 행을 **제거**하고 서버가 주는 `lastPatrolDt`·`lastPatrolUserName`(최근 순찰)으로 대체할지 ② 백엔드에 `createdAt` 추가를 요청할지. `CLAUDE.md` B4("우리가 설계했던 필드 중 서버에 없는 것은 화면에 실제로 바인딩되는지 확인 → 필요하면 백엔드에 요청, 불필요하면 제거")의 판단 지점. **구현 중 ①로 진행하고 필요성은 사용자 확인** |
+| OQ-022-I | 🔴 **서버 응답에 생성일(`createdAt`)이 없다.** 현재 상세 카드는 "생성일" 행을 mock `createdAt`으로 채운다(`PointDetail.tsx:35`). `PointDetail` 실측에 해당 필드가 없고 `GetPointList`에도 없다 → ① 그 행을 **제거**하고 서버가 주는 `lastPatrolDt`·`lastPatrolUserName`(최근 순찰)으로 대체할지 ② 백엔드에 `createdAt` 추가를 요청할지. `CLAUDE.md` B4("우리가 설계했던 필드 중 서버에 없는 것은 화면에 실제로 바인딩되는지 확인 → 필요하면 백엔드에 요청, 불필요하면 제거")의 판단 지점. **구현 중 ①로 진행하고 필요성은 사용자 확인** **→ 2026-10-08: 실 API 응답 확인 후 확정하기로 결정**(`tasks.md` "사용자 판단 3건"). |
 
 ---
 
