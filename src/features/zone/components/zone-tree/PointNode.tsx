@@ -1,5 +1,7 @@
 import { MapPinIcon } from 'lucide-react'
-import type { PointType } from '../../types'
+// 🔴 `features/zone/types` 는 `PointType` 을 re-export 하지 않는다(`ZonePointType` 만).
+// 원 소유처에서 직접 가져온다 — 027 에서 typecheck 를 고치며 드러난 끊긴 import 다.
+import type { PointType } from '@/features/points/types'
 
 export const PointNode = ({ point }: { point: PointType }) => {
   return (

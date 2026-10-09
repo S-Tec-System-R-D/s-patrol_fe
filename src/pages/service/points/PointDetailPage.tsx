@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
-import { ChevronRightIcon, MapPinIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
+import { format, isValid, parseISO } from 'date-fns'
+import { useMemo, useState } from 'react'
+import { ChevronRightIcon, HistoryIcon, MapPinIcon, QrCodeIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
@@ -10,7 +11,19 @@ import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
 import AppPageHeader from '@/components/app/AppPageHeader'
 import { deletePoint } from '@/features/points/api/deletePoint'
-import PointDetail from '@/features/points/components/detail/PointDetail'
+import PointDetail, { PointAuthCard } from '@/features/points/components/detail/PointDetail'
+import { PendingSection } from '@/features/points/components/detail/PendingBlock'
+import PointPatrolLog from '@/features/points/components/detail/PointPatrolLog'
+import PointStats from '@/features/points/components/detail/PointStats'
+import SiblingPoints from '@/features/points/components/detail/SiblingPoints'
+import { usePointHistory } from '@/features/points/hooks/usePointHistory'
+import { usePointList } from '@/features/points/hooks/usePointList'
+import {
+  summarizePatrolHistory,
+  summaryFromDate,
+  summaryToDate,
+} from '@/features/points/lib/patrolSummary'
+import { getSiteSeq } from '@/lib/auth/site'
 import EditPointForm from '@/features/points/form/EditPointForm'
 import { usePointDetail } from '@/features/points/hooks/usePointDetail'
 import { pointKeys } from '@/features/points/queryKeys'
@@ -38,6 +51,16 @@ import { paths } from '@/router/paths'
  * 사업장의 지점**이라는 뜻이다. 목록으로 돌아갈 수단과 함께 안내한다.
  */
 
+/**
+ * 통계 칸의 "최근 순찰" 문구. 기록이 없으면 `null` 을 돌려 호출부가 `—` 로 그린다.
+ * 🔴 상세 본문(`PointDetail`)과 같은 포맷을 쓰되 **이름은 뺀다** — 통계 칸이 좁다.
+ */
+const lastPatrolLabel = (point: { lastPatrolDt: string | null }): string | null => {
+  if (!point.lastPatrolDt) return null
+  const parsed = parseISO(point.lastPatrolDt)
+  return isValid(parsed) ? format(parsed, 'MM.dd HH:mm') : null
+}
+
 /** `코스/지점 › 지점 상세` — 첫 조각이 목록 링크를 겸한다 */
 const Breadcrumb = () => (
   <nav aria-label="현재 위치" className="flex items-center gap-1 text-caption">
@@ -61,6 +84,23 @@ const PointDetailPage = () => {
 
   const detail = usePointDetail(pointSeq)
   const point = detail.data
+
+  const siteSeq = getSiteSeq()
+  // 🔴 기준일을 렌더마다 새로 만들지 않는다 — `new Date()` 가 매번 바뀌면 queryKey 가
+  // 바뀌어 **무한 재조회**가 된다. 날짜 문자열로 고정해 하루 단위로만 바뀌게 한다.
+  const today = useMemo(() => new Date(), [])
+  const fromDt = summaryFromDate(today)
+  const toDt = summaryToDate(today)
+
+  const history = usePointHistory(siteSeq, pointSeq, fromDt, toDt)
+  const historyRows = useMemo(() => history.data?.items ?? [], [history.data])
+  const summary = useMemo(
+    () => summarizePatrolHistory(historyRows, today),
+    [historyRows, today]
+  )
+
+  // 같은 사업장의 다른 지점 — 목록 훅을 그대로 재사용해 캐시를 공유한다
+  const siblings = usePointList(siteSeq, {})
 
   const removal = useMutation({
     mutationFn: deletePoint,
@@ -130,7 +170,44 @@ const PointDetailPage = () => {
             }
           />
 
-          <PointDetail point={point} />
+          <PointStats
+            patrolCount={summary.total}
+            lastPatrol={lastPatrolLabel(point)}
+            courseCount={point.courseList.length}
+          />
+
+          {/* 좌 2/3 (정보·코스·기록) / 우 1/3 (인증수단·변경이력·형제지점) — xl 미만 1단 */}
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+            <div className="flex flex-col gap-4 xl:col-span-2">
+              <PointDetail point={point} />
+              <PointPatrolLog
+                summary={summary}
+                rows={historyRows}
+                isPending={history.isPending && pointSeq !== null}
+              />
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <PointAuthCard point={point} />
+
+              {/* 🔴 지우지 않고 자리를 비워 둔다(OQ-027-E) */}
+              <PendingSection
+                title="QR 코드"
+                icon={QrCodeIcon}
+                reason="QR 이미지·식별자·발행 정보(발행일·버전)와 다운로드·인쇄는 아직 없습니다. 서버에 발행 메타가 없고(B-23) QR 생성은 별도 작업입니다(OQ-022-D)."
+              />
+              <PendingSection
+                title="변경 이력"
+                icon={HistoryIcon}
+                reason="누가 무엇을 언제 바꿨는지 보여주려면 변경 이력 API가 필요합니다. 서버에 아직 없습니다(B-22)."
+              />
+
+              <SiblingPoints
+                points={siblings.data?.items ?? []}
+                currentSeq={point.pointSeq}
+              />
+            </div>
+          </div>
         </>
       ) : detail.isPending && pointSeq !== null ? (
         <AppPageHeader title="지점 정보를 불러오는 중" subtitle="잠시만 기다려주세요" />

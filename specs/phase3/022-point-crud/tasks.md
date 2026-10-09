@@ -512,4 +512,4 @@ Phase 8 (실 백엔드 실측)  ← 🔴 Phase 6보다 먼저 R1·R2를 끝내�
 - [x] ✅ **해소(2026-10-08) — OQ-022-G.** 서버가 미사용 지점을 목록에서 제외하지 않음을 실측 → 구분은 프론트 책임. **회색 처리**로 구현(뱃지 추가 안 함 — 340px 폭) + `sr-only` "(미사용)"(design-system §3)
 - [ ] **OQ-022-H 구 `PointType` 중복 제거** → `spec 023`(순찰코스)에서 `features/zone`과 함께. 참조 3곳: `patrol-points/types/PatrolPoint.ts:1`·`zone/types/point.ts:1`·`zone/form/AddPointForm.tsx:11`
 - [x] ✅ **해소(2026-10-08) — OQ-022-I.** 목록·상세 실응답 모두 `createdAt` 계열 필드가 **없음을 확인.** "제거 + 최근 순찰 대체" **유지 확정**. 업무상 필요하면 백엔드 추가 요청(사용자 판단)
-- [ ] ⚠️ **`tsconfig.json`의 `"strict": true`가 `src`에 미적용** → 별도 spec(021 이월 유지). 022가 파일을 늘렸으므로 켤 때 고칠 양이 더 늘었다
+- [x] ✅ **해소(2026-10-09, `spec 027` Phase 3)** — ⚠️ 실제 문제는 더 심각했다: `strict` 적용 여부가 아니라 **`npm run typecheck`(`tsc --noEmit`)가 아무것도 검사하지 않고 있었다.** 루트가 `files: []` + `references` 구조라 비-build 모드는 참조 프로젝트를 건드리지 않는다. `tsc -b` 로 바꾸니 **에러 5건**(기존 3 + 신규 2)이 드러났고 전부 고쳤다. ~~`tsconfig.json`의 `"strict": true`가 `src`에 미적용~~ → 별도 spec(021 이월 유지). 022가 파일을 늘렸으므로 켤 때 고칠 양이 더 늘었다

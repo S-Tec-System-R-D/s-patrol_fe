@@ -2,7 +2,12 @@ import { http, HttpResponse } from 'msw'
 
 import { points as legacyPoints } from '@/features/points/mock/pointData'
 import { toAuthMethodCode } from '@/features/points/lib/authMethod'
-import type { PointDetail, PointRow, UpdatePointRequest } from '@/features/points/types'
+import type {
+  PointDetail,
+  PointHistoryRow,
+  PointRow,
+  UpdatePointRequest,
+} from '@/features/points/types'
 
 /**
  * MSW 순찰지점 핸들러 (`spec 022`).
@@ -110,6 +115,24 @@ export const resetPointStore = (): void => {
   store.push(...legacyPoints.map(toMockPoint))
 }
 
+/**
+ * 🔴 **`lastPatrolDt` 는 이력에서 파생한다 — 따로 들고 있으면 어긋난다.**
+ *
+ * `toMockPoint` 가 심어 둔 고정 날짜(`2026-10-0X`)와 `buildHistory` 가 **오늘 기준**으로
+ * 만드는 이력이 서로 달라, 화면에서 통계 "최근 순찰" 과 기록 목록의 최신이 **다른 날짜**로
+ * 보였다(027 Phase 3 캡쳐에서 발견). 실 서버는 같은 데이터에서 나오므로 mock 도 한
+ * 출처에서 뽑는다 — mock 이 실 서버보다 이상하게 굴면 디버깅이 두 배가 된다.
+ */
+const lastPatrolOf = (point: MockPoint): Pick<MockPoint, 'lastPatrolDt' | 'lastPatrolUserName' | 'lastPatrolUserSeq'> => {
+  const latest = buildHistory(point)[0]
+  if (!latest) return { lastPatrolDt: null, lastPatrolUserName: null, lastPatrolUserSeq: null }
+  return {
+    lastPatrolDt: latest.checkDt,
+    lastPatrolUserName: latest.userName,
+    lastPatrolUserSeq: latest.userSeq,
+  }
+}
+
 const toPointRow = (point: MockPoint): PointRow => ({
   pointSeq: point.pointSeq,
   pointName: point.name, // 🔴 목록은 pointName (상세는 name) — B-4 실측
@@ -119,7 +142,7 @@ const toPointRow = (point: MockPoint): PointRow => ({
   usedCount: point.courseList.length,
   useYn: point.useYn,
   nfcTagId: point.nfcTagId,
-  lastPatrolDt: point.lastPatrolDt,
+  lastPatrolDt: lastPatrolOf(point).lastPatrolDt,
 })
 
 const toPointDetail = (point: MockPoint): PointDetail => ({
@@ -133,9 +156,7 @@ const toPointDetail = (point: MockPoint): PointDetail => ({
   gpsLat: point.gpsLat,
   gpsLng: point.gpsLng,
   useYn: point.useYn,
-  lastPatrolDt: point.lastPatrolDt,
-  lastPatrolUserSeq: point.lastPatrolUserSeq,
-  lastPatrolUserName: point.lastPatrolUserName,
+  ...lastPatrolOf(point),
   courseList: point.courseList,
 })
 
@@ -182,6 +203,55 @@ const DETAIL_POINT_PATH = '/api/v1/Point/W/sign/DetailPoint'
 const ADD_POINT_PATH = '/api/v1/Point/W/sign/AddPoint'
 const UPDATE_POINT_PATH = '/api/v1/Point/W/sign/UpdatePoint'
 const DELETE_POINT_PATH = '/api/v1/Point/W/sign/DeletePoint'
+/** 🔴 `Point/*` 가 아니라 `History/*` 다 — 지점 상세에서 쓰지만 소유 도메인은 이력이다 */
+const GET_POINT_HISTORY_PATH = '/api/v1/History/W/sign/GetPointHistory'
+
+/**
+ * 지점별 순찰이력 생성 — **결정적**(랜덤 금지). 테스트가 흔들리면 안 된다.
+ *
+ * 🔴 기준일을 `new Date()` 로 잡는다. 화면의 "최근 30일" 집계가 **오늘** 기준이라
+ * 고정 날짜로 만들면 시간이 지나면서 전부 기간 밖이 되어 0건이 된다.
+ */
+const buildHistory = (point: MockPoint): PointHistoryRow[] => {
+  // 3의 배수 지점은 미순찰 — `toMockPoint` 의 `lastPatrolDt: null` 과 맞춘다
+  if (point.pointSeq % 3 === 0) return []
+
+  const courses = point.courseList.length > 0 ? point.courseList : [{ courseSeq: 0, courseName: '미배정 코스' }]
+  const today = new Date()
+  const rows: PointHistoryRow[] = []
+
+  // 최근 30일 중 3일마다 1건, 그중 일부는 하루 2건 — 버킷 합산을 눈으로 보려고
+  for (let ago = 0; ago < 30; ago += 3) {
+    const day = new Date(today)
+    day.setDate(day.getDate() - ago)
+    const ymd = day.toISOString().slice(0, 10)
+    const perDay = ago % 9 === 0 ? 2 : 1
+
+    for (let n = 0; n < perDay; n += 1) {
+      const course = courses[(ago + n) % courses.length]
+      rows.push({
+        detailSeq: point.pointSeq * 1000 + ago * 10 + n,
+        courseSeq: course.courseSeq,
+        courseName: course.courseName,
+        pointSeq: point.pointSeq,
+        pointName: point.name,
+        checkDt: `${ymd}T${String(9 + n * 5).padStart(2, '0')}:${String(10 + ago).padStart(2, '0')}:00`,
+        userSeq: 100 + point.pointSeq,
+        userName: n === 0 ? '김근무' : '박순찰',
+        authMethod: point.authMethod,
+        authMethodName: point.authMethod === 9 ? 'QR' : 'NFC',
+        status: ago % 12 === 0 ? 3 : 4, // 가끔 미완료를 섞는다
+        statusName: ago % 12 === 0 ? '미완료' : '완료',
+        overTimeYn: ago % 15 === 0,
+        hasMemo: ago % 6 === 0,
+        pauseTime: '00:00:00',
+      })
+    }
+  }
+
+  // 최근 → 과거 순 (서버 기본 정렬 가정)
+  return rows
+}
 
 /** 새 `pointSeq` — 저장소 최대값 + 1. 삭제 후 재사용되지 않게 한다 */
 const nextPointSeq = (): number =>
@@ -358,5 +428,48 @@ export const pointHandlers = [
 
     store.splice(index, 1)
     return mutationOk()
+  }),
+
+  /**
+   * 지점 순찰이력 — 지점 상세의 "순찰 인증 기록" 섹션(`spec 027` Phase 3).
+   *
+   * 🔴 **지점마다 다른 기록을 준다.** 전부 같게 주면 화면에서 **"기록 없음" 경로를 한
+   * 번도 볼 수 없다.** 022 가 mock 에 미사용 지점·미순찰 지점을 심어 둔 것과 같은 이유다.
+   * - `pointSeq % 3 === 0` → **0건**(미순찰 — `toMockPoint` 의 `lastPatrolDt: null` 과 일치)
+   * - 그 외 → 최근 30일에 흩뿌린 기록. 하루 2건인 날을 섞어 **버킷 합산**을 눈으로 본다
+   *
+   * ⚠️ 응답 형태는 실측(`api-spec.md` §5-2 19번 `PointHistoryRow`)이다. `fromDt`/`toDt`
+   * 는 **실제로 거른다** — 전량 반환으로 때우면 집계 기간 경계를 화면에서 확인할 수 없다.
+   */
+  http.get(GET_POINT_HISTORY_PATH, ({ request }) => {
+    const query = new URL(request.url).searchParams
+    const pointSeq = Number(query.get('pointSeq'))
+    const pageNumber = Number(query.get('pageNumber') ?? 1)
+    const pageSize = Number(query.get('pageSize') ?? 20)
+
+    if (pageNumber < 1) {
+      return businessError('페이지 번호는 1 이상이어야 합니다.')
+    }
+
+    const point = store.find((item) => item.pointSeq === pointSeq)
+    const rows = point ? buildHistory(point) : []
+
+    const from = query.get('fromDt')
+    const to = query.get('toDt')
+    const filtered = rows.filter((row) => {
+      const day = row.checkDt.slice(0, 10)
+      if (from && day < from) return false
+      if (to && day > to) return false
+      return true
+    })
+
+    const start = (pageNumber - 1) * pageSize
+    return ok({
+      items: filtered.slice(start, start + pageSize),
+      page: pageNumber,
+      pageSize,
+      totalCount: filtered.length,
+      totalPages: Math.ceil(filtered.length / pageSize),
+    })
   }),
 ]

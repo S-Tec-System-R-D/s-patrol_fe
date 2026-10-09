@@ -107,7 +107,8 @@ describe('EditPointForm — 초기값 주입', () => {
     // 임의로 'QR' 을 채우면 사용자가 고르지 않은 인증수단으로 저장된다(A1).
     const user = userEvent.setup()
     const captured = captureBody()
-    renderForm(detail({ authMethod: 99, authMethodName: null }))
+    // 서버는 null 을 `''` 또는 `'Unknown'` 으로 준다(B-6) — 타입은 `string` 이다
+    renderForm(detail({ authMethod: 99, authMethodName: '' }))
 
     await user.click(screen.getByRole('button', { name: '저장' }))
 

@@ -1,4 +1,4 @@
-import type { PointListParams } from './types'
+import type { PointHistoryParams, PointListParams } from './types'
 
 /**
  * 순찰지점 react-query 키 SSOT.
@@ -36,4 +36,14 @@ export const pointKeys = {
 
   /** 상세 쿼리 키. 수정 후 이 키만 따로 무효화한다 */
   detail: (pointSeq: number) => ['point', pointSeq] as const,
+
+  /**
+   * 지점 순찰이력 키(027).
+   *
+   * 루트를 `'point-history'` 로 **따로 둔다** — 지점을 수정·삭제해도 이력은 바뀌지
+   * 않으므로 `lists`·`detail` 무효화에 **딸려 들어가면 안 된다**(불필요한 재조회).
+   * 규약 2대로 스코프(`siteSeq`)를 포함하고 파라미터 객체를 마지막에 둔다.
+   */
+  history: (params: PointHistoryParams) =>
+    ['point-history', params.siteSeq, params] as const,
 }

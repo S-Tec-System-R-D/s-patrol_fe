@@ -68,18 +68,18 @@
 >
 > ⚠️ **8섹션 중 2개는 placeholder 다.** 지우지 않는다(OQ-027-E) — 지우면 "설계에 없던 것" 이 되어 나중에 다시 논의해야 한다.
 
-- [ ] T329 지점 순찰이력 api + 훅 in src/features/points/api/pointHistory.ts · src/features/points/hooks/usePointHistory.ts — `GET History/W/sign/GetPointHistory`. 🔴 **응답은 실측돼 있다**(`api-spec.md` §5-2 19번 `PointHistoryRow`). 파라미터는 `siteSeq`·`pointSeq`·`fromDt`·`toDt`·`pageNumber`·`pageSize`. `queryKey` 는 `data-model.md` §8 규약을 따른다(스코프 값 포함)
-- [ ] T330 30일 집계 순수함수 in src/features/points/lib/patrolSummary.ts — 🔴 **전용 집계 API 가 없다.** `PointHistoryRow[]` → 날짜별 버킷 + 총 횟수. 순수함수로 빼서 테스트한다(경계: 0건·하루 다건·기간 밖)
-- [ ] T331 [P] vitest in src/features/points/lib/__tests__/patrolSummary.test.ts
-- [ ] T332 MSW 핸들러 in src/mocks/handlers/points.ts — `GetPointHistory`. 🔴 **지점별로 다른 기록을 준다**(0건 지점 포함) — 전부 같으면 "기록 없음" 경로를 화면에서 볼 수 없다. 022 의 `resetPointStore` 와 같은 자리에 둔다
-- [ ] T333 [US2] 통계 3칸 in src/features/points/components/detail/PointStats.tsx — 30일 인증 / 최근 순찰 / 소속 코스. ⚠️ **목업의 "QR 발행" 4번째 칸은 뺀다**(B-23 — 발행 메타가 서버에 없다)
-- [ ] T334 [US2] 기본정보 확장 + 행 placeholder in src/features/points/components/detail/PointDetail.tsx — 8칸 2열. 🔴 **4칸은 점선 + `준비 중`**(지점 코드 B-21 · 상세 위치 B-20 · 등록/최근 수정 B-19). 사업장명은 021 저장값(`getSiteName()`)
-- [ ] T335 [US2] 순찰 인증 기록 섹션 in src/features/points/components/detail/PointPatrolLog.tsx — 날짜별 막대 + 목록. 0건이면 **빈 상태**(placeholder 아님 — 기능은 있고 데이터가 없는 것이다). "전체 기록" → `/patrol/points` 링크
-- [ ] T336 [US2] 같은 사업장의 다른 지점 in src/features/points/components/detail/SiblingPoints.tsx — `GetPointList(siteSeq)` 재사용. 현재 지점은 `현재` 표시 + 링크 제외. 코스 N 은 `usedCount`
-- [ ] T337 🔴 placeholder 2종 신설 in src/features/points/components/detail/PendingBlock.tsx — **행용**(값 자리 점선 + `준비 중`)과 **섹션용**(점선 카드 + 뱃지 + 사유 한 줄). 🔴 **`AppEmpty` 를 쓰지 않는다** — 변경 이력은 실제로 비어 있을 수도 있어 "데이터 없음" 과 섞이면 구분이 불가능하다. ⚠️ 공용(`components/app/`)으로 빼지 않는다 — 사례가 이 화면 2곳뿐이다(A6)
-- [ ] T338 [US2] 변경 이력 · QR 카드 **섹션 placeholder** 배치 — 각각 막힌 이유를 적는다(B-22 / B-23·OQ-022-D). 소속 코스의 **"코스에 추가" 버튼도 비활성 + 사유**(코스 편성 API 는 `spec 023`)
-- [ ] T339 [US2] 상세 2단 레이아웃 재배치 in src/pages/service/points/PointDetailPage.tsx — 좌(기본정보·소속 코스·순찰 인증 기록) / 우(인증 수단·변경 이력·같은 사업장 지점). `xl` 미만 1단
-- [ ] T340 [US2] [P] vitest in src/features/points/components/detail/__tests__/ · src/pages/service/points/__tests__/PointDetailPage.test.tsx — 통계 집계 표시 / 기록 0건 빈 상태 / 🔴 **placeholder 가 빈 상태와 다른 것** / 섹션이 지워지지 않은 것 / 형제 지점 목록
+- [x] T329 지점 순찰이력 api + 훅 in src/features/points/api/pointHistory.ts · src/features/points/hooks/usePointHistory.ts — `GET History/W/sign/GetPointHistory`. 🔴 **응답은 실측돼 있다**(`api-spec.md` §5-2 19번 `PointHistoryRow`). 파라미터는 `siteSeq`·`pointSeq`·`fromDt`·`toDt`·`pageNumber`·`pageSize`. `queryKey` 는 `data-model.md` §8 규약을 따른다(스코프 값 포함)
+- [x] T330 30일 집계 순수함수 in src/features/points/lib/patrolSummary.ts — 🔴 **전용 집계 API 가 없다.** `PointHistoryRow[]` → 날짜별 버킷 + 총 횟수. 순수함수로 빼서 테스트한다(경계: 0건·하루 다건·기간 밖)
+- [x] T331 [P] vitest in src/features/points/lib/__tests__/patrolSummary.test.ts
+- [x] T332 MSW 핸들러 in src/mocks/handlers/points.ts — `GetPointHistory`. 🔴 **지점별로 다른 기록을 준다**(0건 지점 포함) — 전부 같으면 "기록 없음" 경로를 화면에서 볼 수 없다. 022 의 `resetPointStore` 와 같은 자리에 둔다
+- [x] T333 [US2] 통계 3칸 in src/features/points/components/detail/PointStats.tsx — 30일 인증 / 최근 순찰 / 소속 코스. ⚠️ **목업의 "QR 발행" 4번째 칸은 뺀다**(B-23 — 발행 메타가 서버에 없다)
+- [x] T334 [US2] 기본정보 확장 + 행 placeholder in src/features/points/components/detail/PointDetail.tsx — 8칸 2열. 🔴 **4칸은 점선 + `준비 중`**(지점 코드 B-21 · 상세 위치 B-20 · 등록/최근 수정 B-19). 사업장명은 021 저장값(`getSiteName()`)
+- [x] T335 [US2] 순찰 인증 기록 섹션 in src/features/points/components/detail/PointPatrolLog.tsx — 날짜별 막대 + 목록. 0건이면 **빈 상태**(placeholder 아님 — 기능은 있고 데이터가 없는 것이다). "전체 기록" → `/patrol/points` 링크
+- [x] T336 [US2] 같은 사업장의 다른 지점 in src/features/points/components/detail/SiblingPoints.tsx — `GetPointList(siteSeq)` 재사용. 현재 지점은 `현재` 표시 + 링크 제외. 코스 N 은 `usedCount`
+- [x] T337 🔴 placeholder 2종 신설 in src/features/points/components/detail/PendingBlock.tsx — **행용**(값 자리 점선 + `준비 중`)과 **섹션용**(점선 카드 + 뱃지 + 사유 한 줄). 🔴 **`AppEmpty` 를 쓰지 않는다** — 변경 이력은 실제로 비어 있을 수도 있어 "데이터 없음" 과 섞이면 구분이 불가능하다. ⚠️ 공용(`components/app/`)으로 빼지 않는다 — 사례가 이 화면 2곳뿐이다(A6)
+- [x] T338 [US2] 변경 이력 · QR 카드 **섹션 placeholder** 배치 — 각각 막힌 이유를 적는다(B-22 / B-23·OQ-022-D). 소속 코스의 **"코스에 추가" 버튼도 비활성 + 사유**(코스 편성 API 는 `spec 023`)
+- [x] T339 [US2] 상세 2단 레이아웃 재배치 in src/pages/service/points/PointDetailPage.tsx — 좌(기본정보·소속 코스·순찰 인증 기록) / 우(인증 수단·변경 이력·같은 사업장 지점). `xl` 미만 1단
+- [x] T340 [US2] [P] vitest in src/features/points/components/detail/__tests__/ · src/pages/service/points/__tests__/PointDetailPage.test.tsx — 통계 집계 표시 / 기록 0건 빈 상태 / 🔴 **placeholder 가 빈 상태와 다른 것** / 섹션이 지워지지 않은 것 / 형제 지점 목록
 
 ## Phase 4: US3 — 검색·필터·페이지 이동 (022 US5 이월)
 
@@ -203,4 +203,23 @@ Phase 1 (라우트 + 목록 테이블 — 🔴 한 묶음)
   - 🔴 **"페이지 최대 폭 제한(C)" 은 철회했다** — 사용자 지적이 맞았다. ① `max-w-*` 선례가 코드에 **0건**이고 `layout.md` 에도 폭 규정이 없어 **이 화면만 좁아진다** ② **B 가 원인을 직접 제거**하므로 C 는 증상 치료다(둘 다 하면 과잉) ③ 폭 제한의 정당한 근거는 **산문**(45~75자)이고 라벨-값 목록은 표라 좌측 정렬이면 길어도 읽힌다. 남는 세로 여백은 **폭 문제가 아니라 정보량 문제**이며 다른 페이지도 데이터가 적으면 빈다. 전역 규칙으로 세울 거라면 `layout.md` 에 넣고 **모든 상세에 동시 적용**해야 한다 — 027 범위 밖
   - ⚠️ **미적용 2건** — 소속 코스를 `/zones` 링크로(D) · `ZoneRow` 의 의미 불명 점 제거(E). 사용자 판단 대기
   - ⚠️ **`DetailRow` 중복이 남아 있다** — `components/app/AppDetailRow`(공지·근무자·코스이력 3곳 사용)가 같은 일을 한다. **027 은 지점 쪽만 바꿨다.** 괜찮으면 그쪽으로 통합(사용자 결정: 1번 → 확인 후 2번)
-- 다음: Phase 3(T317~T323) — 검색·필터·페이지 이동. 🔴 `AppFilterPopover` 신설이 가장 큰 덩어리
+- 다음: Phase 3(상세 확장) → Phase 4(필터)
+
+### Phase 3 완료 — 상세 확장 (2026-10-09)
+
+- T329~T340 완료. 신설 8파일(이력 타입·api·훅 · 집계 함수+테스트 · 통계 · 순찰기록 · 형제지점 · placeholder) + 기존 5파일 수정
+- `npm run verify` **0 errors** + `npm run test` **52 files / 432 tests green**(412 → **+20**)
+- 🔴🔴 **`npm run typecheck` 가 아무것도 검사하지 않고 있었다 — 이번에 발견해 고쳤다.** 루트 `tsconfig.json` 이 `files: []` + `references` 구조라 **`tsc --noEmit`(비-build 모드)는 참조 프로젝트를 건드리지 않는다.** `tsc -b` 로 바꾸니 **에러 5건**이 나왔다. 그중 **3건은 기존 문제**로, 언제 들어왔는지 모른 채 통과하고 있었다:
+  - `zone-tree/PointNode.tsx` — `features/zone/types` 는 `PointType` 을 re-export 하지 않는데(`ZonePointType` 만) 거기서 import 하고 있었다 → **끊긴 import**
+  - `EditPointForm.test.tsx` — `authMethodName: null` 전달. 타입은 `string` 이다(서버는 `''`/`'Unknown'` 으로 준다 — B-6)
+  - `jwt.test.ts` — `AccessTokenClaims` → `Record<string, unknown>` 직접 단언(인덱스 시그니처 없음)
+  - ⚠️ **021 이월의 "`strict` 가 `src` 에 미적용" 보다 심각한 문제였다** — strict 여부가 아니라 **검사 자체가 0건**이었다. 그 이월 항목은 이걸로 해소된다
+- 🔴 **mock 정합 결함 1건 — 캡쳐로 발견.** 통계 "최근 순찰"(`toMockPoint` 의 고정 날짜)과 순찰 기록 목록(오늘 기준 생성)이 **다른 날짜**였다. `lastPatrolDt` 를 **이력에서 파생**하도록 바꿨다 — 실 서버는 같은 데이터에서 나오므로 mock 도 한 출처에서 뽑아야 한다. **mock 이 실 서버보다 이상하게 굴면 디버깅이 두 배가 된다**
+- 🔴 **전용 집계 API 가 없어 클라이언트가 센다.** `lib/patrolSummary.ts` 순수함수 + 테스트 10건으로 경계를 전부 고정했다(0건 · 하루 다건 · 시작일 포함 · 하루 밖 제외 · 미래 · 깨진 날짜). 화면에서는 "숫자가 좀 이상한데" 로만 보여 원인을 못 찾는 종류다. ⚠️ 기간이 길어지면 **서버 집계를 요청**해야 한다(지금은 `pageSize: 200` 한 페이지 가정)
+- 🔴 **기준일을 `useMemo` 로 고정했다.** `new Date()` 를 렌더마다 만들면 `queryKey` 가 매번 바뀌어 **무한 재조회**가 된다
+- `queryKey` 루트를 `'point-history'` 로 **따로 뒀다** — 지점을 수정·삭제해도 이력은 안 바뀌므로 `lists`·`detail` 무효화에 딸려 들어가면 불필요한 재조회다
+- **MSW 는 지점마다 다른 이력을 준다**(3의 배수는 0건). 전부 같게 주면 **"기록 없음" 경로를 화면에서 한 번도 볼 수 없다** — 022 가 미사용·미순찰 지점을 심어 둔 것과 같은 이유
+- **placeholder 2종**(`PendingBlock`) — 행용/섹션용. 🔴 **`AppEmpty` 를 쓰지 않는다**: 변경 이력은 실제로 비어 있을 수도 있어 섞이면 "기록이 없는 것" 인지 "기능이 없는 것" 인지 구분이 불가능하다. 섹션 placeholder 는 **막힌 이유(B 번호)를 반드시 적는다**
+- 인증 수단을 본문에서 떼어 `PointAuthCard` 로 분리(우측 컬럼). 본문은 "무엇을 그릴지" 만 알고 **2단 배치는 페이지가 정한다**
+- ⚠️ **미적용 2건**(사용자 판단 대기) — 소속 코스를 `/zones` 링크로(D) · `ZoneRow` 의 의미 불명 점 제거(E)
+- 다음: Phase 4(T317~T323) — 검색·필터·페이지 이동. 🔴 `AppFilterPopover` 신설이 가장 큰 덩어리

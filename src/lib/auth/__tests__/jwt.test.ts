@@ -86,7 +86,7 @@ describe('toRole', () => {
   it('role 클레임이 아예 없어도 throw하지 않고 null이다', () => {
     const claims = decodeAccessToken(makeAccessToken())
     // 서버가 role을 빼는 경우. delete로 클레임 부재를 재현한다.
-    delete (claims as Record<string, unknown>)[MS_ROLE_CLAIM]
+    delete (claims as unknown as Record<string, unknown>)[MS_ROLE_CLAIM]
 
     expect(() => claims && toRole(claims)).not.toThrow()
     expect(claims && toRole(claims)).toBeNull()

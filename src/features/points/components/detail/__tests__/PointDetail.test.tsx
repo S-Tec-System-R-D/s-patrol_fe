@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import PointDetail from '../PointDetail'
+import PointDetail, { PointAuthCard } from '../PointDetail'
 import type { PointDetail as PointDetailData } from '../../../types'
 
 /**
@@ -42,12 +42,10 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
     expect(screen.getByText('정문 입구')).toBeInTheDocument()
   })
 
-  it('인증 수단 섹션에 설명 한 줄이 있다', () => {
+  it('🔴 인증 수단은 본문이 아니라 별도 카드다 — 페이지가 우측에 배치한다', () => {
     renderDetail()
 
-    expect(
-      screen.getByText('근무자가 이 지점에서 순찰을 인증하는 방식입니다.')
-    ).toBeInTheDocument()
+    expect(screen.queryByText('인증 수단')).not.toBeInTheDocument()
   })
 
   it('🔴 본문에 사용여부 행이 없다 — 페이지 제목 옆 뱃지가 갖는다', () => {
@@ -65,23 +63,65 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
     expect(screen.getByText('최근 순찰')).toBeInTheDocument()
   })
 
-  it('🔴 섹션을 3개 카드로 나눈다 — 기본정보 · 인증 수단 · 소속 코스', () => {
+  it('🔴 본문은 기본정보 · 소속 코스 2카드다', () => {
     renderDetail()
 
     expect(screen.getByText('기본정보')).toBeInTheDocument()
-    expect(screen.getByText('인증 수단')).toBeInTheDocument()
     expect(screen.getByText('소속 코스')).toBeInTheDocument()
+  })
+
+  it('🔴 기본정보는 8칸이고 그중 4칸이 placeholder 다 (B-19·B-20·B-21)', () => {
+    renderDetail()
+
+    for (const label of ['지점명', '지점 코드', '사업장', '상세 위치', '설명', '최근 순찰', '등록', '최근 수정']) {
+      expect(screen.getByText(label)).toBeInTheDocument()
+    }
+    // 점선 + "준비 중" — 빈 값(`-`)과 구별된다
+    expect(screen.getAllByText('준비 중')).toHaveLength(4)
+  })
+
+  it('🔴 "코스에 추가" 는 비활성이다 — 코스 편성 API 는 spec 023', () => {
+    renderDetail()
+
+    expect(screen.getByRole('button', { name: '코스에 추가' })).toBeDisabled()
   })
 
   it('설명이 비면 하이픈', () => {
     renderDetail(detail({ memo: null }))
 
-    expect(screen.getByText('-')).toBeInTheDocument()
+    // 사업장(미선택)도 '-' 라 2개 이상이다
+    expect(screen.getAllByText('-').length).toBeGreaterThan(0)
   })
 
   it('소속 코스가 0건이면 안내를 보여준다', () => {
     renderDetail(detail({ courseList: [] }))
 
-    expect(screen.getByText('소속된 코스가 없습니다.')).toBeInTheDocument()
+    expect(screen.getByText(/소속된 코스가 없습니다/)).toBeInTheDocument()
+  })
+})
+
+describe('PointAuthCard', () => {
+  const renderAuth = (point = detail()) => render(<PointAuthCard point={point} />)
+
+  it('섹션 제목과 설명 한 줄', () => {
+    renderAuth()
+
+    expect(screen.getByText('인증 수단')).toBeInTheDocument()
+    expect(
+      screen.getByText('근무자가 이 지점에서 순찰을 인증하는 방식입니다.')
+    ).toBeInTheDocument()
+  })
+
+  it('NFC 지점은 TAG ID 행을 그린다', () => {
+    renderAuth(detail({ authMethod: 10, authMethodName: 'NFC', nfcTagId: '04A1B2C3D4E5F6' }))
+
+    expect(screen.getByText('TAG ID')).toBeInTheDocument()
+    expect(screen.getByText('04A1B2C3D4E5F6')).toBeInTheDocument()
+  })
+
+  it('🔴 미실측 인증수단 코드면 안내 문구를 보여준다', () => {
+    renderAuth(detail({ authMethod: 99, authMethodName: '' }))
+
+    expect(screen.getByText('인증수단 정보를 확인할 수 없습니다.')).toBeInTheDocument()
   })
 })

@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b --force",
     "verify": "npm run typecheck && npm run lint",
     "test": "vitest run",
     "test:watch": "vitest",
