@@ -1,5 +1,4 @@
-import { format, isValid, parseISO } from 'date-fns'
-import { PlusIcon } from 'lucide-react'
+import { PlusIcon, QrCodeIcon } from 'lucide-react'
 
 import AppButton from '@/components/app/AppButton'
 import { getSiteName } from '@/lib/auth/site'
@@ -8,7 +7,7 @@ import ZoneRow from './ZoneRow'
 import DetailSection from './DetailSection'
 import DetailRow from './DetailRow'
 import AuthMethodDisplay from './AuthMethodDisplay'
-import { PendingValue } from './PendingBlock'
+import { PendingSection, PendingValue } from './PendingBlock'
 import { resolveAuthMethodLabel, toAuthMethodLabel } from '../../lib/authMethod'
 import type { PointDetail as PointDetailData } from '../../types'
 
@@ -34,22 +33,13 @@ import type { PointDetail as PointDetailData } from '../../types'
  * ⚠️ 목업(`지점관리-신규.png`)에는 생성일이 있어 **갈라진 지점**이다(OQ-027-B).
  */
 
-/** ISO 8601(타임존 없음) → 'yyyy-MM-dd HH:mm'. 값이 없거나 깨졌으면 '-' */
-const formatPatrolDt = (value: string | null): string => {
-  if (!value) return '-'
-  const parsed = parseISO(value)
-  return isValid(parsed) ? format(parsed, 'yyyy-MM-dd HH:mm') : '-'
-}
-
 /** 섹션 카드 — 경계를 나누는 것이 목적이라 공용으로 뽑지 않고 여기 둔다(A6) */
 const Card = ({ className = '', children }: { className?: string; children: React.ReactNode }) => (
   <div className={`rounded-lg border border-border bg-card p-6 ${className}`}>{children}</div>
 )
 
 const PointDetail = ({ point }: { point: PointDetailData }) => {
-  const lastPatrol = point.lastPatrolDt
-    ? `${formatPatrolDt(point.lastPatrolDt)}${point.lastPatrolUserName ? ` · ${point.lastPatrolUserName}` : ''}`
-    : '순찰 기록 없음'
+  const method = toAuthMethodLabel(point.authMethod)
 
   return (
     <div className="flex flex-col gap-4">
@@ -68,7 +58,10 @@ const PointDetail = ({ point }: { point: PointDetailData }) => {
             <PendingValue label="상세 위치" />
 
             <DetailRow label="설명" value={point.memo?.trim() || '-'} />
-            <DetailRow label="최근 순찰" value={lastPatrol} />
+            {/* 🔴 인증 수단을 기본정보로 녹였다(사용자 결정 2026-10-10) — 값 하나뿐인
+                섹션을 따로 둘 이유가 없다. 우측 카드는 **수단별 자격증명**을 맡는다.
+                ⚠️ "최근 순찰" 은 통계 칸에 있어 여기서 뺐다(같은 값 두 번) */}
+            <DetailRow label="인증수단" value={<AuthMethodDisplay value={method} />} />
 
             <PendingValue label="등록" />
             <PendingValue label="최근 수정" />
@@ -112,31 +105,58 @@ const PointDetail = ({ point }: { point: PointDetailData }) => {
 }
 
 /**
- * 인증 수단 카드 — **우측 컬럼**에 놓인다(목업 배치).
- * 본문(좌측)과 분리해 export 하는 이유: 페이지가 2단 배치를 결정하고, 본문은
- * "무엇을 그릴지" 만 안다.
+ * 지점 **자격증명 카드** — 인증수단에 따라 다른 것을 보여준다(사용자 결정 2026-10-10).
+ *
+ * 🔴 **"인증 수단" 섹션은 기본정보로 녹였다.** 값 하나(QR/NFC)뿐인 섹션을 따로 둘 이유가
+ * 없었다. 이 카드는 **그 수단이 실제로 쓰는 자격증명**을 맡는다 — 역할이 갈렸다.
+ *
+ * | 수단 | 보여주는 것 | 상태 |
+ * |---|---|---|
+ * | **NFC** | TAG ID | ✅ **실 데이터**(`nfcTagId` 는 서버에 있다) |
+ * | **QR** | QR 이미지·식별자·발행정보 | 🔲 placeholder — 발행 메타가 없고(B-23) 생성은 별도 작업(OQ-022-D) |
+ * | 미실측 코드 | 안내 문구 | — |
+ *
+ * 🔴 **NFC 는 placeholder 가 아니다.** 022 에서 `nfcTagId` 를 실측했고 화면에 뜬다.
+ * QR 만 막혀 있는데 둘을 같은 "준비 중" 으로 묶으면 **되는 것까지 안 되는 것처럼** 보인다.
  */
-export const PointAuthCard = ({ point }: { point: PointDetailData }) => {
+export const PointCredentialCard = ({ point }: { point: PointDetailData }) => {
   const method = toAuthMethodLabel(point.authMethod)
 
+  if (method === 'NFC') {
+    return (
+      <Card>
+        <DetailSection title="NFC 태그" description="근무자 단말이 이 태그를 읽어 인증합니다.">
+          {point.nfcTagId ? (
+            <DetailRow label="TAG ID" value={<span className="font-mono">{point.nfcTagId}</span>} />
+          ) : (
+            /* ⚠️ 서버가 NFC 지점의 TAG ID 를 강제하지 않는다(B-13) — 실 데이터에 존재한다 */
+            <span className="text-caption text-muted-foreground">
+              태그 ID가 등록되지 않았습니다. 수정에서 14자리 HEX를 입력해주세요.
+            </span>
+          )}
+        </DetailSection>
+      </Card>
+    )
+  }
+
+  if (method === 'QR') {
+    return (
+      <PendingSection
+        title="QR 코드"
+        icon={QrCodeIcon}
+        reason="QR 이미지·식별자·발행 정보(발행일·버전)와 다운로드·인쇄는 아직 없습니다. 서버에 발행 메타가 없고(B-23) QR 생성은 별도 작업입니다(OQ-022-D)."
+      />
+    )
+  }
+
+  // 9·10 외 미실측 코드 — 추측 라벨을 만들지 않는다(A1)
   return (
     <Card>
-      <DetailSection
-        title="인증 수단"
-        description="근무자가 이 지점에서 순찰을 인증하는 방식입니다."
-      >
-        <AuthMethodDisplay value={method} />
-        {/* TAG ID 도 같은 행 형식으로 — 카드마다 다른 모양을 쓰지 않는다 */}
-        {method === 'NFC' && point.nfcTagId && (
-        <DetailRow label="TAG ID" value={point.nfcTagId} />
-        )}
-        {/* 9·10 외 코드면 세그먼트 둘 다 비강조라 설명이 필요하다 */}
-        {method === null && (
+      <DetailSection title="인증 자격증명">
         <span className="text-caption text-muted-foreground">
           {resolveAuthMethodLabel(point.authMethod, point.authMethodName) ||
-          '인증수단 정보를 확인할 수 없습니다.'}
+            '인증수단 정보를 확인할 수 없습니다.'}
         </span>
-        )}
       </DetailSection>
     </Card>
   )

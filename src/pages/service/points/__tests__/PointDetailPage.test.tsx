@@ -84,14 +84,15 @@ describe('PointDetailPage — 진입', () => {
     expect(screen.getByText('사용')).toBeInTheDocument()
   })
 
-  it('소속 코스·인증수단 섹션을 그린다', async () => {
+  it('소속 코스 섹션과 인증수단 행을 그린다', async () => {
     renderAt('/points/1')
 
     await screen.findByRole('heading', { name: '정문 입구' })
     // '소속 코스' 는 통계 칸과 섹션 제목 두 곳에 나온다
     expect(screen.getAllByText('소속 코스').length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByText('인증 수단')).toBeInTheDocument()
-    // 코스명은 소속 코스·순찰 기록 두 곳에 나온다
+    // 🔴 인증수단은 별도 섹션이 아니라 기본정보 행이다(2026-10-10)
+    expect(screen.getByText('인증수단')).toBeInTheDocument()
+    expect(screen.queryByText('인증 수단')).not.toBeInTheDocument()
     expect(screen.getAllByText('A동 순찰코스').length).toBeGreaterThan(0)
   })
 
@@ -233,8 +234,9 @@ describe('PointDetailPage — 상세 확장(Phase 3)', () => {
 
     await screen.findByRole('heading', { name: '정문 입구' })
     expect(screen.getByText('30일 인증')).toBeInTheDocument()
-    // '최근 순찰'·'소속 코스' 는 기본정보 행·섹션 제목과도 겹친다
-    expect(screen.getAllByText('최근 순찰').length).toBeGreaterThanOrEqual(2)
+    // '최근 순찰' 은 통계에만 있다 — 기본정보에서 뺐다(같은 값 두 번)
+    expect(screen.getByText('최근 순찰')).toBeInTheDocument()
+    // '소속 코스' 는 통계 칸과 섹션 제목 두 곳
     expect(screen.getAllByText('소속 코스').length).toBeGreaterThanOrEqual(2)
     expect(screen.queryByText('QR 발행')).not.toBeInTheDocument()
   })
@@ -264,18 +266,17 @@ describe('PointDetailPage — 상세 확장(Phase 3)', () => {
 
     await screen.findByRole('heading', { name: '정문 입구' })
     expect(screen.getByText('변경 이력')).toBeInTheDocument()
+    // 지점 1은 QR 이라 자격증명 카드가 QR placeholder 로 그려진다
     expect(screen.getByText('QR 코드')).toBeInTheDocument()
     // 막힌 이유가 적혀 있어야 한다 — 이유 없는 "준비 중" 은 언제 풀리는지 알 수 없다
     expect(screen.getByText(/변경 이력 API가 필요합니다/)).toBeInTheDocument()
     expect(screen.getByText(/발행 메타가 없고/)).toBeInTheDocument()
   })
 
-  it('같은 사업장의 다른 지점을 보여주고 현재 지점을 표시한다', async () => {
+  it('🔴 "같은 사업장의 다른 지점" 섹션은 없다 — 불필요 판단(2026-10-10)', async () => {
     renderAt('/points/1')
 
-    expect(await screen.findByText('같은 사업장의 다른 지점')).toBeInTheDocument()
-    expect(screen.getByText('현재')).toBeInTheDocument()
-    // 다른 지점은 링크다
-    expect(screen.getByRole('link', { name: /로비 1층/ })).toBeInTheDocument()
+    await screen.findByRole('heading', { name: '정문 입구' })
+    expect(screen.queryByText('같은 사업장의 다른 지점')).not.toBeInTheDocument()
   })
 })

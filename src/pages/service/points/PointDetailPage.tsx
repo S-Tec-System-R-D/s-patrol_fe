@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, isValid, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
-import { ChevronRightIcon, HistoryIcon, MapPinIcon, QrCodeIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
+import { ChevronRightIcon, HistoryIcon, MapPinIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
@@ -11,13 +11,11 @@ import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
 import AppPageHeader from '@/components/app/AppPageHeader'
 import { deletePoint } from '@/features/points/api/deletePoint'
-import PointDetail, { PointAuthCard } from '@/features/points/components/detail/PointDetail'
+import PointDetail, { PointCredentialCard } from '@/features/points/components/detail/PointDetail'
 import { PendingSection } from '@/features/points/components/detail/PendingBlock'
 import PointPatrolLog from '@/features/points/components/detail/PointPatrolLog'
 import PointStats from '@/features/points/components/detail/PointStats'
-import SiblingPoints from '@/features/points/components/detail/SiblingPoints'
 import { usePointHistory } from '@/features/points/hooks/usePointHistory'
-import { usePointList } from '@/features/points/hooks/usePointList'
 import {
   summarizePatrolHistory,
   summaryFromDate,
@@ -99,8 +97,6 @@ const PointDetailPage = () => {
     [historyRows, today]
   )
 
-  // 같은 사업장의 다른 지점 — 목록 훅을 그대로 재사용해 캐시를 공유한다
-  const siblings = usePointList(siteSeq, {})
 
   const removal = useMutation({
     mutationFn: deletePoint,
@@ -188,23 +184,14 @@ const PointDetailPage = () => {
             </div>
 
             <div className="flex flex-col gap-4">
-              <PointAuthCard point={point} />
+              {/* 인증수단에 따라 NFC 태그(실 데이터) 또는 QR placeholder 로 갈린다 */}
+              <PointCredentialCard point={point} />
 
               {/* 🔴 지우지 않고 자리를 비워 둔다(OQ-027-E) */}
-              <PendingSection
-                title="QR 코드"
-                icon={QrCodeIcon}
-                reason="QR 이미지·식별자·발행 정보(발행일·버전)와 다운로드·인쇄는 아직 없습니다. 서버에 발행 메타가 없고(B-23) QR 생성은 별도 작업입니다(OQ-022-D)."
-              />
               <PendingSection
                 title="변경 이력"
                 icon={HistoryIcon}
                 reason="누가 무엇을 언제 바꿨는지 보여주려면 변경 이력 API가 필요합니다. 서버에 아직 없습니다(B-22)."
-              />
-
-              <SiblingPoints
-                points={siblings.data?.items ?? []}
-                currentSeq={point.pointSeq}
               />
             </div>
           </div>

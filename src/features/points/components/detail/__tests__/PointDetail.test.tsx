@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import PointDetail, { PointAuthCard } from '../PointDetail'
+import PointDetail, { PointCredentialCard } from '../PointDetail'
 import type { PointDetail as PointDetailData } from '../../../types'
 
 /**
@@ -55,12 +55,17 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
     expect(screen.queryByText('미사용')).not.toBeInTheDocument()
   })
 
-  it('🔴 생성일 행이 없다 — 서버에 createdAt 이 없다(OQ-022-I, 실측 확인)', () => {
+  it('🔴 "최근 순찰" 행이 없다 — 통계 칸과 같은 값이다', () => {
     renderDetail()
 
-    expect(screen.queryByText('생성일')).not.toBeInTheDocument()
-    // 대신 서버가 주는 최근 순찰을 보여준다
-    expect(screen.getByText('최근 순찰')).toBeInTheDocument()
+    expect(screen.queryByText('최근 순찰')).not.toBeInTheDocument()
+  })
+
+  it('인증수단은 기본정보 행으로 녹였다 — 별도 섹션이 아니다', () => {
+    renderDetail()
+
+    expect(screen.getByText('인증수단')).toBeInTheDocument()
+    expect(screen.queryByText('인증 수단')).not.toBeInTheDocument()
   })
 
   it('🔴 본문은 기본정보 · 소속 코스 2카드다', () => {
@@ -73,7 +78,7 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
   it('🔴 기본정보는 8칸이고 그중 4칸이 placeholder 다 (B-19·B-20·B-21)', () => {
     renderDetail()
 
-    for (const label of ['지점명', '지점 코드', '사업장', '상세 위치', '설명', '최근 순찰', '등록', '최근 수정']) {
+    for (const label of ['지점명', '지점 코드', '사업장', '상세 위치', '설명', '인증수단', '등록', '최근 수정']) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
     // 점선 + "준비 중" — 빈 값(`-`)과 구별된다
@@ -100,27 +105,32 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
   })
 })
 
-describe('PointAuthCard', () => {
-  const renderAuth = (point = detail()) => render(<PointAuthCard point={point} />)
+describe('PointCredentialCard — 인증수단별 분기', () => {
+  const renderCard = (point = detail()) => render(<PointCredentialCard point={point} />)
 
-  it('섹션 제목과 설명 한 줄', () => {
-    renderAuth()
+  it('🔴 NFC 지점은 TAG ID 를 실제로 보여준다 — placeholder 가 아니다', () => {
+    renderCard(detail({ authMethod: 10, authMethodName: 'NFC', nfcTagId: '04A1B2C3D4E5F6' }))
 
-    expect(screen.getByText('인증 수단')).toBeInTheDocument()
-    expect(
-      screen.getByText('근무자가 이 지점에서 순찰을 인증하는 방식입니다.')
-    ).toBeInTheDocument()
+    expect(screen.getByText('NFC 태그')).toBeInTheDocument()
+    expect(screen.getByText('04A1B2C3D4E5F6')).toBeInTheDocument()
+    expect(screen.queryByText('준비 중')).not.toBeInTheDocument()
   })
 
-  it('NFC 지점은 TAG ID 행을 그린다', () => {
-    renderAuth(detail({ authMethod: 10, authMethodName: 'NFC', nfcTagId: '04A1B2C3D4E5F6' }))
+  it('NFC 인데 TAG ID 가 없으면 등록 안내를 보여준다 (B-13 — 서버가 강제하지 않는다)', () => {
+    renderCard(detail({ authMethod: 10, authMethodName: 'NFC', nfcTagId: null }))
 
-    expect(screen.getByText('TAG ID')).toBeInTheDocument()
-    expect(screen.getByText('04A1B2C3D4E5F6')).toBeInTheDocument()
+    expect(screen.getByText(/태그 ID가 등록되지 않았습니다/)).toBeInTheDocument()
+  })
+
+  it('QR 지점은 placeholder 다 — 발행 메타가 없고(B-23) 생성은 별도 작업(OQ-022-D)', () => {
+    renderCard(detail({ authMethod: 9, authMethodName: 'QR' }))
+
+    expect(screen.getByText('QR 코드')).toBeInTheDocument()
+    expect(screen.getByText('준비 중')).toBeInTheDocument()
   })
 
   it('🔴 미실측 인증수단 코드면 안내 문구를 보여준다', () => {
-    renderAuth(detail({ authMethod: 99, authMethodName: '' }))
+    renderCard(detail({ authMethod: 99, authMethodName: '' }))
 
     expect(screen.getByText('인증수단 정보를 확인할 수 없습니다.')).toBeInTheDocument()
   })

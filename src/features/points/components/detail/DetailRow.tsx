@@ -11,7 +11,8 @@
  * ⚠️ 같은 일을 하는 `components/app/AppDetailRow` 가 따로 있다(공지·근무자·코스이력에서
  * 사용). **027 은 지점 쪽만 바꾼다** — 괜찮으면 그쪽으로 통합한다(사용자 결정 2026-10-08).
  */
-const DetailRow = ({ label, value }: { label: string; value: string }) => {
+/** `value` 는 `ReactNode` 다 — 인증수단처럼 뱃지를 넣는 행이 있다(027) */
+const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }) => {
   return (
     <div className="flex items-start gap-4 border-b py-2">
       <span className="w-24 shrink-0 text-muted-foreground">{label}</span>
