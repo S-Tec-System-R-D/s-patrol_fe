@@ -6,6 +6,7 @@ import AppBadge from '@/components/app/AppBadge'
 import { paths } from '@/router/paths'
 
 import type { PatrolSummary } from '../../lib/patrolSummary'
+import PatrolBarChart from './PatrolBarChart'
 import type { PointHistoryRow } from '../../types'
 
 /**
@@ -29,12 +30,6 @@ const formatCheckDt = (value: string): string => {
   return isValid(parsed) ? format(parsed, 'MM.dd HH:mm') : '-'
 }
 
-/** 막대 높이 — 최대값 기준 상대. 0건인 날도 얇은 바닥선을 남겨 "쉰 날" 을 보여준다 */
-const barHeight = (count: number, max: number): string => {
-  if (count === 0) return '3px'
-  return `${Math.max(6, Math.round((count / max) * 40))}px`
-}
-
 const PointPatrolLog = ({
   summary,
   rows,
@@ -44,7 +39,6 @@ const PointPatrolLog = ({
   rows: PointHistoryRow[]
   isPending: boolean
 }) => {
-  const max = Math.max(...summary.buckets.map((b) => b.count), 1)
   const preview = rows.slice(0, PREVIEW_COUNT)
 
   return (
@@ -65,21 +59,12 @@ const PointPatrolLog = ({
       </div>
 
       {isPending ? (
-        <div className="mt-6 h-[60px] animate-pulse rounded-sm bg-muted" />
+        <div className="mt-4 h-[140px] animate-pulse rounded-sm bg-muted" />
       ) : (
         <>
-          {/* 날짜별 막대 */}
-          <div className="mt-6 flex items-end gap-[3px]" aria-hidden>
-            {summary.buckets.map((bucket) => (
-              <div
-                key={bucket.date}
-                title={`${bucket.date} · ${bucket.count}회`}
-                className={`flex-1 rounded-[2px] ${
-                  bucket.count === 0 ? 'bg-border' : 'bg-point/70'
-                }`}
-                style={{ height: barHeight(bucket.count, max) }}
-              />
-            ))}
+          {/* 일자별 막대 — 축·툴팁은 recharts 가 맡는다 */}
+          <div className="mt-4">
+            <PatrolBarChart buckets={summary.buckets} />
           </div>
 
           {summary.total === 0 ? (

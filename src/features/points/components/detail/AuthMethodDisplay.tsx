@@ -28,10 +28,12 @@ const AuthMethodDisplay = ({ value }: Props) => {
   const Icon = value === 'QR' ? QrCodeIcon : NfcIcon
 
   return (
-    <div className="flex w-fit items-center gap-1.5 rounded-sm border border-point bg-point/5 px-3 py-1.5 text-xs font-semibold text-point">
-      <Icon size={14} />
+    /* 🔴 **행 높이에 맞춘 크기다.** 기본정보 행 안에 들어가므로 다른 값(평문 텍스트)과
+       같은 줄에 서야 한다 — `px-3 py-1.5` 는 행보다 커서 그 줄만 튀어 보였다(2026-10-10). */
+    <span className="inline-flex w-fit items-center gap-1 rounded-sm border border-point/40 bg-point/5 px-1.5 py-0.5 text-[11px] font-semibold leading-5 text-point">
+      <Icon size={12} />
       {value}
-    </div>
+    </span>
   )
 }
 
