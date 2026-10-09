@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { PaginationState } from '@tanstack/react-table'
-import { MapPinIcon, TriangleAlertIcon } from 'lucide-react'
+import { FilterXIcon, MapPinIcon, TriangleAlertIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import AppButton from '@/components/app/AppButton'
@@ -10,49 +9,81 @@ import AppPagination from '@/components/app/AppPagination'
 import AppTable from '@/components/AppTable'
 import CourseTabs from '@/features/zone/components/CourseTabs'
 import { pointColumns } from '@/features/points/components/PointColumn'
+import PointFilters from '@/features/points/components/PointFilters'
 import PointTopNav from '@/features/points/components/PointTopNav'
 import { usePointList } from '@/features/points/hooks/usePointList'
+import {
+  DEFAULT_PAGE_SIZE,
+  parsePageNumber,
+  toPageIndex,
+  toPageNumber,
+  type PointListQuery,
+} from '@/features/points/lib/pointListParams'
+import { useQueryParams } from '@/hooks/useQueryParams'
 import { getSiteSeq } from '@/lib/auth/site'
 import { paths } from '@/router/paths'
 
 /**
- * 코스/지점 — 순찰지점 목록 (`spec 027` Phase 1).
+ * 코스/지점 — 순찰지점 목록 (`spec 027`).
  *
- * 🔴 **좌/우 마스터-디테일을 걷어냈다.** 022 까지는 좌측 340px 목록 + 우측 상세 패널이었다.
- * 세 가지가 동시에 걸려 있었다(spec §1):
- * 1. 340px 에 필터 2종 + 페이지 이동이 들어갈 자리가 없다(OQ-022-E 가 이 이유로 멈춰 있었다)
- * 2. 분할화면에서 좌우 2단이 가장 먼저 깨진다(`CLAUDE.md` B4)
- * 3. 선택 상태가 `useState` 라 **새로고침하면 날아가고** 딥링크가 없다
+ * 🔴 **좌/우 마스터-디테일을 걷어냈다**(Phase 1). 행 클릭 → `/points/:pointSeq`.
+ * 선택 상태가 URL 로 가면서 022 의 "첫 행 자동 선택" 파생이 함께 사라졌다.
  *
- * 이제 **행 클릭 → `/points/:pointSeq`** 로 이동한다. 선택 상태가 URL 에 있으므로
- * 022 의 "첫 행 자동 선택 파생" 과 "선택이 목록에서 빠지면 비우기" 가 **함께 사라졌다** —
- * 목록은 목록만 그린다.
+ * 🔴 **검색·필터·페이지는 전부 URL 에 있다**(Phase 4, 022 US5 이월). 새로고침·뒤로가기에
+ * 보존되고 링크로 공유된다(`CLAUDE.md` B4). **클라이언트 필터 함수는 0건** — 서버가
+ * 전부 거른다(Phase 8 R2 실측: `authMethod=9`→4건 / `useYn=false`→0건 / `searchKey`→6건).
  *
- * ⚠️ 검색·필터는 Phase 3(T317~T323)에서 연결한다. 지금은 1페이지 기본 조회만 한다.
- * 🔴 **페이지네이션은 로컬 상태**다 — URL 연동은 Phase 3 몫이고, 여기서 URL 을 쓰면
- * 필터와 두 군데에서 같은 쿼리를 만지게 된다.
+ * 🔴 **`siteSeq` 는 URL 에 노출하지 않는다**(`spec 021` DoD #13) — 선택 결과에서만 온다.
  */
+
+type FilterKey = keyof PointListQuery
+
 const PointsPage = () => {
   const navigate = useNavigate()
-  // 🔴 `siteSeq` 는 URL 이 아니라 선택 결과(localStorage)에서 온다 — spec 021 DoD #13.
   const siteSeq = getSiteSeq()
 
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 25,
-  })
+  const [params, setParams] = useQueryParams<FilterKey>()
+  const query: PointListQuery = useMemo(
+    () => ({
+      search: params.search,
+      authMethod: params.authMethod,
+      useYn: params.useYn,
+      page: params.page,
+    }),
+    [params.search, params.authMethod, params.useYn, params.page]
+  )
 
-  const list = usePointList(siteSeq, {})
+
+  /**
+   * 🔴 **행 수는 URL 에 두지 않지만 동작은 한다.** 공유할 상태가 아니라서(필터·페이지와
+   * 성격이 다르다) 로컬이되, **컨트롤을 비활성·무동작으로 두지 않는다** — 그게 027 이
+   * 고치고 있는 "죽은 버튼" 과 같은 문제다(실제로 한 번 만들었다가 캡쳐에서 잡았다).
+   * 행 수를 바꾸면 **첫 페이지로 되돌린다** — 3페이지에서 50개로 바꾸면 범위를 벗어난다.
+   */
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+
+  const list = usePointList(siteSeq, query, pageSize)
   const items = list.data?.items ?? []
 
   /**
    * 🔴 **컬럼 정의를 메모이즈한다.** `pointColumns()` 를 렌더마다 호출하면 `cell` 함수의
    * 참조가 매번 바뀌고, `flexRender` 가 그것을 **새 컴포넌트 타입**으로 보아 React 가
    * 행 전체를 언마운트→리마운트한다. 화면은 같아 보이지만 DOM 노드가 교체되므로
-   * ① 포커스·선택이 날아가고 ② 재조회마다 깜빡인다. (027 Phase 1 에서 테스트가
-   * "찾은 노드가 document 에서 분리됨" 으로 이것을 잡아냈다)
+   * ① 포커스·선택이 날아가고 ② 재조회마다 깜빡인다.
    */
   const columns = useMemo(() => pointColumns(), [])
+
+  /**
+   * 필터·검색 변경.
+   * 🔴 **히스토리를 쌓지 않고**(`replace`) **첫 페이지로 되돌린다** — 3페이지에서 필터를
+   * 걸면 결과가 1페이지뿐일 수 있고, 그러면 **정상 응답인 빈 화면**이 된다(018 선례).
+   */
+  const updateFilter = (next: Partial<Record<FilterKey, string | undefined>>) => {
+    setParams({ ...next, page: undefined }, { replace: true })
+  }
+
+  const pageNumber = parsePageNumber(params.page)
+  const hasFilter = Boolean(params.search || params.authMethod || params.useYn)
 
   return (
     <div className="flex flex-col gap-4 p-8">
@@ -60,7 +91,17 @@ const PointsPage = () => {
 
       <CourseTabs />
 
-      <PointTopNav />
+      <PointTopNav
+        search={params.search}
+        onSearchChange={(value) => updateFilter({ search: value })}
+        filters={
+          <PointFilters
+            authMethod={params.authMethod}
+            useYn={params.useYn}
+            onChange={updateFilter}
+          />
+        }
+      />
 
       {list.isError ? (
         /* 🔴 조회 실패와 0건을 다르게 그린다 — 둘 다 "아무것도 없음" 이면 장애를
@@ -78,12 +119,37 @@ const PointsPage = () => {
           </div>
         </div>
       ) : items.length === 0 && !list.isPending ? (
+        /* 🔴 **필터 0건과 "등록된 지점 없음" 도 다르다.** 필터 때문에 비었는데
+           "지점을 추가해주세요" 라고 하면 이미 있는 지점을 또 만들게 된다 */
         <div className="rounded-lg border border-border bg-card">
-          <AppEmpty
-            icon={MapPinIcon}
-            title="등록된 지점이 없습니다."
-            description="우측 상단 + 버튼으로 지점을 추가해주세요."
-          />
+          {hasFilter ? (
+            <>
+              <AppEmpty
+                icon={FilterXIcon}
+                title="조건에 맞는 지점이 없습니다"
+                description="검색어나 필터를 바꿔보세요."
+              />
+              <div className="flex justify-center pb-6">
+                <AppButton
+                  variant="sub"
+                  onClick={() =>
+                    setParams(
+                      { search: undefined, authMethod: undefined, useYn: undefined, page: undefined },
+                      { replace: true }
+                    )
+                  }
+                >
+                  필터 초기화
+                </AppButton>
+              </div>
+            </>
+          ) : (
+            <AppEmpty
+              icon={MapPinIcon}
+              title="등록된 지점이 없습니다."
+              description="우측 상단 + 버튼으로 지점을 추가해주세요."
+            />
+          )}
         </div>
       ) : (
         <>
@@ -91,17 +157,23 @@ const PointsPage = () => {
             columns={columns}
             data={items}
             hidePagination
-            pagination={pagination}
-            onPaginationChange={setPagination}
             onRowClick={(point) => navigate(paths.service.pointDetail(point.pointSeq))}
           />
 
           <AppPagination
-            pageIndex={pagination.pageIndex}
-            pageSize={pagination.pageSize}
+            // 🔴 1-based ↔ 0-based 변환은 `lib/pointListParams.ts` 한 자리에서만 한다
+            pageIndex={toPageIndex(pageNumber)}
+            pageSize={pageSize}
             total={list.data?.totalCount ?? items.length}
-            onPageChange={(pageIndex) => setPagination((prev) => ({ ...prev, pageIndex }))}
-            onPageSizeChange={(pageSize) => setPagination({ pageIndex: 0, pageSize })}
+            // 🔴 서버 기본값(20)이 옵션에 있어야 셀렉트가 빈 값으로 보이지 않는다
+            pageSizeOptions={[20, 50, 100]}
+            onPageChange={(pageIndex) =>
+              setParams({ page: String(toPageNumber(pageIndex)) }, { replace: true })
+            }
+            onPageSizeChange={(next) => {
+              setPageSize(next)
+              setParams({ page: undefined }, { replace: true })
+            }}
           />
         </>
       )}

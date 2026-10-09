@@ -235,7 +235,8 @@ const buildHistory = (point: MockPoint): PointHistoryRow[] => {
         courseName: course.courseName,
         pointSeq: point.pointSeq,
         pointName: point.name,
-        checkDt: `${ymd}T${String(9 + n * 5).padStart(2, '0')}:${String(10 + ago).padStart(2, '0')}:00`,
+        // 지점마다 분을 흔든다 — 전부 같은 시각이면 목록의 '최근 순찰' 이 한 값으로 보인다
+        checkDt: `${ymd}T${String(8 + n * 5 + (point.pointSeq % 3)).padStart(2, '0')}:${String((7 * point.pointSeq + ago * 3) % 60).padStart(2, '0')}:00`,
         userSeq: 100 + point.pointSeq,
         userName: n === 0 ? '김근무' : '박순찰',
         authMethod: point.authMethod,

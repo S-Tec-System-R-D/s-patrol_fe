@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import PointsPage from '../PointsPage'
@@ -25,14 +25,21 @@ import { makeAccessToken } from '@/test/jwt'
 
 const GET_POINT_LIST_PATH = '/api/v1/Point/W/sign/GetPointList'
 
+/** 현재 URL 을 화면에 흘려 테스트가 읽게 한다 */
+const UrlProbe = () => {
+  const { search } = useLocation()
+  return <div data-testid="url">{search}</div>
+}
+
 /** 상세 라우트를 더미로 두고 이동 여부를 본문 텍스트로 확인한다 */
-const renderPage = () => {
+const renderPage = (initialEntry = '/points') => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/points']}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <UrlProbe />
         <Routes>
           <Route path="/points" element={<PointsPage />} />
           <Route path="/points/:pointSeq" element={<div>DETAIL_ROUTE</div>} />
@@ -41,6 +48,8 @@ const renderPage = () => {
     </QueryClientProvider>
   )
 }
+
+const url = () => screen.getByTestId('url').textContent ?? ''
 
 beforeEach(() => {
   resetPointStore()
@@ -61,7 +70,8 @@ describe('PointsPage — 목록 조회', () => {
     // 전체 폭 테이블이 되면서 생긴 컬럼들
     expect(screen.getByText('소속 코스')).toBeInTheDocument()
     expect(screen.getByText('최근 순찰')).toBeInTheDocument()
-    expect(screen.getByText('사용여부')).toBeInTheDocument()
+    // '사용여부' 는 컬럼 헤더와 필터 버튼 두 곳에 나온다
+    expect(screen.getAllByText('사용여부').length).toBeGreaterThanOrEqual(2)
   })
 
   it('다른 사업장을 선택하면 그 사업장의 지점만 보인다', async () => {
@@ -137,5 +147,100 @@ describe('PointsPage — 빈 목록 · 실패 · 미선택', () => {
 
     await waitFor(() => expect(screen.getByText('코스/지점')).toBeInTheDocument())
     expect(requested).toBe(false)
+  })
+})
+
+/**
+ * `spec 027` Phase 4 (022 US5 이월) — 검색·필터·페이지.
+ *
+ * 🔴 **클라이언트 필터 함수가 0건**이다. 전부 서버 파라미터로 나가고, 여기서 그것을
+ * 요청 가로채기로 확인한다 — 화면 결과만 보면 "서버가 걸렀는지 우리가 걸렀는지" 알 수 없다.
+ */
+describe('PointsPage — 검색·필터·페이지 (Phase 4)', () => {
+  /** 서버로 나간 쿼리를 모은다 */
+  const captureQuery = () => {
+    const seen: URLSearchParams[] = []
+    server.use(
+      http.get(GET_POINT_LIST_PATH, ({ request }) => {
+        const query = new URL(request.url).searchParams
+        seen.push(query)
+        return HttpResponse.json({
+          message: '',
+          data: { items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 },
+          code: 200,
+        })
+      })
+    )
+    return seen
+  }
+
+  it('🔴 URL 의 필터가 서버 파라미터로 나간다', async () => {
+    const seen = captureQuery()
+    renderPage('/points?authMethod=10&useYn=false&search=로비')
+
+    await waitFor(() => expect(seen.length).toBeGreaterThan(0))
+    const last = seen.at(-1)!
+    expect(last.get('authMethod')).toBe('10')
+    expect(last.get('useYn')).toBe('false')
+    expect(last.get('searchKey')).toBe('로비')
+  })
+
+  it('필터를 고르면 URL 에 보존된다', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await screen.findByText('정문 입구')
+    await user.click(screen.getByRole('button', { name: /인증수단/ }))
+    await user.click(await screen.findByRole('option', { name: 'NFC' }))
+
+    await waitFor(() => expect(url()).toContain('authMethod=10'))
+  })
+
+  it('🔴 "전체" 는 URL 에 남지 않는다 — 센티넬을 서버로 보내지 않는다', async () => {
+    const user = userEvent.setup()
+    renderPage('/points?authMethod=10')
+
+    await user.click(screen.getByRole('button', { name: /인증수단/ }))
+    await user.click(await screen.findByRole('option', { name: '전체' }))
+
+    await waitFor(() => expect(url()).not.toContain('authMethod'))
+  })
+
+  it('🔴 필터를 바꾸면 첫 페이지로 돌아간다 — 3페이지에서 걸면 빈 화면이 된다', async () => {
+    const user = userEvent.setup()
+    // 3페이지는 결과가 없다(10건 / 20건씩) — 필터 바는 목록과 무관하게 항상 있다
+    renderPage('/points?page=3')
+
+    await user.click(await screen.findByRole('button', { name: /사용여부/ }))
+    await user.click(await screen.findByRole('option', { name: '미사용' }))
+
+    await waitFor(() => expect(url()).toContain('useYn=false'))
+    expect(url()).not.toContain('page=3')
+  })
+
+  it('🔴 필터 0건과 "등록된 지점 없음" 을 다르게 그린다', async () => {
+    renderPage('/points?search=존재하지않는지점명')
+
+    expect(await screen.findByText('조건에 맞는 지점이 없습니다')).toBeInTheDocument()
+    // 이미 있는 지점을 또 만들게 하면 안 된다
+    expect(screen.queryByText('등록된 지점이 없습니다.')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '필터 초기화' })).toBeInTheDocument()
+  })
+
+  it('필터 초기화를 누르면 쿼리가 비워진다', async () => {
+    const user = userEvent.setup()
+    renderPage('/points?search=존재하지않는지점명&authMethod=9')
+
+    await user.click(await screen.findByRole('button', { name: '필터 초기화' }))
+
+    await waitFor(() => expect(url()).toBe(''))
+  })
+
+  it('페이지 번호가 URL 에 보존되고 서버로 나간다', async () => {
+    const seen = captureQuery()
+    renderPage('/points?page=2')
+
+    await waitFor(() => expect(seen.length).toBeGreaterThan(0))
+    expect(seen.at(-1)!.get('pageNumber')).toBe('2')
   })
 })

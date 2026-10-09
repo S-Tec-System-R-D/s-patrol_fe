@@ -16,8 +16,13 @@ import { toPointListParams, type PointListQuery } from '../lib/pointListParams'
 /** 조회하지 않는 상태를 쿼리 키에 드러내기 위한 값. `enabled: false`라 요청은 나가지 않는다 */
 const NO_SITE = -1
 
-export const usePointList = (siteSeq: number | null, query: PointListQuery) => {
-  const params = toPointListParams(siteSeq ?? NO_SITE, query)
+export const usePointList = (
+  siteSeq: number | null,
+  query: PointListQuery,
+  /** 행 수. URL 이 아니라 화면 로컬 상태라 인자로 받는다(027) */
+  pageSize?: number
+) => {
+  const params = toPointListParams(siteSeq ?? NO_SITE, query, pageSize)
 
   return useQuery({
     queryKey: pointKeys.list(params),

@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
 
 import PointTopNav from '../PointTopNav'
 
@@ -16,15 +17,16 @@ import PointTopNav from '../PointTopNav'
  * 항상 DOM 에 있다). 숨김은 브라우저 확인(T326) 몫이고, 여기서는 **이름이 유지되는지**만
  * 본다.
  */
-const renderNav = () => {
+const renderNav = (search?: string, onSearchChange = vi.fn()) => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
   })
   render(
     <QueryClientProvider client={queryClient}>
-      <PointTopNav />
+      <PointTopNav search={search} onSearchChange={onSearchChange} />
     </QueryClientProvider>
   )
+  return { onSearchChange }
 }
 
 describe('PointTopNav — 추가 버튼', () => {
@@ -41,5 +43,35 @@ describe('PointTopNav — 추가 버튼', () => {
   it('검색 input 이 있다', () => {
     renderNav()
     expect(screen.getByPlaceholderText('지점 이름 검색')).toBeInTheDocument()
+  })
+})
+
+/** `spec 027` Phase 4 — 검색 디바운스 */
+describe('PointTopNav — 검색', () => {
+  it('URL 의 검색어가 입력창에 들어온다', () => {
+    renderNav('정문')
+
+    expect(screen.getByPlaceholderText('지점 이름 검색')).toHaveValue('정문')
+  })
+
+  it('🔴 글자마다 보내지 않는다 — 디바운스 뒤 1회만', async () => {
+    const user = userEvent.setup()
+    const { onSearchChange } = renderNav()
+
+    await user.type(screen.getByPlaceholderText('지점 이름 검색'), '정문')
+
+    // 타이핑 직후에는 아직 안 나간다
+    expect(onSearchChange).not.toHaveBeenCalled()
+    await waitFor(() => expect(onSearchChange).toHaveBeenCalledTimes(1), { timeout: 1500 })
+    expect(onSearchChange).toHaveBeenCalledWith('정문')
+  })
+
+  it('비우면 undefined 를 보낸다 — 빈 문자열이 URL 에 남지 않는다', async () => {
+    const user = userEvent.setup()
+    const { onSearchChange } = renderNav('정문')
+
+    await user.clear(screen.getByPlaceholderText('지점 이름 검색'))
+
+    await waitFor(() => expect(onSearchChange).toHaveBeenCalledWith(undefined), { timeout: 1500 })
   })
 })

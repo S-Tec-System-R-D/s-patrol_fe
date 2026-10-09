@@ -87,13 +87,13 @@
 >
 > ✅ **추측이 아니다** — Phase 8 R2에서 서버 필터 3종이 실제로 걸리는 것을 실측했다(`authMethod=9`→4건 / `useYn=false`→0건 / `searchKey=지점`→6건).
 
-- [ ] T317 🔴 **`AppFilterPopover` 신설** in src/components/app/AppFilterPopover.tsx — 기존 `AppFilterButton`(시각 트리거)을 `Popover`로 감싸 **처음으로 동작하게** 만든다. 선택 시 라벨에 값 반영(`인증수단` → `인증수단: QR`) + `active` 상태 + "전체" 옵션. ⚠️ **`AppFilterButton`을 고치지 않는다** — `/patrol/points` 5개·`/users` 2개가 그 시각에 의존한다
-- [ ] T318 [P] vitest in src/components/app/\_\_tests\_\_/AppFilterPopover.test.tsx — 열림/선택/라벨 반영/active/"전체" 선택 시 `undefined` 반환
-- [ ] T319 [US3] 필터 바 조립 in src/features/points/components/PointFilters.tsx — 인증수단·사용여부 2종. 018 규약 승계: `ALL_VALUE`("전체"는 URL에 안 남김) + `setParams(..., { replace: true })` + **필터 변경 시 첫 페이지 복귀**(규칙 5)
-- [ ] T320 [US3] 검색 연결 + 디바운스 in src/features/points/components/PointTopNav.tsx — `AppInput variant="search"`에 `value`/`onChange`. **300ms 디바운스**(규칙 6) — 없으면 글자 수만큼 요청이 나간다. URL 키는 `search`
-- [ ] T321 [US3] URL↔쿼리 연결 in src/pages/service/points/PointsPage.tsx — `useQueryParams<'search' | 'authMethod' | 'useYn' | 'page'>` + `lib/pointListParams.ts` 변환(022 자산). 🔴 **변환은 그 한 자리에만**(규칙 8)
-- [ ] T322 [US3] 빈 결과 처리 — 🔴 **필터 0건과 조회 실패를 다르게 그린다**(§4). "조건에 맞는 지점이 없습니다" vs "다시 시도"
-- [ ] T323 [US3] [P] vitest in src/pages/service/points/\_\_tests\_\_/PointsPage.test.tsx — 검색어 입력 → URL 반영 + 요청 파라미터 / 필터 변경 시 첫 페이지 복귀 / 뒤로가기에서 필터 보존 / `ALL_VALUE`는 URL에 안 남음 / 필터 0건 ≠ 실패
+- [x] T317 🔴 **`AppFilterPopover` 신설** in src/components/app/AppFilterPopover.tsx — 기존 `AppFilterButton`(시각 트리거)을 `Popover`로 감싸 **처음으로 동작하게** 만든다. 선택 시 라벨에 값 반영(`인증수단` → `인증수단: QR`) + `active` 상태 + "전체" 옵션. ⚠️ **`AppFilterButton`을 고치지 않는다** — `/patrol/points` 5개·`/users` 2개가 그 시각에 의존한다
+- [x] T318 [P] vitest in src/components/app/\_\_tests\_\_/AppFilterPopover.test.tsx — 열림/선택/라벨 반영/active/"전체" 선택 시 `undefined` 반환
+- [x] T319 [US3] 필터 바 조립 in src/features/points/components/PointFilters.tsx — 인증수단·사용여부 2종. 018 규약 승계: `ALL_VALUE`("전체"는 URL에 안 남김) + `setParams(..., { replace: true })` + **필터 변경 시 첫 페이지 복귀**(규칙 5)
+- [x] T320 [US3] 검색 연결 + 디바운스 in src/features/points/components/PointTopNav.tsx — `AppInput variant="search"`에 `value`/`onChange`. **300ms 디바운스**(규칙 6) — 없으면 글자 수만큼 요청이 나간다. URL 키는 `search`
+- [x] T321 [US3] URL↔쿼리 연결 in src/pages/service/points/PointsPage.tsx — `useQueryParams<'search' | 'authMethod' | 'useYn' | 'page'>` + `lib/pointListParams.ts` 변환(022 자산). 🔴 **변환은 그 한 자리에만**(규칙 8)
+- [x] T322 [US3] 빈 결과 처리 — 🔴 **필터 0건과 조회 실패를 다르게 그린다**(§4). "조건에 맞는 지점이 없습니다" vs "다시 시도"
+- [x] T323 [US3] [P] vitest in src/pages/service/points/\_\_tests\_\_/PointsPage.test.tsx — 검색어 입력 → URL 반영 + 요청 파라미터 / 필터 변경 시 첫 페이지 복귀 / 뒤로가기에서 필터 보존 / `ALL_VALUE`는 URL에 안 남음 / 필터 0건 ≠ 실패
 
 ## Phase 5: Polish
 
@@ -235,4 +235,22 @@ Phase 1 (라우트 + 목록 테이블 — 🔴 한 묶음)
     - ✅ 팔레트 검증 통과(`dataviz` 검증 스크립트): 밝기 밴드·채도 하한·표면 대비 3:1
     - 🔴 **캡쳐로 또 잡았다** — `interval` 에 맡겼더니 **마지막 날(= 오늘)에 라벨이 없었다.** 기간의 양 끝을 모르면 "최근 30일" 이 어디부터인지 알 수 없다 → `ticks` 배열로 양 끝 포함 직접 지정
   - **인증수단 뱃지 크기 조정** — `px-3 py-1.5` 가 행보다 커서 그 줄만 튀었다. 행 높이에 맞춰 `px-1.5 py-0.5 text-[11px]` + 아이콘 12px
-- 다음: Phase 4(T317~T323) — 검색·필터·페이지 이동. 🔴 `AppFilterPopover` 신설이 가장 큰 덩어리
+- 다음: Phase 4(T317~T323) — 검색·필터·페이지 이동
+
+### Phase 4 완료 — 검색·필터·페이지 이동 (022 US5 이월, 2026-10-10)
+
+- T317~T323 완료. 신설 4파일(`AppFilterPopover` + 테스트 · `PointFilters` · `useDebouncedCallback`) + 기존 4파일 수정
+- `npm run verify` **0 errors** + `npm run test` **53 files / 450 tests green**(434 → **+16**)
+- 🔴 **`AppFilterButton` 의 첫 조립.** 시각만 있고 **조립 사례가 0건**이던 것을 `AppFilterPopover` 로 채웠다 — `/patrol/points` 5개·`/users` 2개가 **죽은 버튼**으로 기다리고 있었고 이제 쓸 것이 생겼다. 그래서 feature 가 아니라 **공용(`components/app/`)** 에 뒀다
+  - **"전체" 는 값이 아니라 해제다** — `onChange(undefined)`. `ALL` 센티넬이 URL·서버로 새지 않는 것을 테스트로 고정(018 규약 승계)
+  - **선택값을 버튼 라벨에 붙인다**(`인증수단: QR`) — 팝오버를 열지 않고도 무엇이 걸렸는지 안다
+  - 선택 표시를 **체크 아이콘**으로도 준다(색·굵기만으로 전달하지 않는다 — design-system §3)
+  - ⚠️ **단일 선택만** 한다. 날짜 범위·다중 선택은 소비처가 생길 때(`spec 024`) 넓힌다(A6)
+- ✅ **추측이 아니라 실측 위에서 짰다** — Phase 8 R2 에서 서버 필터 3종이 실제로 걸리는 것을 확인해 뒀다. 테스트도 화면 결과가 아니라 **서버로 나간 쿼리를 가로채** 검증한다(화면만 보면 "서버가 걸렀는지 우리가 걸렀는지" 알 수 없다)
+- **검색 300ms 디바운스**(`useDebouncedCallback` 신설). 없으면 글자 수만큼 요청이 나가고 URL 히스토리도 그만큼 쌓인다. 🔴 **입력은 로컬 state, URL 은 디바운스 뒤에** — URL 을 바로 쓰면 글자마다 내비게이션이 걸려 입력이 끊긴다. 반대로 **URL 이 밖에서 바뀌면**(뒤로가기·초기화) 입력창을 맞춘다
+- 🔴 **그 동기화를 effect 가 아니라 렌더 중 조정으로 했다.** 처음엔 `useEffect` 로 썼다가 `react-hooks/set-state-in-effect` 에 걸렸다 — **lint 가 옳았다**. effect 면 "렌더 → 커밋 → setState → 재렌더" 로 한 박자 늦는다. React 공식 "prop 이 바뀔 때 state 조정" 패턴으로 바꿨다
+- **필터 변경 시 첫 페이지 복귀 + `replace`**(018 승계). 3페이지에서 필터를 걸면 결과가 1페이지뿐일 수 있고 그러면 **정상 응답인 빈 화면**이 된다
+- 🔴 **필터 0건과 "등록된 지점 없음" 을 다르게 그린다.** 필터 때문에 비었는데 "지점을 추가해주세요" 라고 하면 **이미 있는 지점을 또 만든다**. 필터 0건에는 **초기화 버튼**을 준다
+- 🔴 **죽은 컨트롤을 하나 만들었다가 캡쳐에서 잡았다** — "페이지당 행 수" 셀렉트가 **빈 값에 무동작**이었다(`onPageSizeChange={() => undefined}` + 서버 기본 20이 옵션 `[10,25,50]` 에 없음). **027 이 고치고 있는 문제와 같은 종류**라 바로 동작하게 만들었다(옵션 `[20,50,100]`, 변경 시 첫 페이지 복귀). 행 수는 URL 에 두지 않는다 — 공유할 상태가 아니다
+- **mock 보강**: 지점마다 순찰 시각을 흔들었다. 전부 같으면 목록의 "최근 순찰" 이 **한 값으로** 보여 정렬·차이를 확인할 수 없다
+- 다음: Phase 5(T324~T328) — 캡쳐 재촬영·브라우저 확인·문서·DoD
