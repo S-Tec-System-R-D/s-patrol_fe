@@ -60,7 +60,28 @@
 - [x] T315 [US2] 삭제 후 이동 처리 — 🔴 **성공 시 `navigate(paths.service.points)`, 실패 시 머문다**(규칙 13). `PointDetail.test.tsx` 5건을 "선택 해제" → "navigate 호출"로 교체. 🔴 **실패 시 navigate가 호출되지 않는 것**을 명시 고정 — 거부인데 화면이 바뀌면 삭제된 것처럼 보인다
 - [x] T316 [US2] [P] 상세 라우트 엣지 테스트 in src/pages/service/points/\_\_tests\_\_/PointDetailPage.test.tsx — 없는 `pointSeq`(400) → 안내 + 목록 복귀 수단 / 새로고침 시 유지 / 🔴 **`/404`로 가지 않음**
 
-## Phase 3: US3 — 검색·필터·페이지 이동 (022 US5 이월)
+## Phase 3: US2 — 상세 확장 (목업 `지점상세-신규.html` 반영, 2026-10-09 추가)
+
+> **독립 테스트 기준**: 상세에 **통계 3칸 · 순찰 인증 기록 · 같은 사업장의 다른 지점**이 있고, 기본정보가 8칸(4칸은 placeholder)이다. 변경 이력·QR 카드 **섹션이 남아 있고** 막힌 이유가 적혀 있다. `npm run test` green.
+>
+> 🔴 **왜 필터(Phase 4)보다 앞인가**: 상세 확장이 커졌고 사용자가 지금 상세를 보고 있다. 필터는 022 이월분이라 급하지 않고, 둘은 **서로 독립**이다(Phase 1에만 종속). **태스크 ID 는 그대로 두고 묶음 순서만 바꿨다** — ID 는 Phase 무관 일련번호다(템플릿 규약).
+>
+> ⚠️ **8섹션 중 2개는 placeholder 다.** 지우지 않는다(OQ-027-E) — 지우면 "설계에 없던 것" 이 되어 나중에 다시 논의해야 한다.
+
+- [ ] T329 지점 순찰이력 api + 훅 in src/features/points/api/pointHistory.ts · src/features/points/hooks/usePointHistory.ts — `GET History/W/sign/GetPointHistory`. 🔴 **응답은 실측돼 있다**(`api-spec.md` §5-2 19번 `PointHistoryRow`). 파라미터는 `siteSeq`·`pointSeq`·`fromDt`·`toDt`·`pageNumber`·`pageSize`. `queryKey` 는 `data-model.md` §8 규약을 따른다(스코프 값 포함)
+- [ ] T330 30일 집계 순수함수 in src/features/points/lib/patrolSummary.ts — 🔴 **전용 집계 API 가 없다.** `PointHistoryRow[]` → 날짜별 버킷 + 총 횟수. 순수함수로 빼서 테스트한다(경계: 0건·하루 다건·기간 밖)
+- [ ] T331 [P] vitest in src/features/points/lib/__tests__/patrolSummary.test.ts
+- [ ] T332 MSW 핸들러 in src/mocks/handlers/points.ts — `GetPointHistory`. 🔴 **지점별로 다른 기록을 준다**(0건 지점 포함) — 전부 같으면 "기록 없음" 경로를 화면에서 볼 수 없다. 022 의 `resetPointStore` 와 같은 자리에 둔다
+- [ ] T333 [US2] 통계 3칸 in src/features/points/components/detail/PointStats.tsx — 30일 인증 / 최근 순찰 / 소속 코스. ⚠️ **목업의 "QR 발행" 4번째 칸은 뺀다**(B-23 — 발행 메타가 서버에 없다)
+- [ ] T334 [US2] 기본정보 확장 + 행 placeholder in src/features/points/components/detail/PointDetail.tsx — 8칸 2열. 🔴 **4칸은 점선 + `준비 중`**(지점 코드 B-21 · 상세 위치 B-20 · 등록/최근 수정 B-19). 사업장명은 021 저장값(`getSiteName()`)
+- [ ] T335 [US2] 순찰 인증 기록 섹션 in src/features/points/components/detail/PointPatrolLog.tsx — 날짜별 막대 + 목록. 0건이면 **빈 상태**(placeholder 아님 — 기능은 있고 데이터가 없는 것이다). "전체 기록" → `/patrol/points` 링크
+- [ ] T336 [US2] 같은 사업장의 다른 지점 in src/features/points/components/detail/SiblingPoints.tsx — `GetPointList(siteSeq)` 재사용. 현재 지점은 `현재` 표시 + 링크 제외. 코스 N 은 `usedCount`
+- [ ] T337 🔴 placeholder 2종 신설 in src/features/points/components/detail/PendingBlock.tsx — **행용**(값 자리 점선 + `준비 중`)과 **섹션용**(점선 카드 + 뱃지 + 사유 한 줄). 🔴 **`AppEmpty` 를 쓰지 않는다** — 변경 이력은 실제로 비어 있을 수도 있어 "데이터 없음" 과 섞이면 구분이 불가능하다. ⚠️ 공용(`components/app/`)으로 빼지 않는다 — 사례가 이 화면 2곳뿐이다(A6)
+- [ ] T338 [US2] 변경 이력 · QR 카드 **섹션 placeholder** 배치 — 각각 막힌 이유를 적는다(B-22 / B-23·OQ-022-D). 소속 코스의 **"코스에 추가" 버튼도 비활성 + 사유**(코스 편성 API 는 `spec 023`)
+- [ ] T339 [US2] 상세 2단 레이아웃 재배치 in src/pages/service/points/PointDetailPage.tsx — 좌(기본정보·소속 코스·순찰 인증 기록) / 우(인증 수단·변경 이력·같은 사업장 지점). `xl` 미만 1단
+- [ ] T340 [US2] [P] vitest in src/features/points/components/detail/__tests__/ · src/pages/service/points/__tests__/PointDetailPage.test.tsx — 통계 집계 표시 / 기록 0건 빈 상태 / 🔴 **placeholder 가 빈 상태와 다른 것** / 섹션이 지워지지 않은 것 / 형제 지점 목록
+
+## Phase 4: US3 — 검색·필터·페이지 이동 (022 US5 이월)
 
 > **독립 테스트 기준**: 검색어·인증수단·사용여부·페이지가 URL에 보존되고 **서버 파라미터로** 나간다. 🔴 **클라이언트 필터 함수가 0건**이다.
 >
@@ -74,7 +95,7 @@
 - [ ] T322 [US3] 빈 결과 처리 — 🔴 **필터 0건과 조회 실패를 다르게 그린다**(§4). "조건에 맞는 지점이 없습니다" vs "다시 시도"
 - [ ] T323 [US3] [P] vitest in src/pages/service/points/\_\_tests\_\_/PointsPage.test.tsx — 검색어 입력 → URL 반영 + 요청 파라미터 / 필터 변경 시 첫 페이지 복귀 / 뒤로가기에서 필터 보존 / `ALL_VALUE`는 URL에 안 남음 / 필터 0건 ≠ 실패
 
-## Phase 4: Polish
+## Phase 5: Polish
 
 - [ ] T324 [P] 로딩 상태 점검 (022 T276 이월) — 목록·상세·변경 각각. 기존 선례(`AppEmpty`·`isPending` disabled)를 따르고 **새 패턴을 만들지 않는다**(A6)
 - [ ] T325 🔴 `npm run capture` baseline 재촬영 in docs/ui-current/ (022 T277 이월) — `현장/points--목록+상세` **1장 → 2장**(`points--목록`·`points--상세`)으로 교체 + **나머지 9장 무변화 확인**. ⚠️ 020·021·022에 이어 **네 번째 같은 자리**다 — 🔴 재촬영 전 scratchpad 스크립트로 먼저 확인하고(021 T237 방식), baseline 덮어쓰기는 이상 없음을 확인한 뒤에 한다. 🔴 **상세 라우트가 추가돼 캡쳐 스크립트에 경로를 더해야 한다**
@@ -91,7 +112,11 @@
 - **T308 → T309.** 컬럼 정의가 있어야 테이블을 조립한다
 - **T309 → T310.** 구조가 바뀐 뒤에 테스트를 맞춘다
 - **T306은 독립** `[P]` — 다만 Phase 1 안에서 끝낸다(상세 페이지에서 탭이 꺼진 채 Phase 2로 넘어가지 않는다)
-- **Phase 1 → Phase 2·3.** 🔴 **Phase 2와 3은 서로 독립**이라 순서를 바꿔도 된다. 사용자 결정(2026-10-08): **2 → 3**
+- **Phase 1 → Phase 2·3·4.** 🔴 **Phase 2·3(상세)와 Phase 4(필터)는 서로 독립**이다. 사용자 결정: 상세를 먼저(**2 → 3 → 4**)
+- **T329 → T330 → T333·T335.** 이력 응답이 있어야 집계가 있고, 집계가 있어야 통계 칸이 있다
+- **T332 → T335·T340.** MSW 핸들러가 그 화면·테스트의 전제다
+- **T337 → T334·T338.** placeholder 컴포넌트가 선 뒤에 소비한다
+- **T333~T338 → T339.** 섹션이 다 있어야 배치를 정한다
 - **T312 → T313 → T314 → T315.** 전부 상세 페이지 한 자리를 만지므로 **병렬 금지**
 - **T317 → T318·T319.** 공용 컴포넌트가 선 뒤에 소비한다
 - **T319·T320 → T321 → T322·T323**
@@ -103,11 +128,13 @@
 
 ```
 Phase 1 (라우트 + 목록 테이블 — 🔴 한 묶음)
-  ├─→ Phase 2 (상세 페이지 UI)        ┐
-  └─→ Phase 3 (필터·검색·페이지)      ┘ 서로 독립 · 결정된 순서는 2 → 3
-                                        ↓
-                                   Phase 4 (캡쳐·브라우저·문서)
+  ├─→ Phase 2 (상세 기본 UI) → Phase 3 (상세 확장 — 목업 반영)  ┐
+  └─→ Phase 4 (필터·검색·페이지, 022 이월)                        ┘ 상세와 독립
+                                                                   ↓
+                                              Phase 5 (캡쳐·브라우저·문서)
 ```
+
+🔴 **Phase 3 는 2026-10-09 에 추가됐다.** 재구성 목업(`지점상세-신규.html`)이 생기면서 상세가 **8섹션**으로 커졌다. Phase 4(필터)와 **독립**이고, 사용자 결정으로 **상세를 먼저** 한다. 번호를 재배치했지만 **태스크 ID 는 그대로다**(Phase 무관 일련번호 — 템플릿 규약).
 
 ---
 
