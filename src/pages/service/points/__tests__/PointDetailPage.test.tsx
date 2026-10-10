@@ -144,7 +144,20 @@ describe('PointDetailPage — 삭제 후 이동', () => {
 
   it('🔴 삭제가 거부되면 상세에 머문다 — 화면이 바뀌면 삭제된 것으로 오해한다', async () => {
     const user = userEvent.setup()
-    // pointSeq 1 은 코스에 편성돼 있어 mock 이 거부한다
+    /**
+     * 🔴 **거부를 핸들러로 직접 만든다.** 022 에서는 "코스에 편성된 지점은 mock 이
+     * 거부한다" 에 기댔는데, 실측(2026-10-10) 결과 **서버는 거부하지 않아**
+     * 그 가정을 걷어냈다(OQ-10). 거부 **처리**는 다른 비즈니스 오류에서 여전히
+     * 유효하므로, 데이터가 아니라 **응답을 스텁해** 그 경로만 고정한다.
+     */
+    server.use(
+      http.delete(DELETE_POINT_PATH, () =>
+        HttpResponse.json(
+          { message: '삭제할 수 없습니다.', data: false, code: 400 },
+          { status: 400 }
+        )
+      )
+    )
     renderAt('/points/1')
     await screen.findByRole('heading', { name: '정문 입구' })
 

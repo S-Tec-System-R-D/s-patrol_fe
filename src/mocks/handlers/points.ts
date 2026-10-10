@@ -405,28 +405,25 @@ export const pointHandlers = [
    * ✅ **성공 응답만 실측됐다(2026-10-08)**: 200 + `data: true`. 없는 `pointSeq` 는
    * **400 + 래퍼**(`"잘못된 요청입니다."`). 삭제 후 그 지점의 `DetailPoint` 도 400 이 된다.
    *
-   * 🔴 **거부 케이스는 여전히 가정이다.** `usedCount > 0`(코스에 편성된) 지점의 삭제를
-   * 서버가 거부하는지는 **확인하지 않았다** — Phase 8 의 쓰기 범위를 "생성한 지점만" 으로
-   * 합의했고(2026-10-08), 새로 만든 지점은 코스에 편성돼 있지 않아 이 경로를 밟을 수
-   * 없었다. 거부되지 않는다면 실 지점이 삭제되므로 기존 지점으로 시험하지 않았다.
-   * **확정은 코스 편성 API(`spec 023`) 이후.** 그때까지 이 분기는 UI 경로 확보용으로 남긴다.
+   * ✅ **거부는 없다 — 실측 확정(2026-10-10, `spec 023` WF-1-0).** 코스에 편성된 지점도
+   * **거부 없이 삭제**되고 코스 편성에서도 함께 빠진다. `usedCount > 0` 차단은 **서버
+   * 규칙이 아니다**(`api-spec.md` OQ-10).
+   *
+   * 🔴 **그래서 mock 의 거부 분기를 제거했다.** 실 서버가 거부하지 않는데 mock 만 거부하면
+   * **dev 에서는 막히고 실 서버에서는 지워지는** 가장 나쁜 불일치가 된다 — mock 이 실
+   * 서버보다 엄격한 것도 거짓이다. 프론트의 거부 처리 경로(사유 노출 + 목록 유지)는
+   * **다른 비즈니스 오류에서 여전히 유효**하므로 코드는 그대로 둔다.
    *
    * ⚠️ 실측에서 거부가 **없다면** 이 분기를 지운다. 거부 사유 문구·상태코드도 추측이므로
    * 프론트가 문구에 의존하지 않게 해야 한다(019 `ApiError` 정규화가 형태를 흡수한다).
    *
-   * 거부 지점: `COURSES_OF` 가 코스를 주는 1·2·3번. `pointSeq=3` 은 2개 코스에 걸려 있다.
-   */
+     */
   http.delete(DELETE_POINT_PATH, ({ request }) => {
     const pointSeq = Number(new URL(request.url).searchParams.get('pointSeq'))
     const index = store.findIndex((point) => point.pointSeq === pointSeq)
     if (index < 0) return businessError(NOT_FOUND_MESSAGE)
 
-    const target = store[index]
-    if (target.courseList.length > 0) {
-      const courseNames = target.courseList.map((course) => course.courseName).join(', ')
-      return businessError(`순찰코스(${courseNames})에 편성된 지점은 삭제할 수 없습니다.`)
-    }
-
+    // 편성된 코스가 있어도 그냥 지운다(실측). 코스 쪽 편성도 함께 사라진다
     store.splice(index, 1)
     return mutationOk()
   }),
