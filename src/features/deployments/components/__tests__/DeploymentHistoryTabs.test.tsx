@@ -42,7 +42,8 @@ describe('DeploymentHistoryTabs', () => {
   beforeEach(() => {
     clearTokens()
     setAccessToken(makeAccessToken())
-    setSite(8, '강동 그랜드타워')
+    // mock 데이터가 siteSeq 7(강동 테크노타워) 기준이다 — 2026-10-10 교정
+    setSite(7, '강동 테크노타워')
   })
 
   it('기본 탭("전출 이력")에 이력이 렌더', async () => {

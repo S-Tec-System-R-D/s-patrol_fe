@@ -23,6 +23,15 @@ export default defineConfig({
     // PC 기준 1280px (CLAUDE.md B4 반응형 — 모바일 전용 UI 없음)
     viewport: { width: 1280, height: 900 },
     colorScheme: 'light',
+    /**
+     * 🔴 **애니메이션을 멈춘다 — 없으면 baseline 이 찍을 때마다 달라진다.**
+     * `AppEmpty` 의 `bounce-anim` 이 **무한 반복**이라 빈 상태가 있는 화면(403·404·
+     * 배치관리 등)은 캡쳐 시점에 따라 픽셀이 바뀐다. 그러면 "무엇이 진짜 바뀌었는지"
+     * 비교할 수 없다(027 재촬영에서 실제로 겪었다 — 같은 코드로 두 번 찍었는데
+     * 403·404 가 달랐다). 프로젝트 CSS 에 이미 `prefers-reduced-motion` 규칙이 있어
+     * 그것을 켜기만 하면 된다(`index.css:345`).
+     */
+    reducedMotion: 'reduce',
     locale: 'ko-KR',
     timezoneId: 'Asia/Seoul',
     deviceScaleFactor: 1,

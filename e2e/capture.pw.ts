@@ -77,6 +77,9 @@ test.beforeEach(async ({ context }) => {
 const open = async (page: Page, path: string) => {
   await page.goto(path)
   await page.waitForLoadState('networkidle')
+  // 🔴 **웹폰트가 적용된 뒤에 찍는다.** Pretendard 가 늦게 들어오면 같은 코드로 찍어도
+  // 글자 모양이 달라져 baseline 이 흔들린다(027 재촬영에서 겪었다).
+  await page.evaluate(() => document.fonts.ready)
   // MSW 응답 후 react-query 렌더 + 트랜지션 안착 여유
   await page.waitForTimeout(600)
 }
@@ -118,10 +121,22 @@ test('순찰코스 관리', async ({ page }) => {
   await shoot(page, '현장/zones--목록+다이어그램')
 })
 
-test('순찰지점 관리', async ({ page }) => {
-  // PointsPage는 첫 지점을 자동 선택한다 → 상세 카드가 기본 노출
+/**
+ * 🔴 **`spec 027` 에서 1장 → 2장이 됐다.** 좌/우 마스터-디테일이 **목록 페이지 + 상세
+ * 페이지**로 분리돼 한 화면에 담기지 않는다. baseline 파일명도 바뀐다
+ * (`points--목록+상세` → `points--목록` · `points--상세`).
+ */
+test('순찰지점 목록', async ({ page }) => {
   await open(page, '/points')
-  await shoot(page, '현장/points--목록+상세')
+  await shoot(page, '현장/points--목록')
+})
+
+test('순찰지점 상세', async ({ page }) => {
+  // pointSeq 1(정문 입구) — QR + 코스 1개 + 순찰 기록 있음. 섹션이 모두 채워지는 지점이다
+  await open(page, '/points/1')
+  // 차트(recharts)는 ResponsiveContainer 가 크기를 잡은 뒤 그려진다
+  await page.waitForTimeout(400)
+  await shoot(page, '현장/points--상세')
 })
 
 test('근무자', async ({ page }) => {
