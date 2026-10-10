@@ -101,7 +101,8 @@ flowchart TB
         PZ <-->|탭| PP
 
         ZP --> Z["/zones<br/>순찰코스 목록·설정"]
-        ZP --> P["/points<br/>순찰지점 목록·설정"]
+        ZP --> P["/points<br/>순찰지점 목록"]
+        P --> PD["/points/:pointSeq<br/>지점 상세"]
         Z <-->|탭| P
     end
 
@@ -111,7 +112,8 @@ flowchart TB
 **탭 그룹**
 
 - `/patrol/zones` ↔ `/patrol/points` — 순찰이력 탭(`PatrolLayout`)
-- `/zones` ↔ `/points` — 구역·지점 탭(`LocationLayout`)
+- `/zones` ↔ `/points` — 구역·지점 탭(`CourseTabs`)
+- `/points` → `/points/:pointSeq` — 행 클릭으로 상세 진입(`spec 027`). 🔴 **상세가 라우트라 새로고침·딥링크·뒤로가기가 보존된다** — 027 전에는 선택이 `useState` 였다. 상세의 브레드크럼 첫 조각이 목록 복귀 링크를 겸한다
 
 ### 1-2. 화면 간 이동 (모달·액션 포함)
 

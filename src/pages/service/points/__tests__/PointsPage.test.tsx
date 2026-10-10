@@ -244,3 +244,28 @@ describe('PointsPage — 검색·필터·페이지 (Phase 4)', () => {
     expect(seen.at(-1)!.get('pageNumber')).toBe('2')
   })
 })
+
+/** `spec 027` T324 — 로딩 상태 점검에서 드러난 퇴행 */
+describe('PointsPage — 로딩', () => {
+  it('🔴 조회 중에 "데이터가 없습니다"를 보여주지 않는다', async () => {
+    // 응답을 지연시켜 로딩 상태를 붙잡는다
+    server.use(
+      http.get(GET_POINT_LIST_PATH, async () => {
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        return HttpResponse.json({
+          message: '',
+          data: { items: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0 },
+          code: 200,
+        })
+      })
+    )
+    renderPage()
+
+    // 로딩 중 — 지점이 없다고 믿고 새로 만들게 하면 안 된다
+    expect(screen.queryByText('데이터가 없습니다')).not.toBeInTheDocument()
+    expect(screen.queryByText('등록된 지점이 없습니다.')).not.toBeInTheDocument()
+
+    // 응답 후에야 빈 목록 안내가 뜬다
+    expect(await screen.findByText('등록된 지점이 없습니다.')).toBeInTheDocument()
+  })
+})

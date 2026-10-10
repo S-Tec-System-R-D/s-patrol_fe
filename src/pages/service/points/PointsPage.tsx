@@ -125,7 +125,23 @@ const PointsPage = () => {
             </AppButton>
           </div>
         </div>
-      ) : items.length === 0 && !list.isPending ? (
+      ) : list.isPending ? (
+        /**
+         * 🔴 **로딩을 "데이터 없음" 으로 보여주지 않는다.** `AppTable` 은 행이 0개면
+         * **"데이터가 없습니다"** 를 그리는데, 조회 중에 그것이 뜨면 사용자는 지점이
+         * 없다고 믿고 새로 만들려 한다 — 022 가 `PointList` 에서 막아 둔 것을 테이블
+         * 전환(Phase 1)에서 놓쳤다(T324 점검에서 발견).
+         *
+         * 행 높이를 유지해 **로딩 → 목록 전환에서 레이아웃이 튀지 않게** 한다(022 선례).
+         */
+        <div className="rounded-sm border border-border bg-card">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="border-b border-border/50 px-3 py-3 last:border-0">
+              <div className="h-[22px] animate-pulse rounded-md bg-muted" />
+            </div>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
         /* 🔴 **필터 0건과 "등록된 지점 없음" 도 다르다.** 필터 때문에 비었는데
            "지점을 추가해주세요" 라고 하면 이미 있는 지점을 또 만들게 된다 */
         <div className="rounded-lg border border-border bg-card">
