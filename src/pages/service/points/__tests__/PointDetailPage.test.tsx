@@ -233,7 +233,7 @@ describe('PointDetailPage — 상세 확장(Phase 3)', () => {
     renderAt('/points/1')
 
     await screen.findByRole('heading', { name: '정문 입구' })
-    expect(screen.getByText('30일 인증')).toBeInTheDocument()
+    expect(screen.getByText('2주 인증')).toBeInTheDocument()
     // '최근 순찰' 은 통계에만 있다 — 기본정보에서 뺐다(같은 값 두 번)
     expect(screen.getByText('최근 순찰')).toBeInTheDocument()
     // '소속 코스' 는 통계 칸과 섹션 제목 두 곳

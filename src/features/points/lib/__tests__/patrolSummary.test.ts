@@ -36,10 +36,10 @@ const row = (checkDt: string, overrides: Partial<PointHistoryRow> = {}): PointHi
 const TODAY = new Date('2026-10-09T12:00:00')
 
 describe('summaryFromDate / summaryToDate', () => {
-  it('30일 구간은 시작일 포함 30일이다 (오늘 포함)', () => {
+  it('2주 구간은 시작일 포함 14일이다 (오늘 포함)', () => {
     expect(summaryToDate(TODAY)).toBe('2026-10-09')
-    // 09-10 ~ 10-09 = 30일
-    expect(summaryFromDate(TODAY)).toBe('2026-09-10')
+    // 09-26 ~ 10-09 = 14일
+    expect(summaryFromDate(TODAY)).toBe('2026-09-26')
   })
 })
 
@@ -62,7 +62,7 @@ describe('summarizePatrolHistory', () => {
   it('버킷은 오래된 날 → 최근 날 순이다', () => {
     const result = summarizePatrolHistory([], TODAY)
 
-    expect(result.buckets[0].date).toBe('2026-09-10')
+    expect(result.buckets[0].date).toBe('2026-09-26')
     expect(result.buckets.at(-1)?.date).toBe('2026-10-09')
   })
 
@@ -80,15 +80,15 @@ describe('summarizePatrolHistory', () => {
     expect(result.buckets.at(-1)).toEqual({ date: '2026-10-09', count: 3 })
   })
 
-  it('경계 — 시작일(30일 전)은 포함된다', () => {
-    const result = summarizePatrolHistory([row('2026-09-10T23:59:00')], TODAY)
+  it('경계 — 시작일(14일 전)은 포함된다', () => {
+    const result = summarizePatrolHistory([row('2026-09-26T23:59:00')], TODAY)
 
     expect(result.total).toBe(1)
     expect(result.buckets[0].count).toBe(1)
   })
 
   it('🔴 경계 — 기간보다 하루 오래된 기록은 버린다', () => {
-    const result = summarizePatrolHistory([row('2026-09-09T23:59:00')], TODAY)
+    const result = summarizePatrolHistory([row('2026-09-25T23:59:00')], TODAY)
 
     expect(result.total).toBe(0)
   })

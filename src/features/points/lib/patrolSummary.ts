@@ -14,8 +14,14 @@ import type { PointHistoryRow } from '../types'
  * 있고, 렌더와 섞으면 그 경계를 테스트하기 어렵다.
  */
 
-/** 집계 기본 기간(일). 목업의 "최근 30일" */
-export const SUMMARY_DAYS = 30
+/**
+ * 집계 기본 기간(일) — **2주**.
+ *
+ * 🔴 목업은 "최근 30일" 이었지만 **14일로 줄였다**(사용자 결정 2026-10-10). 30개 막대에는
+ * 날짜를 다 못 붙여 띄엄띄엄 찍히고, 그러면 **어느 막대가 어느 날인지 읽을 수 없다**.
+ * 14개면 모든 날짜를 라벨링할 수 있어 차트가 **읽히는** 물건이 된다.
+ */
+export const SUMMARY_DAYS = 14
 
 export interface PatrolDayBucket {
   /** 'yyyy-MM-dd' */

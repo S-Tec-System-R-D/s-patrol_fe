@@ -47,7 +47,7 @@ const PointPatrolLog = ({
         <div className="flex flex-col gap-1">
           <span className="text-muted-foreground text-xs">순찰 인증 기록</span>
           <p className="text-caption text-muted-foreground/80">
-            최근 30일 · 이 지점에서 발생한 인증 내역
+            최근 2주 · 이 지점에서 발생한 인증 내역
           </p>
         </div>
         <Link

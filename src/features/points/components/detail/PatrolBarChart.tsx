@@ -19,10 +19,9 @@ import type { PatrolDayBucket } from '../../lib/patrolSummary'
  * 밝기 밴드·채도 하한·표면 대비 3:1 모두 PASS.
  * 🔴 **CSS 변수로 칠한다** — 하드코딩하면 다크 모드에서 따라오지 않는다.
  *
- * **축** — 30일을 다 라벨링하면 겹친다. **약 5개만** 찍고 나머지는 툴팁이 맡는다.
- * 🔴 **첫날과 마지막날(= 오늘)은 반드시 찍는다.** `interval` 에 맡겼더니 끝이 잘려
- * **가장 중요한 "오늘" 에 라벨이 없었다**(2026-10-10 캡쳐에서 발견) — 기간의 양 끝을
- * 모르면 "최근 30일" 이 어디부터 어디까지인지 알 수 없다.
+ * **축** — 🔴 **모든 날짜를 라벨링한다**(사용자 결정 2026-10-10). 30일일 때는 다 못 붙여
+ * 5개만 띄엄띄엄 찍었는데, 그러면 **어느 막대가 어느 날인지 읽을 수 없다** — 축이 있으나
+ * 마나였다. 기간을 **2주로 줄여**(`SUMMARY_DAYS`) 14개를 전부 찍는다.
  * y축은 정수 눈금만, 축선 없이 **뒤로 물린다**(grid·axes는 recessive).
  */
 
@@ -32,21 +31,6 @@ export interface PatrolBarChartProps {
 
 /** 'yyyy-MM-dd' → 'MM.dd' */
 const tickLabel = (date: string) => format(parseISO(date), 'MM.dd')
-
-/**
- * 라벨링할 날짜를 고른다 — **양 끝 포함**, 사이는 균등.
- * `interval` 은 끝을 보장하지 않아 직접 고른다.
- */
-const pickTicks = (buckets: PatrolDayBucket[], count = 5): string[] => {
-  if (buckets.length <= count) return buckets.map((b) => b.date)
-
-  const step = (buckets.length - 1) / (count - 1)
-  const picked = new Set<string>()
-  for (let i = 0; i < count; i += 1) {
-    picked.add(buckets[Math.round(i * step)].date)
-  }
-  return [...picked]
-}
 
 const ChartTooltip = ({
   active,
@@ -68,8 +52,6 @@ const ChartTooltip = ({
 }
 
 const PatrolBarChart = ({ buckets }: PatrolBarChartProps) => {
-  const ticks = pickTicks(buckets)
-
   return (
     <div className="h-[140px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -79,11 +61,11 @@ const PatrolBarChart = ({ buckets }: PatrolBarChartProps) => {
           <XAxis
             dataKey="date"
             tickFormatter={tickLabel}
-            ticks={ticks}
+            // 🔴 전부 찍는다 — recharts 가 자동으로 솎아내지 않게 명시한다
             interval={0}
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
+            tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }}
             tickMargin={8}
           />
           <YAxis

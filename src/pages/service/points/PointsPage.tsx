@@ -75,11 +75,18 @@ const PointsPage = () => {
 
   /**
    * 필터·검색 변경.
-   * 🔴 **히스토리를 쌓지 않고**(`replace`) **첫 페이지로 되돌린다** — 3페이지에서 필터를
-   * 걸면 결과가 1페이지뿐일 수 있고, 그러면 **정상 응답인 빈 화면**이 된다(018 선례).
+   *
+   * 🔴 **첫 페이지로 되돌린다** — 3페이지에서 필터를 걸면 결과가 1페이지뿐일 수 있고,
+   * 그러면 **정상 응답인 빈 화면**이 된다(018 선례).
+   *
+   * 🔴 **히스토리를 쌓는다(`replace` 아님).** 018 은 `replace` 를 썼지만 그 화면은
+   * 탭 이동 뒤로가기를 보존하는 것이 목적이었다. 여기서는 **필터를 뒤로가기로 되돌릴 수
+   * 있어야 한다** — `replace` 면 필터를 걸고 뒤로가기를 눌렀을 때 **필터 이전이 아니라
+   * 아예 이전 화면(`/zones`)으로 튄다**(사용자 확인 2026-10-10). 검색은 300ms 디바운스가
+   * 걸려 있어 글자마다 쌓이지 않는다.
    */
   const updateFilter = (next: Partial<Record<FilterKey, string | undefined>>) => {
-    setParams({ ...next, page: undefined }, { replace: true })
+    setParams({ ...next, page: undefined })
   }
 
   const pageNumber = parsePageNumber(params.page)
@@ -133,10 +140,12 @@ const PointsPage = () => {
                 <AppButton
                   variant="sub"
                   onClick={() =>
-                    setParams(
-                      { search: undefined, authMethod: undefined, useYn: undefined, page: undefined },
-                      { replace: true }
-                    )
+                    setParams({
+                      search: undefined,
+                      authMethod: undefined,
+                      useYn: undefined,
+                      page: undefined,
+                    })
                   }
                 >
                   필터 초기화
@@ -158,6 +167,8 @@ const PointsPage = () => {
             data={items}
             hidePagination
             onRowClick={(point) => navigate(paths.service.pointDetail(point.pointSeq))}
+            // 🔴 미사용은 **행 전체**를 톤다운한다 — 셀 글자만 흐리면 눈에 안 띈다
+            rowClassName={(point) => (point.useYn ? '' : 'bg-muted/40')}
           />
 
           <AppPagination
@@ -167,12 +178,10 @@ const PointsPage = () => {
             total={list.data?.totalCount ?? items.length}
             // 🔴 서버 기본값(20)이 옵션에 있어야 셀렉트가 빈 값으로 보이지 않는다
             pageSizeOptions={[20, 50, 100]}
-            onPageChange={(pageIndex) =>
-              setParams({ page: String(toPageNumber(pageIndex)) }, { replace: true })
-            }
+            onPageChange={(pageIndex) => setParams({ page: String(toPageNumber(pageIndex)) })}
             onPageSizeChange={(next) => {
               setPageSize(next)
-              setParams({ page: undefined }, { replace: true })
+              setParams({ page: undefined })
             }}
           />
         </>

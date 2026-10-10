@@ -25,6 +25,11 @@ interface AppTableProps<TData> {
   data: TData[]
   columns: ColumnDef<TData>[]
   onRowClick?: (data: TData) => void
+  /**
+   * 행별 추가 클래스. 상태를 **행 전체**로 드러내야 할 때 쓴다
+   * (027: 미사용 지점 배경 톤다운). 셀 단위로는 배경이 끊겨 보인다.
+   */
+  rowClassName?: (data: TData) => string
   searchable?: boolean
   /** 페이지당 행 수. 기본 10. controlled `pagination` 미지정 시에만 사용. */
   pageSize?: number
@@ -40,6 +45,7 @@ const AppTable = <TData,>({
   columns,
   searchable,
   onRowClick,
+  rowClassName,
   pageSize = 10,
   hidePagination = false,
   pagination,
@@ -113,7 +119,7 @@ const AppTable = <TData,>({
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className={`border-b last:border-0 hover:bg-muted/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                  className={`border-b last:border-0 hover:bg-muted/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''} ${rowClassName?.(row.original) ?? ''}`}
                   onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (

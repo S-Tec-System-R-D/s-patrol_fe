@@ -39,7 +39,7 @@ const PointStats = ({
   lastPatrol,
   courseCount,
 }: {
-  /** 최근 30일 인증 횟수 — `GetPointHistory` 를 클라이언트에서 집계한 값 */
+  /** 최근 14일 인증 횟수 — `GetPointHistory` 를 클라이언트에서 집계한 값 */
   patrolCount: number
   /** 'yyyy-MM-dd HH:mm · 이름' 또는 null */
   lastPatrol: string | null
@@ -48,10 +48,10 @@ const PointStats = ({
   <div className="flex flex-col rounded-lg border border-border bg-card xl:flex-row">
     <Stat
       icon={ActivityIcon}
-      label="30일 인증"
+      label="2주 인증"
       value={String(patrolCount)}
       unit="회"
-      hint={patrolCount === 0 ? '순찰 기록 없음' : '최근 30일 기준'}
+      hint={patrolCount === 0 ? '순찰 기록 없음' : '최근 14일 기준'}
     />
     <Stat
       icon={ClockIcon}
