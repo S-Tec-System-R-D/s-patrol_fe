@@ -152,10 +152,48 @@ WF-1-0 이전 계획은 Phase 4를 "백엔드 답변 후"로 뒀다. **실측 �
 > **독립 테스트 기준**: `/zones/:courseSeq` 에 브레드크럼·코스명·상태 뱃지·경로 다이어그램·지점 순서 카드가 있다. 지점 0개 코스는 **빈 상태**("준비 중" 아님)를 보여준다. 없는 `courseSeq` 는 안내 + 목록 복귀. 버튼은 아직 **없거나 비활성**이다.
 
 - [x] T356 [US2] 상세 페이지 골격 ✅ **Phase 2 에서 선행 완료**(행 클릭이 갈 곳이 필요했다) in src/pages/service/zones/ZoneDetailPage.tsx — `useParams` → `useCourseDetail`. 브레드크럼(`코스/지점 › 코스 상세`) + `AppPageHeader`(`icon`/`titleSuffix` 로 상태 뱃지) — 🔴 **`PointDetailPage` 와 같은 조립**(027 승계). 🔴 없는 `courseSeq`(400) → **안내 + 목록 복귀, `/404` 로 보내지 않는다**(DoD #13)
-- [ ] T357 🔴 다이어그램 이설 + 타입 전환 in src/features/courses/components/detail/CourseDiagramCard.tsx — `ZonePointType[]` → `CourseDetail['points']`. 참조 필드 교체: `timeLimit`→`courseMin` · `isActive`→`useYn` · `name`→`pointName`. 🔴 **테스트 5건을 버리지 않고 서버 필드로 재작성**한다(제약 3)
-- [ ] T358 [US2] 지점 순서 카드 — **읽기 전용** in src/features/courses/components/detail/CoursePointList.tsx — `orderNo` 순 + 구간시간 + 지점별 사용여부. 🔴 지점 0개면 **빈 상태 + "지점 추가" 유도** — ⚠️ **"준비 중" 이 아니다**(기능은 있고 데이터가 없다, 027 placeholder 규약). 편집 수단은 Phase 4
-- [ ] T359 [US2] 기본정보 섹션 in src/features/courses/components/detail/CourseInfo.tsx — 코스명·설명(`memo`)·총 소요시간·교대 허용·사용여부·지점 수. ⚠️ **`siteSeq` 는 응답에 없다**(OQ-9) → `getSiteSeq()` 로 보충하고 **그 사실을 주석에 남긴다**(Phase 4의 `UpdateCourse` 가 요구한다)
-- [ ] T360 [US2] [P] vitest in src/pages/service/zones/\_\_tests\_\_/ZoneDetailPage.test.tsx · src/features/courses/components/detail/\_\_tests\_\_/ — URL 직접 진입으로 상세가 뜬다 / 지점 0개 빈 상태 / 🔴 **없는 `courseSeq` 가 `/404` 로 가지 않는다** / 다이어그램 순서
+- [x] T357 🔴 다이어그램 이설 + 타입 전환 in src/features/courses/components/detail/CourseDiagramCard.tsx — `ZonePointType[]` → `CourseDetail['points']`. 참조 필드 교체: `timeLimit`→`courseMin` · `isActive`→`useYn` · `name`→`pointName`. 🔴 **테스트 5건을 버리지 않고 서버 필드로 재작성**한다(제약 3)
+- [x] T358 [US2] 지점 순서 카드 — **읽기 전용** in src/features/courses/components/detail/CoursePointList.tsx — `orderNo` 순 + 구간시간 + 지점별 사용여부. 🔴 지점 0개면 **빈 상태 + "지점 추가" 유도** — ⚠️ **"준비 중" 이 아니다**(기능은 있고 데이터가 없다, 027 placeholder 규약). 편집 수단은 Phase 4
+- [x] T359 [US2] 기본정보 섹션 in src/features/courses/components/detail/CourseInfo.tsx — 코스명·설명(`memo`)·총 소요시간·교대 허용·사용여부·지점 수. ⚠️ **`siteSeq` 는 응답에 없다**(OQ-9) → `getSiteSeq()` 로 보충하고 **그 사실을 주석에 남긴다**(Phase 4의 `UpdateCourse` 가 요구한다)
+- [x] T360 [US2] [P] vitest in src/pages/service/zones/\_\_tests\_\_/ZoneDetailPage.test.tsx · src/features/courses/components/detail/\_\_tests\_\_/ — URL 직접 진입으로 상세가 뜬다 / 지점 0개 빈 상태 / 🔴 **없는 `courseSeq` 가 `/404` 로 가지 않는다** / 다이어그램 순서
+
+### Phase 3 결과 (2026-10-11)
+
+**`npm run verify` 0 errors** / **`npm run test` 561건 green**(534 → **+27**). 깨진 테스트 **0건**.
+
+| 파일 | 건수 | 내용 |
+|---|:-:|---|
+| `detail/__tests__/CourseDiagramCard.test.tsx` | 9 (5→9) | 🔴 **011 판 5건을 서버 필드로 재작성** + 모르는 인증수단 코드 숨김 + **설명을 그리지 않는 것** |
+| `detail/__tests__/CoursePointList.test.tsx` | 11 | `orderNo` 정렬 · 빈 상태 ≠ "준비 중" · **편집·토글·메모가 없는 것** |
+| `detail/__tests__/CourseInfo.test.tsx` | 9 | 사업장명이 **021 저장값**에서 오는 것(OQ-9) · 설명 빈 값이 정상인 것 · 코스명 행 없음 |
+| `ZoneDetailPage.test.tsx` | 9 (6→9) | 섹션 3개 **조립** · 지점 0개 코스 · 설명 중복 없음 |
+
+✅ **`features/zone/` 이 완전히 사라졌다**(파일 0개). 구 `PointType` 참조는 **1곳**(`patrol-points`)만 남아 T370 몫이다.
+
+### 🔴 Phase 3 에서 또 하나 — B-30 (구간 메모는 쓰기 전용)
+
+다이어그램을 전환하다 **설명 줄의 출처가 없다**는 것을 발견했다. 실측으로 확인했다(코스 생성 → 지점 2개 편성(`memo` 포함) → 상세 조회 → 삭제):
+
+| | |
+|---|---|
+| `UpdateCourse` 에 `points[].memo` 전송 | **200** — 받아들인다 |
+| `GetCourseDetail` 의 `points[]` | 🔴 **`memo` 필드가 없다** — 저장한 값을 다시 읽을 수 없다 |
+| 겹치는 위험 | **전량 전송 규약**(B-25)과 만나 매 저장마다 `memo: null` 이 나간다 → 다른 경로로 들어간 메모가 **조용히 지워진다** |
+
+**대응**: 다이어그램의 **설명 줄을 없앴다**(추측으로 빈 자리를 두지 않는다 — A1). 대신 **"설명을 그리지 않는다" 를 테스트로 고정**했다 — 빼면 나중에 누가 빈 자리를 채우려 쓰기 전용 필드를 읽고 늘 `undefined` 를 그린다. T367 에 "구간 메모 UI 를 만들지 않는다" 를 명시했다.
+
+### 중복 표시를 두 군데서 걷어냈다
+
+구현 중 **같은 값이 한 화면에 두 번** 나오는 자리가 둘 생겼고, 둘 다 뺐다 — 사용자는 둘이 다른 값인지 확인하려 눈을 왕복한다.
+
+| 중복 | 처리 |
+|---|---|
+| 설명 — 제목 아래 `subtitle` + 기본정보 행 | **기본정보에만** 남김 |
+| 코스명 — 페이지 제목 + 기본정보 행 | **제목에만** 남김(수정 모달에는 당연히 들어간다) |
+
+🔴 두 번째는 **테스트가 먼저 잡았다** — `findByText('A동 순찰코스')` 가 다중 일치로 터져 6건이 실패했다. 화면만 봤으면 "두 번 나오네" 하고 넘어갈 수도 있었다.
+
+⚠️ **T373(공용 셸 승격)의 증거 1건 추가**: 라벨 고정폭 상세 행이 이제 **두 feature 에 있다**(`points/DetailRow` + `courses/CourseInfo.InfoRow`). 공용 `AppDetailRow` 는 **`justify-between` 판**이라 전체 폭 페이지에서 쓸 수 없다(027 이 지점에서 버린 바로 그 모양) — 승격 시 그 둘을 합치는 문제를 함께 풀어야 한다.
 
 ## Phase 4: 🔴 US3·US4·US5 — CRUD + 지점 편성 (위험도 A 본체)
 
@@ -169,7 +207,7 @@ WF-1-0 이전 계획은 Phase 4를 "백엔드 답변 후"로 뒀다. **실측 �
 - [ ] T364 [US5] 🔴 토글 2종 확인 모달 in src/features/courses/components/detail/CourseToggleDialog.tsx — **둘 다 모달, 문구 다르게**(사용자 결정, 규칙 11). 활성화 OFF: "비활성화하면 근무자 앱에서 이 코스의 순찰이 더 이상 배정되지 않습니다." / 교대 허용: 담백한 확인. 🔴 **옵티미스틱을 쓰지 않는다** — 모달로 의도를 확인했으므로 응답을 기다린다(둘은 양립 불가). ⚠️ **OQ-023-F 미해소**: 위 문구가 사실인지 업무 확인 전이다 — 틀리면 **틀린 경고**다
 - [ ] T365 `dnd-kit` 도입 in package.json — `@dnd-kit/core` · `@dnd-kit/sortable` · `@dnd-kit/utilities`. 🔴 **설치돼 있지 않다**(제약 5). `roadmap.md` §7 · `patterns.md` §5가 지정한 것이고 **새 라이브러리를 고르지 않는다**(규칙 7)
 - [ ] T366 [US4] 지점 추가 UI in src/features/courses/components/detail/AddCoursePointDialog.tsx — ⚠️ **OQ-023-C 결정 지점**: `GetClassificationPoint` 는 **페이징이 없어 전량 내려온다** → 후보가 많으면 검색이 필요하다. **모달 + 검색 입력**으로 간다(상세 안 인라인은 다이어그램·순서 카드와 폭을 다툰다). 🔴 **이미 편성된 지점은 후보에서 제외**
-- [ ] T367 [US4] 🔴 편성 — 드래그 정렬 · 구간시간 · 제거 in src/features/courses/components/detail/CoursePointEditor.tsx — `dnd-kit` `SortableContext`. 🔴 **저장은 `UpdateCourse` 에 `points` 전량 전송**(규칙 3) — "변경분만 보내기" 를 만들지 않는다. 기존 행은 **`coursePointSeq`** 로 식별한다. 🔴 **`orderNo` 를 다시 1..N 으로 매긴다**(드래그 후 번호가 비면 서버 순서가 무너진다). 🔴 **지점별 활성(`useYn`)은 표시만 한다** — 요청 DTO 에 필드가 없어 **바꿀 수단이 없다**(B-29, 제약 6). 🔴 **mock 단일 출처 작업 포함**: `handlers/points.ts` 의 `COURSES_OF` 를 코스 저장소에서 파생시킨다(제약 7)
+- [ ] T367 [US4] 🔴 편성 — 드래그 정렬 · 구간시간 · 제거 in src/features/courses/components/detail/CoursePointEditor.tsx — `dnd-kit` `SortableContext`. 🔴 **저장은 `UpdateCourse` 에 `points` 전량 전송**(규칙 3) — "변경분만 보내기" 를 만들지 않는다. 기존 행은 **`coursePointSeq`** 로 식별한다. 🔴 **`orderNo` 를 다시 1..N 으로 매긴다**(드래그 후 번호가 비면 서버 순서가 무너진다). 🔴 **지점별 활성(`useYn`)은 표시만 한다** — 요청 DTO 에 필드가 없어 **바꿀 수단이 없다**(B-29, 제약 6). 🔴 **구간 메모(`memo`)를 UI 에 만들지 않는다** — 쓰기 전용이라 저장해도 다시 읽을 수 없고, 전량 전송과 겹쳐 **다른 경로로 들어간 메모를 지운다**(B-30). 전송 시 기존 값을 알 수 없으므로 `memo: null` 이 나가는 것을 **알고도 보내는 것**임을 코드 주석에 남긴다. 🔴 **mock 단일 출처 작업 포함**: `handlers/points.ts` 의 `COURSES_OF` 를 코스 저장소에서 파생시킨다(제약 7)
 - [ ] T368 [US4] 실패 복구 — 🔴 **드래그 중 저장 실패 시 순서를 원복**한다(§4 — 화면만 바뀌면 다음 조회에서 되돌아가 혼란스럽다). 전량 전송이라 실패는 **부분 반영 없이 전무**다 → 화면 상태를 유지하고 재시도하게 한다. 🔴 **지점 0개가 되어도 자동 조치를 하지 않는다**(규칙 12 — 비활성화·저장 차단·경고 배너 **어느 것도**)
 - [ ] T369 [US3·US4·US5] [P] vitest — 🔴 **`AddCourse` 요청 바디에 `points` 키가 없는 것** / 🔴 **`UpdateCourse` 에 지점 전량이 나가는 것**(하나만 바꿔도) / `courseSeq` 가 반드시 포함되는 것 / `DeleteCourse` 가 `courseId` 로 나가는 것 / 토글 모달 **문구 2종이 다른 것** / 모달 취소 시 **아무 요청도 안 나가는 것** / 드래그 후 `orderNo` 재부여 / 저장 실패 시 순서 원복
 
