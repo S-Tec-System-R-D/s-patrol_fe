@@ -8,6 +8,7 @@ import AdminLayout from '@/components/layout/AdminLayout'
 import PointsPage from '@/pages/service/points/PointsPage'
 import PointDetailPage from '@/pages/service/points/PointDetailPage'
 import ZonesPage from '@/pages/service/zones/ZonesPage'
+import ZoneDetailPage from '@/pages/service/zones/ZoneDetailPage'
 import PatrolZonesPage from '@/pages/service/patrol/zones/PatrolZonesPage'
 import PatrolPointsPage from '@/pages/service/patrol/points/PatrolPointsPage'
 import UsersPage from '@/pages/service/users/UsersPage'
@@ -75,6 +76,11 @@ export const router = createBrowserRouter([
           {
             path: paths.service.zones,
             element: <ZonesPage />,
+            errorElement: <PageErrorFallback />,
+          },
+          {
+            path: pathPatterns.courseDetail,
+            element: <ZoneDetailPage />,
             errorElement: <PageErrorFallback />,
           },
           {

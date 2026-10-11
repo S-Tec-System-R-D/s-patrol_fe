@@ -14,9 +14,11 @@ import type { CourseListParams, CourseRow } from '../types'
  * `params` 의 `undefined` 는 axios 가 쿼리스트링에서 뺀다 — 필터 미적용은 `undefined`
  * 로 표현하고 "전체" 센티넬을 서버로 보내지 않는다.
  *
- * ⚠️ **서버 필터 4종(`searchKey`·`useYn`·`switchYn`·`courseStatus`)이 실제로 걸리는지는
- * 미실측이다.** 지점은 Phase 8 R2 에서 전부 걸리는 것을 확인했지만 코스는 아직이다
- * (`spec 023` T355). 걸리지 않으면 **클라이언트 필터를 만들지 말고 백엔드에 요청**한다.
+ * ✅ **서버 필터 4종을 실측했다**(2026-10-11, T355): `useYn`·`switchYn`·`searchKey`(부분
+ * 일치)·`courseStatus` 가 **모두 걸리고**, 두 개를 함께 주면 **AND** 로 좁혀진다. 그래서
+ * 클라이언트 필터 함수가 **0건**이다. ⚠️ `courseStatus` 는 `1`·`2` 로 호출하면 `0건` 이다
+ * (테스트 DB 에 `0` 만 존재 — OQ-3). 페이지 초과는 에러가 아니라 **빈 items + 요청값
+ * 에코**이고 `pageSize=0` 은 **400** 이다(지점과 동일).
  */
 
 const GET_COURSE_LIST_PATH = '/api/v1/Course/W/sign/GetCourseList'

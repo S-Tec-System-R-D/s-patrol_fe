@@ -107,19 +107,51 @@ WF-1-0 이전 계획은 Phase 4를 "백엔드 답변 후"로 뒀다. **실측 �
 
 > **독립 테스트 기준**: `/zones` 가 전체 폭 테이블이고 좌측 트리가 없다. 행을 누르면 `/zones/:courseSeq` 로 가고 **새로고침해도 유지된다.** 검색·필터·페이지가 **서버 파라미터로** 나가고 URL에 남는다. `npm run test` green.
 
-- [ ] T349 라우트 추가 in src/router/paths.ts · src/router/index.tsx — `courseDetail(courseSeq: number)` + `pathPatterns.courseDetail = '/zones/:courseSeq'`. 🔴 **`pointDetail`(`paths.ts:15,55`)과 같은 모양**으로. 새 관례를 만들지 않는다
-- [ ] T350 [US1] 테이블 컬럼 팩토리 in src/features/courses/components/CourseColumn.tsx — **7컬럼**(코스명·상태·지점 수·총 소요시간·교대·최근 순찰·사용여부). 🔴 **`useMemo` 로 감싸 쓴다**(027 교훈 — 렌더마다 호출하면 `flexRender` 가 새 컴포넌트 타입으로 보아 행 전체가 리마운트된다). 🔴 미사용은 **행 전체 톤다운**(`rowClassName`, 027 승계). ⚠️ `courseStatusName` 을 그대로 쓴다 — 코드 사전이 불완전하다(OQ-3)
-- [ ] T351 [US1] `CourseTabs` 이설 in src/features/courses/components/CourseTabs.tsx — 테스트 3건과 함께 그대로 옮긴다. 🔴 **내용을 고치지 않는다**(제약 3)
-- [ ] T352 [US1] 🔴 목록 페이지 전면 재작성 + **레거시 제거** in src/pages/service/zones/ZonesPage.tsx — `AppTable` + `hidePagination` + 외부 `AppPagination`(`pageSizeOptions=[20,50,100]` — 🔴 **서버 기본값 20이 옵션에 있어야 셀렉트가 비지 않는다**, 027 교훈). 🔴 **제거**: `ZoneSideBar` · `zone-tree/{ZoneTree,ZoneNode,PointNode}` · `ZoneTopNav` · `PointCard` · `point-card/ActiveMenu` · `form/{AddZoneForm,EditZoneForm,AddPointForm,EditPointForm}` · `mocks/zoneData.ts` · `types/{zone,point,index}.ts` (제약 1·4)
-- [ ] T353 [US1] 필터 · 검색 · URL 연결 in src/features/courses/components/{CourseFilters,CourseTopNav}.tsx · ZonesPage.tsx — `AppFilterPopover` 3종(사용여부·교대·상태) + 검색(**300ms 디바운스**). 🔴 **"전체" 는 URL에 남기지 않고**, 필터 변경 시 **첫 페이지 복귀**, `replace` 를 쓰지 않는다(🔴 027 실측: `replace` 면 필터 걸고 뒤로가기 시 **이전 화면으로 튄다**). 🔴 **클라이언트 필터 함수 0건**
-- [ ] T354 [US1] [P] vitest in src/features/courses/components/\_\_tests\_\_/CourseColumn.test.tsx · src/pages/service/zones/\_\_tests\_\_/ZonesPage.test.tsx — 🔴 **서버로 나간 쿼리를 가로채** 확인한다(화면만 보면 누가 걸렀는지 알 수 없다, 027 교훈) / 행 클릭 → 라우트 이동 / 좌측 트리 없음 / **로딩 ≠ 0건 ≠ 실패 셋 구분**(DoD #14)
-- [ ] T355 🔴 서버 필터 4종 실측 확인 (real 모드) — `searchKey`·`useYn`·`switchYn`·`courseStatus` 가 **실제로 걸리는지**. ⚠️ 규칙 8이 "서버가 제공한다" 고 전제하지만 **지점에서만 확인했다**(Phase 8 R2). 걸리지 않으면 **클라이언트 필터가 아니라 백엔드 요청**으로 간다
+- [x] T349 라우트 추가 in src/router/paths.ts · src/router/index.tsx — `courseDetail(courseSeq: number)` + `pathPatterns.courseDetail = '/zones/:courseSeq'`. 🔴 **`pointDetail`(`paths.ts:15,55`)과 같은 모양**으로. 새 관례를 만들지 않는다. ➕ **상세 최소 골격(`ZoneDetailPage.tsx`)까지 포함했다** — 라우트만 추가하면 행 클릭이 **갈 곳이 없어** Phase 2 종료 시점에 화면이 깨진다(027 T307 과 같은 처리). 다이어그램·섹션은 Phase 3, 버튼은 Phase 4
+- [x] T350 [US1] 테이블 컬럼 팩토리 in src/features/courses/components/CourseColumn.tsx — **7컬럼**(코스명·상태·지점 수·총 소요시간·교대·최근 순찰·사용여부). 🔴 **`useMemo` 로 감싸 쓴다**(027 교훈 — 렌더마다 호출하면 `flexRender` 가 새 컴포넌트 타입으로 보아 행 전체가 리마운트된다). 🔴 미사용은 **행 전체 톤다운**(`rowClassName`, 027 승계). ⚠️ `courseStatusName` 을 그대로 쓴다 — 코드 사전이 불완전하다(OQ-3)
+- [x] T351 [US1] `CourseTabs` 이설 in src/features/courses/components/CourseTabs.tsx — 테스트 3건과 함께 그대로 옮긴다. 🔴 **내용을 고치지 않는다**(제약 3)
+- [x] T352 [US1] 🔴 목록 페이지 전면 재작성 + **레거시 제거** in src/pages/service/zones/ZonesPage.tsx — `AppTable` + `hidePagination` + 외부 `AppPagination`(`pageSizeOptions=[20,50,100]` — 🔴 **서버 기본값 20이 옵션에 있어야 셀렉트가 비지 않는다**, 027 교훈). 🔴 **제거**: `ZoneSideBar` · `zone-tree/{ZoneTree,ZoneNode,PointNode}` · `ZoneTopNav` · `PointCard` · `point-card/ActiveMenu` · `form/{AddZoneForm,EditZoneForm,AddPointForm,EditPointForm}` · `mocks/zoneData.ts` · `types/{zone,point,index}.ts` (제약 1·4)
+- [x] T353 [US1] 필터 · 검색 · URL 연결 in src/features/courses/components/{CourseFilters,CourseTopNav}.tsx · ZonesPage.tsx — `AppFilterPopover` 3종(사용여부·교대·상태) + 검색(**300ms 디바운스**). 🔴 **"전체" 는 URL에 남기지 않고**, 필터 변경 시 **첫 페이지 복귀**, `replace` 를 쓰지 않는다(🔴 027 실측: `replace` 면 필터 걸고 뒤로가기 시 **이전 화면으로 튄다**). 🔴 **클라이언트 필터 함수 0건**
+- [x] T354 [US1] [P] vitest in src/features/courses/components/\_\_tests\_\_/CourseColumn.test.tsx · src/pages/service/zones/\_\_tests\_\_/ZonesPage.test.tsx — 🔴 **서버로 나간 쿼리를 가로채** 확인한다(화면만 보면 누가 걸렀는지 알 수 없다, 027 교훈) / 행 클릭 → 라우트 이동 / 좌측 트리 없음 / **로딩 ≠ 0건 ≠ 실패 셋 구분**(DoD #14)
+- [x] T355 🔴 서버 필터 4종 실측 확인 (real 모드) — `searchKey`·`useYn`·`switchYn`·`courseStatus` 가 **실제로 걸리는지**. ⚠️ 규칙 8이 "서버가 제공한다" 고 전제하지만 **지점에서만 확인했다**(Phase 8 R2). 걸리지 않으면 **클라이언트 필터가 아니라 백엔드 요청**으로 간다
+
+### Phase 2 결과 (2026-10-11)
+
+**`npm run verify` 0 errors** / **`npm run test` 534건 green**(496 → **+38**). 깨진 테스트 **0건**.
+
+| 파일 | 건수 | 내용 |
+|---|:-:|---|
+| `courses/components/__tests__/CourseColumn.test.tsx` | 13 | 7컬럼 · `history: null` → "기록 없음" · 깨진 날짜 · 지점 0개에 경고 없음 · 상태 이름 공백이면 뱃지 숨김 |
+| `pages/service/zones/__tests__/ZonesPage.test.tsx` | 19 | 사업장 스코프 · 행 클릭 이동 · **로딩 ≠ 0건 ≠ 실패** · 서버 쿼리 가로채기 · URL 보존 |
+| `pages/service/zones/__tests__/ZoneDetailPage.test.tsx` | 6 | URL 직접 진입 · 없는 `courseSeq` 가 `/404` 아님 · 숫자 아닌 세그먼트 |
+
+🔴 **`/zones` 는 011 이후 테스트가 0건이었다**(mock 셸). 이번이 이 화면의 **첫 테스트**다.
+
+**제거한 레거시 14개 파일** — `ZoneSideBar` · `zone-tree/{ZoneTree,ZoneNode,PointNode}` · `ZoneTopNav` · `PointCard` · `point-card/ActiveMenu` · `form/{AddZoneForm,EditZoneForm,AddPointForm,EditPointForm,schema}` · `mocks/zoneData.ts` · `types/zone.ts`.
+⚠️ **`features/zone/` 이 완전히 사라지지는 않았다** — `CourseDiagramCard` + 그 테스트 5건 + `types/point.ts` 가 남는다. 다이어그램을 서버 타입으로 바꾸는 **T357(Phase 3)에서 함께 정리**되고, `types/index.ts` 에 그 사실을 적어 뒀다.
+
+✅ **DoD #15 가 2/3 해소됐다** — 구 `PointType` 참조 3곳 중 `zone/form/AddPointForm.tsx` 가 삭제됐다. 남은 둘은 T357·T370.
+
+### 🔴 T355 실측 결과 — 필터는 전부 서버가 거른다
+
+⚠️ **실 서버 사업장 7·8 에 코스가 0건**이라 측정할 데이터가 없었다 → 테스트 코스 2개를 만들어 재고 **끝에 전부 삭제**했다(기존 데이터 무접촉).
+
+| 호출 | 결과 |
+|---|---|
+| `useYn` · `switchYn` | ✅ 각각 걸린다 |
+| `useYn=true&switchYn=false` | ✅ **AND** 로 좁혀진다 — OR 가 아니다 |
+| `searchKey=미사용` | ✅ **부분 일치** |
+| `courseStatus=1`·`2` | **0건**(에러 아님) — OQ-3 그대로. 그래서 **상태 필터를 UI 에 넣지 않았다** |
+| `pageNumber` 범위 초과 | 200 + 빈 items + 요청값 에코 / `pageSize=0` 은 **400** |
+| 지점 0개 코스 상세 | `points: []`. 🔴 `siteSeq`·`courseStatusCode`·`pointCount` **없음**(OQ-9 재확인) |
+
+→ **클라이언트 필터 0건의 근거가 코스에서도 확보**됐다. 🔴 측정 뒤 코드 주석의 "미실측" 3곳을 **실측 결과로 교체**했다 — 남겨 두면 다음 사람이 확인된 사실을 다시 재는다.
 
 ## Phase 3: US2 — 상세 **조회** (읽기 전용 — 변경계 없음)
 
 > **독립 테스트 기준**: `/zones/:courseSeq` 에 브레드크럼·코스명·상태 뱃지·경로 다이어그램·지점 순서 카드가 있다. 지점 0개 코스는 **빈 상태**("준비 중" 아님)를 보여준다. 없는 `courseSeq` 는 안내 + 목록 복귀. 버튼은 아직 **없거나 비활성**이다.
 
-- [ ] T356 [US2] 상세 페이지 골격 in src/pages/service/zones/ZoneDetailPage.tsx — `useParams` → `useCourseDetail`. 브레드크럼(`코스/지점 › 코스 상세`) + `AppPageHeader`(`icon`/`titleSuffix` 로 상태 뱃지) — 🔴 **`PointDetailPage` 와 같은 조립**(027 승계). 🔴 없는 `courseSeq`(400) → **안내 + 목록 복귀, `/404` 로 보내지 않는다**(DoD #13)
+- [x] T356 [US2] 상세 페이지 골격 ✅ **Phase 2 에서 선행 완료**(행 클릭이 갈 곳이 필요했다) in src/pages/service/zones/ZoneDetailPage.tsx — `useParams` → `useCourseDetail`. 브레드크럼(`코스/지점 › 코스 상세`) + `AppPageHeader`(`icon`/`titleSuffix` 로 상태 뱃지) — 🔴 **`PointDetailPage` 와 같은 조립**(027 승계). 🔴 없는 `courseSeq`(400) → **안내 + 목록 복귀, `/404` 로 보내지 않는다**(DoD #13)
 - [ ] T357 🔴 다이어그램 이설 + 타입 전환 in src/features/courses/components/detail/CourseDiagramCard.tsx — `ZonePointType[]` → `CourseDetail['points']`. 참조 필드 교체: `timeLimit`→`courseMin` · `isActive`→`useYn` · `name`→`pointName`. 🔴 **테스트 5건을 버리지 않고 서버 필드로 재작성**한다(제약 3)
 - [ ] T358 [US2] 지점 순서 카드 — **읽기 전용** in src/features/courses/components/detail/CoursePointList.tsx — `orderNo` 순 + 구간시간 + 지점별 사용여부. 🔴 지점 0개면 **빈 상태 + "지점 추가" 유도** — ⚠️ **"준비 중" 이 아니다**(기능은 있고 데이터가 없다, 027 placeholder 규약). 편집 수단은 Phase 4
 - [ ] T359 [US2] 기본정보 섹션 in src/features/courses/components/detail/CourseInfo.tsx — 코스명·설명(`memo`)·총 소요시간·교대 허용·사용여부·지점 수. ⚠️ **`siteSeq` 는 응답에 없다**(OQ-9) → `getSiteSeq()` 로 보충하고 **그 사실을 주석에 남긴다**(Phase 4의 `UpdateCourse` 가 요구한다)

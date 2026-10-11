@@ -3,10 +3,13 @@
  *
  * 🔴 **구 mock 타입과 서버 실측 타입이 나란히 존재한다.** `spec 022`가 `/points`만
  * 전환하고 `features/zone`(코스 관리)은 `spec 023` 범위로 남겼기 때문이다.
- * 아래 "구 mock 타입" 블록은 023에서 제거한다 — 참조 3곳:
- *   - `features/patrol-points/types/PatrolPoint.ts:1`  (`PointAuthenticationMethod`)
- *   - `features/zone/types/point.ts:1`                 (`ZonePointType extends PointType`)
- *   - `features/zone/form/AddPointForm.tsx:11`         (`mock/pointData`의 `points`)
+ * 아래 "구 mock 타입" 블록은 023에서 제거한다 — 남은 참조 **2곳**(2026-10-11 갱신):
+ *   - `features/patrol-points/types/PatrolPoint.ts:1`  (`PointAuthenticationMethod`) → 023 Phase 5(T370)
+ *   - `features/zone/types/point.ts:1`                 (`ZonePointType extends PointType`) → 023 Phase 3(T357)
+ *
+ * ✅ `features/zone/form/AddPointForm.tsx` 는 **023 Phase 2 에서 삭제됐다**(mock 셸 제거).
+ * ⚠️ `mock/pointData.ts` 자체는 남는다 — MSW 핸들러(`handlers/points.ts`·`handlers/courses.ts`)가
+ * 서버 스키마로 변환해 쓰는 **dev 데이터 출처**다.
  */
 
 // ─────────────────────────────────────────────
