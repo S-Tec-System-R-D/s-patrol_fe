@@ -54,6 +54,7 @@ const ToggleValue = ({
   checked,
   onLabel,
   offLabel,
+  hint,
   disabled,
   onRequest,
 }: {
@@ -61,10 +62,18 @@ const ToggleValue = ({
   checked: boolean
   onLabel: string
   offLabel: string
+  /**
+   * 값 뒤에 붙는 **효과 한 줄**(목업 `코스상세-신규.html`).
+   *
+   * 🔴 **선택이다. 확인된 것만 붙인다**(A1). 코스 활성화는 업무 확인을 받았지만
+   * (OQ-023-F) 교대 허용의 효과는 **여전히 모른다** — 모르는 쪽은 비워 둔다.
+   * "순찰 중 인계 가능" 같은 그럴듯한 문장을 지어 넣으면 틀린 설명이 화면에 남는다.
+   */
+  hint?: string
   disabled?: boolean
   onRequest: (nextValue: boolean) => void
 }) => (
-  <span className="flex items-center gap-2">
+  <span className="flex flex-wrap items-center gap-2">
     <Switch
       id={id}
       checked={checked}
@@ -75,6 +84,7 @@ const ToggleValue = ({
     <label htmlFor={id} className={checked ? 'text-foreground' : 'text-muted-foreground'}>
       {checked ? onLabel : offLabel}
     </label>
+    {hint && <span className="text-caption text-muted-foreground">· {hint}</span>}
   </span>
 )
 
@@ -134,6 +144,8 @@ const CourseInfo = ({ course, onRequestToggle, isSaving }: CourseInfoProps) => {
               checked={course.useYn}
               onLabel="사용"
               offLabel="미사용"
+              // ✅ OQ-023-F 로 확인된 사실이다 — 배정이 아니라 **근무자가 고른다**
+              hint="앱 코스 목록에 노출"
               disabled={isSaving}
               onRequest={(next) => onRequestToggle('useYn', next)}
             />

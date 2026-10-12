@@ -100,6 +100,40 @@ describe('ZoneDetailPage', () => {
     expect(screen.getByRole('button', { name: '수정' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
   })
+
+  it('🔴 변경 수단 셋이 **헤더 한 줄**에 모여 있다 (A단) — 편성 편집이 카드 밖으로 나왔다', async () => {
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    expect(screen.getByRole('button', { name: '편성 편집' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '수정' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
+  })
+
+  it('🔴 편집 중에는 헤더의 편성 편집이 사라진다 — 편집 모드에 자기 저장·취소가 있다', async () => {
+    const user = userEvent.setup()
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    await user.click(screen.getByRole('button', { name: '편성 편집' }))
+
+    expect(screen.queryByRole('button', { name: '편성 편집' })).not.toBeInTheDocument()
+  })
+
+  it('🔴 제목 줄에 규모 요약 뱃지가 있다 (A단) — 두 카드에 흩어진 값을 한 번에 읽는다', async () => {
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    // mock 코스 1: 지점 3개 · 총 45분
+    expect(screen.getByText('지점 3개 · 45분')).toBeInTheDocument()
+  })
+
+  it('지점 0개 코스도 요약 뱃지를 그대로 적는다 — 경고로 바꾸지 않는다 (규칙 12)', async () => {
+    renderPage('/zones/3')
+
+    await screen.findByText('옥상 점검 코스')
+    expect(screen.getByText(/지점 0개/)).toBeInTheDocument()
+  })
 })
 
 describe('ZoneDetailPage — 조회 섹션 조립 (Phase 3)', () => {

@@ -98,6 +98,22 @@ describe('CourseInfo — 토글 2종 (Phase 4)', () => {
     expect(screen.getAllByRole('switch')).toHaveLength(2)
   })
 
+  it('🔴 코스 활성화에만 효과 한 줄이 붙는다 (A단) — 교대 허용은 효과를 모른다 (A1)', () => {
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
+
+    // ✅ OQ-023-F 로 확인된 사실이다 — 배정이 아니라 **근무자가 앱에서 고른다**
+    expect(screen.getByText('· 앱 코스 목록에 노출')).toBeInTheDocument()
+    // 🔴 교대 허용의 효과는 **업무 확인 전**이다. 그럴듯한 문장을 지어 넣지 않는다
+    expect(screen.queryByText(/인계/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/나눠/)).not.toBeInTheDocument()
+  })
+
+  it('🔴 근무자가 직접 선택한다는 사실을 카드에 남긴다 — 두 토글의 근거다', () => {
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
+
+    expect(screen.getByText(/근무자가 앱에서 순찰 시작 시 이 코스를 직접 선택합니다/)).toBeInTheDocument()
+  })
+
   it('🔴 스위치는 값을 바꾸지 않고 **확인을 요청**한다 — 켜진 값이 그대로 남는다', async () => {
     const user = userEvent.setup()
     const onRequestToggle = vi.fn()

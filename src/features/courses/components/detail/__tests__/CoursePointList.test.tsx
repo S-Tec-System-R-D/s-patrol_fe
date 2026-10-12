@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import CoursePointList from '../CoursePointList'
 import type { CourseDetailPoint } from '../../../types'
@@ -94,36 +93,27 @@ describe('CoursePointList — 빈 상태', () => {
   })
 })
 
-describe('CoursePointList — 편집 진입 (Phase 4)', () => {
-  it('🔴 onEdit 을 받지 않으면 버튼이 없다 — 읽기 전용으로 쓸 수 있다', () => {
+describe('CoursePointList — 읽기 전용이다 (A단)', () => {
+  it('🔴 카드 안에 **버튼이 하나도 없다** — 편성 편집은 페이지 헤더가 유일한 소유자다', () => {
+    // 🔴 Phase 4 에서는 이 카드가 `onEdit` 을 받아 버튼을 그렸다. A단에서 그 버튼이
+    // **헤더로 올라갔고**, prop 자체를 없앴다 — 같은 모드로 들어가는 길이 두 곳에
+    // 있으면 어느 쪽이 정식인지 알 수 없다
     renderList([point()])
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
+    // 행에도 조작 수단이 없다 — 제거·순서 변경은 편집 모드 안에서만
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
   })
 
-  it('🔴 편집 수단은 **버튼 하나**다 — 드래그를 상시로 열어 두지 않는다 (전량 전송, B-25)', async () => {
-    const user = userEvent.setup()
-    const onEdit = vi.fn()
-    render(
-      <MemoryRouter>
-        <CoursePointList points={[point()]} onEdit={onEdit} />
-      </MemoryRouter>
-    )
+  it('🔴 어디서 바꾸는지는 알려 준다 — "상단의 편성 편집"', () => {
+    renderList([point()])
 
-    // 행에는 여전히 조작 수단이 없다 — 제거·순서 변경은 편집 모드 안에서만
-    expect(screen.queryByRole('button', { name: /제거/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: '편성 편집' }))
-    expect(onEdit).toHaveBeenCalledTimes(1)
+    expect(screen.getByText(/상단의/)).toBeInTheDocument()
+    expect(screen.getByText(/편성 편집/)).toBeInTheDocument()
   })
 
   it('🔴 "준비 중" 안내를 더 쓰지 않는다 — 편성은 이제 동작한다', () => {
-    render(
-      <MemoryRouter>
-        <CoursePointList points={[point()]} onEdit={vi.fn()} />
-      </MemoryRouter>
-    )
+    renderList([point()])
 
     expect(screen.queryByText(/준비 중/)).not.toBeInTheDocument()
   })

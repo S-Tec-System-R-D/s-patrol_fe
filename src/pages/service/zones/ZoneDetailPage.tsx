@@ -1,5 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeftIcon, ChevronRightIcon, RouteIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
+import {
+  ArrowLeftIcon,
+  ChevronRightIcon,
+  ListOrderedIcon,
+  RouteIcon,
+  SquarePenIcon,
+  Trash2Icon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
@@ -143,14 +150,39 @@ const ZoneDetailPage = () => {
             // 🔴 설명(`memo`)을 여기 넣지 않는다 — 기본정보 카드에 이미 있고, 같은 문장이
             // 한 화면에 두 번 나오면 사용자는 둘이 다른 값인지 확인하려 눈을 왕복한다
             titleSuffix={
-              course.useYn ? (
-                <AppBadge variant="success">사용</AppBadge>
-              ) : (
-                <AppBadge variant="muted">미사용</AppBadge>
-              )
+              <>
+                {course.useYn ? (
+                  <AppBadge variant="success">사용</AppBadge>
+                ) : (
+                  <AppBadge variant="muted">미사용</AppBadge>
+                )}
+                {/* 🔴 **요약 뱃지**(목업 `코스상세-신규.html`) — 코스 상세를 여는 두 번째
+                    질문이 "얼마나 큰 코스인가" 다. 두 값이 아래 두 카드에 흩어져 있어
+                    제목 줄에서 한 번에 읽히게 한다. ⚠️ `pointCount` 는 상세 응답에 없어
+                    (목록 전용) **편성 배열의 길이**로 센다 — 같은 값이다 */}
+                <AppBadge variant="muted">
+                  지점 {course.points.length}개 · {course.totalMin}분
+                </AppBadge>
+              </>
             }
             action={
               <div className="flex items-center gap-2">
+                {/* 🔴 **편성 편집을 헤더로 올렸다**(목업). 변경 수단 셋이 한 줄에 모여
+                    "이 화면에서 할 수 있는 일" 이 한자리에서 보인다 — 전에는 하나만
+                    카드 안에 있어 스크롤해야 찾았다.
+                    🔴 편집 중에는 **감춘다**. 편집 모드에는 자기 저장·취소가 있어서,
+                    같은 버튼이 또 보이면 "다시 눌러야 하나" 를 묻게 된다 */}
+                {!editingPoints && (
+                  <AppButton
+                    icon={ListOrderedIcon}
+                    variant="sub"
+                    className="bg-card"
+                    onClick={() => setEditingPoints(true)}
+                  >
+                    편성 편집
+                  </AppButton>
+                )}
+
                 <AppDialog
                   open={editOpen}
                   onOpenChange={setEditOpen}
@@ -192,20 +224,24 @@ const ZoneDetailPage = () => {
             }
           />
 
-          {/* 🔴 다이어그램을 **맨 위**에 둔다 — 코스 상세를 여는 첫 질문이
-              "이 코스가 어디를 어떤 순서로 도는가" 다. 목업 `코스관리-신규.png` 와 같다.
-              ⚠️ 편집 중에는 **저장된 순서**를 그린다 — 초안을 반영하면 "저장 전인데 반영된
-              것처럼" 보인다(옵티미스틱을 안 쓰는 것과 같은 이유) */}
-          <CourseDiagramCard points={course.points} />
-
-          {/* 좌 2/3 (지점 순서) / 우 1/3 (기본정보) — `xl` 미만 1단.
-              🔴 순서 목록이 길어지는 쪽이라 넓은 칸을 준다(기본정보는 5행 고정) */}
+          {/* **2열 골격**(목업 `코스상세-신규.html`, 사용자 결정 2026-10-12) — `xl` 미만 1단.
+              좌 2/3 = 코스 자체를 보는 칸(동선 → 순서), 우 1/3 = 설정 칸.
+              🔴 **지점 순서를 넓은 쪽에 둔다.** 목업은 우측 1/3 에 두었지만 편성 편집의
+              **드래그가 여기서 일어난다** — 1/3 폭에서 핸들·구간시간·제거를 한 줄에 놓으면
+              답답하다. 목업과 다른 유일한 지점이고, 이유가 상호작용이다.
+              🔴 우측은 나중에 **이상 이력·KPI** 가 쌓일 칸이다(Phase B~C) */}
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <div className="xl:col-span-2">
+            <div className="flex flex-col gap-4 xl:col-span-2">
+              {/* 🔴 동선이 **순서 위**에 온다 — 첫 질문이 "어디를 어떤 순서로 도는가" 다.
+                  ⚠️ 편집 중에도 **저장된 순서**를 그린다 — 초안을 반영하면 "저장 전인데
+                  반영된 것처럼" 보인다(옵티미스틱을 안 쓰는 것과 같은 이유) */}
+              <CourseDiagramCard points={course.points} />
+
               {editingPoints ? (
                 <CoursePointEditor course={course} onClose={() => setEditingPoints(false)} />
               ) : (
-                <CoursePointList points={course.points} onEdit={() => setEditingPoints(true)} />
+                /* 🔴 `onEdit` 를 넘기지 않는다 — 편성 편집은 **헤더가 유일한 소유자**다 */
+                <CoursePointList points={course.points} />
               )}
             </div>
             <CourseInfo
