@@ -272,20 +272,42 @@ interface PagedData<T> {
 
 → ⚠️ GPS 값 미관측. `AddPointDto` 에 `gpsLat`/`gpsLng` 가 있으므로 GPS 인증 코드가 따로 있을 것 → OQ-2
 
-### `status` — **코스이력과 지점이력의 값 체계가 다르다** 🔴
+### `status` — **코스 상태와 지점 상태는 서로 다른 사전이다** 🔴
 
-| 컨텍스트 | 값 | Name |
-|---|---|---|
-| `GetCourseHistory.items[].status` | 1 | `완료` |
-|  | 2 | `미완료` |
-| `GetPointHistory.items[].status` | 3 | `미완료` |
-|  | 4 | `완료` |
-| `GetCourseHistoryCheckDetails[].status` | 4 | (이름 없음 — **지점이력 체계를 따른다**, 실측 2026-10-12) |
+✅ **백엔드 전달(2026-10-12)로 전체 값이 확정됐다.** 그전까지는 관측된 값만 알았다.
 
-→ **같은 `status` 이름인데 1·2 vs 3·4로 분리.** 공용 enum으로 묶으면 안 된다.
-🔴 **인증 상세(`CheckDetails`)는 코스이력 응답에 딸려 있는데도 `3·4` 쪽을 쓴다** — 코스
-이력 화면 안에서 **두 체계가 섞인다**(실측 2026-10-12). `statusName` 도 오지 않아 프론트
-매핑표가 필요하다.
+| 코스 상태 (`eventType` · 코스이력 `status`) | | 지점 상태 (지점이력 · `CheckDetails`) | |
+|---:|---|---:|---|
+| 0 | `진행중` | 0 | `대기중` |
+| 1 | `완료` | 1 | `진행중` |
+| 2 | `미완료` | 2 | 🔴 **`순찰제외`** |
+| | | 3 | `미완료` |
+| | | 4 | `완료` |
+
+🔴 **공용 enum 으로 묶으면 안 된다.** 값이 겹치는데 뜻이 다르다 — `2` 가 코스에서는
+`미완료`, 지점에서는 **`순찰제외`** 다. 한쪽 매핑표를 다른 쪽에 쓰면 **"미완료" 를
+"순찰제외" 로 읽는다.**
+
+🔴 **`순찰제외`(지점 2)가 인증률 계산을 바꾼다.** 분모에 넣으면 영원히 100% 가 안 되는
+지점이 섞인다 — 자세한 것은 §5-2 `GetCourseHistory` 블록의 경고.
+
+⚠️ **`GetCourseHistoryCheckDetails` 는 코스이력 응답에 딸려 있는데 지점 사전(0~4)을
+쓴다**(실측 2026-10-12: `status: 4` = 완료). 한 화면에서 두 사전이 섞이므로, 매핑 함수를
+**응답 단위가 아니라 "코스/지점" 단위로** 나눠 둔다.
+
+⚠️ `GetCourseHistoryDetail` 에는 `statusName` 이 **없다**(목록에는 있다) — 위 표가
+프론트 매핑표의 근거다.
+
+### `eventType` — **코스이력의 상태 필터다** (✅ OQ-5 해소)
+
+`GET History/W/sign/GetCourseHistory` 의 `eventType` 은 **코스 상태로 거르는 파라미터**다
+(백엔드 전달 2026-10-12). 값은 위 표의 코스 상태와 같다: `0` 진행중 / `1` 완료 / `2` 미완료.
+
+→ 실측(`eventType=1` → 15건, `2` → 26건)과 맞는다. 응답 본문에 `eventType` 필드가 없던
+이유도 이것이다 — **요청 전용 필터**이고, 행의 같은 값은 `status` 로 온다.
+
+🔴 **`eventType=0` 이 "지금 순찰 중" 목록이다.** 사용자가 만들기로 한 **실시간 진행 페이지**
+의 데이터 출처가 이것이다(2026-10-12) — 코스 목록의 `courseStatusCode` 가 아니다.
 
 ### `courseStatusCode` (코스 현재 상태)
 
@@ -712,6 +734,23 @@ interface CourseHistoryRow {
   userList: { userSeq: number; userName: string }[]   // 교대 시 복수
 }
 
+/**
+ * 🔴🔴 **인증률을 `checkedCount / pointCount` 로 계산하면 틀릴 수 있다.**
+ *
+ * 지점 상태에 **`순찰제외`(2)** 가 있다(백엔드 전달 2026-10-12, §4). 순찰에서 빼기로 한
+ * 지점이 `pointCount` 분모에 들어 있으면 **영원히 100% 가 안 되는 코스**가 생기고,
+ * 관리자는 매번 "누가 안 돌았나" 를 찾게 된다.
+ *
+ * ⚠️ **`pointCount` 가 순찰제외를 빼고 센 값인지 미확인이다.** 확인 방법은 순찰제외
+ * 지점이 있는 이력을 `GetCourseHistoryCheckDetails` 로 열어 `status: 2` 건수를 세고
+ * `pointCount` 와 맞춰 보는 것이다 — 🔴 **그런 데이터가 아직 없다**(관측된 `CheckDetails`
+ * 3건은 전부 `status: 4`). 데이터가 생기기 전에는 인증률을 **"서버가 준 두 수의 비"** 로만
+ * 적고, 100% 미달을 **경고로 바꾸지 않는다.**
+ *
+ * 🔴 **`status: 1 완료` 인데 `checkedCount: 0` 인 행이 실존한다**(실측 2026-10-12, 사업장
+ * 10). 상태와 인증률은 **독립**이다 — "완료 = 전 지점 인증" 으로 묶으면 안 된다.
+ */
+
 // ── 16. GetCourseHistoryDetail ──────────────────
 interface CourseHistoryDetail {
   historySeq: number
@@ -746,7 +785,22 @@ interface CheckDetailRow {
   gpsLat: number | null
   gpsLng: number | null
   overtimeYn: boolean
-  memos: unknown[]                // 🔴 빈 배열만 관측 — 요소 구조 미확인 : OQ-10
+  memos: CourseHistoryMemo[]      // ✅ 구조 확정(백엔드 전달 2026-10-12) — 아래
+}
+
+/** ✅ 순찰 중 남긴 메모. **첨부가 딸려 온다**(백엔드 전달 2026-10-12, OQ-10 해소) */
+interface CourseHistoryMemo {
+  memoSeq: number
+  memo: string
+  attaches: CourseHistoryAttach[] | null   // 🔴 nullable — 빈 배열이 아니라 null 일 수 있다
+}
+
+/** 메모 첨부. 🔴 `imagePath` 가 **절대 URL 인지 상대 경로인지 미확인** → OQ-13 */
+interface CourseHistoryAttach {
+  attachSeq: number
+  imagePath: string
+  fileName: string
+  fileExt: string
 }
 
 // ── 18. GetCourseHistoryHandOvers ───────────────
@@ -852,7 +906,7 @@ interface NoticeAttach {
 | B-4 | 필드명 불일치: 목록 `pointName` ↔ 상세 `name` / `overtimeYn` ↔ `overTimeYn`(엔드포인트마다 뒤섞임) | 🟡 |
 | B-5 | 타입 불일치: `pauseTime` 이 목록은 `'HH:mm:ss'` 문자열, 상세는 `number` | 🟡 |
 | B-6 | `authMethodName` null 표현이 `''` / `'Unknown'` 두 가지 | 🟡 |
-| B-7 | `status` 값 체계가 코스이력(1,2) ↔ 지점이력(3,4)으로 분리 — 의도된 것인지 | 🟡 |
+| B-7 | ✅ **해소(백엔드 전달 2026-10-12)** — **의도된 것이다.** 코스 상태(`0·1·2`)와 지점 상태(`0~4`)는 **서로 다른 사전**이고 겹친 값의 뜻이 다르다(`2` = 코스 `미완료` / 지점 **`순찰제외`**). 공용 enum 금지는 그대로 유효하고, 매핑 함수를 **코스/지점 단위로** 나눈다. ⚠️ `GetCourseHistoryDetail` 에 `statusName` 이 없는 것은 그대로다 | ✅ |
 | B-8 | `GetNoticeList` 가 본문 전문(`description`) 포함 — 목록 페이로드 과대 | 🟡 |
 | B-9 | 🔴 **교정(실측 2026-10-08)** — 권한 밖 사업장 조회가 "200 + 빈 목록"이 아니라 **200 + 실제 데이터**다. 서버가 `siteSeq` 권한을 **전혀 검사하지 않는다.** 현장 계정 `333333`(접근 가능 `UserSiteSelect` = 7·8)이 `siteSeq=3` 을 조회하면 **15건이 그대로** 내려오고 `DetailPoint` 로 상세까지 열린다. 기존 "빈 목록" 기록은 **지점이 0건인 사업장을 조회한 탓의 잘못된 추론**이었다(site 1 은 실제로 0건). → 현재 유일한 방어는 **프론트가 선택 목록 안의 값만 쿼리에 싣는 것**이고(`spec 021` 설계가 결과적으로 옳았다), 서버측 검사 추가가 필요하다 | 🔴 |
 | B-10 | `refreshToken` 회전 없음 — 재발급 후 기존 값 계속 유효 | 🟡 |
@@ -879,6 +933,7 @@ interface NoticeAttach {
 | B-31 | 🔴 **`totalMin` 을 서버가 검증하지 않는다**(실측 2026-10-12). `UpdateCourse` 에 `totalMin: 99` 를 보내면 구간시간 합이 25 여도 **99 가 저장되고 200 이 온다** — 목록·상세의 "총 소요시간" 이 지점 합과 **다른 값**일 수 있고, 그 화면을 보는 사람은 어느 쪽이 맞는지 알 수 없다. ✅ 다만 **`null` 을 보내면 서버가 합으로 채운다** — 그래서 프론트는 항상 `null` 을 보내 어긋날 경로를 없앴다. **개선 방향**: 파생 값이면 요청 DTO 에서 **빼거나**(서버가 항상 계산), 받을 거면 **합과 다를 때 400** 으로 거부한다 | 🟡 |
 | B-32 | 🟡 **`GetCourseDetail.points[]` 에 좌표(`gpsLat`/`gpsLng`)가 없다.** 좌표 자체는 서버에 있다 — `PointDetail` 과 `GetCourseHistoryCheckDetails` 에는 둘 다 온다(§5-2). 그런데 **코스 편성 응답에만 없어서**, 코스 상세에 순찰 동선 지도를 그리려면 지점을 **1 + N 회** 조회해야 한다(`DetailPoint` 는 `pointSeq` 하나씩만 받는다) — 지점 12개 코스면 요청 13회, 한 건만 실패해도 **핀이 빠진 지도**가 나오고 어느 핀이 빠졌는지 화면에서 알 수 없다. **요청**: ① `GetCourseDetail` 의 `points[]` 에 `gpsLat`/`gpsLng` 추가(요청 수 그대로 1회, **선호**) ② 어렵다면 `GetClassificationPoint`(사업장 전량 배열)에 추가 — 2회가 되지만 사업장 단위라 캐시해 모든 코스가 공유한다. ⚠️ **값이 실제로 채워져 있는지는 미관측** — 모바일 앱 좌표 동기화가 채우는지 확인 필요(사용자 2026-10-12). 전부 `null` 이면 필드만 받아도 지도를 못 그린다 | 🟡 |
 | B-33 | 🔴 **지점 좌표에 유효성 검증이 없다**(실측 2026-10-12). 사업장 3 의 지점들이 `gpsLat: 123`, `gpsLng: 57.22` 로 저장돼 있다 — **위도는 -90~90, 경도는 -180~180** 이라 123 은 불가능한 값이다. `AddPoint`/`UpdatePoint` 가 범위를 보지 않는다. 지도에 그대로 넘기면 핀이 엉뚱한 곳으로 날아가거나 렌더가 깨진다. **요청**: 범위 밖 값을 **400** 으로 거부한다. ⚠️ 거부되더라도 **이미 저장된 값은 남으므로** 프론트가 범위 검사를 하고 벗어난 지점은 "좌표 없음" 과 같이 다룬다 | 🔴 |
+| B-34 | 🟡 **`GetCourseHistory` 에 `overtimeYn` 필터가 없다.** ✅ 상태 필터는 **이미 있다** — `eventType` 이 그것이다(OQ-5 해소, 2026-10-12). 남은 것은 **소요 초과(`overtimeYn`)로 거르는 수단**뿐이다. 🔴 없으면 **페이징과 충돌해 틀린 수치가 뜬다**: 1페이지 20행을 받아 프론트에서 거르면 "지연 3건" 이 나오는데 그것은 전체가 아니라 **그 페이지 안의 3건**이고, 사용자는 전체로 읽는다. **요청**: `overtimeYn` 쿼리 파라미터 추가. ⚠️ 지점이력(`GetPointHistory`)에는 `status` 가 있지만 `overTimeYn` 필터도 없다 — 같이 봐 달라고 전달. ✅ **백엔드 수정 예정(2026-10-12 전달 완료)** | 🟡 |
 
 ### 6-1-A. 🔴 백엔드 전달용 — 우선순위 (2026-10-10 기준)
 
@@ -900,6 +955,7 @@ interface NoticeAttach {
 | 6 | **B-31** | `totalMin` 이 **검증되지 않는다** — 구간시간 합과 다른 값도 저장된다 | 지금은 **항상 `null` 을 보내** 서버가 계산하게 했다 — 막히는 것은 없다. B-29 와 **같이** 전달한다(한 엔드포인트 이야기) |
 | 6 | **B-32** | `GetCourseDetail.points[]` 에 **좌표가 없다** — 좌표는 서버에 있는데 이 응답에만 없다 | 코스 상세의 **순찰 동선 지도**가 막힌다(N+1 말고는 길이 없다). 필드 1개 추가면 열린다 |
 | 6 | **B-33** | 지점 좌표에 **유효성 검증이 없다** — `lat: 123` 이 저장돼 있다 | 지도에 넘기면 **엉뚱한 곳으로 날아간다**. 프론트가 범위 검사를 떠안아야 한다. B-32 와 **같이** 전달한다(지도 이야기) |
+| 6 | **B-34** | `GetCourseHistory` 에 **`overtimeYn` 필터가 없다**(상태 필터 `eventType` 은 있다) | 지연·초과만 보기를 서버에서 못 거른다 → **페이징과 충돌해 틀린 건수**가 뜬다 |
 | 7 | B-17 | 변경계 실패 문구가 전부 `"잘못된 요청입니다."` | 사유를 구분·안내할 수 없다 |
 | 8 | B-20·B-21 | 상세 위치 · 지점 코드 필드 없음 | 화면 칸이 비지만 동작은 한다 |
 | 9 | B-22·B-23 | 변경 이력 API · QR 발행 메타 | 섹션이 placeholder 로 남아 있다 |
@@ -919,13 +975,14 @@ interface NoticeAttach {
 | OQ-2 | `authMethod` 에 GPS 코드가 있는가? (9=QR, 10=NFC만 관측) |
 | OQ-3 | ✅ **종결(2026-10-12, 사용자 결정)** — `courseStatusCode` 를 **화면에서 쓰지 않기로** 했다(코스 목록 상태 컬럼 제거, 실시간 진행은 별도 페이지). 전체 값은 여전히 미확인이고, 진행 페이지를 만들 때 **다시 실측해야 한다**. §4 블록 참조 |
 | OQ-4 | `codeSeq` 목록을 주는 API — 사용자 등록 폼에 필요한데 없음 |
-| OQ-5 | `eventType` 값 의미 (1→15건, 2→26건 관측. 응답 본문에 필드 없음) |
+| OQ-5 | ✅ **해소(백엔드 전달 2026-10-12)** — `eventType` 은 `GetCourseHistory` 의 **코스 상태 필터**다(`0` 진행중 / `1` 완료 / `2` 미완료). 요청 전용이라 응답 본문에 없다. 🔴 **`eventType=0` 이 "지금 순찰 중" 목록**이고, 실시간 진행 페이지의 데이터 출처다. §4 `eventType` 블록 참조 |
 | OQ-6 | `UserDetail.deviceType` 의 `'0'` 의미 (문자열 타입인 이유) |
 | OQ-7 | `UserRow.originSiteSeq`=null 인데 `originSiteName` 은 채워진 행의 의미 |
 | OQ-8 | `UserDetail` 에 `codeSeq`/`codeName` 없음 — 권한 표시·수정을 어떻게? |
 | OQ-9 | `GetCourseDetail` 응답에 `siteSeq` 없음 — `UpdateCourseDto` 는 요구함. 프론트가 별도 보관해야 하는가? → **`spec 023` 에서 프론트 보관으로 진행한다**(`getSiteSeq()`, spec 021). 응답에 넣어 달라고 요청할 수도 있으나, 우리가 이미 들고 있는 값이라 **없어도 막히지 않는다** — B-24~B-26 보다 우선순위가 낮다 |
 | OQ-10 | ✅ **해소(실측 2026-10-10)** — `DeletePoint` 는 **코스에 편성된 지점도 거부 없이 삭제**한다. 지점이 지워지고 코스 편성에서도 함께 빠진다. 즉 `usedCount > 0` 삭제 차단은 **서버 규칙이 아니다**(`spec 022` OQ-022-B / 판단 3 해소) |
-| OQ-10 | `memos` / `memoList` 요소 구조 (빈 배열만 관측) |
+| OQ-10 | ✅ **해소(백엔드 전달 2026-10-12)** — `CourseHistoryMemo { memoSeq, memo, attaches }` + `CourseHistoryAttach { attachSeq, imagePath, fileName, fileExt }`. §5-2 17번 참조. ⚠️ **메모가 달린 샘플 데이터는 아직 없다**(빈 배열만 관측) — 화면 확인은 데이터가 생긴 뒤 |
+| OQ-13 | `CourseHistoryAttach.imagePath` 가 **절대 URL 인가 상대 경로인가.** 상대면 무엇을 붙여야 하는가(API base? 별도 정적 호스트?). 공지 첨부(`imageList`/`fileList`)와 같은 규칙인지도 함께 확인 — 틀리면 **이미지가 전부 깨진 썸네일**로 나온다 |
 | OQ-11 | `GetCourseHistoryHandOvers` 응답 구조 (빈 배열만 관측 — 교대 데이터 필요) |
 | OQ-12 | `UpsertNotice` 요청 `attachList[]` ↔ 응답 `imageList`/`fileList` 분리 기준 (확장자? MIME?) |
 
