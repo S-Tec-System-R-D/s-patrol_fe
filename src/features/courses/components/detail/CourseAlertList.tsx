@@ -66,7 +66,8 @@ const AlertRow = ({ alert }: { alert: CourseAlert }) => {
 
 const CourseAlertList = ({ alerts, isPending }: CourseAlertListProps) => (
   <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
-    <div className="flex items-center justify-between">
+    {/* 🔴 건수는 **제목 옆**이다 — 세 카드가 같은 모양을 쓴다(`CoursePatrolLog` 주석) */}
+    <div className="flex items-baseline gap-2">
       <span className="text-panel-title font-semibold">미인증 · 이상 이력</span>
       <span className="text-caption text-muted-foreground">
         최근 {HISTORY_DAYS}일 · {alerts.totalCount}건

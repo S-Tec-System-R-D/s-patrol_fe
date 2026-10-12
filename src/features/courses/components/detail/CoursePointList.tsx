@@ -51,9 +51,10 @@ const CoursePointList = ({ points, onEdit }: CoursePointListProps) => {
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
       <div className="flex items-center justify-between">
-        {/* 🔴 **건수를 제목 옆에 붙인다**(사용자 결정 2026-10-12). 우측에 두면 아이콘
-            버튼과 한 덩어리로 보여 "3개" 가 버튼의 라벨처럼 읽혔다. 건수는 제목을
-            **수식하는 말**이므로 제목 옆이 맞다 */}
+        {/* 🔴 **건수는 제목 옆이다**(사용자 결정 2026-10-12). 우측에 두면 아이콘 버튼과
+            한 덩어리로 보여 "총 3개" 가 버튼의 라벨처럼 읽혔다 — 건수는 제목을 **수식하는
+            말**이므로 제목 옆이 맞다. 상세의 세 카드(지점 순서·순찰 기록·이상 이력)가
+            **같은 모양**을 쓴다 */}
         <span className="flex items-baseline gap-2">
           <span className="text-panel-title font-semibold">지점 순서</span>
           <span className="text-caption text-muted-foreground">
