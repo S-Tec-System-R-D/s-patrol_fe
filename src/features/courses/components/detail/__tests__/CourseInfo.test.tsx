@@ -88,6 +88,32 @@ describe('CourseInfo', () => {
   })
 })
 
+describe('CourseInfo — 수정 버튼', () => {
+  it('🔴 onEdit 을 받으면 카드 우측 상단에 수정 버튼을 그린다 (사용자 결정 2026-10-12)', async () => {
+    const user = userEvent.setup()
+    const onEdit = vi.fn()
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} onEdit={onEdit} />)
+
+    await user.click(screen.getByRole('button', { name: '수정' }))
+
+    expect(onEdit).toHaveBeenCalledTimes(1)
+  })
+
+  it('🔴 onEdit 이 없으면 버튼도 없다 — 읽기 전용으로 쓸 수 있다', () => {
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
+
+    expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument()
+  })
+
+  it('🔴 이 카드가 저장하지 않는다 — 모달·폼은 페이지가 들고 있다', () => {
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} onEdit={vi.fn()} />)
+
+    // 전량 전송 규약(B-25)이 카드 안으로 새어 들어오면 안 된다
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
+
 describe('CourseInfo — 토글 2종 (Phase 4)', () => {
   it('교대 허용·코스 활성화가 각각 스위치 + 글자로 상태를 보여준다', () => {
     render(<CourseInfo course={course({ switchYn: false, useYn: false })} onRequestToggle={vi.fn()} />)
@@ -108,10 +134,13 @@ describe('CourseInfo — 토글 2종 (Phase 4)', () => {
     expect(screen.queryByText(/나눠/)).not.toBeInTheDocument()
   })
 
-  it('🔴 근무자가 직접 선택한다는 사실을 카드에 남긴다 — 두 토글의 근거다', () => {
+  it('🔴 안내 문구를 카드에 두지 않는다 (사용자 결정) — 토글 보조줄이 같은 사실을 전한다', () => {
     render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
 
-    expect(screen.getByText(/근무자가 앱에서 순찰 시작 시 이 코스를 직접 선택합니다/)).toBeInTheDocument()
+    // 카드마다 설명 한 줄을 붙이면 읽히지 않는 글이 쌓인다
+    expect(screen.queryByText(/직접 선택합니다/)).not.toBeInTheDocument()
+    // 같은 사실은 토글 보조줄이 전한다
+    expect(screen.getByText('· 앱 코스 목록에 노출')).toBeInTheDocument()
   })
 
   it('🔴 스위치는 값을 바꾸지 않고 **확인을 요청**한다 — 켜진 값이 그대로 남는다', async () => {

@@ -1,7 +1,8 @@
-import { MapPinIcon, PlusIcon } from 'lucide-react'
+import { ListOrderedIcon, MapPinIcon, PlusIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import AppBadge from '@/components/app/AppBadge'
+import AppButton from '@/components/app/AppButton'
 import AppEmpty from '@/components/app/AppEmpty'
 import { toAuthMethodLabel } from '@/features/points/lib/authMethod'
 import { paths } from '@/router/paths'
@@ -12,8 +13,8 @@ import type { CourseDetailPoint } from '../../types'
  * 지점 순서 카드 — **읽기 전용**(`spec 023` Phase 3, T358).
  *
  * 🔴 **이 카드 자체는 읽기 전용이다.** 추가·제거·드래그 정렬·구간시간 변경은 **편집
- * 모드**(`CoursePointEditor`)가 맡고, 그 모드로 들어가는 버튼은 **페이지 헤더**에 있다
- * (`ZoneDetailPage`). 🔴 **드래그를 상시로 열어 두지 않는 이유**는
+ * 모드**(`CoursePointEditor`)가 맡고, 여기 있는 것은 그 모드로 들어가는 버튼 하나뿐이다
+ * (`onEdit` 을 받을 때만 그린다). 🔴 **드래그를 상시로 열어 두지 않는 이유**는
  * `UpdateCourse` 가 **전량 전송**이라(B-25) 드래그마다 코스 전체를 교체하게 되기
  * 때문이다 — 자세한 근거는 `CoursePointEditor` 상단 주석.
  *
@@ -30,27 +31,38 @@ import type { CourseDetailPoint } from '../../types'
  * 양방향으로 열어 둔다(T372).
  */
 
-/**
- * 🔴 **`onEdit` prop 을 없앴다**(A단, 2026-10-12). 편성 편집 버튼이 **페이지 헤더**로
- * 올라가 변경 수단 셋(편성 편집·수정·삭제)이 한 줄에 모였다. 카드가 같은 버튼을 또 들면
- * **두 곳에서 같은 모드로 들어가는 길**이 생기고, 어느 쪽이 정식인지 알 수 없게 된다.
- * 이 카드는 다시 **읽기 전용**이다.
- */
 interface CoursePointListProps {
   points: CourseDetailPoint[]
+  /**
+   * 편집 모드 진입.
+   *
+   * 🔴 **버튼이 이 카드로 돌아왔다**(사용자 결정 2026-10-12). A단에서 페이지 헤더로
+   * 올렸다가 되돌린 것인데, **헤더에서 빼면서 돌아왔다**는 점이 중요하다 — 두 곳에 두면
+   * "어느 쪽이 정식인지" 를 묻게 되지만, **카드마다 자기 편집 수단 하나**면 그 질문이
+   * 생기지 않는다(기본정보는 `수정`, 지점 순서는 `편성 편집`). 헤더에는 코스 전체에
+   * 대한 `삭제` 만 남는다.
+   */
+  onEdit?: () => void
 }
 
-const CoursePointList = ({ points }: CoursePointListProps) => {
+const CoursePointList = ({ points, onEdit }: CoursePointListProps) => {
   const sorted = [...points].sort((a, b) => a.orderNo - b.orderNo)
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
       <div className="flex items-center justify-between">
         <span className="text-panel-title font-semibold">지점 순서</span>
-        <span className="text-caption text-muted-foreground">
-          {/* 🔴 0개도 그대로 적는다 — 경고로 바꾸지 않는다(규칙 12) */}
-          총 {points.length}개
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-caption text-muted-foreground">
+            {/* 🔴 0개도 그대로 적는다 — 경고로 바꾸지 않는다(규칙 12) */}
+            총 {points.length}개
+          </span>
+          {onEdit && (
+            <AppButton variant="sub" icon={ListOrderedIcon} className="h-8" onClick={onEdit}>
+              편성 편집
+            </AppButton>
+          )}
+        </div>
       </div>
 
       {sorted.length === 0 ? (
@@ -116,8 +128,8 @@ const CoursePointList = ({ points }: CoursePointListProps) => {
       {/* 🔴 "준비 중" 이 아니다 — 편성은 이제 **편성 편집**에서 한다. 남겨 둘 안내는
           **지점 자체의 관리 위치**뿐이다(코스에서 제거해도 지점은 지워지지 않는다) */}
       <p className="text-caption text-muted-foreground">
-        순서·구간시간은 상단의 <strong className="font-medium">편성 편집</strong>에서 바꿉니다.
-        지점 자체는{' '}
+        순서·구간시간은 <strong className="font-medium">편성 편집</strong>에서 바꿉니다. 지점
+        자체는{' '}
         <Link to={paths.service.points} className="underline hover:text-foreground">
           순찰지점
         </Link>{' '}

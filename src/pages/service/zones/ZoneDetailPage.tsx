@@ -1,12 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  ArrowLeftIcon,
-  ChevronRightIcon,
-  ListOrderedIcon,
-  RouteIcon,
-  SquarePenIcon,
-  Trash2Icon,
-} from 'lucide-react'
+import { ArrowLeftIcon, ChevronRightIcon, RouteIcon, Trash2Icon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
@@ -195,36 +188,13 @@ const ZoneDetailPage = () => {
             }
             action={
               <div className="flex items-center gap-2">
-                {/* 🔴 **편성 편집을 헤더로 올렸다**(목업). 변경 수단 셋이 한 줄에 모여
-                    "이 화면에서 할 수 있는 일" 이 한자리에서 보인다 — 전에는 하나만
-                    카드 안에 있어 스크롤해야 찾았다.
-                    🔴 편집 중에는 **감춘다**. 편집 모드에는 자기 저장·취소가 있어서,
-                    같은 버튼이 또 보이면 "다시 눌러야 하나" 를 묻게 된다 */}
-                {!editingPoints && (
-                  <AppButton
-                    icon={ListOrderedIcon}
-                    variant="sub"
-                    className="bg-card"
-                    onClick={() => setEditingPoints(true)}
-                  >
-                    편성 편집
-                  </AppButton>
-                )}
-
-                <AppDialog
-                  open={editOpen}
-                  onOpenChange={setEditOpen}
-                  title="코스 수정"
-                  description="코스명과 설명을 수정할 수 있습니다."
-                  trigger={
-                    <AppButton icon={SquarePenIcon} variant="sub" className="bg-card">
-                      수정
-                    </AppButton>
-                  }
-                >
-                  {/* 🔴 성공해야 닫는다 — 먼저 닫으면 실패 시 입력값이 사라진다 */}
-                  <EditCourseForm course={course} onSuccess={() => setEditOpen(false)} />
-                </AppDialog>
+                {/* 🔴 **헤더에는 `삭제` 만 둔다**(사용자 결정 2026-10-12). A단에서 변경 수단
+                    셋을 헤더로 모았다가, **카드마다 자기 편집 수단 하나**로 되돌렸다 —
+                    기본정보는 `수정`, 지점 순서는 `편성 편집`. 고치려는 값을 **보여 주는
+                    자리**에 버튼이 있는 쪽이 찾기 쉽고, 한 카드에 하나뿐이라 "어느 쪽이
+                    정식인지" 를 묻지 않게 된다.
+                    🔴 **삭제만 헤더에 남는 이유**: 코스 **전체**에 대한 동작이라 어느 카드에도
+                    속하지 않는다. 파괴적 동작을 편집 버튼들과 떼어 놓는 효과도 있다 */}
 
                 {/* 🔴 **편성된 지점이 있어도 선제 차단하지 않는다** — 서버가 거부하지
                     않는다(실측). 없는 규칙을 프론트가 만들지 않는다(A1) */}
@@ -273,8 +243,7 @@ const ZoneDetailPage = () => {
               {editingPoints ? (
                 <CoursePointEditor course={course} onClose={() => setEditingPoints(false)} />
               ) : (
-                /* 🔴 `onEdit` 를 넘기지 않는다 — 편성 편집은 **헤더가 유일한 소유자**다 */
-                <CoursePointList points={course.points} />
+                <CoursePointList points={course.points} onEdit={() => setEditingPoints(true)} />
               )}
 
               {/* 🔴 **순찰 기록은 맨 아래**다 — 편성(현재 상태)을 먼저 읽고 기록(과거)을
@@ -291,6 +260,7 @@ const ZoneDetailPage = () => {
               <CourseInfo
                 course={course}
                 onRequestToggle={(kind, nextValue) => setToggle({ kind, nextValue })}
+                onEdit={() => setEditOpen(true)}
                 isSaving={toggleMutation.isPending}
               />
 
@@ -300,6 +270,19 @@ const ZoneDetailPage = () => {
               />
             </div>
           </div>
+
+          {/* 🔴 **trigger 없는 제어형 모달**이다. 버튼은 기본정보 카드가 들고 있고
+              (`CourseInfo.onEdit`) 모달·폼은 페이지가 들고 있다 — 카드가 mutation 을 들면
+              전량 전송 규약(B-25)이 카드 안으로 새어 들어온다 */}
+          <AppDialog
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            title="코스 수정"
+            description="코스명과 설명을 수정할 수 있습니다."
+          >
+            {/* 🔴 성공해야 닫는다 — 먼저 닫으면 실패 시 입력값이 사라진다 */}
+            <EditCourseForm course={course} onSuccess={() => setEditOpen(false)} />
+          </AppDialog>
 
           {/* 🔴 토글 2종이 **같은 컴포넌트를 쓰고 문구만 다르다**(규칙 11) */}
           {toggle && (

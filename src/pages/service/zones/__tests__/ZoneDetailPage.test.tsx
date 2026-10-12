@@ -43,6 +43,13 @@ const renderPage = (initialEntry: string) => {
   )
 }
 
+/** 카드 제목으로 그 카드 DOM 을 집는다 — 버튼이 **어느 카드 안**인지 보려면 필요하다 */
+const cardOf = (title: string): HTMLElement => {
+  const card = screen.getByText(title).closest('div.rounded-lg')
+  if (card === null) throw new Error(`카드를 찾지 못했다: ${title}`)
+  return card as HTMLElement
+}
+
 beforeEach(() => {
   resetCourseStore()
   clearTokens()
@@ -93,24 +100,36 @@ describe('ZoneDetailPage', () => {
     expect(screen.getByRole('link', { name: '코스 목록으로' })).toBeInTheDocument()
   })
 
-  it('🔴 수정·삭제 수단이 헤더에 있다 — 본문 아래 풋터가 아니다', async () => {
+  it('🔴 편집 버튼은 **자기 카드 안**에, 삭제는 **카드 밖**에 있다 (사용자 결정 2026-10-12)', async () => {
     renderPage('/zones/1')
 
     await screen.findByText('A동 순찰코스')
-    expect(screen.getByRole('button', { name: '수정' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
+
+    // 고치려는 값을 **보여 주는 카드**에 버튼이 있다
+    const infoCard = cardOf('기본정보')
+    const pointCard = cardOf('지점 순서')
+    expect(within(infoCard).getByRole('button', { name: '수정' })).toBeInTheDocument()
+    expect(within(pointCard).getByRole('button', { name: '편성 편집' })).toBeInTheDocument()
+
+    // 🔴 삭제는 코스 **전체**에 대한 동작이라 어느 카드에도 속하지 않는다.
+    // 파괴적 동작을 편집 버튼들과 떼어 놓는 효과도 있다
+    const remove = screen.getByRole('button', { name: '삭제' })
+    expect(infoCard.contains(remove)).toBe(false)
+    expect(pointCard.contains(remove)).toBe(false)
   })
 
-  it('🔴 변경 수단 셋이 **헤더 한 줄**에 모여 있다 (A단) — 편성 편집이 카드 밖으로 나왔다', async () => {
+  it('🔴 편집 수단이 **카드마다 하나씩** 있다 (사용자 결정 2026-10-12)', async () => {
     renderPage('/zones/1')
 
     await screen.findByText('A동 순찰코스')
+    // 고치려는 값을 **보여 주는 자리**에 버튼이 있다. 한 카드에 하나뿐이라
+    // "어느 쪽이 정식인지" 를 묻지 않게 된다
     expect(screen.getByRole('button', { name: '편성 편집' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '수정' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
   })
 
-  it('🔴 편집 중에는 헤더의 편성 편집이 사라진다 — 편집 모드에 자기 저장·취소가 있다', async () => {
+  it('🔴 편집 중에는 편성 편집 버튼이 사라진다 — 편집 모드에 자기 저장·취소가 있다', async () => {
     const user = userEvent.setup()
     renderPage('/zones/1')
 
@@ -118,6 +137,16 @@ describe('ZoneDetailPage', () => {
     await user.click(screen.getByRole('button', { name: '편성 편집' }))
 
     expect(screen.queryByRole('button', { name: '편성 편집' })).not.toBeInTheDocument()
+  })
+
+  it('🔴 수정 버튼은 기본정보 카드 안에 있다 — 모달은 페이지가 들고 있다', async () => {
+    const user = userEvent.setup()
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    await user.click(screen.getByRole('button', { name: '수정' }))
+
+    expect(await screen.findByText('코스 수정')).toBeInTheDocument()
   })
 
   it('🔴 제목 줄에 규모 요약 뱃지가 있다 (A단) — 두 카드에 흩어진 값을 한 번에 읽는다', async () => {

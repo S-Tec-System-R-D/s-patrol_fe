@@ -1,3 +1,6 @@
+import { SquarePenIcon } from 'lucide-react'
+
+import AppButton from '@/components/app/AppButton'
 import { Switch } from '@/components/ui/switch'
 import { getSiteName } from '@/lib/auth/site'
 
@@ -92,16 +95,32 @@ interface CourseInfoProps {
   course: CourseDetail
   /** 확인 모달을 열어 달라는 요청. 실제 저장은 페이지가 한다 */
   onRequestToggle: (kind: CourseToggleKind, nextValue: boolean) => void
+  /**
+   * 수정 모달 열기 요청.
+   *
+   * 🔴 **버튼이 이 카드로 왔다**(사용자 결정 2026-10-12). 코스명·설명을 고치는 수단이
+   * **그 값을 보여 주는 카드**에 있는 것이 자연스럽다. 모달과 폼은 페이지가 들고 있다 —
+   * 이 카드가 mutation 을 들면 `UpdateCourse` 전량 전송 규약(B-25)이 카드 안으로 새어
+   * 들어온다(토글을 `onRequestToggle` 으로 올려 보내는 것과 같은 이유).
+   */
+  onEdit?: () => void
   /** 저장 중에는 스위치를 잠근다 — 연타가 전량 전송을 중복으로 만들지 않게 */
   isSaving?: boolean
 }
 
-const CourseInfo = ({ course, onRequestToggle, isSaving }: CourseInfoProps) => {
+const CourseInfo = ({ course, onRequestToggle, onEdit, isSaving }: CourseInfoProps) => {
   const siteName = getSiteName()
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
-      <span className="text-panel-title font-semibold">기본정보</span>
+      <div className="flex items-center justify-between">
+        <span className="text-panel-title font-semibold">기본정보</span>
+        {onEdit && (
+          <AppButton variant="sub" icon={SquarePenIcon} className="h-8" onClick={onEdit}>
+            수정
+          </AppButton>
+        )}
+      </div>
 
       {/* 🔴 **1열이다**(사용자 결정 2026-10-12). Phase 3 에서는 이 카드가 전체 폭의 1/3
           이 아니라 더 넓은 자리에 있어 `xl` 에서 2열이 유리했지만, A단에서 **우측 1/3
@@ -157,12 +176,10 @@ const CourseInfo = ({ course, onRequestToggle, isSaving }: CourseInfoProps) => {
         />
       </div>
 
-      {/* ✅ **OQ-023-F 해소(2026-10-12, 업무 확인)** — 코스는 배정되지 않는다. 근무자가
-          앱에서 **본인이 돌 코스를 직접 고른다.** 이 한 줄이 두 토글의 의미를 설명한다:
-          비활성화는 "이 목록에서 숨긴다" 는 뜻이다(`CourseToggleDialog` 문구와 같은 근거) */}
-      <p className="text-caption text-muted-foreground">
-        근무자가 앱에서 순찰 시작 시 이 코스를 직접 선택합니다.
-      </p>
+      {/* 🔴 **"근무자가 앱에서 직접 선택합니다" 안내를 뺐다**(사용자 결정 2026-10-12) —
+          코스 활성화 토글의 `· 앱 코스 목록에 노출` 과 확인 모달 문구가 같은 사실을 이미
+          전하고, 카드마다 설명 한 줄을 붙이면 읽히지 않는 글이 쌓인다.
+          ⚠️ OQ-023-F 의 **근거는 그대로 유효**하다(`CourseToggleDialog` 주석) */}
     </div>
   )
 }
