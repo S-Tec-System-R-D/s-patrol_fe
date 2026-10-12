@@ -354,4 +354,27 @@ describe('ZoneDetailPage — 순찰 기록·KPI (B단)', () => {
     expect(await screen.findByText('순찰 기록이 없습니다')).toBeInTheDocument()
     expect(screen.getAllByText('—').length).toBeGreaterThan(0)
   })
+
+  it('이상 이력 카드가 우측 열에 쌓인다 (C단)', async () => {
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    expect(await screen.findByText('미인증 · 이상 이력')).toBeInTheDocument()
+  })
+
+  it('🔴 이상 이력은 요청을 더 하지 않는다 — 기록·미인증 응답에서 모은다', async () => {
+    renderPage('/zones/1')
+
+    // mock 시드: 코스 1 에 미완료 2건 + 초과 1건 + 미인증 지점 이력
+    await screen.findByText('미인증 · 이상 이력')
+    expect(await screen.findByText('소요시간 초과')).toBeInTheDocument()
+    expect(screen.getAllByText('순찰 미완료').length).toBeGreaterThan(0)
+  })
+
+  it('🔴 이상이 없는 코스는 "이상이 없습니다" 다 — 빈 상태가 아니다', async () => {
+    renderPage('/zones/3')
+
+    await screen.findByText('옥상 점검 코스')
+    expect(await screen.findByText(/이상이 없습니다/)).toBeInTheDocument()
+  })
 })

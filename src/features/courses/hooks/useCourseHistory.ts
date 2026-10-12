@@ -40,12 +40,16 @@ export const useCourseHistory = (
   })
 
 /**
- * 미인증 건수 — **`totalCount` 만** 쓴다. 그래서 `pageSize: 1` 이다.
+ * 미인증 지점 이력.
+ *
+ * 🔴 **건수와 행을 한 요청으로 쓴다.** B단은 `totalCount`(KPI)만 필요했지만 C단이 **행**
+ * (지점명·근무자·시각)을 쓰므로, `pageSize: 1` 을 유지하면 **같은 조건으로 두 번** 조회하게
+ * 된다. `select` 로 `totalCount` 만 꺼내던 것도 걷었다 — 호출부가 둘을 모두 본다.
  *
  * ⚠️ `status` 는 **지점 사전**이다(`3` = 미완료). 코스 사전의 `2`(미완료)를 넣으면
  * **순찰제외**를 세게 된다 — 값이 겹치는데 뜻이 다르다(`api-spec.md` §4).
  */
-export const useUncheckedCount = (
+export const useUncheckedPoints = (
   siteSeq: number | null,
   courseSeq: number | null,
   range: HistoryRange
@@ -60,8 +64,7 @@ export const useUncheckedCount = (
         fromDt: range.fromDt,
         toDt: range.toDt,
         pageNumber: 1,
-        pageSize: 1,
+        pageSize: HISTORY_PAGE_SIZE,
       }),
     enabled: siteSeq !== null && courseSeq !== null,
-    select: (page) => page.totalCount,
   })

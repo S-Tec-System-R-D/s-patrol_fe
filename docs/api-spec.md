@@ -523,6 +523,74 @@ interface PagedData<T> {
 🔴 구간을 만들 때 **`from ≤ to` 를 보장**한다 — 뒤집히면 에러 없이 0건이라 **빈 화면이
 버그처럼 보이지 않는다.**
 
+**메모·첨부 실측 (2026-10-12, C단 전제)**
+
+> "빈 배열만 관측" 이던 기록이 **조회 범위가 좁았던 것**이었다. 사업장 6 의 코스이력 46건
+> 중 **14건**, 사업장 3 의 6건 중 **1건**에 메모가 달려 있다(읽기만).
+
+**① `CheckDetails[].memos` 는 전달받은 DTO 와 정확히 같다** ✅
+
+```jsonc
+// GetCourseHistoryCheckDetails?historySeq=67
+"memos": [{
+  "memoSeq": 50,
+  "memo": "새지점 인증",
+  "attaches": [{
+    "attachSeq": 46,
+    "imagePath": "http://123.2.156.148:5231/UploadedFiles/patrols/202610/5c2e….jpg",
+    "fileName": "1000000282.jpg",
+    "fileExt": ".jpg"
+  }]
+}]
+```
+
+**② ✅ OQ-13 해소 — `imagePath` 는 절대 URL 전체**다(사용자 확인 + 실측 일치). 붙일 것이
+없다. ⚠️ 단 **스킴이 `http` 이고 호스트가 API 서버와 같다** → 운영이 HTTPS 면 **mixed
+content 로 차단**된다. 그리고 `npm run dev:real`(vite proxy)에서는 이미지가 프록시를 타지
+않고 **직접 그 호스트로** 가므로 사내망 밖에서는 안 보인다.
+
+**③ 🔴 OQ-14 해소 — `memoList` 는 `memos` 와 구조가 다르다** → **B-35** 등재
+
+```jsonc
+// GetPointHistoryDetail?detailSeq=186  ← 위와 **같은 메모**(memoSeq 50, attachSeq 46)
+"memoList": [{
+  "memoSeq": 50,
+  "memo": "새지점 인증",
+  "attachList": [{            // ← attaches 가 아니다
+    "attachSeq": 46,
+    "attachPath": "http://…/5c2e….jpg",   // ← imagePath 가 아니다
+    "fileName": "1000000282.jpg"
+                               // ← fileExt 가 **없다**
+  }]
+}]
+```
+
+| | 코스이력(`CheckDetails`) | 지점이력(`PointHistoryDetail`) |
+|---|---|---|
+| 메모 배열 | `memos` | **`memoList`** |
+| 첨부 배열 | `attaches` | **`attachList`** |
+| 이미지 URL | `imagePath` | **`attachPath`** |
+| 확장자 | `fileExt` | **없음** |
+
+→ **같은 데이터에 이름이 셋 다 다르다.** 전달받은 DTO(`CourseHistoryMemoDto`)는 **코스 쪽
+뿐**이므로, 지점 쪽을 쓰려면 **어댑터가 하나 더** 필요하다(어댑터 조건 ① 목록↔상세
+필드명 차이에 해당 — `CLAUDE.md` B4).
+
+**④ 메모 내용은 "이상 사유" 가 아니다**
+
+관측값: `"[키워드 관리]"` · `"[조명 고장] [누수]"` · `"새지점 인증"` · `"엔에프씨인증"` ·
+`"test"`. 🔴 **앱에서 고른 키워드 조합 + 자유 입력**이고, "왜 미인증인지" 를 설명하는
+문장이 아니다. 목업의 `QR 스캔 없이 순찰 종료` 같은 사유 문구는 **이 필드가 아니다** —
+메모를 그대로 "이상 사유" 로 붙이면 **틀린 설명**이 된다(A1).
+
+**⑤ 첨부가 여러 장인 메모가 있다**(`historySeq 16`: `attachSeq 29·30`) — 단일 이미지로
+가정하면 안 된다.
+
+**⑥ 🔴 사유를 붙이려면 행마다 상세 조회다.** 메모는 **목록에 없고**(`hasMemo: boolean`
+뿐) `CheckDetails(historySeq)` / `PointHistoryDetail(detailSeq)` 에만 있다 — 즉 이상 이력
+10행에 사유를 붙이면 **요청 11회**다. 구조와 데이터가 확인됐어도 **N+1 은 그대로**이므로,
+C단은 **사유 없이** 먼저 만든다(사용자 결정 2026-10-12).
+
 🔴 **`DeletePoint` 는 코스에 편성돼 있어도 거부하지 않는다**(OQ-022-B 해소) — 지점이 삭제되고
 코스 편성에서도 함께 빠진다. 즉 **"사용 중이라 못 지운다" 는 서버 규칙이 없다.**
 
@@ -957,6 +1025,7 @@ interface NoticeAttach {
 | B-32 | 🟡 **`GetCourseDetail.points[]` 에 좌표(`gpsLat`/`gpsLng`)가 없다.** 좌표 자체는 서버에 있다 — `PointDetail` 과 `GetCourseHistoryCheckDetails` 에는 둘 다 온다(§5-2). 그런데 **코스 편성 응답에만 없어서**, 코스 상세에 순찰 동선 지도를 그리려면 지점을 **1 + N 회** 조회해야 한다(`DetailPoint` 는 `pointSeq` 하나씩만 받는다) — 지점 12개 코스면 요청 13회, 한 건만 실패해도 **핀이 빠진 지도**가 나오고 어느 핀이 빠졌는지 화면에서 알 수 없다. **요청**: ① `GetCourseDetail` 의 `points[]` 에 `gpsLat`/`gpsLng` 추가(요청 수 그대로 1회, **선호**) ② 어렵다면 `GetClassificationPoint`(사업장 전량 배열)에 추가 — 2회가 되지만 사업장 단위라 캐시해 모든 코스가 공유한다. ⚠️ **값이 실제로 채워져 있는지는 미관측** — 모바일 앱 좌표 동기화가 채우는지 확인 필요(사용자 2026-10-12). 전부 `null` 이면 필드만 받아도 지도를 못 그린다 | 🟡 |
 | B-33 | 🔴 **지점 좌표에 유효성 검증이 없다**(실측 2026-10-12). 사업장 3 의 지점들이 `gpsLat: 123`, `gpsLng: 57.22` 로 저장돼 있다 — **위도는 -90~90, 경도는 -180~180** 이라 123 은 불가능한 값이다. `AddPoint`/`UpdatePoint` 가 범위를 보지 않는다. 지도에 그대로 넘기면 핀이 엉뚱한 곳으로 날아가거나 렌더가 깨진다. **요청**: 범위 밖 값을 **400** 으로 거부한다. ⚠️ 거부되더라도 **이미 저장된 값은 남으므로** 프론트가 범위 검사를 하고 벗어난 지점은 "좌표 없음" 과 같이 다룬다 | 🔴 |
 | B-34 | ❌ **철회(2026-10-12). 요청하지 않는다.** 처음에 `GetCourseHistory` 에 `status`·`overtimeYn` 필터를 요청했는데, ① `status` 는 **이미 있었다**(`eventType`, OQ-5 해소) ② `overtimeYn` 으로 거르는 화면이 **코드에도 목업에도 결정에도 없다.** 확정된 필터는 코스이력 페이지의 **기간·코스·결과** 3종이고 결과는 `eventType` 이 덮는다. 🔴 **목업의 `지연` 뱃지를 보고 "보이면 걸러 보고 싶을 것" 이라고 추측해 올린 요청이었다**(A1 위반). 요청 사유로 쓴 "페이징과 충돌해 틀린 건수가 뜬다" 는 **그 필터를 쓰는 화면이 생길 때만** 성립한다 — 그때 다시 요청한다 |
+| B-35 | 🟡 **같은 메모를 응답마다 다른 이름으로 준다**(실측 2026-10-12). `GetCourseHistoryCheckDetails` 는 `memos` / `attaches` / `imagePath` / `fileExt`, `GetPointHistoryDetail` 은 **`memoList` / `attachList` / `attachPath`** 이고 **`fileExt` 가 없다** — `memoSeq`·`attachSeq`·URL 이 같은 **동일 데이터**다. 백엔드가 전달한 DTO(`CourseHistoryMemoDto`)는 **코스 쪽뿐**이라, 지점 쪽을 쓰려면 프론트에 어댑터가 하나 더 생긴다. B-4(필드명 불일치) 계열이지만 **중첩 2단에 걸쳐** 어긋나 비용이 더 크다. **요청**: 한쪽 이름으로 통일 |
 
 ### 6-1-A. 🔴 백엔드 전달용 — 우선순위 (2026-10-10 기준)
 
@@ -1004,8 +1073,8 @@ interface NoticeAttach {
 | OQ-9 | `GetCourseDetail` 응답에 `siteSeq` 없음 — `UpdateCourseDto` 는 요구함. 프론트가 별도 보관해야 하는가? → **`spec 023` 에서 프론트 보관으로 진행한다**(`getSiteSeq()`, spec 021). 응답에 넣어 달라고 요청할 수도 있으나, 우리가 이미 들고 있는 값이라 **없어도 막히지 않는다** — B-24~B-26 보다 우선순위가 낮다 |
 | OQ-10 | ✅ **해소(실측 2026-10-10)** — `DeletePoint` 는 **코스에 편성된 지점도 거부 없이 삭제**한다. 지점이 지워지고 코스 편성에서도 함께 빠진다. 즉 `usedCount > 0` 삭제 차단은 **서버 규칙이 아니다**(`spec 022` OQ-022-B / 판단 3 해소) |
 | OQ-10 | ✅ **해소(백엔드 전달 2026-10-12)** — `CourseHistoryMemo { memoSeq, memo, attaches }` + `CourseHistoryAttach { attachSeq, imagePath, fileName, fileExt }`. §5-2 17번 참조. ⚠️ **메모가 달린 샘플 데이터는 아직 없다**(빈 배열만 관측) — 화면 확인은 데이터가 생긴 뒤 |
-| OQ-14 | 🔴 **`PointHistoryDetail.memoList` 가 `CheckDetails[].memos` 와 같은 구조인가.** 백엔드가 전달한 것은 `memos` 쪽(`CourseHistoryMemoDto`)이고, 지점이력 상세는 **필드명이 `memoList` 로 다르다**(빈 배열만 관측). 같은 DTO 면 변환 한 곳으로 끝나고, 다르면 **지점 사유와 코스 사유를 따로** 다뤄야 한다 |
-| OQ-13 | `CourseHistoryAttach.imagePath` 가 **절대 URL 인가 상대 경로인가.** 상대면 무엇을 붙여야 하는가(API base? 별도 정적 호스트?). 공지 첨부(`imageList`/`fileList`)와 같은 규칙인지도 함께 확인 — 틀리면 **이미지가 전부 깨진 썸네일**로 나온다 |
+| OQ-14 | ✅ **해소(실측 2026-10-12)** — **다르다.** 같은 메모(`memoSeq 50`)인데 `memos`↔**`memoList`** / `attaches`↔**`attachList`** / `imagePath`↔**`attachPath`** 로 이름이 셋 다 다르고 지점 쪽엔 `fileExt` 가 없다 → **B-35** 등재. 지점 쪽을 쓰려면 어댑터가 하나 더 필요하다 |
+| OQ-13 | ✅ **해소(사용자 확인 + 실측 2026-10-12)** — **절대 URL 전체**다(`http://{API호스트}/UploadedFiles/patrols/{YYYYMM}/{uuid}.jpg`). 붙일 것이 없다. ⚠️ **스킴이 `http`** 라 운영이 HTTPS 면 **mixed content 로 차단**되고, `dev:real`(vite proxy)에서는 이미지가 프록시를 타지 않아 사내망 밖에서 안 보인다 |
 | OQ-11 | `GetCourseHistoryHandOvers` 응답 구조 (빈 배열만 관측 — 교대 데이터 필요) |
 | OQ-12 | `UpsertNotice` 요청 `attachList[]` ↔ 응답 `imageList`/`fileList` 분리 기준 (확장자? MIME?) |
 

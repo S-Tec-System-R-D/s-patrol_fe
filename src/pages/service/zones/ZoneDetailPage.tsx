@@ -22,6 +22,7 @@ import CourseDiagramCard from '@/features/courses/components/detail/CourseDiagra
 import CourseInfo from '@/features/courses/components/detail/CourseInfo'
 import CoursePointEditor from '@/features/courses/components/detail/CoursePointEditor'
 import CourseKpiRow from '@/features/courses/components/detail/CourseKpiRow'
+import CourseAlertList from '@/features/courses/components/detail/CourseAlertList'
 import CoursePatrolLog from '@/features/courses/components/detail/CoursePatrolLog'
 import CoursePointList from '@/features/courses/components/detail/CoursePointList'
 import CourseToggleDialog, {
@@ -31,8 +32,9 @@ import EditCourseForm from '@/features/courses/form/EditCourseForm'
 import { useCourseDetail } from '@/features/courses/hooks/useCourseDetail'
 import {
   useCourseHistory,
-  useUncheckedCount,
+  useUncheckedPoints,
 } from '@/features/courses/hooks/useCourseHistory'
+import { buildCourseAlerts } from '@/features/courses/lib/courseAlerts'
 import { courseHistoryStats } from '@/features/courses/lib/courseHistoryStats'
 import { recentRange } from '@/features/courses/lib/historyRange'
 import { toUpdateCourseBody } from '@/features/courses/lib/updateCourseBody'
@@ -113,10 +115,12 @@ const ZoneDetailPage = () => {
    */
   const range = useMemo(() => recentRange(), [])
   const history = useCourseHistory(siteSeq, courseSeq, range)
-  const unchecked = useUncheckedCount(siteSeq, courseSeq, range)
+  const unchecked = useUncheckedPoints(siteSeq, courseSeq, range)
 
   const rows = history.data?.items ?? []
   const stats = courseHistoryStats(rows, history.data?.totalCount ?? 0)
+  // 🔴 이상 이력은 **위 두 응답에서 모은다** — 요청이 늘지 않는다(C단)
+  const alerts = buildCourseAlerts(rows, unchecked.data?.items ?? [])
 
   /**
    * 토글 저장.
@@ -251,7 +255,7 @@ const ZoneDetailPage = () => {
           {/* 🔴 **KPI 는 전체 폭, 헤더 바로 아래**(목업). 코스 상세를 여는 세 번째 질문이
               "이 코스가 잘 돌고 있나" 다 — 동선·편성보다 먼저 읽힌다.
               ⚠️ 평균·인증률은 **프론트가 더한 값**이다(서버에 집계 엔드포인트 없음) */}
-          <CourseKpiRow stats={stats} uncheckedCount={unchecked.data} />
+          <CourseKpiRow stats={stats} uncheckedCount={unchecked.data?.totalCount} />
 
           {/* **2열 골격**(목업 `코스상세-신규.html`, 사용자 결정 2026-10-12) — `xl` 미만 1단.
               좌 2/3 = 코스 자체를 보는 칸(동선 → 순서), 우 1/3 = 설정 칸.
@@ -281,11 +285,20 @@ const ZoneDetailPage = () => {
                 isPending={history.isPending}
               />
             </div>
-            <CourseInfo
-              course={course}
-              onRequestToggle={(kind, nextValue) => setToggle({ kind, nextValue })}
-              isSaving={toggleMutation.isPending}
-            />
+            {/* 우측 1/3 — 설정 칸. 🔴 **기본정보 아래에 이상 이력이 쌓인다**(목업 순서):
+                "이 코스는 어떻게 설정돼 있나" 다음에 "최근에 뭐가 어긋났나" 를 읽는다 */}
+            <div className="flex flex-col gap-4">
+              <CourseInfo
+                course={course}
+                onRequestToggle={(kind, nextValue) => setToggle({ kind, nextValue })}
+                isSaving={toggleMutation.isPending}
+              />
+
+              <CourseAlertList
+                alerts={alerts}
+                isPending={history.isPending || unchecked.isPending}
+              />
+            </div>
           </div>
 
           {/* 🔴 토글 2종이 **같은 컴포넌트를 쓰고 문구만 다르다**(규칙 11) */}
