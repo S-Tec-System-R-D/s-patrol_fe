@@ -89,12 +89,13 @@ describe('CourseInfo', () => {
 })
 
 describe('CourseInfo — 수정 버튼', () => {
-  it('🔴 onEdit 을 받으면 카드 우측 상단에 수정 버튼을 그린다 (사용자 결정 2026-10-12)', async () => {
+  it('🔴 onEdit 을 받으면 카드 우측 상단에 아이콘 버튼을 그린다 (사용자 결정 2026-10-12)', async () => {
     const user = userEvent.setup()
     const onEdit = vi.fn()
     render(<CourseInfo course={course()} onRequestToggle={vi.fn()} onEdit={onEdit} />)
 
-    await user.click(screen.getByRole('button', { name: '수정' }))
+    // 🔴 아이콘만 있어도 이름이 있다(`aria-label`)
+    await user.click(screen.getByRole('button', { name: '기본정보 수정' }))
 
     expect(onEdit).toHaveBeenCalledTimes(1)
   })
@@ -102,7 +103,7 @@ describe('CourseInfo — 수정 버튼', () => {
   it('🔴 onEdit 이 없으면 버튼도 없다 — 읽기 전용으로 쓸 수 있다', () => {
     render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
 
-    expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '기본정보 수정' })).not.toBeInTheDocument()
   })
 
   it('🔴 이 카드가 저장하지 않는다 — 모달·폼은 페이지가 들고 있다', () => {

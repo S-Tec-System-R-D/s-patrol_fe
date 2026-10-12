@@ -101,7 +101,7 @@ describe('CoursePointList — 편집 진입', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
-  it('🔴 편집 수단은 **카드 우측 상단 버튼 하나**다 (사용자 결정 2026-10-12)', async () => {
+  it('🔴 편집 수단은 **카드 우측 상단 아이콘 버튼 하나**다 (사용자 결정 2026-10-12)', async () => {
     const user = userEvent.setup()
     const onEdit = vi.fn()
     render(
@@ -114,7 +114,9 @@ describe('CoursePointList — 편집 진입', () => {
     expect(screen.queryByRole('button', { name: /제거/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: '편성 편집' }))
+    // 🔴 아이콘만 있어도 **이름이 있다** — `aria-label` 이 없으면 스크린리더에
+    // "버튼" 으로만 읽힌다
+    await user.click(screen.getByRole('button', { name: '지점 편성 편집' }))
     expect(onEdit).toHaveBeenCalledTimes(1)
   })
 

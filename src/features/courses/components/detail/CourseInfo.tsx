@@ -1,6 +1,6 @@
 import { SquarePenIcon } from 'lucide-react'
 
-import AppButton from '@/components/app/AppButton'
+import AppIconButton from '@/components/app/AppIconButton'
 import { Switch } from '@/components/ui/switch'
 import { getSiteName } from '@/lib/auth/site'
 
@@ -116,9 +116,14 @@ const CourseInfo = ({ course, onRequestToggle, onEdit, isSaving }: CourseInfoPro
       <div className="flex items-center justify-between">
         <span className="text-panel-title font-semibold">기본정보</span>
         {onEdit && (
-          <AppButton variant="sub" icon={SquarePenIcon} className="h-8" onClick={onEdit}>
-            수정
-          </AppButton>
+          /* 🔴 아이콘만 둔다 — 지점 순서 카드와 **같은 `SquarePen`**(사용자 결정
+             2026-10-12). `aria-label`·`title` 로 이름을 남긴다 */
+          <AppIconButton
+            icon={SquarePenIcon}
+            aria-label="기본정보 수정"
+            title="수정"
+            onClick={onEdit}
+          />
         )}
       </div>
 

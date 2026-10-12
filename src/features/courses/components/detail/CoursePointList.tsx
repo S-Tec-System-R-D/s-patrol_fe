@@ -1,8 +1,8 @@
-import { ListOrderedIcon, MapPinIcon, PlusIcon } from 'lucide-react'
+import { MapPinIcon, PlusIcon, SquarePenIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import AppBadge from '@/components/app/AppBadge'
-import AppButton from '@/components/app/AppButton'
+import AppIconButton from '@/components/app/AppIconButton'
 import AppEmpty from '@/components/app/AppEmpty'
 import { toAuthMethodLabel } from '@/features/points/lib/authMethod'
 import { paths } from '@/router/paths'
@@ -58,9 +58,18 @@ const CoursePointList = ({ points, onEdit }: CoursePointListProps) => {
             총 {points.length}개
           </span>
           {onEdit && (
-            <AppButton variant="sub" icon={ListOrderedIcon} className="h-8" onClick={onEdit}>
-              편성 편집
-            </AppButton>
+            /* 🔴 **아이콘만 둔다**(사용자 결정 2026-10-12). 글자 버튼은 카드 머리에서
+               제목·건수와 무게를 다퉈 카드가 시끄러워졌다. 기본정보 카드와 **같은
+               `SquarePen`** 을 쓴다 — 두 버튼의 뜻이 "이 카드를 편집한다" 로 같고,
+               한 카드에 하나뿐이라 아이콘이 같아도 가리키는 대상이 섞이지 않는다.
+               🔴 **`aria-label` 과 `title` 로 이름을 남긴다** — 아이콘만 두면 글자가
+               사라지므로, 스크린리더와 마우스 양쪽에 같은 말을 준다 */
+            <AppIconButton
+              icon={SquarePenIcon}
+              aria-label="지점 편성 편집"
+              title="편성 편집"
+              onClick={onEdit}
+            />
           )}
         </div>
       </div>

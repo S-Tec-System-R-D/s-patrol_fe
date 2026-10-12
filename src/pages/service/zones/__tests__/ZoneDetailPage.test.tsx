@@ -108,8 +108,10 @@ describe('ZoneDetailPage', () => {
     // 고치려는 값을 **보여 주는 카드**에 버튼이 있다
     const infoCard = cardOf('기본정보')
     const pointCard = cardOf('지점 순서')
-    expect(within(infoCard).getByRole('button', { name: '수정' })).toBeInTheDocument()
-    expect(within(pointCard).getByRole('button', { name: '편성 편집' })).toBeInTheDocument()
+    expect(within(infoCard).getByRole('button', { name: '기본정보 수정' })).toBeInTheDocument()
+    expect(
+      within(pointCard).getByRole('button', { name: '지점 편성 편집' })
+    ).toBeInTheDocument()
 
     // 🔴 삭제는 코스 **전체**에 대한 동작이라 어느 카드에도 속하지 않는다.
     // 파괴적 동작을 편집 버튼들과 떼어 놓는 효과도 있다
@@ -124,8 +126,8 @@ describe('ZoneDetailPage', () => {
     await screen.findByText('A동 순찰코스')
     // 고치려는 값을 **보여 주는 자리**에 버튼이 있다. 한 카드에 하나뿐이라
     // "어느 쪽이 정식인지" 를 묻지 않게 된다
-    expect(screen.getByRole('button', { name: '편성 편집' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '수정' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '지점 편성 편집' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '기본정보 수정' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
   })
 
@@ -134,17 +136,17 @@ describe('ZoneDetailPage', () => {
     renderPage('/zones/1')
 
     await screen.findByText('A동 순찰코스')
-    await user.click(screen.getByRole('button', { name: '편성 편집' }))
+    await user.click(screen.getByRole('button', { name: '지점 편성 편집' }))
 
-    expect(screen.queryByRole('button', { name: '편성 편집' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '지점 편성 편집' })).not.toBeInTheDocument()
   })
 
-  it('🔴 수정 버튼은 기본정보 카드 안에 있다 — 모달은 페이지가 들고 있다', async () => {
+  it('🔴 수정 아이콘은 기본정보 카드 안에 있다 — 모달은 페이지가 들고 있다', async () => {
     const user = userEvent.setup()
     renderPage('/zones/1')
 
     await screen.findByText('A동 순찰코스')
-    await user.click(screen.getByRole('button', { name: '수정' }))
+    await user.click(screen.getByRole('button', { name: '기본정보 수정' }))
 
     expect(await screen.findByText('코스 수정')).toBeInTheDocument()
   })
@@ -335,7 +337,7 @@ describe('ZoneDetailPage — 변경계 조립 (Phase 4)', () => {
     renderPage('/zones/1')
 
     await screen.findByText('A동 순찰코스')
-    await user.click(screen.getByRole('button', { name: '편성 편집' }))
+    await user.click(screen.getByRole('button', { name: '지점 편성 편집' }))
 
     expect(screen.getByText('지점 순서 편집')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '취소' }))
