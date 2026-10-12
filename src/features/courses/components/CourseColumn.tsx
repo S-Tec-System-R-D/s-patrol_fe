@@ -17,9 +17,11 @@ import type { CourseRow } from '../types'
  * "폭만 먹으니 빼자" 는 **결정**이었지만 코스는 **선택지가 없다.** 같은 결과라도 이유가
  * 달라, 나중에 "코스도 설명을 보여 주자" 가 나오면 **백엔드 요청**이 필요하다.
  *
- * ⚠️ **`courseStatusName` 을 그대로 쓴다.** 코드 사전이 불완전하다 — 테스트 DB 에 `0`
- * 만 있고 1·2·3 으로 필터하면 0건이다(OQ-3). 모르는 코드에 우리가 이름을 붙이면
- * 틀린 이름이 화면에 남는다(A1).
+ * 🔴 **상태 컬럼을 두지 않는다**(사용자 결정 2026-10-12). 실시간 진행 상황은 **별도
+ * 페이지**로 만들기로 했고, 목록에서 "지금 어떤 상태인가" 를 읽을 이유가 사라졌다.
+ * 덕분에 `courseStatusCode` 의 **코드 사전을 모른다는 문제(OQ-3·OQ-023-B)가 함께
+ * 종결된다** — 1·2·3 으로 필터하면 0건이 오던 그 값이다. 응답 타입(`CourseRow`)에는
+ * 실측대로 남겨 둔다(`CLAUDE.md` B4 — 안 쓰는 필드도 선언한다).
  */
 
 /** ISO 8601(타임존 없음) → 'yyyy-MM-dd HH:mm'. 값이 없거나 깨졌으면 null */
@@ -45,18 +47,6 @@ export const courseColumns = (): ColumnDef<CourseRow>[] => [
     ),
   },
   {
-    id: 'courseStatus',
-    header: '상태',
-    cell: ({ row }) => {
-      const { courseStatusName, useYn } = row.original
-      // 서버가 이름을 비워 보내면 뱃지를 숨긴다 — 없는 상태 이름을 만들지 않는다(A1)
-      if (!courseStatusName.trim()) return <span className="text-muted-foreground">-</span>
-      return (
-        <AppBadge variant={useYn ? 'point' : 'muted'}>{courseStatusName}</AppBadge>
-      )
-    },
-  },
-  {
     accessorKey: 'pointCount',
     header: '지점 수',
     cell: ({ row }) => (
@@ -79,13 +69,14 @@ export const courseColumns = (): ColumnDef<CourseRow>[] => [
   {
     accessorKey: 'switchYn',
     header: '교대',
+    // 🔴 **양쪽 다 뱃지다**(사용자 결정 2026-10-12). 처음에는 "켜진 것만 표시" 로 두었는데
+    // (`-`), 같은 열에 뱃지와 하이픈이 섞여 **빈 칸처럼 읽혔다.** 구분은 variant 가 준다 —
+    // 허용은 `success`, 허용 안 함은 `muted` 로 톤이 눌린다
     cell: ({ row }) =>
       row.original.switchYn ? (
         <AppBadge variant={row.original.useYn ? 'success' : 'muted'}>허용</AppBadge>
       ) : (
-        // 🔴 "허용 안 함" 에 뱃지를 쓰지 않는다 — 뱃지가 두 상태 모두에 붙으면 훑을 때
-        // 구분이 안 된다. 켜진 것만 표시가 생기는 쪽이 읽기 쉽다
-        <span className={`text-muted-foreground ${dim(row.original.useYn)}`}>-</span>
+        <AppBadge variant="muted">허용 안 함</AppBadge>
       ),
   },
   {

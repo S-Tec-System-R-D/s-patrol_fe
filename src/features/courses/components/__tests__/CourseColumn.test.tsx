@@ -48,20 +48,20 @@ const renderRow = (overrides: Partial<CourseRow> = {}) => {
 }
 
 describe('courseColumns — 컬럼 구성', () => {
-  it('7개 컬럼을 그린다', () => {
+  it('6개 컬럼을 그린다', () => {
     renderRow()
 
-    for (const header of [
-      '코스명',
-      '상태',
-      '지점 수',
-      '총 소요시간',
-      '교대',
-      '최근 순찰',
-      '사용여부',
-    ]) {
+    for (const header of ['코스명', '지점 수', '총 소요시간', '교대', '최근 순찰', '사용여부']) {
       expect(screen.getByText(header)).toBeInTheDocument()
     }
+  })
+
+  it('🔴 상태 컬럼이 없다 — 실시간 진행은 별도 페이지가 맡는다 (OQ-3 종결)', () => {
+    renderRow({ courseStatusName: '대기중' })
+
+    expect(screen.queryByText('상태')).not.toBeInTheDocument()
+    // 🔴 코드 사전을 모르는 값(OQ-3)이 화면에 **아예 올라오지 않는다**
+    expect(screen.queryByText('대기중')).not.toBeInTheDocument()
   })
 
   it('🔴 설명 컬럼이 없다 — 서버가 목록에 memo 를 주지 않는다', () => {
@@ -115,15 +115,16 @@ describe('courseColumns — 값 표시', () => {
 })
 
 describe('courseColumns — 상태 표시', () => {
-  it('교대 허용은 뱃지로, 허용 안 함은 뱃지 없이 보여준다', () => {
+  it('교대 허용을 뱃지로 보여준다', () => {
     renderRow({ switchYn: true })
     expect(screen.getByText('허용')).toBeInTheDocument()
   })
 
-  it('교대 허용 안 함에는 뱃지를 쓰지 않는다 — 둘 다 뱃지면 훑을 때 구분이 안 된다', () => {
+  it('허용 안 함도 뱃지다 — 하이픈은 빈 칸처럼 읽힌다 (사용자 결정)', () => {
     renderRow({ switchYn: false })
 
-    expect(screen.queryByText('허용')).not.toBeInTheDocument()
+    expect(screen.getByText('허용 안 함')).toBeInTheDocument()
+    expect(screen.queryByText('-')).not.toBeInTheDocument()
   })
 
   it('미사용 코스는 사용여부 뱃지로 글자를 준다 — 색·명도만으로 전달하지 않는다', () => {
@@ -132,17 +133,6 @@ describe('courseColumns — 상태 표시', () => {
     expect(screen.getByText('미사용')).toBeInTheDocument()
   })
 
-  it('🔴 상태 이름이 비면 뱃지를 숨긴다 — 없는 상태 이름을 만들지 않는다', () => {
-    renderRow({ courseStatusName: '  ' })
-
-    expect(screen.getByText('-')).toBeInTheDocument()
-  })
-
-  it('⚠️ 모르는 상태 코드도 서버가 준 이름을 그대로 쓴다 (OQ-3)', () => {
-    renderRow({ courseStatusCode: 7, courseStatusName: '진행중' })
-
-    expect(screen.getByText('진행중')).toBeInTheDocument()
-  })
 })
 
 describe('courseColumns — 행 클릭', () => {

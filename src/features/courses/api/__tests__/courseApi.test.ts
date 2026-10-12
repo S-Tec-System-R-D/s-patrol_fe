@@ -235,6 +235,28 @@ describe('updateCourse', () => {
     expect(detail.points[0].coursePointSeq).toBeGreaterThan(0)
   })
 
+  it('🔴 한 번에 추가한 새 행 2건은 coursePointSeq 가 서로 달라진다', async () => {
+    // 🔴 위 테스트가 **1건**만 넣어 비었던 자리다. mock 이 번호를 루프 안에서 계산해
+    // **둘에게 같은 번호**를 주고 있었고, 화면의 드래그 id 가 `cp-{coursePointSeq}` 라
+    // **하나를 지우니 둘이 지워지는** 증상이 났다(발견 2026-10-12, 브라우저 확인).
+    // ⚠️ 실 서버는 각각 다른 번호를 주는 것이 실측된 동작이다 — mock 만 틀렸다
+    await updateCourse(
+      updateBody({
+        courseSeq: 4, // 지점 0개 코스(구 주차장 코스)
+        courseName: '구 주차장 코스(미사용)',
+        points: [
+          { pointSeq: 4, coursePointSeq: null, orderNo: 1, memo: null, courseMin: 5 },
+          { pointSeq: 5, coursePointSeq: null, orderNo: 2, memo: null, courseMin: 7 },
+        ],
+      })
+    )
+
+    const detail = await fetchCourseDetail(4)
+    const seqs = detail.points.map((point) => point.coursePointSeq)
+    expect(detail.points).toHaveLength(2)
+    expect(new Set(seqs).size).toBe(2)
+  })
+
   it('🔴 memo: null 이 반영된다 — 지점(UpdatePoint)과 반대다 (B-15 / 규칙 6)', async () => {
     await updateCourse(
       updateBody({

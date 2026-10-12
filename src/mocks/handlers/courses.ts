@@ -328,6 +328,13 @@ export const courseHandlers = [
     const current = store[index]
     const incoming = body.points ?? [] // 🔴 생략도 "전부 삭제" 다
 
+    // 🔴 새 행의 번호는 **루프 밖에서 하나씩 발급**한다. `nextCoursePointSeq()` 는
+    // `store` 를 읽는데 `store[index]` 는 아래 대입이 끝나야 바뀌므로, 루프 안에서
+    // 부르면 **한 번에 추가한 새 행 전부가 같은 번호**를 받는다. 그러면 화면의 드래그
+    // id(`cp-{coursePointSeq}`)가 겹쳐 **하나를 지우면 둘이 지워진다.**
+    // ⚠️ 실 서버는 각각 다른 번호를 준다(실측 2026-10-12) — mock 만 틀렸던 자리다
+    let allocated = nextCoursePointSeq()
+
     store[index] = {
       ...current,
       courseName: body.courseName?.trim() || current.courseName,
@@ -341,7 +348,7 @@ export const courseHandlers = [
           (saved) => saved.coursePointSeq === point.coursePointSeq
         )
         return {
-          coursePointSeq: existing?.coursePointSeq ?? nextCoursePointSeq(),
+          coursePointSeq: existing?.coursePointSeq ?? allocated++,
           pointSeq: point.pointSeq,
           orderNo: point.orderNo,
           memo: point.memo ?? null,

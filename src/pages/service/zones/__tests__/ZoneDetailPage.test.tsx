@@ -79,7 +79,10 @@ describe('ZoneDetailPage', () => {
 
     expect(await screen.findByText('코스를 찾을 수 없습니다')).toBeInTheDocument()
     expect(screen.queryByText('NOT_FOUND_PAGE')).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '코스/지점' })).toBeInTheDocument()
+    // 🔴 **안내와 같은 자리에** 복귀 수단이 있어야 한다. 전에는 브레드크럼 링크
+    // (`코스/지점`)만 보고 통과시켰는데, 브라우저에서는 그것이 빠져나갈 길로 읽히지
+    // 않았다(확인 2026-10-12) — 단정을 안내 블록 안으로 좁힌다
+    expect(screen.getByRole('link', { name: '코스 목록으로' })).toHaveAttribute('href', '/zones')
   })
 
   it('🔴 숫자가 아닌 세그먼트는 조회를 시도하지 않고 안내로 끝난다', async () => {
@@ -87,6 +90,7 @@ describe('ZoneDetailPage', () => {
 
     expect(await screen.findByText('코스를 찾을 수 없습니다')).toBeInTheDocument()
     expect(screen.getByText(/주소가 올바르지 않습니다/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '코스 목록으로' })).toBeInTheDocument()
   })
 
   it('🔴 수정·삭제 수단이 헤더에 있다 — 본문 아래 풋터가 아니다', async () => {
@@ -260,7 +264,7 @@ describe('ZoneDetailPage — 변경계 조립 (Phase 4)', () => {
     await user.click(screen.getByLabelText('허용'))
 
     expect(await screen.findByText('교대 허용을 끄시겠습니까?')).toBeInTheDocument()
-    expect(screen.queryByText(/배정되지 않습니다/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/코스 목록에서 숨겨져/)).not.toBeInTheDocument()
   })
 
   it('편성 편집으로 들어가고 취소로 돌아온다', async () => {

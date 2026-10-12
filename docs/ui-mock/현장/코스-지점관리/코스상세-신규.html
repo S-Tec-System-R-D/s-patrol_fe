@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>S-Patrol · 코스 상세</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{--bg:oklch(0.985 0.003 260);--surface:#fff;--border:oklch(0.914 0.006 260);--border-soft:oklch(0.951 0.004 260);--text:oklch(0.22 0.015 260);--text-2:oklch(0.5 0.02 260);--text-3:oklch(0.68 0.014 260);--accent:oklch(0.5 0.175 260);--accent-bg:oklch(0.955 0.025 260);--accent-dark:oklch(0.4 0.16 260);--success:oklch(0.62 0.14 155);--success-bg:oklch(0.955 0.035 155);--amber:oklch(0.68 0.13 70);--amber-bg:oklch(0.96 0.03 70);--amber-dark:oklch(0.52 0.12 70);--danger:oklch(0.58 0.19 25);--danger-bg:oklch(0.962 0.028 25);--gray-bg:oklch(0.955 0.004 260);--rail:oklch(0.19 0.014 262);--rail-2:oklch(0.27 0.016 262);--mono:'Geist Mono',ui-monospace,SFMono-Regular,monospace}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:13px;letter-spacing:-0.01em;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-dark);text-decoration:none}a:hover{color:var(--accent)}
+.shell{width:1920px;min-height:911px;display:flex;background:var(--bg)}
+.rail{width:68px;flex-shrink:0;background:var(--rail);display:flex;flex-direction:column;align-items:center;padding:18px 0 20px;position:sticky;top:0;height:100vh}
+.rail__mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(155deg,oklch(0.6 0.18 260),oklch(0.42 0.16 262));display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;margin-bottom:28px;flex-shrink:0}
+.rail__nav{display:flex;flex-direction:column;gap:6px}
+.rail__item{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;color:oklch(0.62 0.02 260);cursor:pointer;position:relative}
+.rail__item svg{width:20px;height:20px}
+.rail__item.is-active{background:oklch(0.29 0.02 262);color:#fff}
+.rail__item.is-active::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:2px;background:oklch(0.68 0.16 260)}
+.rail__spacer{flex:1}
+.rail__profile{width:44px;height:44px;border-radius:12px;background:var(--rail-2);display:grid;place-items:center;border:1px solid oklch(1 0 0/0.06);position:relative}
+.rail__profile .av{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700;background:oklch(0.5 0.13 300)}
+.rail__dot{position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--rail)}
+.main{flex:1;min-width:0;padding:22px 28px 44px}
+.crumb{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-3);margin-bottom:12px}
+.crumb svg{width:13px;height:13px}
+.crumb b{font-weight:600;color:var(--text-2)}
+.pagehead{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding-bottom:18px;border-bottom:1px solid var(--border-soft);margin-bottom:18px}
+.ph-left{display:flex;gap:13px;min-width:0}
+.ph-icon{width:40px;height:40px;border-radius:11px;background:var(--accent-bg);color:var(--accent-dark);display:grid;place-items:center;flex-shrink:0}
+.ph-icon svg{width:20px;height:20px}
+.ph-titlerow{display:flex;align-items:center;gap:9px}
+.ph-titlerow h1{margin:0;font-size:17px;font-weight:700;letter-spacing:-0.015em}
+.ph-meta{display:flex;align-items:center;gap:10px;margin-top:7px;font-size:11.5px;color:var(--text-3)}
+.ph-meta .sep{width:1px;height:10px;background:var(--border)}
+.ph-meta code{font-family:var(--mono);font-size:11px;background:var(--gray-bg);padding:1.5px 6px;border-radius:5px;color:var(--text-2)}
+.mapctl{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.zoomer{display:flex;flex-direction:column;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 1px 3px oklch(0 0 0/0.08)}
+.zoomer button{width:28px;height:28px;border:none;background:none;font-family:inherit;font-size:14px;color:var(--text-2);cursor:pointer}
+.zoomer button+button{border-top:1px solid var(--border-soft)}
+.scalebar{display:flex;align-items:center;gap:6px;background:oklch(1 0 0/0.88);border:1px solid var(--border-soft);border-radius:6px;padding:3px 7px;font-size:10.5px;color:var(--text-2);font-family:var(--mono)}
+.scalebar i{width:42px;height:5px;border:1px solid var(--text-3);border-top:none;display:block}
+.mapattr{position:absolute;left:12px;bottom:12px;font-size:10.5px;color:var(--text-3);background:oklch(1 0 0/0.84);border-radius:5px;padding:2px 7px}
+.coord{font-family:var(--mono);font-size:10.5px;color:var(--text-3);margin-top:2px}
+.ph-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.btn{height:34px;padding:0 13px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:inherit}
+.btn svg{width:14px;height:14px}
+.btn:hover{background:var(--gray-bg)}
+.btn--primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn--primary:hover{background:var(--accent-dark)}
+.btn--danger{color:var(--danger);border-color:oklch(0.9 0.04 25)}
+.btn--danger:hover{background:var(--danger-bg)}
+.btn--ghost{border-color:transparent;background:none;color:var(--text-2)}
+.btn--sm{height:29px;padding:0 10px;font-size:12px;border-radius:7px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:20px;font-size:11.5px;font-weight:600}
+.pill--on{background:var(--success-bg);color:var(--success)}
+.pill .d{width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge--accent{background:var(--accent-bg);color:var(--accent-dark)}
+.badge--gray{background:var(--gray-bg);color:var(--text-2)}
+.badge--amber{background:var(--amber-bg);color:var(--amber-dark)}
+.badge--green{background:var(--success-bg);color:var(--success)}
+.badge--danger{background:var(--danger-bg);color:var(--danger)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden;margin-bottom:16px}
+.kpi{padding:14px 16px 15px;border-left:1px solid var(--border-soft)}
+.kpi:first-child{border-left:none}
+.kpi__label{font-size:11.5px;color:var(--text-3);font-weight:500;display:flex;align-items:center;gap:6px}
+.kpi__label svg{width:13px;height:13px}
+.kpi__val{margin-top:7px;font-size:21px;font-weight:700;letter-spacing:-0.02em;display:flex;align-items:baseline;gap:4px}
+.kpi__val small{font-size:12px;font-weight:600;color:var(--text-3)}
+.kpi__sub{margin-top:5px;font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px}
+.kpi__sub.up{color:var(--success)}
+.kpi__sub.warn{color:var(--amber-dark)}
+.meter{height:4px;border-radius:3px;background:var(--gray-bg);margin-top:9px;overflow:hidden}
+.meter i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.meter i.g{background:var(--success)}
+.meter i.a{background:var(--amber)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:16px}
+.card{border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.card__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px 0}
+.card__head h3{margin:0;font-size:12.5px;font-weight:700}
+.card__head p{margin:4px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.5}
+.card__body{padding:14px 16px 16px}
+.card__foot{padding:11px 16px;border-top:1px solid var(--border-soft);font-size:11.5px;color:var(--text-3);display:flex;align-items:center;justify-content:space-between}
+.floor{position:relative;border-radius:11px;background:var(--gray-bg);overflow:hidden;border:1px solid var(--border-soft)}
+.floor svg{display:block;width:100%;height:auto}
+.floor__bar{position:absolute;top:11px;left:12px;right:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none}
+.floorsel{display:flex;gap:4px;background:oklch(1 0 0/0.86);backdrop-filter:blur(6px);padding:3px;border-radius:8px;border:1px solid var(--border-soft)}
+.floorsel button{height:25px;padding:0 10px;border:none;border-radius:6px;background:none;font-family:inherit;font-size:11.5px;font-weight:600;color:var(--text-2);cursor:pointer}
+.floorsel button.is-on{background:var(--accent);color:#fff}
+.legend{display:flex;gap:12px;align-items:center;background:oklch(1 0 0/0.86);backdrop-filter:blur(6px);padding:5px 10px;border-radius:8px;border:1px solid var(--border-soft);font-size:11px;color:var(--text-2)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:8px;height:8px;border-radius:50%;display:block}
+.ptrow{display:flex;align-items:center;gap:11px;padding:11px 10px;border-radius:9px;border:1px solid transparent}
+.ptrow + .ptrow{margin-top:2px}
+.ptrow:hover{background:var(--gray-bg)}
+.ptrow.is-sel{background:var(--accent-bg);border-color:oklch(0.88 0.04 260)}
+.ptrow .num{width:22px;height:22px;border-radius:7px;background:var(--surface);border:1px solid var(--border);color:var(--text-2);font-size:11px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+.ptrow.is-sel .num{background:var(--accent);border-color:var(--accent);color:#fff}
+.ptrow .nm{flex:1;min-width:0;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptrow .loc{font-size:11px;color:var(--text-3);font-weight:500;margin-top:2px}
+.ptrow .rate{width:64px;text-align:right;font-size:11.5px;font-weight:600;color:var(--text-2);font-family:var(--mono)}
+.ptrow .dur{width:52px;text-align:right;font-size:11.5px;color:var(--text-3);font-family:var(--mono)}
+.ptrow .off{opacity:0.52}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;color:var(--text-3);padding:0 10px 9px;border-bottom:1px solid var(--border-soft);white-space:nowrap}
+td{font-size:12.5px;padding:10px;border-bottom:1px solid var(--border-soft);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:oklch(0.985 0.002 260)}
+.t-mono{font-family:var(--mono);font-size:11.5px;color:var(--text-2)}
+.who{display:flex;align-items:center;gap:8px;font-weight:600}
+.av2{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.prog{display:flex;align-items:center;gap:8px}
+.prog .track{width:56px;height:4px;border-radius:3px;background:var(--gray-bg);overflow:hidden}
+.prog .track i{display:block;height:100%;border-radius:3px;background:var(--success)}
+.prog .track i.a{background:var(--amber)}
+.prog b{font-size:11.5px;font-weight:600;font-family:var(--mono)}
+.dl{display:grid;grid-template-columns:92px minmax(0,1fr)}
+.dl dt{font-size:12px;color:var(--text-2);padding:11px 0;border-top:1px solid var(--border-soft)}
+.dl dd{margin:0;font-size:12.5px;font-weight:500;padding:11px 0;border-top:1px solid var(--border-soft);line-height:1.55}
+.dl .first{border-top:none}
+.tog{width:34px;height:20px;border-radius:12px;background:var(--accent);position:relative;display:inline-block;vertical-align:-5px;margin-right:8px}
+.tog::after{content:"";position:absolute;top:2px;left:16px;width:16px;height:16px;border-radius:50%;background:#fff}
+.tog.off{background:var(--border)}
+.tog.off::after{left:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px 0 4px;border-radius:20px;background:var(--gray-bg);font-size:11.5px;font-weight:600;color:var(--text-2)}
+.chip .av2{width:19px;height:19px;border-radius:6px;font-size:9px}
+.alert{display:flex;gap:11px;padding:11px 0;border-top:1px solid var(--border-soft)}
+.alert:first-child{border-top:none;padding-top:2px}
+.alert__ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex-shrink:0}
+.alert__ico svg{width:14px;height:14px}
+.alert__ico.amber{background:var(--amber-bg);color:var(--amber-dark)}
+.alert__ico.red{background:var(--danger-bg);color:var(--danger)}
+.alert__b{min-width:0;flex:1}
+.alert__t{font-size:12.5px;font-weight:600}
+.alert__m{font-size:11.5px;color:var(--text-3);margin-top:3px;line-height:1.5}
+.alert__time{font-size:11px;color:var(--text-3);font-family:var(--mono);flex-shrink:0;padding-top:2px}
+.sched{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:4px}
+.sched div{height:28px;border-radius:7px;background:var(--gray-bg);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--text-3)}
+.sched div.on{background:var(--accent-bg);color:var(--accent-dark)}
+.hint{font-size:11.5px;color:var(--text-3);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail">
+    <div class="rail__mark">SP</div>
+    <div class="rail__nav">
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+      <div class="rail__item is-active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1.5-4 4-6 7.5-6s6 2 7.5 6"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h10M7 12h10M7 17h6"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9h4l8-4v14l-8-4H4z"/></svg></div>
+    </div>
+    <div class="rail__spacer"></div>
+    <div class="rail__profile"><div class="av">홍</div><div class="rail__dot"></div></div>
+  </nav>
+
+  <main class="main">
+    <div class="crumb"><a href="#">코스/지점</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg><b>코스 상세</b></div>
+
+    <div class="pagehead">
+      <div class="ph-left">
+        <div class="ph-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5.5" cy="6" r="2.5"/><circle cx="18.5" cy="18" r="2.5"/><path d="M8 6h5a3.5 3.5 0 010 7h-2a3.5 3.5 0 000 7h5"/></svg></div>
+        <div>
+          <div class="ph-titlerow"><h1>A동 순찰코스</h1><span class="pill pill--on"><span class="d"></span>사용</span><span class="badge badge--gray">지점 3개 · 45분</span></div>
+          <div class="ph-meta"><code>RT-0014</code><span class="sep"></span><span>강동 테크노타워 · A동</span><span class="sep"></span><span>외곽 약 1.2km</span><span class="sep"></span><span>최근 수정 2026.10.08 · 홍지우</span></div>
+        </div>
+      </div>
+      <div class="ph-actions">
+        <button class="btn btn--ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>복제</button>
+        <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h10M4 12h16M4 18h7"/><circle cx="18" cy="6" r="2"/><circle cx="14" cy="18" r="2"/></svg>편성 편집</button>
+        <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>수정</button>
+        <button class="btn btn--danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>삭제</button>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi__label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6L9 17l-5-5"/></svg>30일 순찰 수행</div>
+        <div class="kpi__val">60<small>회</small></div>
+        <div class="kpi__sub up">지점 인증률 96.7% · 전월 +2.4%p</div>
+        <div class="meter"><i class="g" style="width:96.7%"></i></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>평균 소요시간</div>
+        <div class="kpi__val">47<small>분</small></div>
+        <div class="kpi__sub warn">기준 45분 대비 +2분</div>
+        <div class="meter"><i class="a" style="width:72%"></i></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.6 17.3A2 2 0 004.3 20.3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>미인증 지점</div>
+        <div class="kpi__val">7<small>건</small></div>
+        <div class="kpi__sub">엘리베이터홀 A에서 5건 발생</div>
+        <div class="meter"><i class="a" style="width:24%"></i></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1.5-4 4-6 7.5-6s6 2 7.5 6"/></svg>최근 순찰</div>
+        <div class="kpi__val" style="font-size:15px">오늘 02:40</div>
+        <div class="kpi__sub">박성민 · 정상 완료 (44분)</div>
+        <div class="meter"><i style="width:100%"></i></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="stack">
+        <section class="card">
+          <div class="card__head"><div><h3>순찰 동선</h3><p>외곽 순찰 경로 · 지점 좌표와 이동 순서</p></div><button class="btn btn--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>지점 좌표 편집</button></div>
+          <div class="card__body">
+            <div class="floor">
+              <div class="floor__bar">
+                <div class="floorsel"><button class="is-on">일반</button><button>위성</button><button>지적편집도</button></div>
+                <div class="legend"><span><i style="background:var(--accent)"></i>코스 지점</span><span><i style="background:var(--amber)"></i>미인증 다발</span><span><i style="background:oklch(0.8 0.01 260)"></i>미배정 지점</span></div>
+              </div>
+              <svg viewBox="0 0 980 420" role="img" aria-label="강동 테크노타워 외곽 순찰 경로 지도">
+                <defs>
+                  <marker id="arw" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0l9 5-9 5z" fill="oklch(0.45 0.16 260)"/></marker>
+                  <filter id="pinsh" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="oklch(0 0 0)" flood-opacity="0.25"/></filter>
+                </defs>
+                <rect x="0" y="0" width="980" height="420" fill="oklch(0.962 0.008 130)"/>
+                <g fill="oklch(0.94 0.028 145)">
+                  <rect x="0" y="0" width="980" height="46"/>
+                  <rect x="0" y="330" width="150" height="90"/>
+                  <path d="M840 300h140v120H840z"/>
+                </g>
+                <g stroke="oklch(0.9 0.006 260)" stroke-width="1" fill="none">
+                  <path d="M0 60h980M0 140h980M0 220h980M0 300h980M0 380h980M80 0v420M240 0v420M400 0v420M560 0v420M720 0v420M880 0v420" stroke-opacity="0.5"/>
+                </g>
+                <g stroke="oklch(0.86 0.006 260)" stroke-width="26" fill="none" stroke-linecap="round"><path d="M-10 372H990M118 -10V372M884 -10V372"/></g>
+                <g stroke="#fff" stroke-width="22" fill="none" stroke-linecap="round"><path d="M-10 372H990M118 -10V372M884 -10V372"/></g>
+                <g stroke="oklch(0.86 0.006 260)" stroke-width="14" fill="none"><path d="M118 96H884"/></g>
+                <g stroke="#fff" stroke-width="11" fill="none"><path d="M118 96H884"/></g>
+                <text x="500" y="396" font-family="Pretendard" font-size="11" fill="oklch(0.6 0.014 260)" text-anchor="middle">상암로 22길</text>
+                <text x="140" y="200" font-family="Pretendard" font-size="11" fill="oklch(0.6 0.014 260)">둔촌대로</text>
+                <rect x="230" y="140" width="330" height="190" rx="4" fill="oklch(0.9 0.012 265)" stroke="oklch(0.83 0.014 265)" stroke-width="1.5"/>
+                <rect x="600" y="160" width="190" height="130" rx="4" fill="oklch(0.92 0.01 265)" stroke="oklch(0.85 0.012 265)" stroke-width="1.5"/>
+                <rect x="610" y="312" width="150" height="44" rx="4" fill="oklch(0.93 0.008 265)" stroke="oklch(0.87 0.01 265)" stroke-width="1.3"/>
+                <g font-family="Pretendard" text-anchor="middle">
+                  <text x="395" y="238" font-size="14" font-weight="700" fill="oklch(0.42 0.02 265)">강동 테크노타워 A동</text>
+                  <text x="395" y="257" font-size="11" fill="oklch(0.56 0.016 265)">지상 12층 · 지하 3층</text>
+                  <text x="695" y="222" font-size="12.5" font-weight="600" fill="oklch(0.48 0.018 265)">B동 (창고)</text>
+                  <text x="685" y="339" font-size="11" fill="oklch(0.58 0.014 265)">옥외 주차장</text>
+                  <text x="175" y="365" font-size="10.5" fill="oklch(0.52 0.06 145)">근린공원</text>
+                </g>
+                <path d="M196 332V118h628v182l-40 40" fill="none" stroke="oklch(0.45 0.16 260)" stroke-opacity="0.16" stroke-width="13" stroke-linejoin="round" stroke-linecap="round"/>
+                <path d="M196 332V118h628v182l-40 40" fill="none" stroke="oklch(0.45 0.16 260)" stroke-width="2.4" stroke-dasharray="7 7" stroke-linejoin="round" marker-end="url(#arw)"/>
+                <g font-family="Pretendard" font-size="11" font-weight="600" fill="oklch(0.5 0.02 260)" text-anchor="middle">
+                  <rect x="170" y="216" width="52" height="19" rx="9.5" fill="#fff" stroke="oklch(0.93 0.006 260)"/><text x="196" y="229">15분</text>
+                  <rect x="640" y="108" width="52" height="19" rx="9.5" fill="#fff" stroke="oklch(0.93 0.006 260)"/><text x="666" y="121">20분</text>
+                </g>
+                <g filter="url(#pinsh)">
+                  <path d="M196 344c0 0-15-14-15-23a15 15 0 1130 0c0 9-15 23-15 23z" fill="oklch(0.5 0.175 260)"/>
+                  <text x="196" y="326" font-family="Pretendard" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+                </g>
+                <g text-anchor="middle"><rect x="138" y="352" width="116" height="34" rx="8" fill="#fff" stroke="oklch(0.92 0.006 260)"/><text x="196" y="366" font-family="Pretendard" font-size="12" font-weight="700" fill="oklch(0.22 0.015 260)">정문 입구</text><text x="196" y="379" font-family="Pretendard" font-size="10" fill="oklch(0.62 0.014 260)">QR · 인증률 100%</text></g>
+                <g filter="url(#pinsh)">
+                  <path d="M450 130c0 0-15-14-15-23a15 15 0 1130 0c0 9-15 23-15 23z" fill="oklch(0.5 0.175 260)"/>
+                  <text x="450" y="112" font-family="Pretendard" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+                </g>
+                <g text-anchor="middle"><rect x="392" y="56" width="116" height="34" rx="8" fill="#fff" stroke="oklch(0.92 0.006 260)"/><text x="450" y="70" font-family="Pretendard" font-size="12" font-weight="700" fill="oklch(0.22 0.015 260)">로비 1층</text><text x="450" y="83" font-family="Pretendard" font-size="10" fill="oklch(0.62 0.014 260)">NFC · 인증률 98%</text></g>
+                <g filter="url(#pinsh)">
+                  <path d="M784 352c0 0-15-14-15-23a15 15 0 1130 0c0 9-15 23-15 23z" fill="oklch(0.68 0.13 70)"/>
+                  <text x="784" y="334" font-family="Pretendard" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+                </g>
+                <g text-anchor="middle"><rect x="718" y="360" width="132" height="34" rx="8" fill="#fff" stroke="oklch(0.92 0.006 260)"/><text x="784" y="374" font-family="Pretendard" font-size="12" font-weight="700" fill="oklch(0.22 0.015 260)">엘리베이터홀 A</text><text x="784" y="387" font-family="Pretendard" font-size="10" fill="oklch(0.52 0.12 70)">QR · 미인증 5건</text></g>
+                <g>
+                  <circle cx="884" cy="200" r="7.5" fill="#fff" stroke="oklch(0.78 0.01 260)" stroke-width="2.4"/>
+                  <text x="884" y="184" font-family="Pretendard" font-size="10.5" fill="oklch(0.66 0.012 260)" text-anchor="middle">후문 입구 · 미배정</text>
+                </g>
+              </svg>
+              <div class="mapctl">
+                <div class="scalebar"><i></i>50m</div>
+                <div class="zoomer"><button>+</button><button>−</button></div>
+              </div>
+              <div class="mapattr">NAVER Maps · 37.5451, 127.1365</div>
+            </div>
+          </div>
+          <div class="card__foot"><span>지점 좌표는 위경도로 저장되며, 모바일 앱 지도에 동일하게 표시됩니다.</span><a href="#">좌표 일괄 등록</a></div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><div><h3>최근 순찰 기록</h3><p>최근 7일 · 근무자가 앱에서 이 코스를 선택해 수행한 순찰</p></div><div style="display:flex;gap:7px"><button class="btn btn--sm btn--ghost">기간 변경</button><button class="btn btn--sm">전체 기록</button></div></div>
+          <div class="card__body" style="padding:6px 6px 0">
+            <table>
+              <thead><tr><th style="padding-left:16px">시작</th><th>근무자</th><th>인증</th><th>소요</th><th>상태</th><th style="text-align:right;padding-right:16px">비고</th></tr></thead>
+              <tbody>
+                <tr><td style="padding-left:16px" class="t-mono">10.12 02:40</td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.14 250)">박</span>박성민</div></td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>3/3</b></div></td><td class="t-mono">44분</td><td><span class="badge badge--green">완료</span></td><td style="text-align:right;padding-right:16px" class="t-mono">—</td></tr>
+                <tr><td style="padding-left:16px" class="t-mono">10.11 23:05</td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.14 250)">박</span>박성민</div></td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>3/3</b></div></td><td class="t-mono">46분</td><td><span class="badge badge--green">완료</span></td><td style="text-align:right;padding-right:16px" class="t-mono">—</td></tr>
+                <tr><td style="padding-left:16px" class="t-mono">10.11 02:38</td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">정</span>정우현</div></td><td><div class="prog"><div class="track"><i class="a" style="width:66%"></i></div><b>2/3</b></div></td><td class="t-mono">38분</td><td><span class="badge badge--amber">미인증 1</span></td><td style="text-align:right;padding-right:16px" style="font-size:11.5px">엘리베이터홀 A</td></tr>
+                <tr><td style="padding-left:16px" class="t-mono">10.10 23:12</td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">정</span>정우현</div></td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>3/3</b></div></td><td class="t-mono">49분</td><td><span class="badge badge--green">완료</span></td><td style="text-align:right;padding-right:16px" class="t-mono">—</td></tr>
+                <tr><td style="padding-left:16px" class="t-mono">10.10 02:51</td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.13 300)">김</span>김현수</div></td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>3/3</b></div></td><td class="t-mono">52분</td><td><span class="badge badge--amber">지연</span></td><td style="text-align:right;padding-right:16px;font-size:11.5px">기준 +7분</td></tr>
+                <tr><td style="padding-left:16px" class="t-mono">10.09 23:00</td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.13 300)">김</span>김현수</div></td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>3/3</b></div></td><td class="t-mono">43분</td><td><span class="badge badge--green">완료</span></td><td style="text-align:right;padding-right:16px" class="t-mono">—</td></tr>
+                <tr><td style="padding-left:16px" class="t-mono">10.09 02:44</td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">정</span>정우현</div></td><td><div class="prog"><div class="track"><i class="a" style="width:33%"></i></div><b>1/3</b></div></td><td class="t-mono">12분</td><td><span class="badge badge--danger">중단</span></td><td style="text-align:right;padding-right:16px;font-size:11.5px">현장 출동</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card__foot"><span>최근 7일 14건 중 7건 표시</span><a href="#">더 보기</a></div>
+        </section>
+      </div>
+
+      <div class="stack">
+        <section class="card">
+          <div class="card__head"><div><h3>지점 순서</h3><p>총 3개 · 순서와 구간시간은 편성 편집에서 변경합니다.</p></div><button class="btn btn--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h10M4 12h16M4 18h7"/><circle cx="18" cy="6" r="2"/><circle cx="14" cy="18" r="2"/></svg>편성 편집</button></div>
+          <div class="card__body" style="padding:8px 10px 10px">
+            <div class="ptrow is-sel"><span class="num">1</span><div style="flex:1;min-width:0"><div class="nm">정문 입구</div><div class="loc">1F · 로비 서측 · QR</div></div><span class="rate">100%</span><span class="dur">10분</span></div>
+            <div class="ptrow"><span class="num">2</span><div style="flex:1;min-width:0"><div class="nm">로비 1층</div><div class="loc">1F · 안내 데스크 · NFC</div></div><span class="rate">98%</span><span class="dur">15분</span></div>
+            <div class="ptrow"><span class="num">3</span><div style="flex:1;min-width:0"><div class="nm">엘리베이터홀 A <span class="badge badge--amber" style="margin-left:4px">미인증 5</span></div><div class="loc">1F · 승강기 앞 · QR</div></div><span class="rate" style="color:var(--amber-dark)">83%</span><span class="dur">20분</span></div>
+          </div>
+          <div class="card__foot"><span>지점 자체는 <a href="#">순찰지점</a>에서 관리합니다.</span></div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><h3>기본정보</h3><button class="btn btn--sm btn--ghost">수정</button></div>
+          <div class="card__body" style="padding-top:4px">
+            <dl class="dl">
+              <dt class="first">코스명</dt><dd class="first">A동 순찰코스</dd>
+              <dt>코스 코드</dt><dd><span class="t-mono">RT-0014</span></dd>
+              <dt>사업장</dt><dd>강동 테크노타워 · A동</dd>
+              <dt>순찰 구간</dt><dd>지점 3개 · 외곽 약 1.2km</dd>
+              <dt>기준 소요시간</dt><dd>45분 <span style="color:var(--text-3);font-weight:400">(실제 평균 47분)</span></dd>
+              <dt>교대 허용</dt><dd><span class="tog"></span>허용 <span style="color:var(--text-3);font-weight:400;font-size:11.5px">· 순찰 중 인계 가능</span></dd>
+              <dt>코스 활성화</dt><dd><span class="tog"></span>사용 <span style="color:var(--text-3);font-weight:400;font-size:11.5px">· 앱 코스 목록에 노출</span></dd>
+              <dt>등록</dt><dd>2026.08.11 · 김현수</dd>
+              <dt>최근 수정</dt><dd>2026.10.08 · 홍지우</dd>
+              <dt>설명</dt><dd>A동 외곽 순찰. 정문에서 시작해 후문 방향으로 진행.</dd>
+            </dl>
+          </div>
+          <div class="card__foot"><span>근무자가 앱에서 순찰 시작 시 이 코스를 직접 선택합니다.</span></div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><div><h3>미인증 · 이상 이력</h3><p>최근 30일 · 7건</p></div><button class="btn btn--sm btn--ghost">전체</button></div>
+          <div class="card__body">
+            <div class="alert"><div class="alert__ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.6 17.3A2 2 0 004.3 20.3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></div><div class="alert__b"><div class="alert__t">엘리베이터홀 A 미인증</div><div class="alert__m">정우현 · QR 스캔 없이 순찰 종료</div></div><div class="alert__time">10.11</div></div>
+            <div class="alert"><div class="alert__ico red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="alert__b"><div class="alert__t">순찰 중단</div><div class="alert__m">정우현 · 1개 지점 인증 후 현장 출동으로 중단</div></div><div class="alert__time">10.09</div></div>
+            <div class="alert"><div class="alert__ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="alert__b"><div class="alert__t">소요시간 초과</div><div class="alert__m">김현수 · 52분 (기준 45분 대비 +7분)</div></div><div class="alert__time">10.10</div></div>
+            <div class="alert"><div class="alert__ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.6 17.3A2 2 0 004.3 20.3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></div><div class="alert__b"><div class="alert__t">엘리베이터홀 A 미인증</div><div class="alert__m">박성민 · QR 코드 인식 실패 신고</div></div><div class="alert__time">10.06</div></div>
+          </div>
+        </section>
+      
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

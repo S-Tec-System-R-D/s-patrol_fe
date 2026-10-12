@@ -140,6 +140,13 @@ const CourseInfo = ({ course, onRequestToggle, isSaving }: CourseInfoProps) => {
           }
         />
       </div>
+
+      {/* ✅ **OQ-023-F 해소(2026-10-12, 업무 확인)** — 코스는 배정되지 않는다. 근무자가
+          앱에서 **본인이 돌 코스를 직접 고른다.** 이 한 줄이 두 토글의 의미를 설명한다:
+          비활성화는 "이 목록에서 숨긴다" 는 뜻이다(`CourseToggleDialog` 문구와 같은 근거) */}
+      <p className="text-caption text-muted-foreground">
+        근무자가 앱에서 순찰 시작 시 이 코스를 직접 선택합니다.
+      </p>
     </div>
   )
 }

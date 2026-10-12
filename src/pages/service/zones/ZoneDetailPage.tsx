@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ChevronRightIcon, RouteIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
+import { ArrowLeftIcon, ChevronRightIcon, RouteIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
@@ -44,11 +44,14 @@ import { paths } from '@/router/paths'
  * 즉 **상세만 보고 수정 요청을 만들 수 없다.**
  *
  * 🔴 **상태 뱃지를 `useYn` 으로만 만든다.** 목록(`CourseRow`)에는 `courseStatusCode`·
- * `courseStatusName` 이 있지만 **상세 응답에는 없다**(실측).
+ * `courseStatusName` 이 있지만 **상세 응답에는 없다**(실측). 목록에서도 상태 컬럼을
+ * 뺐으므로(사용자 결정 2026-10-12) 이제 양쪽이 같은 말을 한다.
  *
  * 🔴 **브레드크럼 + 제목을 둘 다 둔다**(027 승계 — 질문이 둘이다): 브레드크럼은 "어느
- * 화면인가", 제목은 "어느 코스인가". 브레드크럼의 첫 조각이 목록 링크를 겸해 **`← 목록
- * 으로` 를 흡수**한다.
+ * 화면인가", 제목은 "어느 코스인가". 코스를 **찾은** 화면에서는 브레드크럼의 첫 조각이
+ * 목록 링크를 겸해 `← 목록으로` 를 흡수한다 — 🔴 **못 찾은 화면은 예외다**(아래
+ * `AppEmpty` 의 `action`): 할 수 있는 일이 하나도 없는 상태에서는 브레드크럼이
+ * 빠져나갈 길로 읽히지 않는다(브라우저 확인 2026-10-12).
  *
  * 🔴 **없는 `courseSeq` 를 `/404` 로 보내지 않는다**(spec §4). 서버는 400 + 래퍼
  * (`"잘못된 요청입니다."`)를 주는데, 이는 "경로가 없다" 가 아니라 **삭제됐거나 다른
@@ -233,6 +236,19 @@ const ZoneDetailPage = () => {
             courseSeq === null
               ? '주소가 올바르지 않습니다. 목록에서 다시 선택해주세요.'
               : (detail.error?.message ?? '삭제되었거나 접근할 수 없는 코스입니다.')
+          }
+          // 🔴 **명시적인 복귀 수단을 둔다.** 브레드크럼의 첫 조각이 목록 링크를 겸하지만,
+          // 못 찾은 화면에서는 그것이 **빠져나갈 길로 읽히지 않는다**(브라우저 확인
+          // 2026-10-12). 여기가 유일하게 "할 수 있는 일이 하나도 없는" 상태라 안내와
+          // 수단이 같은 자리에 있어야 한다
+          action={
+            <Link
+              to={paths.service.zones}
+              className="flex w-fit items-center gap-1.5 text-caption text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeftIcon size={14} />
+              코스 목록으로
+            </Link>
           }
         />
       )}

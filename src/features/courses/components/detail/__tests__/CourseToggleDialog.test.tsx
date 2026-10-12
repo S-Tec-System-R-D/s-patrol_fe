@@ -10,9 +10,10 @@ import CourseToggleDialog from '../CourseToggleDialog'
  * 🔴 **고정하는 것은 "문구가 네 경우 다르다" 는 것이다**(사용자 결정, 규칙 11). 둘을 같은
  * 문구로 두면 모달이 **읽지 않고 누르는 관문**이 되어, 경고가 없는 것과 같아진다.
  *
- * ⚠️ **비활성화 문구는 OQ-023-F 미해소**다 — "근무자 앱에서 배정되지 않는다" 가 사실인지
- * 업무 확인 전이다. 여기서 문구를 고정해 두면, 확인 결과 틀렸을 때 **어디를 고쳐야
- * 하는지**가 한 자리로 드러난다.
+ * ✅ **OQ-023-F 해소(2026-10-12)**: 코스는 **근무자가 앱에서 직접 고른다**(배정이 아니다).
+ * 그래서 비활성화의 효과는 **"코스 목록에서 숨겨져 고를 수 없다"** 다. 처음 문구
+ * ("배정되지 않습니다")는 **틀린 경고**였고, 여기에 문구를 고정해 둔 덕에 고칠 자리가
+ * 한 곳으로 드러났다 — 그 값을 확인한 셈이다.
  */
 
 const renderDialog = (
@@ -37,7 +38,11 @@ describe('CourseToggleDialog — 코스 활성화', () => {
     renderDialog('useYn', false)
 
     expect(screen.getByText('코스를 비활성화하시겠습니까?')).toBeInTheDocument()
-    expect(screen.getByText(/근무자 앱에서 이 코스의 순찰이 더 이상 배정되지 않습니다/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/코스 목록에서 숨겨져, 더 이상 이 코스로 순찰을 시작할 수 없습니다/)
+    ).toBeInTheDocument()
+    // 🔴 "배정" 은 틀린 말이다 — 근무자가 직접 고른다
+    expect(screen.queryByText(/배정/)).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '비활성화' })).toBeInTheDocument()
   })
 
@@ -45,7 +50,8 @@ describe('CourseToggleDialog — 코스 활성화', () => {
     renderDialog('useYn', true)
 
     expect(screen.getByText('코스를 활성화하시겠습니까?')).toBeInTheDocument()
-    expect(screen.queryByText(/배정되지 않습니다/)).not.toBeInTheDocument()
+    expect(screen.getByText(/코스 목록에 다시 노출됩니다/)).toBeInTheDocument()
+    expect(screen.queryByText(/숨겨져/)).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '활성화' })).toBeInTheDocument()
   })
 })
