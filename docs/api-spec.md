@@ -1004,6 +1004,7 @@ interface NoticeAttach {
 | OQ-9 | `GetCourseDetail` 응답에 `siteSeq` 없음 — `UpdateCourseDto` 는 요구함. 프론트가 별도 보관해야 하는가? → **`spec 023` 에서 프론트 보관으로 진행한다**(`getSiteSeq()`, spec 021). 응답에 넣어 달라고 요청할 수도 있으나, 우리가 이미 들고 있는 값이라 **없어도 막히지 않는다** — B-24~B-26 보다 우선순위가 낮다 |
 | OQ-10 | ✅ **해소(실측 2026-10-10)** — `DeletePoint` 는 **코스에 편성된 지점도 거부 없이 삭제**한다. 지점이 지워지고 코스 편성에서도 함께 빠진다. 즉 `usedCount > 0` 삭제 차단은 **서버 규칙이 아니다**(`spec 022` OQ-022-B / 판단 3 해소) |
 | OQ-10 | ✅ **해소(백엔드 전달 2026-10-12)** — `CourseHistoryMemo { memoSeq, memo, attaches }` + `CourseHistoryAttach { attachSeq, imagePath, fileName, fileExt }`. §5-2 17번 참조. ⚠️ **메모가 달린 샘플 데이터는 아직 없다**(빈 배열만 관측) — 화면 확인은 데이터가 생긴 뒤 |
+| OQ-14 | 🔴 **`PointHistoryDetail.memoList` 가 `CheckDetails[].memos` 와 같은 구조인가.** 백엔드가 전달한 것은 `memos` 쪽(`CourseHistoryMemoDto`)이고, 지점이력 상세는 **필드명이 `memoList` 로 다르다**(빈 배열만 관측). 같은 DTO 면 변환 한 곳으로 끝나고, 다르면 **지점 사유와 코스 사유를 따로** 다뤄야 한다 |
 | OQ-13 | `CourseHistoryAttach.imagePath` 가 **절대 URL 인가 상대 경로인가.** 상대면 무엇을 붙여야 하는가(API base? 별도 정적 호스트?). 공지 첨부(`imageList`/`fileList`)와 같은 규칙인지도 함께 확인 — 틀리면 **이미지가 전부 깨진 썸네일**로 나온다 |
 | OQ-11 | `GetCourseHistoryHandOvers` 응답 구조 (빈 배열만 관측 — 교대 데이터 필요) |
 | OQ-12 | `UpsertNotice` 요청 `attachList[]` ↔ 응답 `imageList`/`fileList` 분리 기준 (확장자? MIME?) |
