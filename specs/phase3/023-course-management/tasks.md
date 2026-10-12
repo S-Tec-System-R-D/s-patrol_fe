@@ -367,7 +367,7 @@ T367 은 "드래그 정렬" 만 적었고 §4 는 "실패 시 순서 원복" 을
 | 단 | 내용 | 선행 |
 |:-:|---|---|
 | **A** ✅ | 2열 골격 전환 · 헤더(요약 뱃지 · 편성 편집 승격) · 기본정보 효과 한 줄 | 없음 — **완료** |
-| **B** | 최근 순찰 기록 표 + KPI 4종(30일 수행 · 평균 소요 · 인증률 · 미인증) — `GetCourseHistory(courseSeq)` + `GetPointHistory(courseSeq, status=3)` | ✅ **없음 — 바로 가능** |
+| **B** ✅ | 최근 순찰 기록 표 + KPI 4종(30일 수행 · 평균 소요 · 인증률 · 미인증) — `GetCourseHistory(courseSeq)` + `GetPointHistory(courseSeq, status=3)` | ✅ **완료 — 요청 0건** |
 | **C** | 이상 이력 카드(메모·첨부 썸네일) — `GetCourseHistoryCheckDetails[].memos` | 메모 **샘플 데이터** + **OQ-13**(`imagePath` 형태) |
 | **D** | 순찰 동선 **지도** | **B-32**(좌표 필드) + **B-33**(좌표 유효성) |
 | 보류 | 코스 코드 · 복제 · 등록/수정 메타 | 업무 결정 / API 없음 / B-19 |
@@ -467,6 +467,70 @@ T367 은 "드래그 정렬" 만 적었고 §4 는 "실패 시 순서 원복" 을
 
 🔴 **B단은 이 중 아무것도 기다리지 않는다** — `GetCourseHistory(courseSeq)` 1요청 +
 `GetPointHistory(courseSeq, status=3)` 1요청으로 전부 그린다.
+
+### ✅ B단 결과 (2026-10-12)
+
+최근 순찰 기록 표 + KPI 4종. **백엔드 요청을 하나도 기다리지 않았다** —
+`GetCourseHistory(courseSeq, 30일)` 1요청 + `GetPointHistory(courseSeq, status=3)` 1요청.
+
+| 새 파일 | 역할 |
+|---|---|
+| `types/history.ts` | 실측 타입 전량 + `POINT_HISTORY_STATUS`·`COURSE_HISTORY_STATUS` 사전 |
+| `lib/elapsed.ts` | `'HH:mm:ss'` → 초 → 표시. 🔴 **시 단위**를 센다 |
+| `lib/courseHistoryStats.ts` | 프론트 집계(평균·인증률·표본) |
+| `lib/historyRange.ts` | 30일 구간. 🔴 `from ≤ to` 보장 |
+| `api/getCourseHistory.ts` · `api/getPointHistory.ts` | 조회 2종 |
+| `hooks/useCourseHistory.ts` | `useCourseHistory` · `useUncheckedCount` |
+| `components/detail/CourseKpiRow.tsx` | KPI 4종(`AppKpiCard` 재사용) |
+| `components/detail/CoursePatrolLog.tsx` | 기록 표 6열 |
+| `mocks/handlers/history.ts` | `GetCourseHistory` + 실측 예외 시드 |
+
+**화면 배치**: KPI 는 **헤더 바로 아래 전체 폭**(목업과 같다), 기록 표는 **좌측 열 맨
+아래**(동선 → 편성 → 기록 = 현재에서 과거로).
+
+#### 🔴 실측 예외를 설계에 박은 것 4건
+
+| 실데이터 | 처리 |
+|---|---|
+| `userList: []` 인 이력 | 근무자 칸 `—`. 아바타를 **항상 그리지 않는다** |
+| `status: 완료` + `checkedCount: 0` | 상태 뱃지와 인증(`0/3`)을 **따로** 적는다. "완료 = 3/3" 으로 묶으면 **없는 보장**을 화면이 약속한다 |
+| `actualElapsedTime: "02:17:40"` | `toSeconds` 가 세 토막을 센다 — 분으로 읽으면 **2분**이 된다 |
+| 소요시간을 읽을 수 없는 행 | 평균에서 **제외**한다(0 으로 섞으면 평균이 내려간다) |
+
+#### 🔴🔴 인증률에 색을 입히지 않는다
+
+지점 상태의 **`순찰제외`(2)** 때문이다. `pointCount` 가 그것을 빼고 센 값인지 미확인이고
+확인할 데이터도 없다 — 순찰에서 빼기로 한 지점이 분모에 있으면 **영원히 100% 가 안 되는
+코스**가 생기고, 빨갛게 칠하면 관리자는 매번 **없는 문제**를 찾는다. 반대로 **미인증
+건수는 경고색을 쓴다** — 그건 서버가 `status=3` 으로 **직접 센** 값이다.
+
+#### 🔴 빈 값을 0 으로 적지 않는다
+
+이력이 없으면 평균·인증률은 `—` 다. `0분`·`0%` 로 적으면 "순찰했는데 결과가 0" 으로
+읽힌다. 미인증 건수도 **조회 전이면 `—`**(0건으로 단정하지 않는다).
+
+#### 🔴 "프론트가 더한 수치" 임을 화면에 적는다
+
+기록 카드 아래 한 줄. 한 페이지(`pageSize: 100`)로 다 못 받으면 **"최근 N건 기준"** 까지
+적는다 — 전체 기간 값으로 보이면 거짓이다.
+
+#### 🔴 사고: 같은 엔드포인트에 핸들러를 두 번 선언했다
+
+`GetPointHistory` 핸들러를 `handlers/history.ts` 에 새로 만들었는데, **`handlers/points.ts`
+가 이미 소유**하고 있었다(지점 상세의 순찰 로그). MSW 는 **먼저 등록된 것만** 쓰므로 내
+핸들러는 조용히 죽고 **미인증 건수가 0** 으로 왔다 — 에러가 아니라 "정상 응답인 빈 값"
+이라 더 늦게 보였다.
+
+→ **중복을 지우고 기존 핸들러를 확장**했다(`pointSeq` 를 선택으로 만들고 `courseSeq`·
+`status` 필터 추가). 🔴 **실 서버에 엔드포인트가 하나면 mock 도 하나다** — 제약 7(지점
+`usedCount` 의 두 출처)과 **같은 종류의 실수**이고, 이번엔 핸들러 층에서 났다.
+
+⚠️ 그 덕에 미인증 건수가 **`coursesOfPoint` 파생**(단일 출처)이 됐다. 그래서 페이지
+테스트는 **건수를 하드코딩하지 않고** "`—` 가 아니라 숫자가 온다" 만 고정한다 — 편성
+시드를 건드릴 때마다 깨지지 않게.
+
+테스트 **654 → 705**(+51): `elapsed` 13 · `courseHistoryStats` 11 · `historyRange` 5 ·
+`CoursePatrolLog` 13 · `CourseKpiRow` 7 · `ZoneDetailPage` +4(배치·기간 필터·미인증·빈 상태).
 
 ## Phase 5: 027 이월 6건 + 공용 셸 승격 판단
 

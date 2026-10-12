@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -312,5 +312,46 @@ describe('ZoneDetailPage — 변경계 조립 (Phase 4)', () => {
     await user.click(screen.getByRole('button', { name: '취소' }))
 
     expect(screen.getByText('지점 순서')).toBeInTheDocument()
+  })
+})
+
+describe('ZoneDetailPage — 순찰 기록·KPI (B단)', () => {
+  it('KPI 4종과 최근 순찰 기록이 상세에 함께 그려진다', async () => {
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    expect(await screen.findByText('30일 순찰 수행')).toBeInTheDocument()
+    expect(screen.getByText('평균 소요시간')).toBeInTheDocument()
+    expect(screen.getByText('지점 인증률')).toBeInTheDocument()
+    expect(screen.getByText('미인증 지점')).toBeInTheDocument()
+    expect(await screen.findByText('최근 순찰 기록')).toBeInTheDocument()
+  })
+
+  it('🔴 30일 밖 이력은 오지 않는다 — 기간이 쿼리로 나간다', async () => {
+    renderPage('/zones/1')
+
+    // mock 시드의 historySeq 108 은 45일 전이다. 기간이 안 걸리면 7건이 아니라 8건이 온다
+    await screen.findByText('최근 순찰 기록')
+    expect(await screen.findByText(/최근 30일 · 7건/)).toBeInTheDocument()
+  })
+
+  it('🔴 미인증 건수를 서버가 센 대로 보여준다 — 화면이 다시 세지 않는다', async () => {
+    renderPage('/zones/1')
+
+    // 🔴 **건수를 하드코딩하지 않는다.** mock 의 지점이력은 `coursesOfPoint` 에서 파생되고
+    // (단일 출처, 제약 7) 편성을 바꾸면 따라 변한다 — 숫자를 박으면 편성 시드를 건드릴
+    // 때마다 이 테스트가 깨진다. 여기서 고정하는 것은 **"— 가 아니라 숫자가 온다"** 다
+    const label = await screen.findByText('미인증 지점')
+    const card = label.parentElement as HTMLElement
+    await waitFor(() => expect(within(card).getByText(/^\d+$/)).toBeInTheDocument())
+    expect(within(card).getByText('건')).toBeInTheDocument()
+  })
+
+  it('🔴 이력이 없는 코스는 빈 상태이고 KPI 가 — 다 — 0 으로 적지 않는다', async () => {
+    renderPage('/zones/3')
+
+    await screen.findByText('옥상 점검 코스')
+    expect(await screen.findByText('순찰 기록이 없습니다')).toBeInTheDocument()
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
   })
 })

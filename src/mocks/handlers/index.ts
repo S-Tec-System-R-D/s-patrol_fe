@@ -1,5 +1,6 @@
 import { authHandlers } from './auth'
 import { courseHandlers } from './courses'
+import { historyHandlers } from './history'
 import { pointHandlers } from './points'
 
 /**
@@ -15,4 +16,9 @@ import { pointHandlers } from './points'
  * 기존 `features/{points,zone}/mock/*` 데이터는 핸들러에서 import해 **서버 스키마로
  * 변환해** 재사용한다(버리지 않는다).
  */
-export const handlers = [...authHandlers, ...pointHandlers, ...courseHandlers]
+export const handlers = [
+  ...authHandlers,
+  ...pointHandlers,
+  ...courseHandlers,
+  ...historyHandlers,
+]

@@ -440,7 +440,10 @@ export const pointHandlers = [
    */
   http.get(GET_POINT_HISTORY_PATH, ({ request }) => {
     const query = new URL(request.url).searchParams
-    const pointSeq = Number(query.get('pointSeq'))
+    const pointSeq = query.get('pointSeq')
+    const siteSeq = Number(query.get('siteSeq'))
+    const courseSeq = query.get('courseSeq')
+    const status = query.get('status')
     const pageNumber = Number(query.get('pageNumber') ?? 1)
     const pageSize = Number(query.get('pageSize') ?? 20)
 
@@ -448,17 +451,33 @@ export const pointHandlers = [
       return businessError('페이지 번호는 1 이상이어야 합니다.')
     }
 
-    const point = store.find((item) => item.pointSeq === pointSeq)
-    const rows = point ? buildHistory(point) : []
+    /**
+     * 🔴 **`pointSeq` 가 선택이다.** 지점 상세는 지점 하나로 조회하지만, 코스 상세(B단)는
+     * **코스 하나의 미인증 건수**를 묻는다 — `courseSeq` + `status` 로만 조회한다.
+     * ⚠️ 이 엔드포인트를 **두 번 선언하지 않는다.** 실 서버에는 하나뿐이고, mock 에 둘을
+     * 두면 **앞의 것만 동작**해 뒤의 것은 조용히 죽는다(실제로 B단에서 그렇게 터졌다).
+     */
+    const targets =
+      pointSeq !== null
+        ? store.filter((item) => item.pointSeq === Number(pointSeq))
+        : store.filter((item) => item.siteSeq === siteSeq)
+
+    const rows = targets.flatMap(buildHistory)
 
     const from = query.get('fromDt')
     const to = query.get('toDt')
-    const filtered = rows.filter((row) => {
-      const day = row.checkDt.slice(0, 10)
-      if (from && day < from) return false
-      if (to && day > to) return false
-      return true
-    })
+    const filtered = rows
+      .filter((row) => (courseSeq === null ? true : row.courseSeq === Number(courseSeq)))
+      // ⚠️ **지점 사전**이다(`3` 미완료 / `4` 완료). 코스 사전(`2` 미완료)과 뜻이 다르다
+      .filter((row) => (status === null ? true : row.status === Number(status)))
+      .filter((row) => {
+        const day = row.checkDt.slice(0, 10)
+        if (from && day < from) return false
+        if (to && day > to) return false
+        return true
+      })
+      // 최근 순 — 여러 지점을 합치면 지점 순서로 섞여 나온다
+      .sort((a, b) => b.checkDt.localeCompare(a.checkDt))
 
     const start = (pageNumber - 1) * pageSize
     return ok({

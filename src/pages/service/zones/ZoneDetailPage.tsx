@@ -7,7 +7,7 @@ import {
   SquarePenIcon,
   Trash2Icon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
@@ -21,12 +21,20 @@ import { updateCourse } from '@/features/courses/api/updateCourse'
 import CourseDiagramCard from '@/features/courses/components/detail/CourseDiagramCard'
 import CourseInfo from '@/features/courses/components/detail/CourseInfo'
 import CoursePointEditor from '@/features/courses/components/detail/CoursePointEditor'
+import CourseKpiRow from '@/features/courses/components/detail/CourseKpiRow'
+import CoursePatrolLog from '@/features/courses/components/detail/CoursePatrolLog'
 import CoursePointList from '@/features/courses/components/detail/CoursePointList'
 import CourseToggleDialog, {
   type CourseToggleKind,
 } from '@/features/courses/components/detail/CourseToggleDialog'
 import EditCourseForm from '@/features/courses/form/EditCourseForm'
 import { useCourseDetail } from '@/features/courses/hooks/useCourseDetail'
+import {
+  useCourseHistory,
+  useUncheckedCount,
+} from '@/features/courses/hooks/useCourseHistory'
+import { courseHistoryStats } from '@/features/courses/lib/courseHistoryStats'
+import { recentRange } from '@/features/courses/lib/historyRange'
 import { toUpdateCourseBody } from '@/features/courses/lib/updateCourseBody'
 import { courseKeys } from '@/features/courses/queryKeys'
 import { getSiteSeq } from '@/lib/auth/site'
@@ -93,6 +101,22 @@ const ZoneDetailPage = () => {
 
   const detail = useCourseDetail(courseSeq)
   const course = detail.data
+
+  /**
+   * 순찰 기록·KPI (B단).
+   *
+   * 🔴 **기간을 `useMemo` 로 고정한다.** `recentRange()` 는 매 렌더 새 객체를 만들고 그
+   * 객체가 **queryKey 에 들어간다** — 고정하지 않으면 렌더마다 키가 바뀌어 **조회가
+   * 멈추지 않는다.** 날짜 문자열은 같아도 참조가 달라서 생기는 문제다.
+   * ⚠️ 자정을 넘겨도 갱신되지 않는다 — 코스 상세를 하루 넘게 열어 두는 화면이 아니고,
+   * 매 렌더 재계산의 비용이 그 정확성보다 크다.
+   */
+  const range = useMemo(() => recentRange(), [])
+  const history = useCourseHistory(siteSeq, courseSeq, range)
+  const unchecked = useUncheckedCount(siteSeq, courseSeq, range)
+
+  const rows = history.data?.items ?? []
+  const stats = courseHistoryStats(rows, history.data?.totalCount ?? 0)
 
   /**
    * 토글 저장.
@@ -224,6 +248,11 @@ const ZoneDetailPage = () => {
             }
           />
 
+          {/* 🔴 **KPI 는 전체 폭, 헤더 바로 아래**(목업). 코스 상세를 여는 세 번째 질문이
+              "이 코스가 잘 돌고 있나" 다 — 동선·편성보다 먼저 읽힌다.
+              ⚠️ 평균·인증률은 **프론트가 더한 값**이다(서버에 집계 엔드포인트 없음) */}
+          <CourseKpiRow stats={stats} uncheckedCount={unchecked.data} />
+
           {/* **2열 골격**(목업 `코스상세-신규.html`, 사용자 결정 2026-10-12) — `xl` 미만 1단.
               좌 2/3 = 코스 자체를 보는 칸(동선 → 순서), 우 1/3 = 설정 칸.
               🔴 **지점 순서를 넓은 쪽에 둔다.** 목업은 우측 1/3 에 두었지만 편성 편집의
@@ -243,6 +272,14 @@ const ZoneDetailPage = () => {
                 /* 🔴 `onEdit` 를 넘기지 않는다 — 편성 편집은 **헤더가 유일한 소유자**다 */
                 <CoursePointList points={course.points} />
               )}
+
+              {/* 🔴 **순찰 기록은 맨 아래**다 — 편성(현재 상태)을 먼저 읽고 기록(과거)을
+                  나중에 읽는다. 목업도 같은 순서다 */}
+              <CoursePatrolLog
+                rows={rows}
+                totalCount={history.data?.totalCount ?? 0}
+                isPending={history.isPending}
+              />
             </div>
             <CourseInfo
               course={course}
