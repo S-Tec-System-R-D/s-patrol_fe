@@ -51,12 +51,18 @@ const CoursePointList = ({ points, onEdit }: CoursePointListProps) => {
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
       <div className="flex items-center justify-between">
-        <span className="text-panel-title font-semibold">지점 순서</span>
-        <div className="flex items-center gap-3">
+        {/* 🔴 **건수를 제목 옆에 붙인다**(사용자 결정 2026-10-12). 우측에 두면 아이콘
+            버튼과 한 덩어리로 보여 "3개" 가 버튼의 라벨처럼 읽혔다. 건수는 제목을
+            **수식하는 말**이므로 제목 옆이 맞다 */}
+        <span className="flex items-baseline gap-2">
+          <span className="text-panel-title font-semibold">지점 순서</span>
           <span className="text-caption text-muted-foreground">
             {/* 🔴 0개도 그대로 적는다 — 경고로 바꾸지 않는다(규칙 12) */}
             총 {points.length}개
           </span>
+        </span>
+
+        <div className="flex items-center gap-3">
           {onEdit && (
             /* 🔴 **아이콘만 둔다**(사용자 결정 2026-10-12). 글자 버튼은 카드 머리에서
                제목·건수와 무게를 다퉈 카드가 시끄러워졌다. 기본정보 카드와 **같은
