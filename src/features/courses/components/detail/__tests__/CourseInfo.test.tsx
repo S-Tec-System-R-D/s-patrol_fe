@@ -1,16 +1,21 @@
 import { render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import CourseInfo from '../CourseInfo'
 import { clearSite, setSite } from '@/lib/auth/site'
 import type { CourseDetail } from '../../../types'
 
 /**
- * 코스 기본정보 (`spec 023` T359).
+ * 코스 기본정보 (`spec 023` T359 → **Phase 4 에서 토글 2종 추가**).
  *
  * 🔴 핵심은 **사업장명이 코스 응답에서 오지 않는다**는 것이다(OQ-9) — `spec 021` 이
  * 저장한 선택값에서 온다. 그 연결이 끊기면 화면에 빈칸이 생기는 게 아니라 **엉뚱한
  * 사업장 이름**이 남을 수 있으므로(이전 선택값) 여기서 고정한다.
+ *
+ * 🔴 Phase 4 의 핵심은 **스위치가 값을 직접 바꾸지 않는 것**이다 — 확인 모달을 **요청**
+ * 하기만 한다. 여기서 바로 저장하면 모달이 "눌러도 되는 관문" 이 되고, 옵티미스틱
+ * 금지(규칙 11)도 함께 무너진다.
  */
 
 const course = (overrides: Partial<CourseDetail> = {}): CourseDetail => ({
@@ -34,63 +39,91 @@ afterEach(() => {
 
 describe('CourseInfo', () => {
   it('설명·총 소요시간을 보여준다', () => {
-    render(<CourseInfo course={course()} />)
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
 
     expect(screen.getByText('A동 1층~지하 주차장 순찰')).toBeInTheDocument()
     expect(screen.getByText('45분')).toBeInTheDocument()
   })
 
   it('🔴 코스명 행이 없다 — 페이지 제목이 이미 코스명이다', () => {
-    render(<CourseInfo course={course()} />)
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
 
     expect(screen.queryByText('코스명')).not.toBeInTheDocument()
     expect(screen.queryByText('A동 순찰코스')).not.toBeInTheDocument()
   })
 
   it('🔴 사업장명은 021 저장값에서 온다 — 코스 응답에 없다 (OQ-9)', () => {
-    render(<CourseInfo course={course()} />)
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
 
     expect(screen.getByText('강동 테크노타워')).toBeInTheDocument()
   })
 
   it('🔴 사업장 선택값이 없으면 빈 값으로 둔다 — 추측해 채우지 않는다', () => {
     clearSite()
-    render(<CourseInfo course={course()} />)
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
 
     expect(screen.getByText('사업장').parentElement?.textContent).toContain('—')
   })
 
   it('🔴 설명이 비어 있는 것은 정상이다 — 코스는 memo 를 실제로 비울 수 있다 (규칙 6)', () => {
-    render(<CourseInfo course={course({ memo: null })} />)
+    render(<CourseInfo course={course({ memo: null })} onRequestToggle={vi.fn()} />)
 
     expect(screen.getByText('설명').parentElement?.textContent).toContain('—')
     // "준비 중"(기능 없음)과 섞지 않는다 — 027 placeholder 규약
     expect(screen.queryByText('준비 중')).not.toBeInTheDocument()
   })
 
-  it('교대 허용/허용 안 함을 구분해 보여준다', () => {
-    render(<CourseInfo course={course({ switchYn: false })} />)
-
-    expect(screen.getByText('허용 안 함')).toBeInTheDocument()
-  })
-
-  it('코스 활성화를 뱃지로 보여준다', () => {
-    render(<CourseInfo course={course({ useYn: false })} />)
-
-    expect(screen.getByText('미사용')).toBeInTheDocument()
-  })
-
   it('🔴 상태(courseStatusName)를 그리지 않는다 — 상세 응답에 없다', () => {
-    render(<CourseInfo course={course()} />)
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
 
     expect(screen.queryByText('대기중')).not.toBeInTheDocument()
     expect(screen.queryByText('상태')).not.toBeInTheDocument()
   })
 
-  it('🔴 토글·수정 수단이 없다 — Phase 4 다', () => {
-    render(<CourseInfo course={course()} />)
+  it('🔴 "총 소요시간" 은 입력란이 아니다 — 서버가 구간시간 합으로 채우는 파생 값이다 (B-31)', () => {
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
 
-    expect(screen.queryByRole('button')).not.toBeInTheDocument()
-    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+})
+
+describe('CourseInfo — 토글 2종 (Phase 4)', () => {
+  it('교대 허용·코스 활성화가 각각 스위치 + 글자로 상태를 보여준다', () => {
+    render(<CourseInfo course={course({ switchYn: false, useYn: false })} onRequestToggle={vi.fn()} />)
+
+    // 🔴 색·위치만으로 전달하지 않는다 — 글자가 함께 있다
+    expect(screen.getByText('허용 안 함')).toBeInTheDocument()
+    expect(screen.getByText('미사용')).toBeInTheDocument()
+    expect(screen.getAllByRole('switch')).toHaveLength(2)
+  })
+
+  it('🔴 스위치는 값을 바꾸지 않고 **확인을 요청**한다 — 켜진 값이 그대로 남는다', async () => {
+    const user = userEvent.setup()
+    const onRequestToggle = vi.fn()
+    render(<CourseInfo course={course()} onRequestToggle={onRequestToggle} />)
+
+    await user.click(screen.getByLabelText('사용'))
+
+    expect(onRequestToggle).toHaveBeenCalledWith('useYn', false)
+    // 🔴 옵티미스틱이 아니다 — 화면은 여전히 "사용" 이다(재조회 뒤에 바뀐다)
+    expect(screen.getByText('사용')).toBeInTheDocument()
+    expect(screen.getByLabelText('사용')).toBeChecked()
+  })
+
+  it('🔴 교대 허용은 다른 종류로 요청한다 — 두 토글이 섞이지 않는다', async () => {
+    const user = userEvent.setup()
+    const onRequestToggle = vi.fn()
+    render(<CourseInfo course={course({ switchYn: false })} onRequestToggle={onRequestToggle} />)
+
+    await user.click(screen.getByLabelText('허용 안 함'))
+
+    expect(onRequestToggle).toHaveBeenCalledWith('switchYn', true)
+  })
+
+  it('🔴 저장 중에는 스위치를 잠근다 — 연타가 전량 전송을 중복으로 만들지 않게', () => {
+    render(<CourseInfo course={course()} onRequestToggle={vi.fn()} isSaving />)
+
+    screen.getAllByRole('switch').forEach((toggle) => expect(toggle).toBeDisabled())
   })
 })

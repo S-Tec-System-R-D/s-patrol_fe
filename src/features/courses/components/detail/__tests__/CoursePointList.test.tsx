@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import CoursePointList from '../CoursePointList'
 import type { CourseDetailPoint } from '../../../types'
@@ -93,12 +94,42 @@ describe('CoursePointList — 빈 상태', () => {
   })
 })
 
-describe('CoursePointList — 아직 두지 않는 것', () => {
-  it('🔴 편집 수단이 없다 — 추가·제거·순서 변경은 Phase 4 다', () => {
+describe('CoursePointList — 편집 진입 (Phase 4)', () => {
+  it('🔴 onEdit 을 받지 않으면 버튼이 없다 — 읽기 전용으로 쓸 수 있다', () => {
     renderList([point()])
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
+
+  it('🔴 편집 수단은 **버튼 하나**다 — 드래그를 상시로 열어 두지 않는다 (전량 전송, B-25)', async () => {
+    const user = userEvent.setup()
+    const onEdit = vi.fn()
+    render(
+      <MemoryRouter>
+        <CoursePointList points={[point()]} onEdit={onEdit} />
+      </MemoryRouter>
+    )
+
+    // 행에는 여전히 조작 수단이 없다 — 제거·순서 변경은 편집 모드 안에서만
+    expect(screen.queryByRole('button', { name: /제거/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '편성 편집' }))
+    expect(onEdit).toHaveBeenCalledTimes(1)
+  })
+
+  it('🔴 "준비 중" 안내를 더 쓰지 않는다 — 편성은 이제 동작한다', () => {
+    render(
+      <MemoryRouter>
+        <CoursePointList points={[point()]} onEdit={vi.fn()} />
+      </MemoryRouter>
+    )
+
+    expect(screen.queryByText(/준비 중/)).not.toBeInTheDocument()
+  })
+})
+
+describe('CoursePointList — 아직 두지 않는 것', () => {
 
   it('🔴 지점별 활성 토글이 없다 — 서버에 바꿀 수단이 없다 (B-29)', () => {
     renderList([point({ useYn: false })])

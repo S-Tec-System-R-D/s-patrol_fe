@@ -98,11 +98,19 @@ describe('ZonesPage — 목록 조회', () => {
     expect(await screen.findByText('옥상 점검 코스')).toBeInTheDocument()
   })
 
-  it('🔴 생성 버튼을 아직 두지 않는다 — 동작하지 않는 컨트롤을 먼저 만들지 않는다', async () => {
+  it('🔴 생성 모달은 명칭·설명만 묻는다 — 지점을 묻지 않는다 (B-27)', async () => {
+    const user = userEvent.setup()
     renderPage()
 
     await screen.findByText('A동 순찰코스')
-    expect(screen.queryByRole('button', { name: /코스 생성/ })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /코스 생성/ }))
+
+    // 🔴 `AddCourse` 가 `points` 를 무시하므로(200 인데 pointCount: 0) 모달에서 지점을
+    // 묻지 않는다. 대신 "어디서 편성하는가" 를 모달 안에서 알려 준다
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('코스명을 입력해주세요')).toBeInTheDocument()
+    expect(screen.getByText(/코스 상세/)).toBeInTheDocument()
+    expect(screen.queryByText(/지점 추가/)).not.toBeInTheDocument()
   })
 })
 

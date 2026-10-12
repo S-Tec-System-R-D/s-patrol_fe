@@ -1,14 +1,22 @@
 import { useState } from 'react'
+import { PlusIcon } from 'lucide-react'
 
+import AppButton from '@/components/app/AppButton'
+import AppDialog from '@/components/app/AppDialog'
 import AppInput from '@/components/app/AppInput'
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback'
+
+import AddCourseForm from '../form/AddCourseForm'
 
 /**
  * 코스 목록 상단 — 검색 + 필터 슬롯 (`spec 023` Phase 2).
  *
- * 🔴 **생성 버튼이 아직 없다.** 생성 모달은 Phase 4 몫이고, 동작하지 않는 버튼을 먼저
- * 두지 않는다 — 027 이 걷어낸 "죽은 컨트롤" 과 같은 것이 된다(행 수 셀렉트가 그렇게
- * 한 번 들어왔고 캡쳐에서 잡혔다). Phase 4 에서 `PointTopNav` 와 같은 모양으로 붙인다.
+ * 🔴 **생성 모달은 제어형이다**(`PointTopNav` 와 같은 모양, Phase 4). 제어가 아니면
+ * `DialogTrigger` 가 여는 것과 사용자가 닫는 것밖에 못 해서 **"성공했을 때만 닫는다"** 를
+ * 표현할 수 없다 — 실패했는데 닫히면 입력값이 사라진다.
+ *
+ * 🔴 **생성 후 상세로 보내지 않는다** — `AddCourse` 가 생성된 `courseSeq` 를 주지
+ * 않아(`data: true` 만) 갈 수가 없다. 목록을 무효화해 다시 읽는다(`AddCourseForm` 주석).
  *
  * 🔴 **검색은 300ms 디바운스**(027 승계). 없으면 **글자 수만큼 요청이 나가고** URL
  * 히스토리도 그만큼 쌓인다.
@@ -28,6 +36,7 @@ interface CourseTopNavProps {
 }
 
 const CourseTopNav = ({ search, onSearchChange, filters }: CourseTopNavProps) => {
+  const [addOpen, setAddOpen] = useState(false)
   const [draft, setDraft] = useState(search ?? '')
 
   /**
@@ -61,6 +70,29 @@ const CourseTopNav = ({ search, onSearchChange, filters }: CourseTopNavProps) =>
       />
       {filters}
       <div className="flex-1" />
+      <AppDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        title="코스 생성"
+        description="새 순찰코스를 생성합니다."
+        trigger={
+          /**
+           * 🔴 **아이콘 + 라벨. `xl` 미만에서는 아이콘만**(지점 목록 승계).
+           * `aria-label` 은 라벨이 숨는 폭에서도 **이름을 유지**하기 위해 남긴다.
+           */
+          <AppButton
+            icon={PlusIcon}
+            iconSize={14}
+            aria-label="코스 생성"
+            className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
+          >
+            <span className="hidden xl:inline">코스 생성</span>
+          </AppButton>
+        }
+      >
+        {/* 🔴 성공해야 닫는다 — 먼저 닫으면 실패 시 입력값이 사라진다 */}
+        <AddCourseForm onSuccess={() => setAddOpen(false)} />
+      </AppDialog>
     </div>
   )
 }

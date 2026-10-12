@@ -62,6 +62,23 @@ export const resetCourseStore = (): void => {
 }
 
 /**
+ * 🔴 **이 지점이 편성된 코스들 — 지점 핸들러가 이것을 읽는다**(제약 7 해소).
+ *
+ * T367 전에는 `handlers/points.ts` 가 고정 배분 함수를 들고 있었고 코스 저장소는
+ * 별개여서, 둘은 **시드 단계에서만** 맞춰져 있었다. 편성을 화면에서 편집할 수 있게 된
+ * 순간 그 합의가 깨진다 — 코스에 지점을 더해도 지점 목록의 `usedCount` 가 그대로여서
+ * **둘이 서로 다른 말을 한다.** 그래서 코스 저장소를 **단일 출처**로 삼고 지점 쪽이
+ * 여기서 파생시킨다.
+ *
+ * ⚠️ 사업장을 가리지 않는다 — 지점은 한 사업장에만 속하므로, 다른 사업장의 코스가
+ * 같은 지점을 편성하고 있을 수 없다.
+ */
+export const coursesOfPoint = (pointSeq: number): { courseSeq: number; courseName: string }[] =>
+  store
+    .filter((course) => course.points.some((point) => point.pointSeq === pointSeq))
+    .map((course) => ({ courseSeq: course.courseSeq, courseName: course.courseName }))
+
+/**
  * 최근 순찰 1건. 🔴 **`hasHistory: false` 면 `history` 자체가 `null`** 이다 — 빈 객체가
  * 아니다. 호출부가 `history?.historyEndDt` 로 접근하는지 확인할 수 있게 한다.
  */

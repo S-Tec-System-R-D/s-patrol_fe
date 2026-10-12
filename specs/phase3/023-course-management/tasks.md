@@ -201,15 +201,89 @@ WF-1-0 이전 계획은 Phase 4를 "백엔드 답변 후"로 뒀다. **실측 �
 >
 > ✅ **백엔드 답변 대기 없음** — 상단 표 참조. B-24 수용 시에만 규칙 3 재검토(OQ-023-E).
 
-- [ ] T361 [US3] 코스 생성 모달 in src/features/courses/form/{AddCourseForm,schema}.ts(x) — 🔴 **명칭·설명만**(규칙 9). `points` 를 보내지 않는다 — 보내도 무시되고 **성공 응답이 와서 조용히 반쪽**이 된다(B-27). 🔴 생성 후 **상세로 보내지 않는다**: `AddCourse` 가 `courseSeq` 를 주지 않고, 이름으로 찾으면 **동명 코스에서 엉뚱한 곳으로** 간다(§4) → **목록 재조회**. ⚠️ 생성 전용 목업이 없다(OQ-023-A) → 구현 후 사용자 확인
-- [ ] T362 [US2] 기본정보 수정 모달 in src/features/courses/form/EditCourseForm.tsx — 명칭·설명. 🔴 **`points` 를 전량 함께 보낸다**(규칙 3 — 전체 교체이므로 생략하면 **지점이 전부 지워진다**). 🔴 **지점의 교훈을 옮기지 않는다**: `memo: null` 은 코스에서 **반영된다**(`UpdatePoint` 는 무시, B-15 — 규칙 6)
-- [ ] T363 [US2] 삭제 in ZoneDetailPage.tsx — `AppAlertDialog`. 🔴 **`courseId`** 로 보낸다(규칙 5). 🔴 **성공 → 목록 복귀 / 실패 → 머문다** — 거부인데 화면이 바뀌면 삭제된 것으로 오해한다(027 교훈). 테스트에서 **실패 시 `navigate` 가 불리지 않는 것**을 명시 고정
-- [ ] T364 [US5] 🔴 토글 2종 확인 모달 in src/features/courses/components/detail/CourseToggleDialog.tsx — **둘 다 모달, 문구 다르게**(사용자 결정, 규칙 11). 활성화 OFF: "비활성화하면 근무자 앱에서 이 코스의 순찰이 더 이상 배정되지 않습니다." / 교대 허용: 담백한 확인. 🔴 **옵티미스틱을 쓰지 않는다** — 모달로 의도를 확인했으므로 응답을 기다린다(둘은 양립 불가). ⚠️ **OQ-023-F 미해소**: 위 문구가 사실인지 업무 확인 전이다 — 틀리면 **틀린 경고**다
-- [ ] T365 `dnd-kit` 도입 in package.json — `@dnd-kit/core` · `@dnd-kit/sortable` · `@dnd-kit/utilities`. 🔴 **설치돼 있지 않다**(제약 5). `roadmap.md` §7 · `patterns.md` §5가 지정한 것이고 **새 라이브러리를 고르지 않는다**(규칙 7)
-- [ ] T366 [US4] 지점 추가 UI in src/features/courses/components/detail/AddCoursePointDialog.tsx — ⚠️ **OQ-023-C 결정 지점**: `GetClassificationPoint` 는 **페이징이 없어 전량 내려온다** → 후보가 많으면 검색이 필요하다. **모달 + 검색 입력**으로 간다(상세 안 인라인은 다이어그램·순서 카드와 폭을 다툰다). 🔴 **이미 편성된 지점은 후보에서 제외**
-- [ ] T367 [US4] 🔴 편성 — 드래그 정렬 · 구간시간 · 제거 in src/features/courses/components/detail/CoursePointEditor.tsx — `dnd-kit` `SortableContext`. 🔴 **저장은 `UpdateCourse` 에 `points` 전량 전송**(규칙 3) — "변경분만 보내기" 를 만들지 않는다. 기존 행은 **`coursePointSeq`** 로 식별한다. 🔴 **`orderNo` 를 다시 1..N 으로 매긴다**(드래그 후 번호가 비면 서버 순서가 무너진다). 🔴 **지점별 활성(`useYn`)은 표시만 한다** — 요청 DTO 에 필드가 없어 **바꿀 수단이 없다**(B-29, 제약 6). 🔴 **구간 메모(`memo`)를 UI 에 만들지 않는다** — 쓰기 전용이라 저장해도 다시 읽을 수 없고, 전량 전송과 겹쳐 **다른 경로로 들어간 메모를 지운다**(B-30). 전송 시 기존 값을 알 수 없으므로 `memo: null` 이 나가는 것을 **알고도 보내는 것**임을 코드 주석에 남긴다. 🔴 **mock 단일 출처 작업 포함**: `handlers/points.ts` 의 `COURSES_OF` 를 코스 저장소에서 파생시킨다(제약 7)
-- [ ] T368 [US4] 실패 복구 — 🔴 **드래그 중 저장 실패 시 순서를 원복**한다(§4 — 화면만 바뀌면 다음 조회에서 되돌아가 혼란스럽다). 전량 전송이라 실패는 **부분 반영 없이 전무**다 → 화면 상태를 유지하고 재시도하게 한다. 🔴 **지점 0개가 되어도 자동 조치를 하지 않는다**(규칙 12 — 비활성화·저장 차단·경고 배너 **어느 것도**)
-- [ ] T369 [US3·US4·US5] [P] vitest — 🔴 **`AddCourse` 요청 바디에 `points` 키가 없는 것** / 🔴 **`UpdateCourse` 에 지점 전량이 나가는 것**(하나만 바꿔도) / `courseSeq` 가 반드시 포함되는 것 / `DeleteCourse` 가 `courseId` 로 나가는 것 / 토글 모달 **문구 2종이 다른 것** / 모달 취소 시 **아무 요청도 안 나가는 것** / 드래그 후 `orderNo` 재부여 / 저장 실패 시 순서 원복
+- [x] T361 [US3] 코스 생성 모달 in src/features/courses/form/{AddCourseForm,schema}.ts(x) — 🔴 **명칭·설명만**(규칙 9). `points` 를 보내지 않는다 — 보내도 무시되고 **성공 응답이 와서 조용히 반쪽**이 된다(B-27). 🔴 생성 후 **상세로 보내지 않는다**: `AddCourse` 가 `courseSeq` 를 주지 않고, 이름으로 찾으면 **동명 코스에서 엉뚱한 곳으로** 간다(§4) → **목록 재조회**. ⚠️ 생성 전용 목업이 없다(OQ-023-A) → 구현 후 사용자 확인
+- [x] T362 [US2] 기본정보 수정 모달 in src/features/courses/form/EditCourseForm.tsx — 명칭·설명. 🔴 **`points` 를 전량 함께 보낸다**(규칙 3 — 전체 교체이므로 생략하면 **지점이 전부 지워진다**). 🔴 **지점의 교훈을 옮기지 않는다**: `memo: null` 은 코스에서 **반영된다**(`UpdatePoint` 는 무시, B-15 — 규칙 6)
+- [x] T363 [US2] 삭제 in ZoneDetailPage.tsx — `AppAlertDialog`. 🔴 **`courseId`** 로 보낸다(규칙 5). 🔴 **성공 → 목록 복귀 / 실패 → 머문다** — 거부인데 화면이 바뀌면 삭제된 것으로 오해한다(027 교훈). 테스트에서 **실패 시 `navigate` 가 불리지 않는 것**을 명시 고정
+- [x] T364 [US5] 🔴 토글 2종 확인 모달 in src/features/courses/components/detail/CourseToggleDialog.tsx — **둘 다 모달, 문구 다르게**(사용자 결정, 규칙 11). 활성화 OFF: "비활성화하면 근무자 앱에서 이 코스의 순찰이 더 이상 배정되지 않습니다." / 교대 허용: 담백한 확인. 🔴 **옵티미스틱을 쓰지 않는다** — 모달로 의도를 확인했으므로 응답을 기다린다(둘은 양립 불가). ⚠️ **OQ-023-F 미해소**: 위 문구가 사실인지 업무 확인 전이다 — 틀리면 **틀린 경고**다
+- [x] T365 `dnd-kit` 도입 in package.json — `@dnd-kit/core` · `@dnd-kit/sortable` · `@dnd-kit/utilities`. 🔴 **설치돼 있지 않다**(제약 5). `roadmap.md` §7 · `patterns.md` §5가 지정한 것이고 **새 라이브러리를 고르지 않는다**(규칙 7)
+- [x] T366 [US4] 지점 추가 UI in src/features/courses/components/detail/AddCoursePointDialog.tsx — ⚠️ **OQ-023-C 결정 지점**: `GetClassificationPoint` 는 **페이징이 없어 전량 내려온다** → 후보가 많으면 검색이 필요하다. **모달 + 검색 입력**으로 간다(상세 안 인라인은 다이어그램·순서 카드와 폭을 다툰다). 🔴 **이미 편성된 지점은 후보에서 제외**
+- [x] T367 [US4] 🔴 편성 — 드래그 정렬 · 구간시간 · 제거 in src/features/courses/components/detail/CoursePointEditor.tsx — `dnd-kit` `SortableContext`. 🔴 **저장은 `UpdateCourse` 에 `points` 전량 전송**(규칙 3) — "변경분만 보내기" 를 만들지 않는다. 기존 행은 **`coursePointSeq`** 로 식별한다. 🔴 **`orderNo` 를 다시 1..N 으로 매긴다**(드래그 후 번호가 비면 서버 순서가 무너진다). 🔴 **지점별 활성(`useYn`)은 표시만 한다** — 요청 DTO 에 필드가 없어 **바꿀 수단이 없다**(B-29, 제약 6). 🔴 **구간 메모(`memo`)를 UI 에 만들지 않는다** — 쓰기 전용이라 저장해도 다시 읽을 수 없고, 전량 전송과 겹쳐 **다른 경로로 들어간 메모를 지운다**(B-30). 전송 시 기존 값을 알 수 없으므로 `memo: null` 이 나가는 것을 **알고도 보내는 것**임을 코드 주석에 남긴다. 🔴 **mock 단일 출처 작업 포함**: `handlers/points.ts` 의 `COURSES_OF` 를 코스 저장소에서 파생시킨다(제약 7)
+- [x] T368 [US4] 실패 복구 — 🔴 **드래그 중 저장 실패 시 순서를 원복**한다(§4 — 화면만 바뀌면 다음 조회에서 되돌아가 혼란스럽다). 전량 전송이라 실패는 **부분 반영 없이 전무**다 → 화면 상태를 유지하고 재시도하게 한다. 🔴 **지점 0개가 되어도 자동 조치를 하지 않는다**(규칙 12 — 비활성화·저장 차단·경고 배너 **어느 것도**)
+- [x] T369 [US3·US4·US5] [P] vitest — 🔴 **`AddCourse` 요청 바디에 `points` 키가 없는 것** / 🔴 **`UpdateCourse` 에 지점 전량이 나가는 것**(하나만 바꿔도) / `courseSeq` 가 반드시 포함되는 것 / `DeleteCourse` 가 `courseId` 로 나가는 것 / 토글 모달 **문구 2종이 다른 것** / 모달 취소 시 **아무 요청도 안 나가는 것** / 드래그 후 `orderNo` 재부여 / 저장 실패 시 순서 원복
+
+### Phase 4 결과 (2026-10-12)
+
+**`npm run verify` 0 errors** / **`npm run test` 648건 green**(561 → **+87**). 깨진 테스트 **2건 → 교체**(아래).
+
+| 파일 | 건수 | 고정한 것 |
+|---|:-:|---|
+| 🔴 `lib/__tests__/updateCourseBody.test.ts` | **10** | **`points` 를 넘기지 않으면 전량이 실리는 것** · `courseSeq` 항상 포함 · `memo: null`(비움) ≠ `undefined`(유지) · `totalMin` 항상 `null` |
+| 🔴 `lib/__tests__/coursePointOrder.test.ts` | **12** | **드래그 후 `orderNo` 1..N 재부여** · 제거 후 번호에 구멍 없음 · 새 행은 `coursePointSeq: null` · 같은 지점 두 번도 `key` 가 겹치지 않음 |
+| `form/__tests__/AddCourseForm.test.tsx` | 12 | 🔴 **바디에 `points` 키가 없는 것**(B-27) · `totalMin: null` · 실패 시 입력값 유지 |
+| `form/__tests__/EditCourseForm.test.tsx` | 8 | 🔴 **코스명만 바꿔도 지점 2개가 전량 나가는 것**(B-25) · 설명 비움이 `null` 로 나가는 것 |
+| `detail/__tests__/CourseToggleDialog.test.tsx` | 7 | 🔴 **문구 4종이 서로 다른 것** · 교대 쪽은 효과를 말하지 않는 것(A1) · 취소 시 무동작 |
+| `detail/__tests__/CoursePointEditor.test.tsx` | 16 | 추가·제거·구간시간 · 🔴 **저장 실패 시 초안 유지 + 안내** · 취소가 원복 · 지점 0개에 경고·차단 없음 |
+| `detail/__tests__/AddCoursePointDialog.test.tsx` | 9 | 🔴 **편성된 지점 제외** · 0건 3종 구분(지점 없음 / 전부 편성 / 검색 0건) · 다건 선택 |
+| `detail/__tests__/CourseInfo.test.tsx` | 11 (9→11) | 🔴 **스위치가 값을 바꾸지 않고 확인을 요청하는 것**(옵티미스틱 금지) |
+| `detail/__tests__/CoursePointList.test.tsx` | 13 (11→13) | `onEdit` 없으면 읽기 전용 그대로 · 행에 조작 수단 없음 |
+| `ZoneDetailPage.test.tsx` | 18 (9→18) | 🔴 **삭제가 `courseId` 로 나가는 것**(B-12) · **실패 시 머무는 것** · 토글이 모달을 거치는 것 · **토글 저장에도 지점 3개 전량이 나가는 것** |
+
+🔴 **깨진 테스트 2건은 전부 "Phase 4 에서 깨지도록 쓴" 것이다** — `ZonesPage` 의 "생성 버튼을
+아직 두지 않는다" 와 `ZoneDetailPage` 의 "변경계 버튼을 아직 두지 않는다". 둘 다 **없음을
+확인하던 단정을 있음·동작 확인으로 교체**했다. 이렇게 깨지는 테스트는 사고가 아니라
+**Phase 경계가 지켜졌다는 신호**다.
+
+### 🔴 실측 먼저 — B-31 (`totalMin` 은 검증되지 않는다)
+
+편성 편집을 만들기 전에 **"구간시간을 고치면 총 소요시간은 누가 계산하는가"** 를 모르면
+코드를 쓸 수 없었다(A1). 코스 1개를 만들어 `UpdateCourse` 를 다섯 번 바꿔 보내고 매번 상세로
+읽은 뒤 삭제했다(`api-spec.md` §5-1-B).
+
+| 보낸 것 | 결과 | 쓴 곳 |
+|---|---|---|
+| `totalMin: 99` / 합 25 | 🔴 **99 가 저장된다** — 검사하지 않는다 | B-31 등재 |
+| `totalMin: null` | ✅ **서버가 합으로 채운다** | **항상 `null` 을 보낸다** |
+| `orderNo` 둘 다 `1` | 🔴 **그대로 저장된다** | 1..N **재부여는 우리 책임** (T367) |
+| 같은 `pointSeq` 두 번 | 🔴 **통과한다** | 중복 제외는 **화면 규칙**이라고 명시 (T366) |
+| `coursePointSeq` 실어 보냄 | ✅ 행이 유지된다(실으면 유지, `null` 이면 새 행) | 기존 행 식별 근거 |
+
+→ **"총 소요시간" 입력란을 어디에도 만들지 않았다.** 파생 값인데 입력란을 두면 지점 합과
+다른 값을 쓸 수 있고(서버가 막지 않는다) **화면의 숫자가 거짓이 된다.**
+
+### 계획과 다르게 간 것 — 편성은 **편집 모드**다
+
+T367 은 "드래그 정렬" 만 적었고 §4 는 "실패 시 순서 원복" 을 요구했다. 상시 드래그 + 즉시
+저장으로 만들면 **둘이 충돌한다** — 그래서 **명시적 편집 모드**(저장/취소)로 갔다.
+
+| 이유 | |
+|---|---|
+| 전량 전송 | 드래그마다 PUT 이면 지점 5개 재배치에 **전량 교체가 네 번** |
+| 구간시간 | **타이핑**이라 자동 저장과 맞지 않는다(글자마다 PUT) |
+| §4 원복 | **취소가 원복이다.** 실패 시에는 초안을 유지하고 **"저장되지 않았다" 를 화면에 남긴다** — 전량 전송이라 **부분 반영이 없으므로** 서버는 저장 직전 그대로다. 말없이 서버 값으로 되돌리면 방금 한 작업이 **설명 없이 사라진다** |
+
+그래서 `CoursePointList`(읽기 전용, `onEdit` 버튼 하나)와 `CoursePointEditor`(편집 모드)가
+**둘 다 남았다** — 같은 목록을 두 번 그리는 중복으로 보이지만, 조회 화면과 편집 화면의
+관심사가 다르고 Phase 3 의 테스트 11건이 그대로 살아 있다.
+
+⚠️ **드래그 자체는 jsdom 에서 시험하지 못한다** — `dnd-kit` 이 `getBoundingClientRect` 로
+레이아웃을 재는데 jsdom 에서는 전부 0 이라 센서가 움직이지 않는다. 그래서 순서 계산을
+**순수 함수로 꺼내**(`lib/coursePointOrder.ts`) 12건으로 고정했고, 실제 드래그는 **T377
+브라우저 확인** 몫으로 남겼다. 🔴 **컴포넌트 안에 두었으면 테스트할 길이 없는 로직이었다.**
+
+### ✅ 제약 7 해소 — mock 이 한 출처가 됐다
+
+`handlers/points.ts` 의 고정 배분 함수(`COURSES_OF`)를 지우고 `handlers/courses.ts` 가
+`coursesOfPoint(pointSeq)` 를 **코스 저장소에서 파생**해 내보낸다. `MockPoint` 의
+`courseList` 필드도 **지웠다** — 두 출처를 남기면 편성을 바꾼 뒤 지점 목록의 `usedCount` 가
+옛 값으로 남아 **한 화면에서 둘이 다른 말을 한다.**
+
+### 남긴 것
+
+- ⚠️ **OQ-023-F 미해소**: "비활성화하면 근무자 앱에서 배정되지 않습니다" 가 사실인지 업무
+  확인 전이다. 효과를 단정하는 문장은 **그 한 줄뿐**이고 교대 허용 쪽은 효과를 말하지
+  않는다(A1). 확인 결과 틀리면 고칠 자리는 `CourseToggleDialog.tsx` 의 `copy()` 한 곳이다.
+- `patterns.md` §10(인라인 토글 = 옵티미스틱)과 **어긋난다** — 확인 모달과 양립 불가다.
+  갱신은 T374.
 
 ## Phase 5: 027 이월 6건 + 공용 셸 승격 판단
 

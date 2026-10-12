@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 
 import { points as legacyPoints } from '@/features/points/mock/pointData'
 import { toAuthMethodCode } from '@/features/points/lib/authMethod'
+import { coursesOfPoint } from './courses'
 import type {
   PointDetail,
   PointHistoryRow,
@@ -42,7 +43,6 @@ interface MockPoint {
   lastPatrolDt: string | null
   lastPatrolUserSeq: number | null
   lastPatrolUserName: string | null
-  courseList: { courseSeq: number; courseName: string }[]
 }
 
 /**
@@ -57,18 +57,17 @@ interface MockPoint {
 const SITE_OF = (pointSeq: number): number => (pointSeq <= 10 ? 7 : 8)
 
 /**
- * 지점이 쓰이는 코스. `usedCount`의 출처이고, **삭제 거부 케이스**가 여기 걸린다.
- * 구 mock에는 코스 연결 정보가 없어 결정적으로 배분한다(실 데이터 아님).
+ * 지점이 쓰이는 코스 — `usedCount` 와 상세의 "소속 코스" 의 산지다.
+ *
+ * 🔴 **코스 핸들러의 저장소에서 파생시킨다**(`spec 023` T367, 제약 7). 이전에는 여기에
+ * 고정 배분 함수가 있었고, 코스 저장소와는 **시드 단계에서 주석으로만** 맞춰져 있었다.
+ * 편성을 화면에서 바꿀 수 있게 된 지금은 그 합의가 어긋난다 — 코스에 지점을 더해도
+ * 지점 목록의 `usedCount` 가 그대로여서 **한 화면에서 둘이 다른 말을 한다.**
+ *
+ * ⚠️ **요청마다 계산한다.** 모듈 로드 시에 한 번 박아 두면 편성을 바꾼 뒤에도 예전 값이
+ * 남아 고정 배분과 다를 게 없다 — 그래서 `MockPoint` 에서 `courseList` 필드를 **지워**
+ * 산지를 두 개 남기지 않았다.
  */
-const COURSES_OF = (pointSeq: number): { courseSeq: number; courseName: string }[] => {
-  if (pointSeq === 1 || pointSeq === 2) return [{ courseSeq: 1, courseName: 'A동 순찰코스' }]
-  if (pointSeq === 3)
-    return [
-      { courseSeq: 1, courseName: 'A동 순찰코스' },
-      { courseSeq: 2, courseName: 'B동 순찰코스' },
-    ]
-  return []
-}
 
 /**
  * 구 mock → 서버 스키마 변환.
@@ -96,7 +95,6 @@ const toMockPoint = (legacy: (typeof legacyPoints)[number]): MockPoint => {
     lastPatrolDt: patrolled ? `2026-10-0${(pointSeq % 7) + 1}T09:${10 + pointSeq}:00` : null,
     lastPatrolUserSeq: patrolled ? 100 + pointSeq : null,
     lastPatrolUserName: patrolled ? '김근무' : null,
-    courseList: COURSES_OF(pointSeq),
   }
 }
 
@@ -139,7 +137,8 @@ const toPointRow = (point: MockPoint): PointRow => ({
   memo: point.memo,
   authMethod: point.authMethod,
   authMethodName: point.authMethod === 9 ? 'QR' : 'NFC',
-  usedCount: point.courseList.length,
+  // 🔴 코스 저장소에서 파생한다 — 편성을 바꾸면 여기도 같이 바뀐다(제약 7)
+  usedCount: coursesOfPoint(point.pointSeq).length,
   useYn: point.useYn,
   nfcTagId: point.nfcTagId,
   lastPatrolDt: lastPatrolOf(point).lastPatrolDt,
@@ -157,7 +156,7 @@ const toPointDetail = (point: MockPoint): PointDetail => ({
   gpsLng: point.gpsLng,
   useYn: point.useYn,
   ...lastPatrolOf(point),
-  courseList: point.courseList,
+  courseList: coursesOfPoint(point.pointSeq),
 })
 
 const ok = (data: unknown) =>
@@ -216,7 +215,8 @@ const buildHistory = (point: MockPoint): PointHistoryRow[] => {
   // 3의 배수 지점은 미순찰 — `toMockPoint` 의 `lastPatrolDt: null` 과 맞춘다
   if (point.pointSeq % 3 === 0) return []
 
-  const courses = point.courseList.length > 0 ? point.courseList : [{ courseSeq: 0, courseName: '미배정 코스' }]
+  const assigned = coursesOfPoint(point.pointSeq)
+  const courses = assigned.length > 0 ? assigned : [{ courseSeq: 0, courseName: '미배정 코스' }]
   const today = new Date()
   const rows: PointHistoryRow[] = []
 
@@ -347,7 +347,6 @@ export const pointHandlers = [
       lastPatrolDt: null, // 새 지점은 순찰 기록이 없다
       lastPatrolUserSeq: null,
       lastPatrolUserName: null,
-      courseList: [], // 코스 편성은 코스 관리(spec 023)에서 한다
     })
 
     return mutationOk()

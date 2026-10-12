@@ -1,10 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import ZoneDetailPage from '../ZoneDetailPage'
+import { server } from '@/mocks/server'
 import { resetCourseStore } from '@/mocks/handlers/courses'
+import type { UpdateCourseRequest } from '@/features/courses/types'
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
 import { setSite } from '@/lib/auth/site'
 import { makeAccessToken } from '@/test/jwt'
@@ -19,6 +23,9 @@ import { makeAccessToken } from '@/test/jwt'
  * 변경계는 Phase 4 다.
  */
 
+const DELETE_COURSE_PATH = '/api/v1/Course/W/sign/DeleteCourse'
+const UPDATE_COURSE_PATH = '/api/v1/Course/W/sign/UpdateCourse'
+
 const renderPage = (initialEntry: string) => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -28,6 +35,7 @@ const renderPage = (initialEntry: string) => {
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route path="/zones/:courseSeq" element={<ZoneDetailPage />} />
+          <Route path="/zones" element={<div>LIST_ROUTE</div>} />
           <Route path="/404" element={<div>NOT_FOUND_PAGE</div>} />
         </Routes>
       </MemoryRouter>
@@ -81,12 +89,12 @@ describe('ZoneDetailPage', () => {
     expect(screen.getByText(/주소가 올바르지 않습니다/)).toBeInTheDocument()
   })
 
-  it('🔴 변경계 버튼을 아직 두지 않는다 — Phase 4 몫이다', async () => {
+  it('🔴 수정·삭제 수단이 헤더에 있다 — 본문 아래 풋터가 아니다', async () => {
     renderPage('/zones/1')
 
     await screen.findByText('A동 순찰코스')
-    expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '삭제' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '수정' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
   })
 })
 
@@ -117,5 +125,154 @@ describe('ZoneDetailPage — 조회 섹션 조립 (Phase 3)', () => {
 
     await screen.findByText('A동 순찰코스')
     expect(screen.getAllByText(/A동 1층~지하 주차장 순찰/)).toHaveLength(1)
+  })
+})
+
+describe('ZoneDetailPage — 변경계 조립 (Phase 4)', () => {
+  it('🔴 삭제는 courseId 로 나간다 — courseSeq 로 보내면 400 ProblemDetails 다 (B-12)', async () => {
+    const user = userEvent.setup()
+    const params: (string | null)[] = []
+    server.use(
+      http.delete(DELETE_COURSE_PATH, ({ request }) => {
+        const query = new URL(request.url).searchParams
+        params.push(query.get('courseId'), query.get('courseSeq'))
+        return HttpResponse.json({ message: '요청이 정상 처리되었습니다.', data: true, code: 200 })
+      })
+    )
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+    await user.click(await screen.findByRole('button', { name: '삭제' }))
+
+    await waitFor(() => expect(params[0]).toBe('1'))
+    expect(params[1]).toBeNull()
+  })
+
+  it('🔴 삭제 성공 → 목록으로 돌아간다', async () => {
+    const user = userEvent.setup()
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+    await user.click(await screen.findByRole('button', { name: '삭제' }))
+
+    expect(await screen.findByText('LIST_ROUTE')).toBeInTheDocument()
+  })
+
+  it('🔴 삭제 실패 → 상세에 머문다. 거부인데 화면이 바뀌면 삭제된 줄 안다', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.delete(DELETE_COURSE_PATH, () =>
+        HttpResponse.json({ message: '잘못된 요청입니다.', data: false, code: 400 }, { status: 400 })
+      )
+    )
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+    await user.click(await screen.findByRole('button', { name: '삭제' }))
+
+    await waitFor(() => expect(screen.queryByText('LIST_ROUTE')).not.toBeInTheDocument())
+    expect(screen.getByText('A동 순찰코스')).toBeInTheDocument()
+  })
+
+  it('🔴 삭제 확인 전에는 요청이 나가지 않는다 — 취소는 아무 일도 하지 않는다', async () => {
+    const user = userEvent.setup()
+    let called = 0
+    server.use(
+      http.delete(DELETE_COURSE_PATH, () => {
+        called += 1
+        return HttpResponse.json({ message: '요청이 정상 처리되었습니다.', data: true, code: 200 })
+      })
+    )
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+    await user.click(await screen.findByRole('button', { name: '취소' }))
+
+    expect(called).toBe(0)
+  })
+
+  it('🔴 토글은 확인 모달을 거친다 — 스위치만 눌러서는 저장되지 않는다', async () => {
+    const user = userEvent.setup()
+    const captured: UpdateCourseRequest[] = []
+    server.use(
+      http.put(UPDATE_COURSE_PATH, async ({ request }) => {
+        captured.push((await request.json()) as UpdateCourseRequest)
+        return HttpResponse.json({ message: '요청이 정상 처리되었습니다.', data: true, code: 200 })
+      })
+    )
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    await user.click(screen.getByLabelText('사용'))
+
+    expect(await screen.findByText('코스를 비활성화하시겠습니까?')).toBeInTheDocument()
+    expect(captured).toHaveLength(0)
+  })
+
+  it('🔴 토글 저장에도 points 가 전량 나간다 — 빼면 지점이 전부 사라진다 (B-25)', async () => {
+    const user = userEvent.setup()
+    const captured: UpdateCourseRequest[] = []
+    server.use(
+      http.put(UPDATE_COURSE_PATH, async ({ request }) => {
+        captured.push((await request.json()) as UpdateCourseRequest)
+        return HttpResponse.json({ message: '요청이 정상 처리되었습니다.', data: true, code: 200 })
+      })
+    )
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    await user.click(screen.getByLabelText('사용'))
+    await user.click(await screen.findByRole('button', { name: '비활성화' }))
+
+    await waitFor(() => expect(captured).toHaveLength(1))
+    expect(captured[0]).toMatchObject({ courseSeq: 1, siteSeq: 7, useYn: false, totalMin: null })
+    // mock 코스 1 은 지점 3개다 — 하나도 빠지지 않는다
+    expect(captured[0].points).toHaveLength(3)
+  })
+
+  it('🔴 토글 모달을 취소하면 아무 요청도 나가지 않는다', async () => {
+    const user = userEvent.setup()
+    let called = 0
+    server.use(
+      http.put(UPDATE_COURSE_PATH, () => {
+        called += 1
+        return HttpResponse.json({ message: '요청이 정상 처리되었습니다.', data: true, code: 200 })
+      })
+    )
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    await user.click(screen.getByLabelText('허용'))
+    await user.click(await screen.findByRole('button', { name: '취소' }))
+
+    expect(called).toBe(0)
+  })
+
+  it('🔴 교대 허용과 코스 활성화가 **다른 문구**로 묻는다 (규칙 11)', async () => {
+    const user = userEvent.setup()
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    await user.click(screen.getByLabelText('허용'))
+
+    expect(await screen.findByText('교대 허용을 끄시겠습니까?')).toBeInTheDocument()
+    expect(screen.queryByText(/배정되지 않습니다/)).not.toBeInTheDocument()
+  })
+
+  it('편성 편집으로 들어가고 취소로 돌아온다', async () => {
+    const user = userEvent.setup()
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    await user.click(screen.getByRole('button', { name: '편성 편집' }))
+
+    expect(screen.getByText('지점 순서 편집')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '취소' }))
+
+    expect(screen.getByText('지점 순서')).toBeInTheDocument()
   })
 })
