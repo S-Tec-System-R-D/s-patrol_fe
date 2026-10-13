@@ -7,17 +7,23 @@
 const DetailSection = ({
   title,
   description,
+  action,
   children,
 }: {
   title: string
   description?: string
+  /** 제목 줄 **우측**에 붙는 것(수정 아이콘 등). `spec 029` — 제목을 두 번 그리지 않으려고 둔다 */
+  action?: React.ReactNode
   children: React.ReactNode
 }) => {
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <span className="text-muted-foreground text-xs">{title}</span>
-        {description && <p className="text-caption text-muted-foreground/80">{description}</p>}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col gap-1">
+          <span className="text-muted-foreground text-xs">{title}</span>
+          {description && <p className="text-caption text-muted-foreground/80">{description}</p>}
+        </div>
+        {action}
       </div>
       <div className="flex flex-col gap-2">{children}</div>
     </div>

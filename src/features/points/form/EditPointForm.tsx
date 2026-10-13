@@ -8,11 +8,10 @@ import AppInput from '@/components/app/AppInput'
 import { Switch } from '@/components/ui/switch'
 
 import { updatePoint } from '../api/updatePoint'
-import { toAuthMethodCode, toAuthMethodLabel } from '../lib/authMethod'
+import { toAuthMethodLabel } from '../lib/authMethod'
 import { pointKeys } from '../queryKeys'
 import type { PointDetail } from '../types'
-import AuthMethodSelector from './fields/AuthMethodSelector'
-import { pointSchema, type FormDataType } from './schema'
+import { makeEditPointSchema, type EditFormDataType } from './schema'
 
 /**
  * 지점 수정 폼 (`spec 022` Phase 5).
@@ -36,26 +35,29 @@ const EditPointForm = ({ point, onSuccess }: { point: PointDetail; onSuccess?: (
   // 🔴 모달이 열린 시점의 지점. 아래 `defaultValues` 도 같은 시점에 한 번만 읽힌다.
   const [pointSeq] = useState(point.pointSeq)
 
+  /**
+   * 🔴 **수단은 폼 값이 아니라 서버값이다**(`spec 029` T416). 전환은 상세 카드의
+   * 스위치가 하고, 이 폼은 **지금 수단에 맞는 필드만** 보여준다. 모달이 열린 시점으로
+   * 고정한다 — 뒤에서 수단이 바뀌어도 열려 있는 폼의 모양이 도중에 변하지 않게.
+   */
+  const [isNfc] = useState(() => toAuthMethodLabel(point.authMethod) === 'NFC')
+
   const {
     register,
     handleSubmit,
     setValue,
     control,
     formState: { errors },
-  } = useForm<FormDataType>({
-    resolver: zodResolver(pointSchema),
+  } = useForm<EditFormDataType>({
+    resolver: zodResolver(makeEditPointSchema(isNfc)),
     defaultValues: {
       name: point.name,
       description: point.memo ?? '',
-      // 미실측 코드(9·10 외)면 `undefined` 로 둬 **아무것도 선택되지 않은 상태**로 연다.
-      // 임의로 'QR' 을 채우면 저장 시 사용자가 고르지 않은 인증수단으로 바뀐다(A1).
-      authenticationMethod: toAuthMethodLabel(point.authMethod) ?? undefined,
       nfcTagId: point.nfcTagId ?? '',
       useYn: point.useYn,
     },
   })
 
-  const authenticationMethod = useWatch({ control, name: 'authenticationMethod' })
   const useYn = useWatch({ control, name: 'useYn' })
 
   const mutation = useMutation({
@@ -71,17 +73,21 @@ const EditPointForm = ({ point, onSuccess }: { point: PointDetail; onSuccess?: (
     },
   })
 
-  const onSubmit = (data: FormDataType) => {
+  const onSubmit = (data: EditFormDataType) => {
     mutation.mutate({
       pointSeq,
       name: data.name,
       memo: data.description.trim() || null,
-      authMethod: toAuthMethodCode(data.authenticationMethod),
-      nfcTagId: data.authenticationMethod === 'NFC' ? data.nfcTagId : null,
+      /**
+       * 🔴 **`authMethod` 를 보내지 않는다**(`spec 029` T415). 전환은 상세 카드의
+       * 스위치가 전담하고, `UpdatePoint` 는 진짜 부분 갱신이라 생략하면 유지된다(실측).
+       * ⚠️ 보내면 **TAG ID 를 함께 실어야 하는 요청**이 되어(NFC 지점이면 400) 이름만
+       * 고치려던 저장이 실패한다 — 보강 실측 2026-10-13 이 그 경계를 확인했다.
+       */
+      // 🔴 TAG ID 는 **NFC 지점일 때만** 보낸다. QR 지점에 남아 있는 값은 어차피 지울
+      // 수 없고(B-15) 화면에도 없다 — 폼이 그것을 되돌려 보낼 이유가 없다
+      nfcTagId: isNfc ? data.nfcTagId : undefined,
       useYn: data.useYn,
-      // QR 재발급은 022 범위 외(OQ-022-D). 생략하지 않고 명시적으로 false 를 보낸다 —
-      // swagger 가 nullable 이 아니라 생략 시 서버 기본값이 미실측이다.
-      reissueQrYn: false,
     })
   }
 
@@ -102,18 +108,13 @@ const EditPointForm = ({ point, onSuccess }: { point: PointDetail; onSuccess?: (
           error={errors.description?.message}
           {...register('description')}
         />
-        {/* 인증수단 */}
-        <AuthMethodSelector
-          required
-          value={authenticationMethod}
-          onChange={(v) => {
-            if (v === 'QR') setValue('nfcTagId', '')
-            setValue('authenticationMethod', v, { shouldValidate: true })
-          }}
-          error={errors.authenticationMethod?.message}
-        />
+        {/* 🔴 **인증수단 선택이 없다**(`spec 029` T415, 사용자 결정 2026-10-13).
+            전환은 상세의 **자격증명 카드 스위치** 한 곳에서만 한다 — 수단이 두 곳이면
+            그중 폼 쪽은 **TAG ID 를 비워도 저장되는 것처럼** 보인다.
+            ⚠️ TAG ID 필드는 남는다. 수단 변경이 아니라 **태그 교체**(분실·파손) 때문이고,
+            그래서 **NFC 지점일 때만** 뜬다 */}
       </div>
-      {authenticationMethod === 'NFC' && (
+      {isNfc && (
         <AppInput
           label="NFC TAG ID"
           placeholder="14자리 HEX"

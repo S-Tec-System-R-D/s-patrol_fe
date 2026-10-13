@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
@@ -124,7 +125,20 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
 })
 
 describe('PointCredentialCard — 인증수단별 분기', () => {
-  const renderCard = (point = detail()) => render(<PointCredentialCard point={point} />)
+  /**
+   * 🔴 `spec 029` 부터 이 카드가 **인증수단 전환 스위치**를 품는다 — mutation 훅을 쓰므로
+   * `QueryClientProvider` 가 필요하다(029 전에는 순수 표시 컴포넌트였다).
+   */
+  const renderCard = (point = detail()) => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+    })
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <PointCredentialCard point={point} />
+      </QueryClientProvider>
+    )
+  }
 
   it('🔴 NFC 지점은 TAG ID 를 실제로 보여준다 — placeholder 가 아니다', () => {
     renderCard(detail({ authMethod: 10, authMethodName: 'NFC', nfcTagId: '04A1B2C3D4E5F6' }))

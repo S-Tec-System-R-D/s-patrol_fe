@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, isValid, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
-import { ChevronRightIcon, HistoryIcon, MapPinIcon, SquarePenIcon, Trash2Icon } from 'lucide-react'
+import { ChevronRightIcon, HistoryIcon, MapPinIcon, Trash2Icon } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
@@ -128,22 +128,12 @@ const PointDetailPage = () => {
               )
             }
             action={
+              /* 🔴 **헤더에는 `삭제` 만 둔다**(`spec 029` T413, 사용자 결정 2026-10-13).
+                 027 은 수정·삭제를 나란히 뒀는데, 코스 상세(023)가 **고치려는 값을 보여
+                 주는 카드에 수단을 둔다**는 규칙을 세웠다. 지점도 같게 맞춘다 —
+                 수정은 기본정보 카드, 인증수단은 자격증명 카드.
+                 삭제만 남는 이유: **지점 전체**에 대한 동작이라 어느 카드에도 속하지 않는다 */
               <div className="flex items-center gap-2">
-                <AppDialog
-                  open={editOpen}
-                  onOpenChange={setEditOpen}
-                  title="지점 수정"
-                  description="지점 정보를 수정할 수 있습니다."
-                  trigger={
-                    <AppButton icon={SquarePenIcon} variant="sub" className="bg-card">
-                      수정
-                    </AppButton>
-                  }
-                >
-                  {/* 🔴 성공해야 닫는다 — 먼저 닫으면 실패 시 입력값이 사라진다(§4) */}
-                  <EditPointForm point={point} onSuccess={() => setEditOpen(false)} />
-                </AppDialog>
-
                 {/* 삭제 확인 모달은 확인 즉시 닫는다: 잃을 입력이 없고 거부 사유는
                     전역 토스트가 전달한다. 닫기 제어는 계약만 늘린다(A6) */}
                 <AppAlertDialog
@@ -175,7 +165,19 @@ const PointDetailPage = () => {
           {/* 좌 2/3 (정보·코스·기록) / 우 1/3 (인증수단·변경이력·형제지점) — xl 미만 1단 */}
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
             <div className="flex flex-col gap-4 xl:col-span-2">
-              <PointDetail point={point} />
+              <PointDetail point={point} onEdit={() => setEditOpen(true)} />
+
+              {/* 🔴 모달은 페이지가 들고 있다 — 카드는 **열어 달라고 요청만** 한다
+                  (코스 상세 `CourseInfo` 와 같은 조립). 성공해야 닫는다 — 먼저 닫으면
+                  실패 시 입력값이 사라진다 */}
+              <AppDialog
+                open={editOpen}
+                onOpenChange={setEditOpen}
+                title="지점 수정"
+                description="지점 정보를 수정할 수 있습니다."
+              >
+                <EditPointForm point={point} onSuccess={() => setEditOpen(false)} />
+              </AppDialog>
               <PointPatrolLog
                 summary={summary}
                 rows={historyRows}

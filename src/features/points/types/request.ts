@@ -35,14 +35,23 @@ export interface AddPointRequest {
  * 필드를 빼지 않고 명시적으로 `false` 를 보내는 쪽을 택했다: swagger 에 nullable 이
  * 아니라 `boolean` 으로 선언돼 있어 생략 시 서버 기본값이 무엇인지 미실측이다.
  */
+/**
+ * 🔴 **`pointSeq` 외에는 전부 선택이다**(`spec 029` T411). swagger 의 required 도
+ * `pointSeq` 하나이고, 실측에서 **진짜 부분 갱신**임이 확인됐다 — 생략한 필드는 유지된다.
+ *
+ * 029 전까지는 모든 필드가 필수였다. 소비처가 수정 폼 하나뿐이라 문제가 없었지만,
+ * **인증수단 전환**(이름·설명을 건드릴 이유가 없다)이 생기면서 "바꾸지 않을 값까지 실어
+ * 보내야 하는" 타입이 됐다. 그렇게 보내면 전환 한 번에 **다른 필드까지 덮어쓸 위험**이
+ * 생긴다(값이 그 사이 다른 경로로 바뀌었다면).
+ */
 export interface UpdatePointRequest {
   pointSeq: number
-  name: string
-  memo: string | null
-  authMethod: number
-  nfcTagId: string | null
-  useYn: boolean
-  reissueQrYn: boolean
+  name?: string
+  memo?: string | null
+  authMethod?: number
+  nfcTagId?: string | null
+  useYn?: boolean
+  reissueQrYn?: boolean
 }
 
 /**

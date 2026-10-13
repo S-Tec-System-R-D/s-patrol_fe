@@ -1,11 +1,13 @@
-import { QrCodeIcon } from 'lucide-react'
+import { QrCodeIcon, SquarePenIcon } from 'lucide-react'
 
 import AppDetailRow from '@/components/app/AppDetailRow'
+import AppIconButton from '@/components/app/AppIconButton'
 import { getSiteName } from '@/lib/auth/site'
 
 import ZoneRow from './ZoneRow'
 import DetailSection from './DetailSection'
 import AuthMethodDisplay from './AuthMethodDisplay'
+import PointCredentialSwitch from './PointCredentialSwitch'
 import { PendingSection, PendingValue } from './PendingBlock'
 import { resolveAuthMethodLabel, toAuthMethodLabel } from '../../lib/authMethod'
 import type { PointDetail as PointDetailData } from '../../types'
@@ -37,13 +39,29 @@ const Card = ({ className = '', children }: { className?: string; children: Reac
   <div className={`rounded-lg border border-border bg-card p-6 ${className}`}>{children}</div>
 )
 
-const PointDetail = ({ point }: { point: PointDetailData }) => {
+const PointDetail = ({ point, onEdit }: { point: PointDetailData; onEdit?: () => void }) => {
   const method = toAuthMethodLabel(point.authMethod)
 
   return (
     <div className="flex flex-col gap-4">
       <Card>
-        <DetailSection title="기본정보">
+        {/* 🔴 **수정 버튼이 이 카드로 왔다**(`spec 029` T413, 사용자 결정 2026-10-13) —
+            코스 상세와 같은 규칙이다. 고치려는 값을 **보여 주는 카드**에 수단을 둔다.
+            헤더에는 `삭제` 만 남는다(지점 전체에 대한 동작이라 어느 카드에도 속하지 않는다) */}
+        <DetailSection
+          title="기본정보"
+          action={
+            onEdit && (
+              /* 코스 상세와 **같은 `SquarePen` 아이콘 전용 버튼** */
+              <AppIconButton
+                icon={SquarePenIcon}
+                aria-label="기본정보 수정"
+                title="수정"
+                onClick={onEdit}
+              />
+            )
+          }
+        >
           {/* 🔴 목업은 8칸 2열이다. **4칸은 서버에 없어 placeholder** 로 둔다 —
               지우면 "설계에 없던 것" 이 되어 나중에 다시 논의해야 한다(OQ-027-E) */}
           <div className="grid grid-cols-1 gap-x-10 xl:grid-cols-2">
@@ -101,24 +119,36 @@ const PointDetail = ({ point }: { point: PointDetailData }) => {
 /**
  * 지점 **자격증명 카드** — 인증수단에 따라 다른 것을 보여준다(사용자 결정 2026-10-10).
  *
- * 🔴 **"인증 수단" 섹션은 기본정보로 녹였다.** 값 하나(QR/NFC)뿐인 섹션을 따로 둘 이유가
- * 없었다. 이 카드는 **그 수단이 실제로 쓰는 자격증명**을 맡는다 — 역할이 갈렸다.
+ * 🔴 **029 에서 전환 스위치가 이 카드로 들어왔다.** 그 전까지 이 카드는 조회 전용이었고
+ * 인증수단은 **수정 폼에서만** 바꿀 수 있었다. 이제 **보여 주는 자리에서 바꾼다** —
+ * 기본정보(수정 아이콘)·코스 상세와 같은 규칙이다.
  *
  * | 수단 | 보여주는 것 | 상태 |
  * |---|---|---|
- * | **NFC** | TAG ID | ✅ **실 데이터**(`nfcTagId` 는 서버에 있다) |
- * | **QR** | QR 이미지·식별자·발행정보 | 🔲 placeholder — 발행 메타가 없고(B-23) 생성은 별도 작업(OQ-022-D) |
+ * | **NFC** | TAG ID | ✅ 실 데이터 |
+ * | **QR** | QR 이미지·식별자 | ✅ **029 에서 실물로**(`qrCode` 가 서버에 있다) |
  * | 미실측 코드 | 안내 문구 | — |
  *
- * 🔴 **NFC 는 placeholder 가 아니다.** 022 에서 `nfcTagId` 를 실측했고 화면에 뜬다.
- * QR 만 막혀 있는데 둘을 같은 "준비 중" 으로 묶으면 **되는 것까지 안 되는 것처럼** 보인다.
+ * 🔴 **지금 쓰는 수단의 자격증명만 그린다.** 서버는 전환해도 반대쪽 값을 지우지 않는다
+ * (QR→NFC 후에도 `qrCode` 가 남고, NFC→QR 후에도 `nfcTagId` 가 남는다 — B-15, 실측
+ * 2026-10-13). **지울 수는 없으니 보여주지 않는다** — 쓰이지 않는 자격증명이 화면에
+ * 있으면 "둘 다 되는 지점" 으로 읽힌다.
  */
 export const PointCredentialCard = ({ point }: { point: PointDetailData }) => {
   const method = toAuthMethodLabel(point.authMethod)
 
+  /**
+   * 🔴 **스위치는 수단과 무관하게 항상 같은 자리에 있다.** 수단별 본문 안에 넣으면
+   * 전환할 때마다 버튼 위치가 움직인다 — 방금 누른 것이 어디 갔는지 눈으로 좇게 된다.
+   */
+  const Switcher = (
+    <PointCredentialSwitch pointSeq={point.pointSeq} authMethod={point.authMethod} />
+  )
+
   if (method === 'NFC') {
     return (
-      <Card>
+      <Card className="flex flex-col gap-4">
+        {Switcher}
         <DetailSection title="NFC 태그" description="근무자 단말이 이 태그를 읽어 인증합니다.">
           {point.nfcTagId ? (
             <AppDetailRow variant="fixed" label="TAG ID" value={<span className="font-mono">{point.nfcTagId}</span>} />
@@ -135,17 +165,23 @@ export const PointCredentialCard = ({ point }: { point: PointDetailData }) => {
 
   if (method === 'QR') {
     return (
-      <PendingSection
-        title="QR 코드"
-        icon={QrCodeIcon}
-        reason="QR 이미지·식별자·발행 정보(발행일·버전)와 다운로드·인쇄는 아직 없습니다. 서버에 발행 메타가 없고(B-23) QR 생성은 별도 작업입니다(OQ-022-D)."
-      />
+      <Card className="flex flex-col gap-4">
+        {Switcher}
+        {/* 🔴 QR 실물은 **tasks Phase 5**(T424~T427)에서 채운다. 지금은 027 의 자리를
+            그대로 둔다 — 스위치만 먼저 들어왔다 */}
+        <PendingSection
+          title="QR 코드"
+          icon={QrCodeIcon}
+          reason="QR 이미지·식별자·발행 정보(발행일·버전)와 다운로드·인쇄는 아직 없습니다. 서버에 발행 메타가 없고(B-23) QR 생성은 별도 작업입니다(OQ-022-D)."
+        />
+      </Card>
     )
   }
 
   // 9·10 외 미실측 코드 — 추측 라벨을 만들지 않는다(A1)
   return (
-    <Card>
+    <Card className="flex flex-col gap-4">
+      {Switcher}
       <DetailSection title="인증 자격증명">
         <span className="text-caption text-muted-foreground">
           {resolveAuthMethodLabel(point.authMethod, point.authMethodName) ||

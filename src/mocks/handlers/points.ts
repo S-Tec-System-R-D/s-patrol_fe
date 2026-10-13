@@ -375,7 +375,13 @@ export const pointHandlers = [
    */
   http.patch(UPDATE_POINT_PATH, async ({ request }) => {
     const body = (await request.json().catch(() => null)) as Partial<UpdatePointRequest> | null
-    if (typeof body?.pointSeq !== 'number' || !body.name) {
+    /**
+     * 🔴 **`name` 을 필수로 보지 않는다**(`spec 029` T412 — 029 전까지 틀려 있었다).
+     * swagger 의 required 는 `pointSeq` 하나이고 실측도 **진짜 부분 갱신**이다 — `name`
+     * 없이 `authMethod` 만 보내도 200 이 온다. mock 이 더 엄격하면 **인증수단 전환이
+     * dev 에서만 400** 이 되어, 있지도 않은 버그를 쫓게 된다.
+     */
+    if (typeof body?.pointSeq !== 'number') {
       return businessError('필수 값이 누락되었습니다.')
     }
 
@@ -383,9 +389,25 @@ export const pointHandlers = [
     if (index < 0) return businessError(NOT_FOUND_MESSAGE)
 
     const current = store[index]
+
+    /**
+     * 🔴 **NFC 로 바꾸려면 TAG ID 가 있어야 한다**(실측 2026-10-13, `spec 029` WF-1-0).
+     * `authMethod: 10` 을 `nfcTagId` 없이 보내면 **400 + `"NFC 값을 입력해주세요."`** 다.
+     * 🔴 **이 문구는 사유를 말해 준다** — B-17("변경계 실패는 전부 `잘못된 요청입니다.`")의
+     * 드문 예외라, 화면이 **그대로 노출해도 되는** 메시지다.
+     * 🔴 **`authMethod` 를 보낼 때만 걸린다**(보강 실측 2026-10-13). NFC 지점에 이름·memo·
+     * `useYn` 만 보내는 부분 갱신은 **전부 200** 이다 — `authMethod` 를 생략하면 TAG ID 를
+     * 묻지 않는다. 이 구분이 없으면 mock 이 **NFC 지점의 이름 수정을 막아버린다.**
+     */
+    const incomingTagId = typeof body.nfcTagId === 'string' ? body.nfcTagId.trim() : ''
+    if (body.authMethod !== undefined && body.authMethod !== 9 && !incomingTagId) {
+      // 🔴 범위 밖 코드(99 등)도 같은 문구다 — 서버가 "9 가 아니면 전부 NFC" 로 본다(B-38)
+      return businessError('NFC 값을 입력해주세요.')
+    }
+
     store[index] = {
       ...current,
-      name: body.name,
+      name: body.name ?? current.name,
       // 🔴 실측 동작: `null`·`''` 은 "변경하지 않음". 공백만 있는 문자열은 지움(trim 후 저장)
       memo: patchText(current.memo, body.memo),
       authMethod: body.authMethod ?? current.authMethod,

@@ -191,12 +191,22 @@ describe('PointDetailPage — 삭제 후 이동', () => {
 describe('PointDetailPage — 수정 모달', () => {
   const UPDATE_POINT_PATH = '/api/v1/Point/W/sign/UpdatePoint'
 
+  it('🔴 헤더에는 삭제만 있다 — 수정은 기본정보 카드로 갔다 (spec 029)', async () => {
+    renderAt('/points/1')
+    await screen.findByRole('heading', { name: '정문 입구' })
+
+    // 고치려는 값을 **보여 주는 카드**에 수단을 둔다(코스 상세와 같은 규칙).
+    // 삭제만 남는 이유: 지점 **전체**에 대한 동작이라 어느 카드에도 속하지 않는다
+    expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '기본정보 수정' })).toBeInTheDocument()
+  })
+
   it('수정 모달은 상세 값이 채워진 폼으로 열린다', async () => {
     const user = userEvent.setup()
     renderAt('/points/1')
     await screen.findByRole('heading', { name: '정문 입구' })
 
-    await user.click(screen.getByRole('button', { name: '수정' }))
+    await user.click(screen.getByRole('button', { name: '기본정보 수정' }))
 
     expect(await screen.findByPlaceholderText('지점명을 입력해주세요')).toHaveValue('정문 입구')
   })
@@ -211,7 +221,7 @@ describe('PointDetailPage — 수정 모달', () => {
     renderAt('/points/1')
     await screen.findByRole('heading', { name: '정문 입구' })
 
-    await user.click(screen.getByRole('button', { name: '수정' }))
+    await user.click(screen.getByRole('button', { name: '기본정보 수정' }))
     await user.click(await screen.findByRole('button', { name: '저장' }))
 
     await waitFor(() =>
@@ -229,7 +239,7 @@ describe('PointDetailPage — 수정 모달', () => {
     renderAt('/points/1')
     await screen.findByRole('heading', { name: '정문 입구' })
 
-    await user.click(screen.getByRole('button', { name: '수정' }))
+    await user.click(screen.getByRole('button', { name: '기본정보 수정' }))
     const name = await screen.findByPlaceholderText('지점명을 입력해주세요')
     await user.clear(name)
     await user.type(name, '정문 입구(수정)')
