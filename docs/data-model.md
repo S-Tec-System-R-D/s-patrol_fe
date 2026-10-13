@@ -941,7 +941,41 @@ export const pointKeys = {
 🔴 **실패 시에는 아무것도 무효화하지 않는다.** 거부인데 목록이 갱신되거나 선택이 풀리면
 사용자는 **삭제되지 않은 대상을 잃은 것처럼** 본다.
 
-### 8-4. 변경계 응답을 신뢰하지 않는다
+### 8-4. 두 번째 소비처 — 순찰코스 (`spec 023`, 2026-10-13)
+
+> 구현 SSOT: `src/features/courses/queryKeys.ts`
+
+규약은 **바뀌지 않았다**. 코스가 두 번째 소비처라 모양을 바꾸면 §8 이 "지점만의 관례" 로
+내려앉는다. 지점에 없던 것은 **루트를 더 쪼갠 것** 둘뿐이다.
+
+```ts
+export const courseKeys = {
+  lists: ['courses'] as const,
+  list: (params: CourseListParams) => ['courses', params.siteSeq, params] as const,
+  detail: (courseSeq: number) => ['course', courseSeq] as const,
+
+  /** 편성 후보 지점 — 코스를 고쳐도 사업장의 후보는 안 바뀐다 */
+  classificationPoints: (siteSeq: number) => ['course-point-candidates', siteSeq] as const,
+
+  /** 코스 순찰이력 — 🔴 기간이 키에 들어간다 */
+  history: (siteSeq: number, courseSeq: number, range: { fromDt: string; toDt: string }) =>
+    ['course-history', siteSeq, { courseSeq, ...range }] as const,
+
+  uncheckedCount: (siteSeq: number, courseSeq: number, range: { fromDt: string; toDt: string }) =>
+    ['course-unchecked-count', siteSeq, { courseSeq, ...range }] as const,
+}
+```
+
+🔴 **이력 루트를 `detail` 과 분리한 이유**: 코스를 수정해도 **과거 순찰 기록은 바뀌지
+않는다.** 같은 루트에 두면 편성을 한 번 고칠 때마다 30일치 이력을 다시 받는다.
+(반대로 편성을 바꿔도 지난 이력의 `pointCount` 는 **그대로**다 — 그때의 편성이기 때문.)
+
+🔴 **기간을 키에 넣는 이유**: 빠지면 30일 조회와 다른 기간 조회가 **같은 캐시를 덮어쓴다.**
+
+⚠️ **기간 객체는 `useMemo` 로 고정해야 한다.** `recentRange()` 를 렌더마다 호출하면
+객체 **신원**이 매번 달라져 키가 바뀌고 **조회가 멈추지 않는다**(구현 중 실제로 겪었다).
+
+### 8-5. 변경계 응답을 신뢰하지 않는다
 
 실측(`api-spec.md` §5-1-B): 변경계 성공 응답은 `data: true` 뿐이고 **생성된 ID 를 주지
 않는다.** 따라서 mutation 의 반환을 `void` 로 두고 **성공 후 무효화해 다시 읽는다.**

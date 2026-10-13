@@ -205,6 +205,32 @@ describe('CoursePointEditor — 저장 바디', () => {
     expect(captured[0]).toMatchObject({ useYn: true, switchYn: false })
   })
 
+  it('🔴 저장 중에는 저장·취소가 잠긴다 — 연타가 전량 전송을 중복으로 만들지 않게 (T375)', async () => {
+    // 🔴 `UpdateCourse` 는 **전량 교체**(B-25)다. 두 번 나가면 두 번째 요청이 첫 번째의
+    // 결과를 모르는 상태로 같은 바디를 또 밀어 넣는다 — 지점 추가·제거가 섞인 저장에서
+    // 무엇이 남을지 보장할 수 없다
+    const user = userEvent.setup()
+    const requests: number[] = []
+    server.use(
+      http.put(UPDATE_COURSE_PATH, async () => {
+        requests.push(1)
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        return HttpResponse.json({ message: '', data: true, code: 200 })
+      })
+    )
+    renderEditor()
+
+    await user.click(screen.getByRole('button', { name: '주차장 편성 제거' }))
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    // 요청이 떠 있는 동안에는 글자부터 바뀌고 두 버튼이 모두 꺼진다
+    const saving = screen.getByRole('button', { name: '저장 중…' })
+    expect(saving).toBeDisabled()
+    expect(screen.getByRole('button', { name: '취소' })).toBeDisabled()
+
+    await waitFor(() => expect(requests).toHaveLength(1))
+  })
+
   it('성공하면 편집 모드를 닫는다', async () => {
     const user = userEvent.setup()
     captureBody()

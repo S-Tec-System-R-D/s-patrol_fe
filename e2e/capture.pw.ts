@@ -12,7 +12,14 @@ import { test, expect, type Page } from '@playwright/test'
  * `dev.role` 스왑도 함께 사라졌다 — 권한은 토큰의 role 클레임이 정한다.
  */
 
-const OUT = 'docs/ui-current'
+/**
+ * 산출물 루트. 🔴 **덮어쓰기 전에 다른 곳에 먼저 찍어 비교하는 것이 규칙**이라
+ * (`docs/ui-current/README.md` 변경 이력 2026-10-10) 환경변수로 뺐다. 그 전에는 매번
+ * 이 줄을 손으로 고쳤고, 되돌리는 것을 잊으면 baseline 이 엉뚱한 곳에 쌓인다.
+ *
+ * `CAPTURE_OUT=<dir> npm run capture`
+ */
+const OUT = process.env.CAPTURE_OUT ?? 'docs/ui-current'
 
 /**
  * ASP.NET role 클레임 키 — `src/features/auth/types/claims.ts`의 `MS_ROLE_CLAIM`과 같은 값.
@@ -115,10 +122,24 @@ test('순찰이력 — 지점 이력', async ({ page }) => {
   await shoot(page, '현장/patrol-points--목록')
 })
 
-test('순찰코스 관리', async ({ page }) => {
-  // ZonesPage는 첫 코스를 자동 선택한다 → 경로 다이어그램이 기본 노출
+/**
+ * 🔴 **`spec 023` 에서 1장 → 2장이 됐다.** 좌/우 마스터-디테일이 **목록 페이지 + 상세
+ * 페이지**로 분리돼(지점과 같은 구조) 한 화면에 담기지 않는다. baseline 파일명도 바뀐다
+ * (`zones--목록+다이어그램` → `zones--목록` · `zones--상세`).
+ */
+test('순찰코스 목록', async ({ page }) => {
   await open(page, '/zones')
-  await shoot(page, '현장/zones--목록+다이어그램')
+  await shoot(page, '현장/zones--목록')
+})
+
+test('순찰코스 상세', async ({ page }) => {
+  // courseSeq 1(A동 순찰코스) — 지점 3개 + 순찰 이력 있음. 다이어그램·지점 순서·기본정보·
+  // KPI·최근 순찰 기록·이상 이력이 **모두 채워지는** 코스다(mock seed 가 예외를 몰아 둔 곳)
+  await open(page, '/zones/1')
+  // 🔴 이력 2종(`GetCourseHistory`·`GetPointHistory`)이 상세 조회 **뒤에** 뜬다 —
+  // KPI·최근 순찰 기록이 스켈레톤인 채로 찍히지 않게 한 번 더 기다린다
+  await page.waitForTimeout(600)
+  await shoot(page, '현장/zones--상세')
 })
 
 /**

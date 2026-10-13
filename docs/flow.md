@@ -100,9 +100,11 @@ flowchart TB
         Patrol --> PP["/patrol/points<br/>지점 이력"]
         PZ <-->|탭| PP
 
-        ZP --> Z["/zones<br/>순찰코스 목록·설정"]
+        ZP --> Z["/zones<br/>순찰코스 목록"]
         ZP --> P["/points<br/>순찰지점 목록"]
+        Z --> ZD["/zones/:courseSeq<br/>코스 상세"]
         P --> PD["/points/:pointSeq<br/>지점 상세"]
+        PD -- "소속 코스 행" --> ZD
         Z <-->|탭| P
     end
 
@@ -114,6 +116,8 @@ flowchart TB
 - `/patrol/zones` ↔ `/patrol/points` — 순찰이력 탭(`PatrolLayout`)
 - `/zones` ↔ `/points` — 구역·지점 탭(`CourseTabs`)
 - `/points` → `/points/:pointSeq` — 행 클릭으로 상세 진입(`spec 027`). 🔴 **상세가 라우트라 새로고침·딥링크·뒤로가기가 보존된다** — 027 전에는 선택이 `useState` 였다. 상세의 브레드크럼 첫 조각이 목록 복귀 링크를 겸한다
+- `/zones` → `/zones/:courseSeq` — **같은 구조**(`spec 023`). ⚠️ 코스 상세는 **못 찾았을 때 브레드크럼만으로 부족**했다 — 할 수 있는 일이 하나도 없는 화면에서는 브레드크럼이 빠져나갈 길로 읽히지 않아(브라우저 확인 2026-10-12) 안내 블록 **안에** `코스 목록으로` 링크를 따로 둔다
+- `/points/:pointSeq` → `/zones/:courseSeq` — **지점 상세의 소속 코스 행이 링크**다(`spec 023` Phase 5). 🔴 코스 활성여부 점을 채우는 대신 **링크로 보낸다** — 점 하나를 채우려면 지점 상세마다 코스 목록 조회(+페이징)가 붙는데, 코스 상세에 가면 활성여부·편성·최근 순찰을 다 볼 수 있다
 
 ### 1-2. 화면 간 이동 (모달·액션 포함)
 
@@ -122,11 +126,15 @@ flowchart TB
 ```mermaid
 %%{init: {'theme':'dark'}}%%
 flowchart LR
-    Z["/zones<br/>코스 목록"] -- 코스 선택 --> ZD[코스 상세 패널]
-    ZD -- "코스 추가/수정 버튼" --> ZForm[(코스 폼<br/>모달)]
-    ZD -- "지점 추가" --> APAdd[(코스 내 지점 추가<br/>모달)]
-    ZD -- "지점 행 수정" --> APEdit[(지점 시간·활성<br/>모달)]
-    ZD -- "지점 행 삭제" --> Conf1[(확인<br/>모달)]
+    Z["/zones<br/>코스 목록"] -- "행 클릭" --> ZD["/zones/:courseSeq<br/>코스 상세"]
+    Z -- "코스 생성" --> ZAdd[(코스 폼<br/>모달)]
+    ZD -- "기본정보 수정 아이콘" --> ZForm[(코스 폼<br/>모달)]
+    ZD -- "토글 2종" --> ZTog[(활성화·교대 확인<br/>모달)]
+    ZD -- "삭제" --> Conf1[(확인<br/>모달)]
+    ZD -- "지점 순서 편집 아이콘" --> ZEdit["편집 모드<br/>(모달 아님)"]
+    ZEdit -- "지점 추가" --> APAdd[(코스 내 지점 추가<br/>모달)]
+    ZEdit -- "드래그·구간시간·제거" --> ZEdit
+    ZEdit -- "저장" --> ZD
 
     P["/points<br/>지점 목록"] -- 지점 선택 --> PD[지점 상세 패널]
     PD -- "지점 추가/수정" --> PForm[(지점 폼<br/>모달)]

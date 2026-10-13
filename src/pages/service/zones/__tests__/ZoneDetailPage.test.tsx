@@ -92,6 +92,26 @@ describe('ZoneDetailPage', () => {
     expect(screen.getByRole('link', { name: '코스 목록으로' })).toHaveAttribute('href', '/zones')
   })
 
+  it('🔴 조회 중에 "코스를 찾을 수 없습니다" 를 보여주지 않는다 (Phase 6 T375)', async () => {
+    // 🔴 목록의 "데이터가 없습니다" 와 **같은 종류의 결함이고, 더 나쁘다** — 상세의 빈
+    // 상태는 "삭제되었거나 접근할 수 없는 코스입니다" 라고 단정한다. 조회 중에 그것이
+    // 뜨면 사용자는 **방금 지운 줄 알고** 목록으로 돌아가거나 다시 만든다
+    server.use(
+      http.get('/api/v1/Course/W/sign/GetCourseDetail', async () => {
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        return HttpResponse.json({ message: '', data: null, code: 200 })
+      })
+    )
+
+    renderPage('/zones/1')
+
+    expect(screen.queryByText('코스를 찾을 수 없습니다')).not.toBeInTheDocument()
+    expect(screen.getByText('코스 정보를 불러오는 중')).toBeInTheDocument()
+
+    // 응답이 와서 **정말 없을 때에만** 안내로 바뀐다
+    expect(await screen.findByText('코스를 찾을 수 없습니다')).toBeInTheDocument()
+  })
+
   it('🔴 숫자가 아닌 세그먼트는 조회를 시도하지 않고 안내로 끝난다', async () => {
     renderPage('/zones/abc')
 
