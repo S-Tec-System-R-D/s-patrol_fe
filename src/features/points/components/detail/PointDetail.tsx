@@ -1,9 +1,7 @@
-import { PlusIcon, QrCodeIcon } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { QrCodeIcon } from 'lucide-react'
 
 import AppDetailRow from '@/components/app/AppDetailRow'
 import { getSiteName } from '@/lib/auth/site'
-import { paths } from '@/router/paths'
 
 import ZoneRow from './ZoneRow'
 import DetailSection from './DetailSection'
@@ -72,31 +70,22 @@ const PointDetail = ({ point }: { point: PointDetailData }) => {
 
 
       <Card>
-        <div className="flex items-start justify-between gap-4">
-          <DetailSection title="소속 코스" description="이 지점이 포함된 순찰 코스입니다.">
-            {null}
-          </DetailSection>
-          {/* 🔴 **비활성 버튼을 링크로 바꿨다**(`spec 023` Phase 5, T372). 안내 문구가
-              "순찰코스 화면(준비 중)" 이었는데 023이 그 화면을 열어 **준비 중이 아니다**.
-              이름도 하는 일에 맞췄다 — 여기서 바로 넣어 주지 않고 **코스 목록으로 보낸다**.
-              여기서 바로 넣으려면 코스 선택 모달 + 코스 상세 조회 + `UpdateCourse`(전량
-              전송, B-25)로 **요청 3개**가 붙는다. 별도 작업으로 둔다. */}
-          <Link
-            to={paths.service.zones}
-            title="순찰코스 상세의 [지점 순서] 카드에서 이 지점을 편성합니다"
-            /* 한 줄 복제: `AppButton` 은 `<button>` 고정이고, 이동은 링크여야 한다
-               (새 탭·가운데 클릭) */
-            className="flex w-fit shrink-0 cursor-pointer items-center justify-center gap-2 rounded-sm border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
-          >
-            <PlusIcon size={16} strokeWidth={1.5} />
-            순찰코스에서 편성
-          </Link>
-        </div>
+        {/* 🔴 **편성 진입 버튼을 두지 않는다**(사용자 결정 2026-10-13). 027이 둔 비활성
+            `코스에 추가` → Phase 5가 `/zones` 링크로 바꿨다가 → **없앴다.** 여기서 바로
+            편성해 주지 못하는 이상(코스 선택 모달 + 상세 조회 + `UpdateCourse` 전량 전송
+            = 요청 3개) 버튼은 **"다른 데 가서 하세요" 만 말하는 자리 차지**다. 아래 코스
+            행이 이미 코스 상세로 가는 링크라 갈 길은 있다. */}
+        <DetailSection title="소속 코스" description="이 지점이 포함된 순찰 코스입니다.">
+          {null}
+        </DetailSection>
         <div className="mt-4 flex flex-col gap-2">
           {point.courseList.length === 0 ? (
+            /* 🔴 **"인증 기록이 쌓이기 시작합니다" 를 뺐다**(사용자 결정 2026-10-13) —
+               빈 상태는 **지금 무엇이 없는지**만 말하면 된다. 그 뒤에 일어날 일까지
+               설명하면 안내가 아니라 홍보가 된다 */
             <span className="text-caption text-muted-foreground">
               소속된 코스가 없습니다. 코스에 추가하면 근무자의 순찰 경로에 이 지점이
-              포함되고, 인증 기록이 쌓이기 시작합니다.
+              포함됩니다.
             </span>
           ) : (
             point.courseList.map((course) => (

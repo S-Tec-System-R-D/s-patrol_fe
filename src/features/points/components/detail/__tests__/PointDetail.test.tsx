@@ -98,12 +98,13 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
     expect(screen.getByRole('link', { name: 'A동 순찰코스' })).toHaveAttribute('href', '/zones/1')
   })
 
-  it('🔴 "편성" 은 비활성 버튼이 아니라 순찰코스로 가는 링크다 (T372)', () => {
+  it('🔴 편성 진입 버튼을 두지 않는다 (사용자 결정 2026-10-13)', () => {
     renderDetail()
 
-    // 023 이 순찰코스 화면을 열었다 — "준비 중" 안내는 더 이상 사실이 아니다
-    expect(screen.getByRole('link', { name: /순찰코스에서 편성/ })).toHaveAttribute('href', '/zones')
+    // 여기서 바로 편성해 주지 못하는 이상(요청 3개) 버튼은 "다른 데 가서 하세요" 만
+    // 말하는 자리 차지다. 코스 행 링크가 갈 길을 이미 준다
     expect(screen.queryByRole('button', { name: '코스에 추가' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /편성/ })).not.toBeInTheDocument()
   })
 
   it('설명이 비면 하이픈', () => {
@@ -117,6 +118,8 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
     renderDetail(detail({ courseList: [] }))
 
     expect(screen.getByText(/소속된 코스가 없습니다/)).toBeInTheDocument()
+    // 🔴 빈 상태는 **지금 무엇이 없는지**만 말한다 (사용자 결정 2026-10-13)
+    expect(screen.queryByText(/인증 기록이 쌓이기/)).not.toBeInTheDocument()
   })
 })
 
