@@ -33,7 +33,7 @@
 | **R** | **Redesign (현장 사이트)** | **Pretendard + OKLCH 토큰 매핑 / `ServiceLayout` + 68px `RailSidebar` + 페이지 자연 스크롤 / 공용 컴포넌트(AppPageHeader · AppFilterButton · AppPagination · AppDetailCard · AppKpiCard · 결과 뱃지 5종) / 현장 5개 화면(순찰이력·코스/지점·근무자·배치관리·공지사항) UI 전면 교체** | **A·B** |
 | **2** | 공용 컴포넌트 확충 | **AppSelect / AppDatePicker** (017에서 2종으로 재산정 — dnd-kit·첨부위젯은 수요 화면으로, 알림시트는 Phase 5로 이동. §6 참조) | B |
 | **3** | 현장 코어 △→✓ | `/login` / `/zones` 디테일 / `/points` 디테일 / `/patrol/zones` 디테일 / `/patrol/points` 신규 / Export | A·B |
-| **4** | 현장 신규 영역 ✗→✓ | `/users` / `/notice` / `/settings/keywords` | B·C |
+| **4** | 현장 신규 영역 ✗→✓ | `/users` / `/notice` / `/settings/keywords` / 🔴 **진행 중인 순찰 현황**(신규, 023 이 상태 컬럼을 뺀 근거) | B·C |
 | **5** | 본사 영역 전체 | `/admin/login` / `/admin/locations`(+상세+헬스체크) / `/admin/admins`(+할당) | A |
 | **6** | 마감 | 권한 매트릭스 검증 / 접근성 / 콘텐츠 톤 점검 / AppButton 마이그레이션 완료 / 성능 점검 / 정리 | — |
 
@@ -227,9 +227,11 @@ screens.md 진행도 △ 일괄 마무리. 위험도 A 우선.
 | 공지 목록 + 상세 | `/notice` | B | 마스터-디테일 + 첨부 표시 |
 | 공지 작성/수정/삭제 | 모달 | B | "저장 시 앱 푸시" 체크박스 |
 | 환경설정 — 키워드 | `/settings/keywords` | C | UX TBD. 후순위 가능 |
+| 🔴 **진행 중인 순찰 현황**(신규) | TBD (`/progress` 예상) | B | **사용자 결정 2026-10-12**. 이력(`/patrol/*`)은 *끝난 것*을 보는 화면이라 **지금 돌고 있는 순찰**을 둘 곳이 없었다. 🔴 **`spec 023` 이 코스 목록에서 상태 컬럼을 뺀 근거**이므로 이 항목이 사라지면 그 결정의 이유가 함께 사라진다(`screens.md` §1-2A). 재료는 있다(`eventType 0 진행중` · 지점 상태 `1 진행중`). ⚠️ **착수 전 결정 3건**: 갱신 방식(🔴 폴링·websocket 전례가 **0건** — 첫 사례가 `patterns.md` 규약이 된다) · 코스 단위인지 지점별 진행까지인지 · 진입 위치(사이드바 신규 vs `/patrol/*` 탭) |
 
 **Phase 4 종료 조건**
 - screens.md 1-4/1-5의 진행도가 모두 ✓ (키워드는 UX 확정 후).
+- §1-2A(진행 중인 순찰)는 **결정 3건이 선행**이다 — 정해지기 전에는 착수하지 않는다.
 
 ---
 
