@@ -1,11 +1,12 @@
 import { PlusIcon, QrCodeIcon } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
-import AppButton from '@/components/app/AppButton'
+import AppDetailRow from '@/components/app/AppDetailRow'
 import { getSiteName } from '@/lib/auth/site'
+import { paths } from '@/router/paths'
 
 import ZoneRow from './ZoneRow'
 import DetailSection from './DetailSection'
-import DetailRow from './DetailRow'
 import AuthMethodDisplay from './AuthMethodDisplay'
 import { PendingSection, PendingValue } from './PendingBlock'
 import { resolveAuthMethodLabel, toAuthMethodLabel } from '../../lib/authMethod'
@@ -50,18 +51,18 @@ const PointDetail = ({ point }: { point: PointDetailData }) => {
           <div className="grid grid-cols-1 gap-x-10 xl:grid-cols-2">
             {/* 제목과 중복이지만 **의도적으로 둔다**(사용자 결정 2026-10-08) — 기본정보
                 블록만 따로 읽거나 캡쳐할 때 이름이 없으면 무엇의 정보인지 알 수 없다 */}
-            <DetailRow label="지점명" value={point.name} />
+            <AppDetailRow variant="fixed" label="지점명" value={point.name} />
             <PendingValue label="지점 코드" />
 
             {/* 사업장명은 서버 응답이 아니라 **선택 결과**에서 온다(spec 021) */}
-            <DetailRow label="사업장" value={getSiteName() ?? '-'} />
+            <AppDetailRow variant="fixed" label="사업장" value={getSiteName() ?? '-'} />
             <PendingValue label="상세 위치" />
 
-            <DetailRow label="설명" value={point.memo?.trim() || '-'} />
+            <AppDetailRow variant="fixed" label="설명" value={point.memo?.trim() || '-'} />
             {/* 🔴 인증 수단을 기본정보로 녹였다(사용자 결정 2026-10-10) — 값 하나뿐인
                 섹션을 따로 둘 이유가 없다. 우측 카드는 **수단별 자격증명**을 맡는다.
                 ⚠️ "최근 순찰" 은 통계 칸에 있어 여기서 뺐다(같은 값 두 번) */}
-            <DetailRow label="인증수단" value={<AuthMethodDisplay value={method} />} />
+            <AppDetailRow variant="fixed" label="인증수단" value={<AuthMethodDisplay value={method} />} />
 
             <PendingValue label="등록" />
             <PendingValue label="최근 수정" />
@@ -75,17 +76,21 @@ const PointDetail = ({ point }: { point: PointDetailData }) => {
           <DetailSection title="소속 코스" description="이 지점이 포함된 순찰 코스입니다.">
             {null}
           </DetailSection>
-          {/* 🔴 비활성 + 사유. 코스 편성 API 는 `spec 023` 이다 — 버튼을 아예 빼면
-              "그런 기능이 없는 것" 으로 읽히고, 누를 수 있게 두면 아무 일도 안 일어난다 */}
-          <AppButton
-            icon={PlusIcon}
-            variant="sub"
-            className="bg-card"
-            disabled
-            title="코스 편성은 순찰코스 화면(준비 중)에서 지원됩니다"
+          {/* 🔴 **비활성 버튼을 링크로 바꿨다**(`spec 023` Phase 5, T372). 안내 문구가
+              "순찰코스 화면(준비 중)" 이었는데 023이 그 화면을 열어 **준비 중이 아니다**.
+              이름도 하는 일에 맞췄다 — 여기서 바로 넣어 주지 않고 **코스 목록으로 보낸다**.
+              여기서 바로 넣으려면 코스 선택 모달 + 코스 상세 조회 + `UpdateCourse`(전량
+              전송, B-25)로 **요청 3개**가 붙는다. 별도 작업으로 둔다. */}
+          <Link
+            to={paths.service.zones}
+            title="순찰코스 상세의 [지점 순서] 카드에서 이 지점을 편성합니다"
+            /* 한 줄 복제: `AppButton` 은 `<button>` 고정이고, 이동은 링크여야 한다
+               (새 탭·가운데 클릭) */
+            className="flex w-fit shrink-0 cursor-pointer items-center justify-center gap-2 rounded-sm border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
           >
-            코스에 추가
-          </AppButton>
+            <PlusIcon size={16} strokeWidth={1.5} />
+            순찰코스에서 편성
+          </Link>
         </div>
         <div className="mt-4 flex flex-col gap-2">
           {point.courseList.length === 0 ? (
@@ -95,7 +100,7 @@ const PointDetail = ({ point }: { point: PointDetailData }) => {
             </span>
           ) : (
             point.courseList.map((course) => (
-              <ZoneRow key={course.courseSeq} title={course.courseName} />
+              <ZoneRow key={course.courseSeq} courseSeq={course.courseSeq} title={course.courseName} />
             ))
           )}
         </div>
@@ -127,7 +132,7 @@ export const PointCredentialCard = ({ point }: { point: PointDetailData }) => {
       <Card>
         <DetailSection title="NFC 태그" description="근무자 단말이 이 태그를 읽어 인증합니다.">
           {point.nfcTagId ? (
-            <DetailRow label="TAG ID" value={<span className="font-mono">{point.nfcTagId}</span>} />
+            <AppDetailRow variant="fixed" label="TAG ID" value={<span className="font-mono">{point.nfcTagId}</span>} />
           ) : (
             /* ⚠️ 서버가 NFC 지점의 TAG ID 를 강제하지 않는다(B-13) — 실 데이터에 존재한다 */
             <span className="text-caption text-muted-foreground">

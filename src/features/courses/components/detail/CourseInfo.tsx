@@ -1,5 +1,6 @@
 import { SquarePenIcon } from 'lucide-react'
 
+import AppDetailRow from '@/components/app/AppDetailRow'
 import AppIconButton from '@/components/app/AppIconButton'
 import { Switch } from '@/components/ui/switch'
 import { getSiteName } from '@/lib/auth/site'
@@ -31,22 +32,6 @@ import type { CourseToggleKind } from './CourseToggleDialog'
  * 🔴 **옵티미스틱이 아니다** — 스위치는 `course` 값만 따르므로 재조회 전까지 **이전
  * 위치에 남아 있는 것이 정상**이다(`CourseToggleDialog` 주석).
  */
-
-/**
- * 라벨 고정폭 + 값 — 027 이 지점 상세에서 `justify-between` 을 버린 것과 같은 이유다.
- * 전체 폭 페이지에서 양끝 정렬을 하면 라벨과 값 사이가 수백 px 벌어져 눈이 못 따라간다.
- *
- * ⚠️ **공용(`components/app/AppDetailRow`)을 쓰지 않았다** — 그쪽이 바로 그
- * `justify-between` 판이다. `features/points` 의 `DetailRow` 와 모양이 같지만 **남의
- * feature 내부를 가져다 쓰지 않고** 3줄을 복제했다(A6). 🔴 이제 **같은 행이 두 feature
- * 에 생겼다** — T373(공용 셸 승격 판단)의 1번 증거다.
- */
-const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="flex items-start gap-4 border-b py-2">
-    <span className="w-24 shrink-0 text-muted-foreground">{label}</span>
-    <span className="min-w-0 flex-1 break-words">{value}</span>
-  </div>
-)
 
 /**
  * 토글 행. 🔴 **글자를 함께 둔다** — 스위치 위치(색·좌우)만으로 상태를 전달하지 않는다
@@ -135,8 +120,9 @@ const CourseInfo = ({ course, onRequestToggle, onEdit, isSaving }: CourseInfoPro
         {/* 🔴 **코스명 행을 두지 않는다** — 페이지 제목이 이미 코스명이다. 같은 값이 한
             화면에 두 번 있으면 사용자는 둘이 다른 값인지 확인하려 눈을 왕복한다(설명도
             같은 이유로 제목 아래에서 뺐다). 수정 모달에는 당연히 들어간다 */}
-        <InfoRow label="사업장" value={siteName ?? '—'} />
-        <InfoRow
+        <AppDetailRow variant="fixed" label="사업장" value={siteName ?? '—'} />
+        <AppDetailRow
+          variant="fixed"
           label="설명"
           value={
             course.memo?.trim() ? (
@@ -147,11 +133,13 @@ const CourseInfo = ({ course, onRequestToggle, onEdit, isSaving }: CourseInfoPro
             )
           }
         />
-        <InfoRow
+        <AppDetailRow
+          variant="fixed"
           label="총 소요시간"
           value={<span className="tabular-nums">{course.totalMin}분</span>}
         />
-        <InfoRow
+        <AppDetailRow
+          variant="fixed"
           label="교대 허용"
           value={
             <ToggleValue
@@ -164,7 +152,8 @@ const CourseInfo = ({ course, onRequestToggle, onEdit, isSaving }: CourseInfoPro
             />
           }
         />
-        <InfoRow
+        <AppDetailRow
+          variant="fixed"
           label="코스 활성화"
           value={
             <ToggleValue

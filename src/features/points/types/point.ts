@@ -3,17 +3,28 @@
  *
  * 🔴 **구 mock 타입과 서버 실측 타입이 나란히 존재한다.** `spec 022`가 `/points`만
  * 전환하고 `features/zone`(코스 관리)은 `spec 023` 범위로 남겼기 때문이다.
- * 아래 "구 mock 타입" 블록은 023에서 제거한다 — 남은 참조 **2곳**(2026-10-11 갱신):
- *   - `features/patrol-points/types/PatrolPoint.ts:1`  (`PointAuthenticationMethod`) → 023 Phase 5(T370)
- *   - `features/zone/types/point.ts:1`                 (`ZonePointType extends PointType`) → 023 Phase 3(T357)
+ *
+ * 🔴 **"023에서 제거" 는 틀린 계획이었다 (2026-10-13 정정, T370).** `PointType` 블록은
+ * **지울 수 없다** — 바로 아래 ⚠️ 처럼 `mock/pointData.ts` 가 MSW 의 dev 데이터 출처이고,
+ * 그 파일이 이 타입을 쓴다. 지우려면 mock 데이터 전체를 들어내야 하는데, 그건 `dev` 모드를
+ * 없애는 일이다.
+ *
+ * 남은 **외부** 참조는 **1곳**뿐이다(2026-10-13 실측):
+ *   - `features/patrol-points/types/PatrolPoint.ts:1` (`PointAuthenticationMethod`)
+ *
+ * 이 1곳도 **지금 끊지 않는다.** 끊는 방법은 `'QR' | 'NFC'` 를 `patrol-points` 에 복제하는
+ * 것인데, `/patrol/*` 화면은 **`spec 024`·`025` 가 서버 API 로 전환하면서 mock 타입이 통째로
+ * 사라질** 자리다(023이 `features/zone` 을 지운 것과 같은 경로). 지금 복제하면 024에서 다시
+ * 지울 코드를 **더하는** 셈이다(A3).
  *
  * ✅ `features/zone/form/AddPointForm.tsx` 는 **023 Phase 2 에서 삭제됐다**(mock 셸 제거).
+ * ✅ `features/zone/types/point.ts` 는 **023 Phase 3 에서 삭제됐다**(T357).
  * ⚠️ `mock/pointData.ts` 자체는 남는다 — MSW 핸들러(`handlers/points.ts`·`handlers/courses.ts`)가
  * 서버 스키마로 변환해 쓰는 **dev 데이터 출처**다.
  */
 
 // ─────────────────────────────────────────────
-// 구 mock 타입 — 023에서 제거 (위 참조 3곳 정리 후)
+// 구 mock 타입 — **남는다**(위 주석). MSW dev 데이터(`mock/pointData.ts`)의 타입이다
 // ─────────────────────────────────────────────
 
 export interface PointType {

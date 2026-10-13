@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
 import PointDetail, { PointCredentialCard } from '../PointDetail'
@@ -30,7 +31,13 @@ const detail = (overrides: Partial<PointDetailData> = {}): PointDetailData => ({
   ...overrides,
 })
 
-const renderDetail = (point = detail()) => render(<PointDetail point={point} />)
+// 소속 코스 행이 `Link` 가 되면서(T371·T372) 라우터가 필요하다
+const renderDetail = (point = detail()) =>
+  render(
+    <MemoryRouter>
+      <PointDetail point={point} />
+    </MemoryRouter>
+  )
 
 
 describe('PointDetail — 레이아웃 결정(027)', () => {
@@ -85,10 +92,18 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
     expect(screen.getAllByText('준비 중')).toHaveLength(4)
   })
 
-  it('🔴 "코스에 추가" 는 비활성이다 — 코스 편성 API 는 spec 023', () => {
+  it('🔴 소속 코스는 코스 상세로 가는 링크다 — 활성여부 점을 대신한다 (T371)', () => {
     renderDetail()
 
-    expect(screen.getByRole('button', { name: '코스에 추가' })).toBeDisabled()
+    expect(screen.getByRole('link', { name: 'A동 순찰코스' })).toHaveAttribute('href', '/zones/1')
+  })
+
+  it('🔴 "편성" 은 비활성 버튼이 아니라 순찰코스로 가는 링크다 (T372)', () => {
+    renderDetail()
+
+    // 023 이 순찰코스 화면을 열었다 — "준비 중" 안내는 더 이상 사실이 아니다
+    expect(screen.getByRole('link', { name: /순찰코스에서 편성/ })).toHaveAttribute('href', '/zones')
+    expect(screen.queryByRole('button', { name: '코스에 추가' })).not.toBeInTheDocument()
   })
 
   it('설명이 비면 하이픈', () => {

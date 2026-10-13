@@ -1,21 +1,34 @@
+import { ChevronRightIcon } from 'lucide-react'
+import { Link } from 'react-router-dom'
+
+import { paths } from '@/router/paths'
+
 /**
- * 소속 코스 1행.
+ * 소속 코스 1행 — **코스 상세로 가는 링크** (`spec 023` Phase 5, T371·T372).
  *
- * `isActive` 는 **선택**이다. `DetailPoint.courseList` 가 `{ courseSeq, courseName }` 만
- * 주고 코스 활성여부를 주지 않아(실측), 모르는 값을 `true` 로 채워 활성인 것처럼
- * 보이게 하지 않는다(A1). 생략하면 중립(테두리) 점으로 그린다.
- * 코스 활성여부는 코스 API 전환(`spec 023`)에서 채운다.
+ * 🔴 **활성여부 점을 뺐다**(2026-10-13). `DetailPoint.courseList` 는
+ * `{ courseSeq, courseName }` 만 주고(실측) 코스 활성여부를 주지 않아, 점이 **항상 중립**
+ * 으로만 그려지고 있었다 — 아무것도 뜻하지 않는 표시다(027 지적). 채우려면 지점 상세마다
+ * `GetCourseList` 를 추가로 돌려 `courseSeq` 로 맞춰야 하고, 사업장 코스가 많으면 **페이징**
+ * 까지 돌아야 전량이 모인다. 요청 1건을 더 쓰는 값이 아니다.
+ *
+ * 🔴 **대신 링크를 준다.** 코스 상세(`/zones/:courseSeq`)에 가면 활성여부·편성·최근 순찰이
+ * 다 있다 — 점 하나로 요약하는 것보다 **많이** 알려 준다. 023이 코스 상세를 열었기 때문에
+ * 이제 갈 곳이 생겼다.
  */
-const ZoneRow = ({ title, isActive }: { title: string; isActive?: boolean }) => {
+const ZoneRow = ({ courseSeq, title }: { courseSeq: number; title: string }) => {
   return (
-    <div className="flex items-center gap-4 py-2 border-b">
-      <span
-        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-          isActive ? 'bg-point' : 'border border-muted-foreground/40'
-        }`}
+    <Link
+      to={paths.service.courseDetail(courseSeq)}
+      className="group flex items-center justify-between gap-4 border-b py-2 hover:text-point"
+    >
+      <span className="min-w-0 truncate">{title}</span>
+      <ChevronRightIcon
+        size={14}
+        strokeWidth={1.75}
+        className="shrink-0 text-muted-foreground group-hover:text-point"
       />
-      <span>{title}</span>
-    </div>
+    </Link>
   )
 }
 
