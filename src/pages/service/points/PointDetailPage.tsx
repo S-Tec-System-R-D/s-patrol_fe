@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, isValid, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
-import { ChevronRightIcon, HistoryIcon, MapPinIcon, Trash2Icon } from 'lucide-react'
+import { ChevronRightIcon, MapPinIcon, Trash2Icon } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
@@ -11,8 +11,10 @@ import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
 import AppPageHeader from '@/components/app/AppPageHeader'
 import { deletePoint } from '@/features/points/api/deletePoint'
-import PointDetail, { PointCredentialCard } from '@/features/points/components/detail/PointDetail'
-import { PendingSection } from '@/features/points/components/detail/PendingBlock'
+import PointDetail, {
+  PointCourseList,
+  PointCredentialCard,
+} from '@/features/points/components/detail/PointDetail'
 import PointPatrolLog from '@/features/points/components/detail/PointPatrolLog'
 import PointStats from '@/features/points/components/detail/PointStats'
 import { usePointHistory } from '@/features/points/hooks/usePointHistory'
@@ -162,22 +164,17 @@ const PointDetailPage = () => {
             courseCount={point.courseList.length}
           />
 
-          {/* 좌 2/3 (정보·코스·기록) / 우 1/3 (인증수단·변경이력·형제지점) — xl 미만 1단 */}
+          {/* **좌 2/3** 소속 코스·순찰 기록 / **우 1/3** 기본정보·자격증명 — `xl` 미만 1단.
+              🔴 **기본정보가 우측으로 갔다**(사용자 결정 2026-10-13). 변경 이력을 치우면서
+              우측이 자격증명 하나만 남아 비어 보였고, 기본정보와 자격증명은 **같은 지점을
+              설명하는 값**이라 한 열에 모이는 편이 읽힌다. 좌측은 **시간이 쌓이는 것**
+              (코스 편성·순찰 기록)이 맡는다.
+              🔴 **좁은 폭에서 순서를 뒤집는다**(`order`). 1단이 되면 DOM 순서대로 소속
+              코스가 맨 위로 오는데, "이 지점이 무엇인가" 보다 "어느 코스에 속하나" 가
+              먼저 나오는 셈이다 — `xl` 미만에서는 기본정보·자격증명을 앞세운다 */}
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <div className="flex flex-col gap-4 xl:col-span-2">
-              <PointDetail point={point} onEdit={() => setEditOpen(true)} />
-
-              {/* 🔴 모달은 페이지가 들고 있다 — 카드는 **열어 달라고 요청만** 한다
-                  (코스 상세 `CourseInfo` 와 같은 조립). 성공해야 닫는다 — 먼저 닫으면
-                  실패 시 입력값이 사라진다 */}
-              <AppDialog
-                open={editOpen}
-                onOpenChange={setEditOpen}
-                title="지점 수정"
-                description="지점 정보를 수정할 수 있습니다."
-              >
-                <EditPointForm point={point} onSuccess={() => setEditOpen(false)} />
-              </AppDialog>
+            <div className="flex flex-col gap-4 xl:col-span-2 xl:order-1 order-2">
+              <PointCourseList point={point} />
               <PointPatrolLog
                 summary={summary}
                 rows={historyRows}
@@ -185,17 +182,24 @@ const PointDetailPage = () => {
               />
             </div>
 
-            <div className="flex flex-col gap-4">
-              {/* 인증수단에 따라 NFC 태그(실 데이터) 또는 QR placeholder 로 갈린다 */}
-              <PointCredentialCard point={point} />
+            <div className="flex flex-col gap-4 xl:order-2 order-1">
+              <PointDetail point={point} onEdit={() => setEditOpen(true)} />
 
-              {/* 🔴 지우지 않고 자리를 비워 둔다(OQ-027-E) */}
-              <PendingSection
-                title="변경 이력"
-                icon={HistoryIcon}
-                reason="누가 무엇을 언제 바꿨는지 보여주려면 변경 이력 API가 필요합니다. 서버에 아직 없습니다(B-22)."
-              />
+              {/* 인증수단 전환 스위치 + 현재 수단의 자격증명(QR 내려받기 / NFC 태그) */}
+              <PointCredentialCard point={point} />
             </div>
+
+            {/* 🔴 모달은 페이지가 들고 있다 — 카드는 **열어 달라고 요청만** 한다
+                (코스 상세 `CourseInfo` 와 같은 조립). 성공해야 닫는다 — 먼저 닫으면
+                실패 시 입력값이 사라진다 */}
+            <AppDialog
+              open={editOpen}
+              onOpenChange={setEditOpen}
+              title="지점 수정"
+              description="지점 정보를 수정할 수 있습니다."
+            >
+              <EditPointForm point={point} onSuccess={() => setEditOpen(false)} />
+            </AppDialog>
           </div>
         </>
       ) : detail.isPending && pointSeq !== null ? (

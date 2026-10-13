@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
-import PointDetail, { PointCredentialCard } from '../PointDetail'
+import PointDetail, { PointCourseList, PointCredentialCard } from '../PointDetail'
 import type { PointDetail as PointDetailData } from '../../../types'
 
 /**
@@ -37,6 +37,14 @@ const renderDetail = (point = detail()) =>
   render(
     <MemoryRouter>
       <PointDetail point={point} />
+    </MemoryRouter>
+  )
+
+/** `spec 029` — 소속 코스가 기본정보에서 떨어져 나와 **좌측 열**로 갔다 */
+const renderCourseList = (point = detail()) =>
+  render(
+    <MemoryRouter>
+      <PointCourseList point={point} />
     </MemoryRouter>
   )
 
@@ -76,25 +84,37 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
     expect(screen.queryByText('인증 수단')).not.toBeInTheDocument()
   })
 
-  it('🔴 본문은 기본정보 · 소속 코스 2카드다', () => {
+  it('🔴 기본정보 카드는 **기본정보만** 담는다 — 소속 코스는 좌측 열로 갔다 (spec 029)', () => {
     renderDetail()
 
     expect(screen.getByText('기본정보')).toBeInTheDocument()
-    expect(screen.getByText('소속 코스')).toBeInTheDocument()
+    // 기본정보·자격증명은 "이 지점이 무엇인가", 소속 코스·순찰 기록은 "시간이 쌓이는 것"
+    expect(screen.queryByText('소속 코스')).not.toBeInTheDocument()
   })
 
-  it('🔴 기본정보는 8칸이고 그중 4칸이 placeholder 다 (B-19·B-20·B-21)', () => {
+  it('🔴 placeholder 4개를 치우고 **좌표**를 넣었다 (spec 029)', () => {
     renderDetail()
 
-    for (const label of ['지점명', '지점 코드', '사업장', '상세 위치', '설명', '인증수단', '등록', '최근 수정']) {
+    for (const label of ['지점명', '사업장', '좌표', '설명', '인증수단']) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
-    // 점선 + "준비 중" — 빈 값(`-`)과 구별된다
-    expect(screen.getAllByText('준비 중')).toHaveLength(4)
+    // 지점 코드·등록·최근 수정은 뺐다 — 서버에 없고 쓰임도 없다(B-19 철회)
+    for (const gone of ['지점 코드', '상세 위치', '등록', '최근 수정']) {
+      expect(screen.queryByText(gone)).not.toBeInTheDocument()
+    }
+    expect(screen.queryByText('준비 중')).not.toBeInTheDocument()
+  })
+
+  it('🔴 좌표가 없으면 `-` 다 — 위도만 있는 좌표는 지도에 찍을 수 없다 (spec 029)', () => {
+    renderDetail(detail({ gpsLat: null, gpsLng: null, memo: '정문 CCTV 앞' }))
+
+    // 🔴 라벨에서 행을 찾아 **그 행의 값**을 본다 — 화면에 `-` 는 여럿 있을 수 있다
+    expect(screen.getByText('좌표').parentElement).toHaveTextContent('-')
+    expect(screen.queryByText(/\d+\.\d{4}/)).not.toBeInTheDocument()
   })
 
   it('🔴 소속 코스는 코스 상세로 가는 링크다 — 활성여부 점을 대신한다 (T371)', () => {
-    renderDetail()
+    renderCourseList()
 
     expect(screen.getByRole('link', { name: 'A동 순찰코스' })).toHaveAttribute('href', '/zones/1')
   })
@@ -116,7 +136,7 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
   })
 
   it('소속 코스가 0건이면 안내를 보여준다', () => {
-    renderDetail(detail({ courseList: [] }))
+    renderCourseList(detail({ courseList: [] }))
 
     expect(screen.getByText(/소속된 코스가 없습니다/)).toBeInTheDocument()
     // 🔴 빈 상태는 **지금 무엇이 없는지**만 말한다 (사용자 결정 2026-10-13)
@@ -154,11 +174,40 @@ describe('PointCredentialCard — 인증수단별 분기', () => {
     expect(screen.getByText(/태그 ID가 등록되지 않았습니다/)).toBeInTheDocument()
   })
 
-  it('QR 지점은 placeholder 다 — 발행 메타가 없고(B-23) 생성은 별도 작업(OQ-022-D)', () => {
-    renderCard(detail({ authMethod: 9, authMethodName: 'QR' }))
+  it('🔴 QR 지점은 **내려받기 버튼**을 준다 — placeholder 가 아니다 (spec 029)', () => {
+    // 027 은 "발행 메타가 없다"(B-23)를 근거로 비워 뒀는데, **식별자는 있었다**
+    // (`DetailPoint.qrCode`, 실측 2026-10-13). 없는 것은 발행일·버전뿐이다.
+    renderCard(detail({ authMethod: 9, authMethodName: 'QR', qrCode: 'STSP1:6:19:1786000770:sig' }))
 
     expect(screen.getByText('QR 코드')).toBeInTheDocument()
-    expect(screen.getByText('준비 중')).toBeInTheDocument()
+    expect(screen.queryByText('준비 중')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /QR 코드 내려받기/ })).toBeInTheDocument()
+  })
+
+  it('🔴🔴 QR 내용을 화면에 노출하지 않는다 — 화면을 찍어 현장 밖에서 인증할 수 있다', () => {
+    // 사용자 결정 2026-10-13. 이미지도, **식별자 문자열도** 보여주지 않는다 —
+    // 그 문자열이 곧 QR 의 내용이라 원문을 적으면 숨긴 의미가 없다
+    renderCard(detail({ authMethod: 9, authMethodName: 'QR', qrCode: 'STSP1:6:19:1786000770:sig' }))
+
+    expect(screen.queryByText('STSP1:6:19:1786000770:sig')).not.toBeInTheDocument()
+    expect(screen.getByText(/보안상 화면에는 표시하지 않습니다/)).toBeInTheDocument()
+  })
+
+  it('🔴 `qrCode` 가 비면 "준비 중" 이 아니라 **이상 상태**다 (spec 029)', () => {
+    // 생성 시 서버가 자동 발급한다(실측) — 비어 있다면 기능이 없는 게 아니라
+    // 그 지점이 **현장에서 인증되지 않는다**는 뜻이다
+    renderCard(detail({ authMethod: 9, authMethodName: 'QR', qrCode: null }))
+
+    expect(screen.getByText('QR 코드가 발급되지 않았습니다.')).toBeInTheDocument()
+    expect(screen.getByText(/현장에서 인증할 수 없습니다/)).toBeInTheDocument()
+  })
+
+  it('🔴 재발행 버튼을 만들지 않았다 — reissueQrYn 이 동작하지 않는다 (B-37)', () => {
+    renderCard(detail({ authMethod: 9, authMethodName: 'QR', qrCode: 'STSP1:6:19:1:sig' }))
+
+    // 누르면 성공 토스트가 뜨는데 코드는 그대로인, 가장 나쁜 종류의 버튼이 된다
+    expect(screen.queryByRole('button', { name: /재발행/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /다운로드|인쇄/ })).not.toBeInTheDocument()
   })
 
   it('🔴 미실측 인증수단 코드면 안내 문구를 보여준다', () => {

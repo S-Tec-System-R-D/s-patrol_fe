@@ -279,21 +279,34 @@ describe('PointDetailPage — 상세 확장(Phase 3)', () => {
     renderAt('/points/3')
 
     expect(await screen.findByText('순찰 기록이 없습니다')).toBeInTheDocument()
-    // 기능은 있고 데이터가 없는 것이므로 "준비 중" 이 아니다
-    const pendings = screen.getAllByText('준비 중')
-    expect(pendings.length).toBeGreaterThan(0) // 다른 섹션의 placeholder 는 있다
+    // 기능은 있고 데이터가 없는 것이므로 "준비 중" 이 아니다.
+    // 🔴 `spec 029` 에서 **화면의 placeholder 가 전부 사라졌다** — 변경 이력은 치웠고
+    //    기본정보 4칸은 좌표로 대체·제거됐다. 이제 "준비 중" 은 화면에 없다
+    expect(screen.queryByText('준비 중')).not.toBeInTheDocument()
   })
 
-  it('🔴 변경 이력·QR 섹션이 placeholder 로 남아 있다 — 지우지 않았다(OQ-027-E)', async () => {
+  it('🔴 변경 이력 섹션을 제거했다 — OQ-027-E 종결 (spec 029)', async () => {
     renderAt('/points/1')
 
     await screen.findByRole('heading', { name: '정문 입구' })
-    expect(screen.getByText('변경 이력')).toBeInTheDocument()
-    // 지점 1은 QR 이라 자격증명 카드가 QR placeholder 로 그려진다
+    // API(B-22)가 없고 생길 일정도 없다. 언제 풀릴지 모르는 빈 카드가 화면 1/3 을
+    // 차지하는 쪽이 더 나쁘다(사용자 결정 2026-10-13)
+    expect(screen.queryByText('변경 이력')).not.toBeInTheDocument()
+    // 지점 1은 QR 이라 자격증명 카드가 **실물 QR** 로 그려진다
     expect(screen.getByText('QR 코드')).toBeInTheDocument()
-    // 막힌 이유가 적혀 있어야 한다 — 이유 없는 "준비 중" 은 언제 풀리는지 알 수 없다
-    expect(screen.getByText(/변경 이력 API가 필요합니다/)).toBeInTheDocument()
-    expect(screen.getByText(/발행 메타가 없고/)).toBeInTheDocument()
+    expect(screen.queryByText(/발행 메타가 없고/)).not.toBeInTheDocument()
+  })
+
+  it('🔴 기본정보 placeholder 4개를 치우고 좌표를 넣었다 (spec 029)', async () => {
+    renderAt('/points/1')
+
+    await screen.findByRole('heading', { name: '정문 입구' })
+    // 지점 코드·등록·최근 수정 — 서버에 없고 쓰임도 없다. **B-19 도 함께 철회**했다
+    expect(screen.queryByText('지점 코드')).not.toBeInTheDocument()
+    expect(screen.queryByText('등록')).not.toBeInTheDocument()
+    // 상세 위치는 좌표로 대체 — 이건 서버에 **실제로 있는 값**이다
+    expect(screen.queryByText('상세 위치')).not.toBeInTheDocument()
+    expect(screen.getByText('좌표')).toBeInTheDocument()
   })
 
   it('🔴 "같은 사업장의 다른 지점" 섹션은 없다 — 불필요 판단(2026-10-10)', async () => {
