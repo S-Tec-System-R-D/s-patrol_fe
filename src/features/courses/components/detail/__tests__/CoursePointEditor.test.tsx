@@ -114,7 +114,7 @@ describe('CoursePointEditor — 화면', () => {
     expect(screen.getByRole('button', { name: '정문 입구 편성 제거' })).toBeInTheDocument()
   })
 
-  it('🔴 지점별 활성 토글이 없다 — 서버에 바꿀 수단이 없다 (B-29)', () => {
+  it('🔴 지점별 활성 토글이 없다 — 코스에서 바꿀 값이 아니다 (B-29 철회)', () => {
     renderEditor()
 
     expect(screen.queryByRole('switch')).not.toBeInTheDocument()

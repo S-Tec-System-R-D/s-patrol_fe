@@ -52,10 +52,15 @@ export interface CourseRow {
  * ⚠️ **`authMethodName` 이 없다.** 목록(`ClassificationPoint`)에는 있는데 여기엔 코드만
  * 온다 — 이름이 필요하면 `lib/authMethod.ts` 로 변환한다.
  *
- * 🔴🔴 **`useYn` 은 읽기 전용이다.** `UpdateCoursePointDto`(swagger)에 `useYn` 이
- * **없다** — 편성 지점의 활성 여부를 보낼 수단이 없다. 화면에 표시는 하되 **편집
- * 수단을 만들지 않는다**(만들면 저장했는데 안 바뀌는, 가장 나쁜 종류의 버튼이 된다).
- * 백엔드 요청 대상 — `api-spec.md` B-29.
+ * 🔴🔴 **`useYn` 은 지금 아무 정보도 주지 않는다 — 항상 `true` 다**(실측 2026-10-13,
+ * `spec 028`). 지점을 `useYn=false` 로 꺼도 그 지점이 편성된 코스 3개(65·37·38)에서
+ * 모두 `true` 로 내려왔다. **지점의 실제 값을 따라오지 않는다.**
+ *
+ * 🔴 요청 DTO(`UpdateCoursePointDto`)에 `useYn` 이 없는 것은 **결함이 아니다** —
+ * "코스 안에서 이 지점만 미사용" 이라는 개념 자체가 없고(사용자 확인 2026-10-13),
+ * 사용여부는 **지점 상세에서만** 바꾼다. 그래서 **B-29 는 철회**했다. 편집 수단을
+ * 만들지 않는 결론은 그대로이되 **근거가 바뀌었다**(서버에 수단이 없어서가 아니라
+ * 여기서 바꿀 값이 아니라서).
  */
 export interface CourseDetailPoint {
   coursePointSeq: number
@@ -63,7 +68,7 @@ export interface CourseDetailPoint {
   pointName: string
   authMethod: number // 9=QR / 10=NFC (api-spec.md §4)
   orderNo: number
-  useYn: boolean // 🔴 읽기 전용 — UpdateCourse 로 바꿀 수 없다(B-29)
+  useYn: boolean // 🔴 항상 true — 지점의 실제 값을 따라오지 않는다(실측 2026-10-13)
   courseMin: number // 이 지점까지의 구간 시간(분)
 }
 
@@ -95,7 +100,8 @@ export interface CourseDetail {
  * 🔴 **`PagedData` 가 아니라 배열이 직접 온다**(실측 §5-2 14번). 페이징이 없어 사업장의
  * 지점이 **전량** 내려온다 — 후보가 많으면 클라이언트에서 검색해야 한다(OQ-023-C).
  *
- * ⚠️ `useYn` 이 없다 — 미사용 지점이 후보에 섞여 있는지 구분할 수 없다.
+ * ✅ `useYn` 이 없지만 **필요 없다** — 서버가 미사용 지점을 후보에서 **제외하고 준다**
+ * (실측 2026-10-13, `spec 028`).
  */
 export interface ClassificationPoint {
   pointSeq: number

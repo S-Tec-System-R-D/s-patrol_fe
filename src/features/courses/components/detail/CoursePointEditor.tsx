@@ -57,7 +57,7 @@ import AddCoursePointDialog from './AddCoursePointDialog'
  * 중복 `orderNo` 도 그대로 저장하므로(실측 2026-10-12) 재부여는 우리 책임이다.
  *
  * 🔴 **지점별 활성(`useYn`)은 표시만 한다** — `UpdateCoursePointDto` 에 필드가 없어
- * **보낼 수단이 없다**(B-29). 토글을 만들면 저장해도 안 바뀐다.
+ * 보내지 않는다 — **코스에서 바꿀 값이 아니다**(B-29 철회, 실측 2026-10-13).
  * 🔴 **구간 메모 UI 를 만들지 않는다** — 쓰기 전용이라 다시 읽을 수 없고(B-30), 전량
  * 전송과 겹쳐 다른 경로로 들어간 메모를 지운다. 저장 시 `memo: null` 이 나가는 것은
  * **알고도 보내는 것**이다(`lib/updateCourseBody.ts` 주석).
@@ -127,7 +127,7 @@ const SortableRow = ({
 
       {method && <AppBadge variant={method === 'QR' ? 'point' : 'success'}>{method}</AppBadge>}
 
-      {/* 🔴 지점별 활성은 **표시만** — 바꿀 수단이 서버에 없다(B-29) */}
+      {/* 🔴 지점별 활성은 **표시만** — 코스에서 바꿀 값이 아니다(B-29 철회) */}
       {!draft.useYn && <AppBadge variant="muted">미사용</AppBadge>}
 
       <label className="flex items-center gap-1 text-caption text-muted-foreground">

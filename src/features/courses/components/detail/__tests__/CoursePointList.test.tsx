@@ -10,7 +10,7 @@ import type { CourseDetailPoint } from '../../../types'
  * 지점 순서 카드 — **읽기 전용**(`spec 023` T358).
  *
  * 여기서 고정하는 것은 "무엇을 **안** 하는가" 가 절반이다: 편집 수단 없음(Phase 4) ·
- * 활성 토글 없음(B-29 — 서버에 수단이 없다) · 구간 메모 없음(B-30 — 쓰기 전용).
+ * 활성 토글 없음(B-29 철회 — 코스에서 바꿀 값이 아니다) · 구간 메모 없음(B-30 — 쓰기 전용).
  */
 
 const point = (overrides: Partial<CourseDetailPoint> = {}): CourseDetailPoint => ({
@@ -129,7 +129,7 @@ describe('CoursePointList — 편집 진입', () => {
 
 describe('CoursePointList — 아직 두지 않는 것', () => {
 
-  it('🔴 지점별 활성 토글이 없다 — 서버에 바꿀 수단이 없다 (B-29)', () => {
+  it('🔴 지점별 활성 토글이 없다 — 코스에서 바꿀 값이 아니다 (B-29 철회)', () => {
     renderList([point({ useYn: false })])
 
     expect(screen.queryByRole('switch')).not.toBeInTheDocument()

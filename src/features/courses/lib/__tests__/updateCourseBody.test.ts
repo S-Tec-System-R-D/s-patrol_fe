@@ -100,7 +100,7 @@ describe('toUpdateCoursePoints', () => {
     expect(toUpdateCoursePoints(course.points).every((point) => point.memo === null)).toBe(true)
   })
 
-  it('표시 전용 필드(useYn·pointName)를 보내지 않는다 — 요청 DTO 에 없다 (B-29)', () => {
+  it('표시 전용 필드(useYn·pointName)를 보내지 않는다 — 요청 DTO 에 없다 (B-29 철회)', () => {
     const [first] = toUpdateCoursePoints(course.points)
 
     expect(first).not.toHaveProperty('useYn')

@@ -313,7 +313,7 @@ export const courseHandlers = [
    * 🔴 **`memo: null` 은 반영된다**(비워짐). 지점(`UpdatePoint`)은 `null`·`''` 을 무시해
    * 값을 비울 수 없지만(B-15) **코스는 비워진다** — 반대 동작이다.
    *
-   * ⚠️ 편성 지점의 `useYn` 은 요청 DTO 에 없어(B-29) **기존 값을 유지**한다. 새 행은
+   * ⚠️ 편성 지점의 `useYn` 은 요청 DTO 에 없어(B-29 철회) **기존 값을 유지**한다. 새 행은
    * `true` 로 들어간다 — 보낼 수단이 없으니 서버 기본값에 맡기는 셈이다.
    */
   http.put(UPDATE_COURSE_PATH, async ({ request }) => {

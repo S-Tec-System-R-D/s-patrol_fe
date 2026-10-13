@@ -27,7 +27,11 @@ export interface CoursePointDraft {
   pointSeq: number
   pointName: string
   authMethod: number
-  /** 🔴 표시 전용 — `UpdateCoursePointDto` 에 필드가 없어 바꿀 수단이 없다(B-29) */
+  /**
+   * 🔴 표시 전용. **항상 `true` 다** — 서버가 지점의 실제 사용여부를 따라오지 않는다
+   * (실측 2026-10-13). 코스에서 바꿀 값이 아니므로 요청 DTO 에 없는 것도 정상이다
+   * (B-29 철회). 자세한 사정은 `CoursePointList` 상단 주석.
+   */
   useYn: boolean
   courseMin: number
 }

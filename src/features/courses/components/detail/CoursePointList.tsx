@@ -18,9 +18,16 @@ import type { CourseDetailPoint } from '../../types'
  * `UpdateCourse` 가 **전량 전송**이라(B-25) 드래그마다 코스 전체를 교체하게 되기
  * 때문이다 — 자세한 근거는 `CoursePointEditor` 상단 주석.
  *
- * 🔴 **지점별 사용여부는 표시만 한다 — 바꿀 수단이 서버에 없다**(B-29).
- * `GetCourseDetail` 은 `points[].useYn` 을 주는데 `UpdateCoursePointDto` 에는 그 필드가
- * **없다.** 토글을 만들면 저장해도 값이 안 바뀐다. Phase 4 에서도 **표시만** 한다.
+ * 🔴 **지점별 사용여부를 여기서 바꾸지 않는다 — 근거가 바뀌었다**(`spec 028`, 실측
+ * 2026-10-13). 이전 주석은 "서버에 수단이 없어서" 라고 적었지만, 사실은 **"코스 안에서
+ * 이 지점만 미사용" 이라는 개념 자체가 없다**(사용자 확인). 사용여부는 지점 상세에서만
+ * 바꾼다 → **B-29 철회.**
+ *
+ * ⚠️ **아래 `useYn` 분기는 현재 발동하지 않는다** — `GetCourseDetail.points[].useYn` 이
+ * **항상 `true`** 이고 지점의 실제 값을 따라오지 않는다(실측: 지점을 꺼도 코스 3개에서
+ * 모두 `true`). 🔴 **그래도 지우지 않는다**(OQ-028-B) — 백엔드가 응답 값을 지점 실제
+ * 값으로 채우면 **그대로 살아나는 코드**이고, 그때 미사용 지점이 편성된 채 남아 있는
+ * 코스를 바로 알릴 수 있다.
  *
  * 🔴 **구간 메모를 보여주지 않는다** — 서버가 돌려주지 않는다(B-30, 실측). 보낼 수는
  * 있지만 읽을 수 없는 **쓰기 전용** 필드다.
@@ -116,12 +123,19 @@ const CoursePointList = ({ points, onEdit }: CoursePointListProps) => {
                   className="shrink-0 text-muted-foreground"
                 />
                 <span
-                  className={`flex-1 truncate text-body font-semibold ${
+                  className={`truncate text-body font-semibold ${
                     point.useYn ? 'text-foreground' : 'text-muted-foreground'
                   }`}
                 >
                   {point.pointName}
                 </span>
+
+                {/* 🔴 사용여부는 뱃지로 글자를 준다 — 색·명도만으로 전달하지 않는다.
+                    🔴 **이름 바로 옆이다**(사용자 결정 2026-10-13) — 행 끝에 두면 인증수단·
+                    구간시간을 지나야 보여서 "무엇이 미사용인지" 가 늦게 읽힌다 */}
+                {!point.useYn && <AppBadge variant="muted">미사용</AppBadge>}
+
+                <span className="flex-1" />
 
                 {method && (
                   <AppBadge variant={!point.useYn ? 'muted' : method === 'QR' ? 'point' : 'success'}>
@@ -132,9 +146,6 @@ const CoursePointList = ({ points, onEdit }: CoursePointListProps) => {
                 <span className="w-16 shrink-0 text-right tabular-nums text-caption text-muted-foreground">
                   {point.courseMin}분
                 </span>
-
-                {/* 🔴 사용여부는 뱃지로 글자를 준다 — 색·명도만으로 전달하지 않는다 */}
-                {!point.useYn && <AppBadge variant="muted">미사용</AppBadge>}
               </li>
             )
           })}

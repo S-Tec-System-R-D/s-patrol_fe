@@ -42,7 +42,7 @@ export interface AddCourseRequest {
  * `null` 을 보낸다(swagger nullable).
  *
  * 🔴 **`useYn` 이 없다 — 보낼 수단이 아예 없다.** 응답(`CourseDetailPoint`)에는 있는데
- * 요청 DTO 에 없어, 편성 지점의 활성 여부는 **읽기 전용**이다(B-29). 화면에 토글을
+ * 요청 DTO 에 없다 — **코스에서 바꿀 값이 아니다**(B-29 철회). 화면에 토글을
  * 만들면 저장해도 안 바뀐다.
  */
 export interface UpdateCoursePointRequest {

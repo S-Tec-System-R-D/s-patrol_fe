@@ -24,7 +24,7 @@ export interface MockCoursePoint {
   orderNo: number
   memo: string | null
   courseMin: number
-  /** 🔴 응답에는 있지만 `UpdateCourse` 로는 바꿀 수 없다(B-29) */
+  /** 🔴 실서버는 **항상 true** 를 준다 — 지점 실제 값을 안 따라온다(B-36) */
   useYn: boolean
 }
 
