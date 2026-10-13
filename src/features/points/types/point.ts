@@ -17,6 +17,9 @@
  * 사라질** 자리다(023이 `features/zone` 을 지운 것과 같은 경로). 지금 복제하면 024에서 다시
  * 지울 코드를 **더하는** 셈이다(A3).
  *
+ * ✅ **사용자 결정(2026-10-13): 그대로 둔다.** 한 줄 복제로 DoD #15 를 형식상 충족시킬 수
+ * 있었지만, 024 에서 되돌릴 작업이라 **사유 기록**을 택했다. `spec 022` OQ-022-H 종결.
+ *
  * ✅ `features/zone/form/AddPointForm.tsx` 는 **023 Phase 2 에서 삭제됐다**(mock 셸 제거).
  * ✅ `features/zone/types/point.ts` 는 **023 Phase 3 에서 삭제됐다**(T357).
  * ⚠️ `mock/pointData.ts` 자체는 남는다 — MSW 핸들러(`handlers/points.ts`·`handlers/courses.ts`)가
