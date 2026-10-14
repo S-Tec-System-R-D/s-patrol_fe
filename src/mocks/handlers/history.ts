@@ -175,6 +175,17 @@ const inRange = (dt: string, fromDt: string | null, toDt: string | null): boolea
   return true
 }
 
+/**
+ * 🔴 **서버 `pageSize` 상한은 100 이다**(실측 2026-10-14). 넘기면 **400** +
+ * `"페이지 사이즈는 1~100 사이여야 합니다."` 가 온다.
+ *
+ * 🔴 **이 검증이 없어서 결함을 놓쳤다.** `usePointHistory` 가 `pageSize=200` 을 보내
+ * **실서버에서는 조회가 통째로 실패**하고 화면에 "순찰 기록이 없습니다" 가 떴는데,
+ * mock 이 200 을 받아줘 **dev 에서는 멀쩡해 보였다.** mock 이 서버보다 관대하면
+ * 그 차이만큼 결함이 숨는다(022 의 "mock 이 더 엄격해도 거짓" 과 같은 종류의 교훈).
+ */
+export const MAX_PAGE_SIZE = 100
+
 const paged = <T>(items: T[], query: URLSearchParams) => {
   const pageNumber = Number(query.get('pageNumber') ?? 1)
   const pageSize = Number(query.get('pageSize') ?? 20)
@@ -191,9 +202,25 @@ const paged = <T>(items: T[], query: URLSearchParams) => {
   }
 }
 
+/** 상한 초과면 서버와 같은 400 + 래퍼를 돌려준다 */
+const pageSizeError = (query: URLSearchParams) => {
+  const pageSize = Number(query.get('pageSize') ?? 20)
+  if (!Number.isFinite(pageSize) || pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
+    return HttpResponse.json(
+      { message: '페이지 사이즈는 1~100 사이여야 합니다.', data: null, code: 400 },
+      { status: 400 }
+    )
+  }
+  return null
+}
+
 export const historyHandlers = [
   http.get(GET_COURSE_HISTORY_PATH, ({ request }) => {
     const query = new URL(request.url).searchParams
+    // 🔴 서버와 같은 순서로 막는다 — 상한 초과는 필터링 전에 400 이다(실측)
+    const sizeError = pageSizeError(query)
+    if (sizeError) return sizeError
+
     const siteSeq = Number(query.get('siteSeq'))
     const courseSeq = query.get('courseSeq')
     const eventType = query.get('eventType')

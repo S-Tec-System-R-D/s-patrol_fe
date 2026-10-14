@@ -274,6 +274,20 @@ export const pointHandlers = [
       return businessError('페이지 번호는 1 이상이어야 합니다.')
     }
 
+    /**
+     * 🔴 **`pageSize` 상한은 100 이다**(실측 2026-10-14). 넘기면 400 + 위 문구다.
+     *
+     * 🔴 **이 검증이 없어서 결함을 놓쳤다.** `usePointHistory` 가 200 을 보내 **실서버에서는
+     * 조회가 통째로 실패**하고 화면에 "순찰 기록이 없습니다" 가 떴는데, mock 이 받아줘서
+     * **dev 에서는 멀쩡해 보였다.** mock 이 서버보다 관대하면 그만큼 결함이 숨는다.
+     */
+    if (!Number.isFinite(pageSize) || pageSize < 1 || pageSize > 100) {
+      return HttpResponse.json(
+        { message: '페이지 사이즈는 1~100 사이여야 합니다.', data: null, code: 400 },
+        { status: 400 }
+      )
+    }
+
     const searchKey = query.get('searchKey')?.trim() ?? ''
     const authMethod = query.get('authMethod')
     const useYn = query.get('useYn')

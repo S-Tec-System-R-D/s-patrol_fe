@@ -115,3 +115,61 @@ describe('summarizePatrolHistory', () => {
     expect(result.total).toBe(1)
   })
 })
+
+/**
+ * 🔴 **인증 / 대상 분리** (`spec 031` 보강, 실측 2026-10-14).
+ *
+ * `GetPointHistory` 를 필터 없이 부르면 **미완료(3)와 완료(4)가 섞여서** 온다
+ * (실측: 사업장 69건 중 미완료 43건). 🔴 **미완료 행도 `checkDt` 를 갖는다** —
+ * "날짜가 없어 자연히 빠질 것" 이라는 가정이 틀렸고, 그래서 "2주 인증" 이 부풀려져 있었다.
+ * 기존 테스트가 **완료 행만** 다뤄 이 결함을 못 잡았다.
+ */
+describe('summarizePatrolHistory — 인증(완료)과 대상(전체)을 가른다', () => {
+  const today = new Date('2026-10-14T10:00:00')
+
+  it('🔴 미완료(status 3)는 인증으로 세지 않는다 — 대상에는 든다', () => {
+    const summary = summarizePatrolHistory(
+      [
+        row('2026-10-14T09:00:00', { status: 4, statusName: '완료' }),
+        row('2026-10-13T09:00:00', { status: 3, statusName: '미완료' }),
+        row('2026-10-12T09:00:00', { status: 3, statusName: '미완료' }),
+      ],
+      today
+    )
+
+    expect(summary.total).toBe(1)
+    expect(summary.attempted).toBe(3)
+  })
+
+  it('🔴 미완료는 **날짜 버킷에도 들어가지 않는다** — 안 한 날이 한 것처럼 보이면 안 된다', () => {
+    const summary = summarizePatrolHistory(
+      [row('2026-10-13T09:00:00', { status: 3, statusName: '미완료' })],
+      today
+    )
+
+    expect(summary.buckets.every((bucket) => bucket.count === 0)).toBe(true)
+  })
+
+  it('기간 밖 행은 대상에서도 빠진다 — 분모가 부풀면 비율이 낮아 보인다', () => {
+    const summary = summarizePatrolHistory(
+      [
+        row('2026-10-14T09:00:00', { status: 4 }),
+        row('2026-01-01T09:00:00', { status: 3 }), // 14일 밖
+      ],
+      today
+    )
+
+    expect(summary.total).toBe(1)
+    expect(summary.attempted).toBe(1)
+  })
+
+  it('전부 완료면 인증 = 대상이다', () => {
+    const summary = summarizePatrolHistory(
+      [row('2026-10-14T09:00:00', { status: 4 }), row('2026-10-13T09:00:00', { status: 4 })],
+      today
+    )
+
+    expect(summary.total).toBe(2)
+    expect(summary.attempted).toBe(2)
+  })
+})

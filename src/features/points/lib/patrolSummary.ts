@@ -30,11 +30,28 @@ export interface PatrolDayBucket {
 }
 
 export interface PatrolSummary {
-  /** 기간 내 총 인증 횟수 */
+  /**
+   * 기간 내 **인증(완료) 횟수** — `status === 4` 인 행만 센다.
+   *
+   * 🔴🔴 **2026-10-14 전까지 미완료까지 세고 있었다.** `GetPointHistory` 는 필터 없이
+   * 부르면 **미완료(3)와 완료(4)가 섞여서** 오고(실측: 사업장 69건 중 미완료 43건),
+   * 🔴 **미완료 행도 `checkDt` 를 갖는다** — "날짜가 없어서 자연히 빠질 것" 이라는 가정이
+   * 틀렸다. 그래서 "2주 인증 N회" 가 **실제 인증보다 부풀려져** 있었다.
+   */
   total: number
+  /**
+   * 기간 내 **대상 순찰 횟수** — 완료 + 미완료. `total` 의 **분모**다.
+   *
+   * 이 값이 있어야 "7회" 가 **잘한 것인지** 알 수 있다 — 9회 중 7회와 7회 중 7회는
+   * 다른 사실이다(`spec 031` 목업의 `인증 7 / 대상 순찰 9회`).
+   */
+  attempted: number
   /** 오래된 날 → 최근 날 순. **기록이 없는 날도 `count: 0` 으로 포함**한다 */
   buckets: PatrolDayBucket[]
 }
+
+/** 🔴 지점이력 `status` 사전에서 **완료**(코스이력은 1·2로 체계가 다르다 — B-7) */
+const STATUS_DONE = 4
 
 /** 집계 기간의 시작일(포함). 서버 `fromDt` 로 그대로 쓴다 */
 export const summaryFromDate = (today: Date, days = SUMMARY_DAYS): string =>
@@ -61,6 +78,7 @@ export const summarizePatrolHistory = (
   }
 
   let total = 0
+  let attempted = 0
   for (const row of rows) {
     const parsed = parseISO(row.checkDt)
     if (!isValid(parsed)) continue
@@ -69,6 +87,10 @@ export const summarizePatrolHistory = (
     const ago = differenceInCalendarDays(today, parsed)
     if (ago < 0 || ago > days - 1) continue
 
+    // 🔴 **미완료도 "대상" 에는 든다** — 돌기로 돼 있었는데 못 한 것이다
+    attempted += 1
+    if (row.status !== STATUS_DONE) continue
+
     const key = format(parsed, 'yyyy-MM-dd')
     counts.set(key, (counts.get(key) ?? 0) + 1)
     total += 1
@@ -76,6 +98,7 @@ export const summarizePatrolHistory = (
 
   return {
     total,
+    attempted,
     buckets: [...counts.entries()].map(([date, count]) => ({ date, count })),
   }
 }
