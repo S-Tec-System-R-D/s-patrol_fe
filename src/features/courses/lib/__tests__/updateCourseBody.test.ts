@@ -27,7 +27,7 @@ const course: CourseDetail = {
       authMethod: 9,
       orderNo: 1,
       useYn: true,
-      courseMin: 10,
+      courseMin: 10, gpsLat: null, gpsLng: null,
     },
     {
       coursePointSeq: 102,
@@ -36,7 +36,7 @@ const course: CourseDetail = {
       authMethod: 10,
       orderNo: 2,
       useYn: false,
-      courseMin: 35,
+      courseMin: 35, gpsLat: null, gpsLng: null,
     },
   ],
 }

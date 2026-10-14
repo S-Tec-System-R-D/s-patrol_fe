@@ -30,7 +30,7 @@ const point = (overrides: Partial<CourseDetailPoint> = {}): CourseDetailPoint =>
   authMethod: 9,
   orderNo: 1,
   useYn: true,
-  courseMin: 10,
+  courseMin: 10, gpsLat: null, gpsLng: null,
   ...overrides,
 })
 

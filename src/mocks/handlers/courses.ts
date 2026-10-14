@@ -31,13 +31,22 @@ import type {
 /** 지점이 어느 사업장에 속하는가 — `handlers/points.ts` 와 **같은 규칙**이어야 한다 */
 const SITE_OF_POINT = (pointSeq: number): number => (pointSeq <= 10 ? 7 : 8)
 
-/** 편성 지점의 표시 이름·인증수단 — 구 지점 mock 에서 끌어온다 */
+/**
+ * 편성 지점의 표시 이름·인증수단·**좌표** — 구 지점 mock 에서 끌어온다.
+ *
+ * 🔴 **좌표는 편성 행이 아니라 지점에서 읽는다**(`spec 032`, 실측 2026-10-14). 편성마다
+ * 좌표를 들고 있으면 **같은 지점이 코스마다 다른 좌표**를 가질 수 있는데, 실서버는 그렇지
+ * 않다 — 지점 하나에 좌표 하나이고 코스 상세는 그것을 **그대로 전파**한다.
+ */
 const pointMeta = (pointSeq: number) => {
   const legacy = legacyPoints.find((point) => Number(point.id) === pointSeq)
   return {
     pointName: legacy?.title ?? `지점 ${pointSeq}`,
     memo: legacy?.description || null,
     authMethod: legacy ? toAuthMethodCode(legacy.authenticationMethod) : 9,
+    // 지점 store 와 **같은 규칙**이어야 한다(`handlers/points.ts`)
+    gpsLat: pointSeq === 3 ? null : 37.4936 + (pointSeq % 5) * 0.0002,
+    gpsLng: pointSeq === 3 ? null : 127.0779 + (pointSeq % 4) * 0.00025,
   }
 }
 
@@ -130,6 +139,12 @@ const toCourseDetail = (course: MockCourse): CourseDetail => ({
       coursePointSeq: point.coursePointSeq,
       pointSeq: point.pointSeq,
       pointName: pointMeta(point.pointSeq).pointName,
+      /**
+       * 🔴 **B-32 해소 후 추가**(실측 2026-10-13) — 좌표가 내려온다.
+       * 🔴 **지점에서 읽는다** — 편성 행이 아니다(위 `pointMeta` 주석).
+       */
+      gpsLat: pointMeta(point.pointSeq).gpsLat,
+      gpsLng: pointMeta(point.pointSeq).gpsLng,
       // ⚠️ 상세의 편성 지점에는 `authMethodName` 이 없다(실측) — 코드만 준다
       authMethod: pointMeta(point.pointSeq).authMethod,
       orderNo: point.orderNo,

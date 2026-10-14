@@ -66,6 +66,16 @@ export interface CourseDetailPoint {
   coursePointSeq: number
   pointSeq: number
   pointName: string
+  /**
+   * 🔴 **B-32 해소 — 좌표가 추가됐다**(실측 2026-10-13). `spec 023` D단이 막혀 있던
+   * 이유가 이 두 필드의 부재였다. 값도 실제로 채워져 있다(강남 일대 37.49/127.07).
+   *
+   * ⚠️ **`null` 인 지점이 섞여 있다** — 실측상 코스 3개에서 각각 1개씩. 그리고 서버에
+   * **범위 밖 값**(`gpsLat: 123`)이 저장된 사례도 있다(B-33) — 둘 다 `lib/courseCoords.ts`
+   * 가 걸러낸다.
+   */
+  gpsLat: number | null
+  gpsLng: number | null
   authMethod: number // 9=QR / 10=NFC (api-spec.md §4)
   orderNo: number
   useYn: boolean // 🔴 항상 true — 지점의 실제 값을 따라오지 않는다(실측 2026-10-13)

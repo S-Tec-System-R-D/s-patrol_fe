@@ -21,6 +21,8 @@ const buildPoints = (count: number): CourseDetailPoint[] =>
     coursePointSeq: 100 + i + 1,
     pointSeq: i + 1,
     pointName: `지점${i + 1}`,
+    gpsLat: null,
+    gpsLng: null,
     authMethod: i % 2 === 0 ? 9 : 10, // 9=QR / 10=NFC
     orderNo: i + 1,
     useYn: true,

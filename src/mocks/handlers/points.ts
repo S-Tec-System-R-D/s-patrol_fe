@@ -90,8 +90,19 @@ const toMockPoint = (legacy: (typeof legacyPoints)[number]): MockPoint => {
       legacy.authenticationMethod === 'QR'
         ? `STSP1:${SITE_OF(pointSeq)}:${pointSeq}:1760000000:mockSignature`
         : null,
-    gpsLat: null, // 실측 미관측 — OQ-022-C
-    gpsLng: null,
+    /**
+     * 🔴 **좌표는 지점의 속성이다**(실측 2026-10-14). 코스 상세의 `points[]` 는 이 값을
+     * **그대로 전파**한다 — 같은 지점이 여러 코스에 편성돼 있으면 **전부 같은 좌표**다.
+     *
+     * ⚠️ **일부러 한 지점(`pointSeq 3`)만 비워 둔다.** 실서버도 똑같다 — 사업장 6 에서
+     * 좌표가 없는 지점은 **단 하나**(`2F 출입구`)인데 그것이 **코스 3개에 편성**돼 있어
+     * "여러 코스에 좌표 없는 지점이 있는" 것처럼 보인다. mock 이 전부 채워져 있으면
+     * **"좌표 없음" 경로가 dev 에서 한 번도 안 돈다**(`spec 032`).
+     *
+     * 좌표값은 실측 데이터와 같은 동네(강남 우체국 일대)를 쓴다.
+     */
+    gpsLat: pointSeq === 3 ? null : 37.4936 + (pointSeq % 5) * 0.0002,
+    gpsLng: pointSeq === 3 ? null : 127.0779 + (pointSeq % 4) * 0.00025,
     lastPatrolDt: patrolled ? `2026-10-0${(pointSeq % 7) + 1}T09:${10 + pointSeq}:00` : null,
     lastPatrolUserSeq: patrolled ? 100 + pointSeq : null,
     lastPatrolUserName: patrolled ? '김근무' : null,

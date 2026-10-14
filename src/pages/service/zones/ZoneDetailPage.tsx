@@ -12,6 +12,7 @@ import AppPageHeader from '@/components/app/AppPageHeader'
 import { deleteCourse } from '@/features/courses/api/deleteCourse'
 import { updateCourse } from '@/features/courses/api/updateCourse'
 import CourseDiagramCard from '@/features/courses/components/detail/CourseDiagramCard'
+import CourseMapCard from '@/features/courses/components/detail/CourseMapCard'
 import CourseInfo from '@/features/courses/components/detail/CourseInfo'
 import CoursePointEditor from '@/features/courses/components/detail/CoursePointEditor'
 import CourseKpiRow from '@/features/courses/components/detail/CourseKpiRow'
@@ -28,6 +29,7 @@ import {
   useUncheckedPoints,
 } from '@/features/courses/hooks/useCourseHistory'
 import { buildCourseAlerts, uncheckedByPoint } from '@/features/courses/lib/courseAlerts'
+import { usableCoords } from '@/features/courses/lib/courseCoords'
 import { courseHistoryStats } from '@/features/courses/lib/courseHistoryStats'
 import { recentRange } from '@/features/courses/lib/historyRange'
 import { toUpdateCourseBody } from '@/features/courses/lib/updateCourseBody'
@@ -119,6 +121,13 @@ const ZoneDetailPage = () => {
    * **같은 행**을 다시 센다. `useMemo` 로 묶는 이유는 `AppKpiCard` 가 배열 참조를 받기
    * 때문이다(렌더마다 새 배열이면 그만큼 다시 그린다).
    */
+  /**
+   * 지도에 찍을 좌표 (`spec 032`). 🔴 **조회가 늘지 않는다** — 상세 응답을 다시 셀 뿐이다.
+   * `useMemo` 인 이유: `CourseMapCard` 가 `pins` 참조로 지도를 다시 그린다(렌더마다 새
+   * 배열이면 **지도가 매번 파괴·재생성**된다).
+   */
+  const coords = useMemo(() => usableCoords(course?.points ?? []), [course?.points])
+
   const uncheckedParts = useMemo(
     () => uncheckedByPoint(unchecked.data?.items ?? []),
     [unchecked.data]
@@ -250,8 +259,17 @@ const ZoneDetailPage = () => {
             <div className="flex flex-col gap-4 xl:col-span-2">
               {/* 🔴 동선이 **순서 위**에 온다 — 첫 질문이 "어디를 어떤 순서로 도는가" 다.
                   ⚠️ 편집 중에도 **저장된 순서**를 그린다 — 초안을 반영하면 "저장 전인데
-                  반영된 것처럼" 보인다(옵티미스틱을 안 쓰는 것과 같은 이유) */}
-              <CourseDiagramCard points={course.points} />
+                  반영된 것처럼" 보인다(옵티미스틱을 안 쓰는 것과 같은 이유).
+
+                  🔴 **조건부 교체**(`spec 032`, 사용자 결정 2026-10-14): 같은 자리에서
+                  **좌표가 있으면 지도**, **하나도 없으면 다이어그램**이다. 그냥 교체하면
+                  좌표 없는 코스가 **경로를 아무것도 못 보여준다** — 좌표 입력 수단이 아직
+                  없어서(OQ-032-C) 비어 있는 지점이 실제로 있다 */}
+              {coords.pins.length > 0 ? (
+                <CourseMapCard pins={coords.pins} missing={coords.missing} />
+              ) : (
+                <CourseDiagramCard points={course.points} />
+              )}
 
               {editingPoints ? (
                 <CoursePointEditor course={course} onClose={() => setEditingPoints(false)} />

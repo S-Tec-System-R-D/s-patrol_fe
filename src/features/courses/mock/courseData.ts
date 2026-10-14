@@ -28,6 +28,12 @@ export interface MockCoursePoint {
   useYn: boolean
 }
 
+/**
+ * 🔴 **좌표를 여기 두지 않는다**(`spec 032`, 실측 2026-10-14). 좌표는 **지점의 속성**이고
+ * 코스 상세는 그것을 **전파**할 뿐이다 — 편성 행마다 좌표를 들면 같은 지점이 코스마다
+ * 다른 좌표를 갖는 **구조적 거짓**이 된다. 핸들러가 지점 store 에서 읽는다.
+ */
+
 /** 핸들러 내부 저장 모델. 서버 응답에 없는 `siteSeq` 도 분기용으로 들고 있는다 */
 export interface MockCourse {
   siteSeq: number
@@ -58,6 +64,9 @@ export const courseSeeds: MockCourse[] = [
     points: [
       { coursePointSeq: 101, pointSeq: 1, orderNo: 1, memo: '정문 확인', courseMin: 10, useYn: true },
       { coursePointSeq: 102, pointSeq: 2, orderNo: 2, memo: null, courseMin: 15, useYn: true },
+      // 🔴 `pointSeq 3` 은 **좌표가 없는 지점**이고 **B동 코스에도 편성**돼 있다 —
+      //    실서버와 같은 모양이다(지점 하나가 여러 코스에 걸쳐 "여러 코스에 좌표 없는
+      //    지점이 있는" 것처럼 보인다)
       { coursePointSeq: 103, pointSeq: 3, orderNo: 3, memo: null, courseMin: 20, useYn: false },
     ],
   },

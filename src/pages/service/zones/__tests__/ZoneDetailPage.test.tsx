@@ -188,7 +188,7 @@ describe('ZoneDetailPage', () => {
 })
 
 describe('ZoneDetailPage — 조회 섹션 조립 (Phase 3)', () => {
-  it('🔴 다이어그램·지점 순서·기본정보가 한 응답에서 함께 그려진다', async () => {
+  it('🔴 동선·지점 순서·기본정보가 한 응답에서 함께 그려진다', async () => {
     renderPage('/zones/1')
 
     await screen.findByText('A동 순찰코스')
@@ -196,8 +196,25 @@ describe('ZoneDetailPage — 조회 섹션 조립 (Phase 3)', () => {
     expect(screen.getByText('지점 순서')).toBeInTheDocument()
     expect(screen.getByText('기본정보')).toBeInTheDocument()
     expect(screen.getByText('총 3개')).toBeInTheDocument()
-    // 다이어그램 노드와 순서 목록이 같은 지점을 그린다 — 이름이 두 번 나온다
-    expect(screen.getAllByText('정문 입구')).toHaveLength(2)
+  })
+
+  it('🔴 좌표가 있으면 **지도**가 다이어그램 자리를 차지한다 (spec 032 조건부 교체)', async () => {
+    // mock 코스 1 은 지점 3개 중 2개에 좌표가 있다
+    renderPage('/zones/1')
+
+    await screen.findByText('A동 순찰코스')
+    expect(screen.getByText('순찰 동선')).toBeInTheDocument()
+    // 🔴 **빠진 지점 수를 적는다** — 조용히 빼면 핀이 빠진 지도가 된다
+    expect(screen.getByText('좌표 없음 1개')).toBeInTheDocument()
+  })
+
+  it('🔴 좌표가 하나도 없으면 **다이어그램으로 되돌아간다** — 경로 표현이 사라지지 않는다', async () => {
+    // mock 코스 2 의 유일한 지점(`pointSeq 3`)은 좌표가 없다
+    renderPage('/zones/2')
+
+    await screen.findByText('B동 순찰코스')
+    expect(screen.queryByText('순찰 동선')).not.toBeInTheDocument()
+    expect(screen.getByText('지점 순서')).toBeInTheDocument()
   })
 
   it('🔴 지점 0개 코스는 빈 상태 2개로 그려진다 — 경고·자동 조치가 없다 (규칙 12)', async () => {
