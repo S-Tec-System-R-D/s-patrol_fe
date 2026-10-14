@@ -393,7 +393,9 @@ describe('ZoneDetailPage — 순찰 기록·KPI (B단)', () => {
     // (단일 출처, 제약 7) 편성을 바꾸면 따라 변한다 — 숫자를 박으면 편성 시드를 건드릴
     // 때마다 이 테스트가 깨진다. 여기서 고정하는 것은 **"— 가 아니라 숫자가 온다"** 다
     const label = await screen.findByText('미인증 지점')
-    const card = label.parentElement as HTMLElement
+    // 🔴 `spec 031` 에서 카드 구조가 바뀌었다 — 라벨의 **부모는 제목 줄**(라벨 + 아이콘)이고
+    //    값은 그 아래 블록에 있다. 카드 루트까지 올라가서 찾는다
+    const card = label.closest('div.rounded-lg') as HTMLElement
     await waitFor(() => expect(within(card).getByText(/^\d+$/)).toBeInTheDocument())
     expect(within(card).getByText('건')).toBeInTheDocument()
   })
