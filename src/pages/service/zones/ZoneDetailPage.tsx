@@ -27,7 +27,7 @@ import {
   useCourseHistory,
   useUncheckedPoints,
 } from '@/features/courses/hooks/useCourseHistory'
-import { buildCourseAlerts } from '@/features/courses/lib/courseAlerts'
+import { buildCourseAlerts, uncheckedByPoint } from '@/features/courses/lib/courseAlerts'
 import { courseHistoryStats } from '@/features/courses/lib/courseHistoryStats'
 import { recentRange } from '@/features/courses/lib/historyRange'
 import { toUpdateCourseBody } from '@/features/courses/lib/updateCourseBody'
@@ -114,6 +114,15 @@ const ZoneDetailPage = () => {
   const stats = courseHistoryStats(rows, history.data?.totalCount ?? 0)
   // 🔴 이상 이력은 **위 두 응답에서 모은다** — 요청이 늘지 않는다(C단)
   const alerts = buildCourseAlerts(rows, unchecked.data?.items ?? [])
+  /**
+   * 미인증 **지점별 분포** (`spec 031`). 🔴 **조회가 늘지 않는다** — 바로 위 `alerts` 와
+   * **같은 행**을 다시 센다. `useMemo` 로 묶는 이유는 `AppKpiCard` 가 배열 참조를 받기
+   * 때문이다(렌더마다 새 배열이면 그만큼 다시 그린다).
+   */
+  const uncheckedParts = useMemo(
+    () => uncheckedByPoint(unchecked.data?.items ?? []),
+    [unchecked.data]
+  )
 
   /**
    * 토글 저장.
@@ -225,7 +234,11 @@ const ZoneDetailPage = () => {
           {/* 🔴 **KPI 는 전체 폭, 헤더 바로 아래**(목업). 코스 상세를 여는 세 번째 질문이
               "이 코스가 잘 돌고 있나" 다 — 동선·편성보다 먼저 읽힌다.
               ⚠️ 평균·인증률은 **프론트가 더한 값**이다(서버에 집계 엔드포인트 없음) */}
-          <CourseKpiRow stats={stats} uncheckedCount={unchecked.data?.totalCount} />
+          <CourseKpiRow
+            stats={stats}
+            uncheckedCount={unchecked.data?.totalCount}
+            uncheckedParts={uncheckedParts}
+          />
 
           {/* **2열 골격**(목업 `코스상세-신규.html`, 사용자 결정 2026-10-12) — `xl` 미만 1단.
               좌 2/3 = 코스 자체를 보는 칸(동선 → 순서), 우 1/3 = 설정 칸.

@@ -112,3 +112,56 @@ describe('formatRate', () => {
     expect(formatRate(0)).toBe('0.0%')
   })
 })
+
+/**
+ * 🔴 **구성 값** (`spec 031` 확장) — 분포 바와 범위 바의 재료.
+ *
+ * 외부 비교(전월 대비) 대신 **이미 받아 둔 응답 안의 분포**를 쓴다. 그래서 서버 요청이
+ * 늘지 않는다.
+ */
+describe('courseHistoryStats — 상태 분포와 최단·최장', () => {
+  it('완료(1)·진행중(0)·미완료(2)를 센다', () => {
+    const stats = courseHistoryStats(
+      [row({ status: 1 }), row({ status: 1 }), row({ status: 0 }), row({ status: 2 })],
+      4
+    )
+
+    expect(stats.statusCounts).toEqual({ done: 2, inProgress: 1, failed: 1 })
+  })
+
+  it('🔴 모르는 상태값은 어느 칸에도 넣지 않는다 — 임의로 "미완료" 로 보내면 없는 실패가 생긴다', () => {
+    const stats = courseHistoryStats([row({ status: 1 }), row({ status: 9 })], 2)
+
+    expect(stats.statusCounts).toEqual({ done: 1, inProgress: 0, failed: 0 })
+  })
+
+  it('소요시간 최단·최장을 뽑는다 — 읽을 수 없는 행은 빼고', () => {
+    const stats = courseHistoryStats(
+      [
+        row({ actualElapsedTime: '00:42:00' }),
+        row({ actualElapsedTime: '00:58:00' }),
+        row({ actualElapsedTime: 'bad' }),
+      ],
+      3
+    )
+
+    expect(stats.minElapsedSec).toBe(42 * 60)
+    expect(stats.maxElapsedSec).toBe(58 * 60)
+  })
+
+  it('🔴 읽을 수 있는 소요시간이 없으면 최단·최장이 null 이다 — 0 은 "0초 순찰" 이 된다', () => {
+    const stats = courseHistoryStats([row({ actualElapsedTime: 'bad' })], 1)
+
+    expect(stats.minElapsedSec).toBeNull()
+    expect(stats.maxElapsedSec).toBeNull()
+  })
+
+  it('⚠️ 상태 분포의 합은 runCount 와 다를 수 있다 — 받아 온 행만 센 값이다', () => {
+    // `partial` 이면 표본 기준이다. 화면이 둘을 같은 수로 취급하면 안 된다
+    const stats = courseHistoryStats([row({ status: 1 })], 50)
+
+    expect(stats.runCount).toBe(50)
+    expect(stats.statusCounts.done).toBe(1)
+    expect(stats.partial).toBe(true)
+  })
+})

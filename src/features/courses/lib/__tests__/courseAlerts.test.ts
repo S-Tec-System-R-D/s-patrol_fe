@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildCourseAlerts } from '../courseAlerts'
+import { buildCourseAlerts, uncheckedByPoint } from '../courseAlerts'
 import type { CourseHistoryRow, PointHistoryRow } from '../../types'
 
 /**
@@ -144,5 +144,47 @@ describe('buildCourseAlerts — 🔴 사유를 만들지 않는다', () => {
     // 🔴 사유 문구를 지어 넣지 않는다. 실측된 메모는 "[조명 고장] [누수]" 류의
     // 키워드 조합이고 "왜 미인증인지" 가 아니다(A1)
     expect(items[0].meta).not.toMatch(/스캔|종료|사유/)
+  })
+})
+
+/**
+ * 🔴 **미인증 지점별 분포** (`spec 031`).
+ *
+ * `미인증 8건` 이 한 지점에서 8번인지 여덟 지점에서 한 번씩인지는 **완전히 다른 상황**이다 —
+ * 전자는 그 지점을, 후자는 코스 운영을 봐야 한다.
+ */
+describe('uncheckedByPoint', () => {
+  it('지점별로 묶고 많은 순으로 준다', () => {
+    const result = uncheckedByPoint([
+      unchecked({ pointName: '엘리베이터홀 A' }),
+      unchecked({ pointName: '지하 B1' }),
+      unchecked({ pointName: '엘리베이터홀 A' }),
+      unchecked({ pointName: '엘리베이터홀 A' }),
+    ])
+
+    expect(result).toEqual([
+      { label: '엘리베이터홀 A', value: 3 },
+      { label: '지하 B1', value: 1 },
+    ])
+  })
+
+  it('🔴 동률이면 지점명 순 — 렌더마다 순서가 바뀌면 눈이 쫓아간다', () => {
+    const result = uncheckedByPoint([
+      unchecked({ pointName: '나 지점' }),
+      unchecked({ pointName: '가 지점' }),
+    ])
+
+    expect(result.map((item) => item.label)).toEqual(['가 지점', '나 지점'])
+  })
+
+  it('🔴 이름이 비어도 버리지 않는다 — 빼면 합이 총계와 어긋난다', () => {
+    const result = uncheckedByPoint([unchecked({ pointName: '  ' }), unchecked({ pointName: 'A' })])
+
+    expect(result.reduce((sum, item) => sum + item.value, 0)).toBe(2)
+    expect(result.some((item) => item.label === '이름 없음')).toBe(true)
+  })
+
+  it('0건이면 빈 배열이다 — 호출부가 바를 그리지 않는다', () => {
+    expect(uncheckedByPoint([])).toEqual([])
   })
 })

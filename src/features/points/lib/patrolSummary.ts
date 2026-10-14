@@ -102,3 +102,36 @@ export const summarizePatrolHistory = (
     buckets: [...counts.entries()].map(([date, count]) => ({ date, count })),
   }
 }
+
+/**
+ * 버킷 → **날짜별 점등 배열** (`spec 031`). 오래된 날 → 최근 날 순.
+ *
+ * 🔴 **안 한 날도 칸을 남긴다**(`false`). 빼면 칸 수가 들쭉날쭉해 **"쉰 날" 이 보이지
+ * 않는다** — 그게 이 바가 존재하는 이유다.
+ */
+export const toPatrolTicks = (summary: PatrolSummary): boolean[] =>
+  summary.buckets.map((bucket) => bucket.count > 0)
+
+/**
+ * 마지막 인증으로부터 **얼마나 지났는지** — `9시간 전` · `3일 전` · `방금`.
+ *
+ * 🔴 **"얼마 전" 은 시각보다 먼저 읽힌다.** `10.14 10:14` 만 있으면 오늘인지 지난주인지
+ * 머릿속으로 빼야 한다 — 관리자가 보는 건 **"최근인가"** 다.
+ *
+ * ⚠️ **미래 시각은 `null`** 이다. 서버 시계가 앞서 있으면 `-2시간 전` 같은 말이 나오는데,
+ * 그건 사실이 아니라 **데이터 이상**이다 — 아무 말도 하지 않는 편이 낫다(A1).
+ */
+export const formatSinceLabel = (lastDt: string | null, now: Date): string | null => {
+  if (!lastDt) return null
+  const parsed = parseISO(lastDt)
+  if (!isValid(parsed)) return null
+
+  const minutes = Math.floor((now.getTime() - parsed.getTime()) / 60_000)
+  if (minutes < 0) return null
+  if (minutes < 60) return '방금'
+
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}시간 전`
+
+  return `${Math.floor(hours / 24)}일 전`
+}

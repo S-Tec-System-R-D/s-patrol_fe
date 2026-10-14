@@ -1,14 +1,26 @@
 import { format, parseISO } from 'date-fns'
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 
 import type { PatrolDayBucket } from '../../lib/patrolSummary'
 
 /**
- * 일자별 순찰 인증 횟수 막대 차트 (`spec 027`, recharts 도입 2026-10-10).
+ * 일자별 순찰 인증 **추세** 차트 (`spec 027` → **`spec 031` 에서 막대 → 라인**).
  *
- * **형태 선택** — 데이터의 일은 *시간에 따른 변화*이고 값은 **하루 단위 이산 횟수**다.
- * 선 그래프는 점 사이를 이어 "연속적으로 변한다" 고 말하는데, 순찰은 **그날 있었거나
- * 없었거나**다. 그래서 막대다.
+ * 🔴 **형태 판단이 뒤집혔다**(사용자 결정 2026-10-14). 027 은 "순찰은 그날 있었거나
+ * 없었거나라 막대" 라고 적었고 그 자체로 맞는 말이었다. 바뀐 것은 **역할 분담**이다 —
+ * `spec 031` 에서 KPI 의 **14일 점등 바**가 "그날 했나" 를 맡게 되면서, 같은 데이터를
+ * 한 화면에 두 번 그리게 됐다. 그래서 여기는 **추세**만 맡는다: 점을 이어 **늘고 주는
+ * 흐름**을 보여주고, 날짜별 사실 확인은 위 KPI 가 한다.
+ * ⚠️ 라인은 "연속적으로 변한다" 고 말하는 형태라 **점을 반드시 찍는다**(`dot`) — 선만
+ * 있으면 측정 지점이 어디인지 사라진다.
  *
  * 🔴 **직접 그린 div 막대를 걷어낸 이유**: 축이 없어 **막대만 보고는 아무것도 알 수
  * 없었다**(사용자 지적 2026-10-10) — 어느 날인지, 몇 회인지. 축·눈금·툴팁은 직접
@@ -55,7 +67,7 @@ const PatrolBarChart = ({ buckets }: PatrolBarChartProps) => {
   return (
     <div className="h-[140px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={buckets} margin={{ top: 8, right: 4, bottom: 0, left: -24 }}>
+        <LineChart data={buckets} margin={{ top: 8, right: 8, bottom: 0, left: -24 }}>
           {/* 가로선만, 점선, 뒤로 물린다 */}
           <CartesianGrid vertical={false} stroke="var(--color-border)" strokeDasharray="2 4" />
           <XAxis
@@ -78,17 +90,21 @@ const PatrolBarChart = ({ buckets }: PatrolBarChartProps) => {
           />
           <Tooltip
             content={<ChartTooltip />}
-            // 막대보다 큰 히트 영역 — 얇은 막대를 정확히 겨냥하지 않아도 뜬다
-            cursor={{ fill: 'var(--color-muted)', opacity: 0.5 }}
+            // 🔴 라인은 점이 얇다 — 세로선 커서로 **가까운 날**을 집게 한다
+            cursor={{ stroke: 'var(--color-border)', strokeWidth: 1 }}
           />
-          <Bar
+          <Line
+            type="monotone"
             dataKey="count"
-            fill="var(--color-point)"
-            // 데이터 끝만 둥글게, 바닥은 기준선에 붙인다
-            radius={[4, 4, 0, 0]}
-            maxBarSize={14}
+            stroke="var(--color-point)"
+            strokeWidth={2}
+            // 🔴 **점을 찍는다** — 선만 있으면 어디가 측정값인지 알 수 없다
+            dot={{ r: 2.5, fill: 'var(--color-point)', strokeWidth: 0 }}
+            activeDot={{ r: 4 }}
+            // 값이 없는 날은 0 이므로 선이 끊기지 않는다(버킷이 0 을 채운다)
+            isAnimationActive={false}
           />
-        </BarChart>
+        </LineChart>
       </ResponsiveContainer>
     </div>
   )

@@ -19,9 +19,11 @@ import PointPatrolLog from '@/features/points/components/detail/PointPatrolLog'
 import PointStats from '@/features/points/components/detail/PointStats'
 import { usePointHistory } from '@/features/points/hooks/usePointHistory'
 import {
+  formatSinceLabel,
   summarizePatrolHistory,
   summaryFromDate,
   summaryToDate,
+  toPatrolTicks,
 } from '@/features/points/lib/patrolSummary'
 import { getSiteSeq } from '@/lib/auth/site'
 import EditPointForm from '@/features/points/form/EditPointForm'
@@ -160,8 +162,12 @@ const PointDetailPage = () => {
 
           <PointStats
             patrolCount={summary.total}
+            attemptedCount={summary.attempted}
+            ticks={toPatrolTicks(summary)}
             lastPatrol={lastPatrolLabel(point)}
+            sinceLabel={formatSinceLabel(point.lastPatrolDt, today)}
             courseCount={point.courseList.length}
+            firstCourseName={point.courseList[0]?.courseName ?? null}
           />
 
           {/* **좌 2/3** 소속 코스·순찰 기록 / **우 1/3** 기본정보·자격증명 — `xl` 미만 1단.

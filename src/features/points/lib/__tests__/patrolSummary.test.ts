@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  SUMMARY_DAYS,
-  summarizePatrolHistory,
-  summaryFromDate,
-  summaryToDate,
-} from '../patrolSummary'
+import { SUMMARY_DAYS, summarizePatrolHistory, summaryFromDate, summaryToDate, toPatrolTicks, formatSinceLabel } from '../patrolSummary'
 import type { PointHistoryRow } from '../../types'
 
 /**
@@ -171,5 +166,51 @@ describe('summarizePatrolHistory — 인증(완료)과 대상(전체)을 가른�
 
     expect(summary.total).toBe(2)
     expect(summary.attempted).toBe(2)
+  })
+})
+
+/** 🔴 **점등 배열과 "얼마 전"** (`spec 031`) */
+describe('toPatrolTicks', () => {
+  const today = new Date('2026-10-14T10:00:00')
+
+  it('인증한 날만 켠다 — 안 한 날도 **칸은 남긴다**', () => {
+    const summary = summarizePatrolHistory(
+      [row('2026-10-14T09:00:00', { status: 4 }), row('2026-10-12T09:00:00', { status: 4 })],
+      today,
+      3
+    )
+
+    // 오래된 날 → 최근 날: 10/12 ✓, 10/13 ✗, 10/14 ✓
+    expect(toPatrolTicks(summary)).toEqual([true, false, true])
+  })
+
+  it('기록이 없으면 전부 꺼져 있다 — 길이는 그대로다', () => {
+    expect(toPatrolTicks(summarizePatrolHistory([], today, 14))).toHaveLength(14)
+    expect(toPatrolTicks(summarizePatrolHistory([], today, 14)).every((on) => !on)).toBe(true)
+  })
+})
+
+describe('formatSinceLabel', () => {
+  const now = new Date('2026-10-14T10:00:00')
+
+  it('한 시간 안이면 "방금"', () => {
+    expect(formatSinceLabel('2026-10-14T09:30:00', now)).toBe('방금')
+  })
+
+  it('하루 안이면 시간 단위', () => {
+    expect(formatSinceLabel('2026-10-14T01:00:00', now)).toBe('9시간 전')
+  })
+
+  it('하루가 넘으면 일 단위', () => {
+    expect(formatSinceLabel('2026-10-11T10:00:00', now)).toBe('3일 전')
+  })
+
+  it('🔴 미래 시각이면 아무 말도 하지 않는다 — `-2시간 전` 은 사실이 아니라 데이터 이상이다', () => {
+    expect(formatSinceLabel('2026-10-14T12:00:00', now)).toBeNull()
+  })
+
+  it('값이 없거나 깨졌으면 null', () => {
+    expect(formatSinceLabel(null, now)).toBeNull()
+    expect(formatSinceLabel('깨진 값', now)).toBeNull()
   })
 })

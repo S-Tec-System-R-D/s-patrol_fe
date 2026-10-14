@@ -33,6 +33,20 @@ export interface CourseHistoryStats {
    * 화면이 그렇게 적어야 한다 — 전체 기간 값으로 보이면 거짓이다.
    */
   partial: boolean
+  /**
+   * 상태별 건수 (`spec 031` 확장) — **구성을 보여주기 위한 값**이다.
+   *
+   * 🔴 **`runCount`(서버 `totalCount`)와 합이 다를 수 있다.** 이건 **받아 온 행**을 센
+   * 값이라, `partial` 이면 표본 기준이다. 화면은 둘을 **같은 수로 취급하면 안 된다**.
+   * 🔴 코스 사전: `0` 진행중 · `1` 완료 · `2` 미완료(지점 사전과 값이 겹치는데 뜻이 다르다 — B-7).
+   */
+  statusCounts: { done: number; inProgress: number; failed: number }
+  /**
+   * 소요시간 **최단·최장**(초). 🔴 **읽을 수 있는 행이 없으면 `null`** —
+   * 평균과 같은 규칙이다(0 으로 섞으면 "0초 순찰" 이 생긴다).
+   */
+  minElapsedSec: number | null
+  maxElapsedSec: number | null
 }
 
 /**
@@ -50,6 +64,17 @@ export const courseHistoryStats = (
   const checkedSum = rows.reduce((sum, row) => sum + row.checkedCount, 0)
   const pointSum = rows.reduce((sum, row) => sum + row.pointCount, 0)
 
+  /**
+   * 🔴 **모르는 상태값을 어느 쪽에도 넣지 않는다.** 실측된 코스 사전은 0·1·2 뿐이고
+   * (api-spec §4), 그 밖의 값이 오면 **세 칸 어디에도 더하지 않는다** — 임의로 "미완료"
+   * 에 넣으면 화면이 없는 실패를 보여준다(A1).
+   */
+  const statusCounts = {
+    done: rows.filter((row) => row.status === 1).length,
+    inProgress: rows.filter((row) => row.status === 0).length,
+    failed: rows.filter((row) => row.status === 2).length,
+  }
+
   return {
     runCount: totalCount,
     avgElapsedSec:
@@ -62,6 +87,9 @@ export const courseHistoryStats = (
     authRate: pointSum === 0 ? null : checkedSum / pointSum,
     sampledCount: rows.length,
     partial: totalCount > rows.length,
+    statusCounts,
+    minElapsedSec: elapsed.length === 0 ? null : Math.min(...elapsed),
+    maxElapsedSec: elapsed.length === 0 ? null : Math.max(...elapsed),
   }
 }
 

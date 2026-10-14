@@ -93,3 +93,29 @@ export const buildCourseAlerts = (
 
   return { items: alerts.slice(0, limit), totalCount: alerts.length }
 }
+
+/**
+ * 미인증을 **지점별로 묶는다** (`spec 031` — 미인증 KPI 의 구성 바).
+ *
+ * 🔴 **건수만으로는 "어디가 문제인지" 를 모른다.** `미인증 8건` 이 한 지점에서 8번인지
+ * 여덟 지점에서 한 번씩인지는 **완전히 다른 상황**이다 — 전자는 그 지점(태그 고장·접근
+ * 불가)을 보면 되고, 후자는 코스 운영을 봐야 한다.
+ *
+ * 🔴 **서버 요청을 늘리지 않는다** — B단이 이미 받아 둔 `unchecked` 행을 다시 센다.
+ *
+ * @returns 많은 순 정렬. 동률이면 **지점명 순**(렌더마다 순서가 바뀌면 눈이 쫓아간다)
+ */
+export const uncheckedByPoint = (
+  unchecked: PointHistoryRow[]
+): { label: string; value: number }[] => {
+  const counts = new Map<string, number>()
+  for (const row of unchecked) {
+    // 🔴 이름이 비어 있으면 **버리지 않고** 묶는다 — 빼면 합이 총계와 어긋난다
+    const label = row.pointName.trim() || '이름 없음'
+    counts.set(label, (counts.get(label) ?? 0) + 1)
+  }
+
+  return [...counts.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label))
+}

@@ -20,6 +20,10 @@ const stats = (overrides: Partial<CourseHistoryStats> = {}): CourseHistoryStats 
   pointSum: 180,
   authRate: 174 / 180,
   sampledCount: 60,
+  // `spec 031` 확장 — 구성 바에 쓰는 값
+  statusCounts: { done: 55, inProgress: 2, failed: 3 },
+  minElapsedSec: 42 * 60,
+  maxElapsedSec: 58 * 60,
   partial: false,
   ...overrides,
 })
