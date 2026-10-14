@@ -66,7 +66,14 @@ const PointTopNav = ({ search, onSearchChange, filters }: PointTopNavProps) => {
           pushSearch(event.target.value)
         }}
       />
-      {filters}
+      {/* 🔴 **필터 영역에 이름을 붙인다**(`spec 030`). 좁은 폭 카드가 `button` 이라
+          접근성 이름에 행 내용이 전부 들어가고, 그중 "교대 허용" 같은 글자가 **필터 버튼과
+          이름이 겹친다.** 스크린리더 사용자에게도 "여기부터 필터" 라는 경계가 생긴다 */}
+      {filters && (
+        <div role="group" aria-label="목록 필터" className="contents">
+          {filters}
+        </div>
+      )}
       <div className="flex-1" />
       <AppDialog
         open={addOpen}

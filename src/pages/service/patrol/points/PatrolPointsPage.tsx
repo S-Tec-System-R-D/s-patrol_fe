@@ -6,6 +6,7 @@ import AppTable from '@/components/AppTable'
 import PatrolHistoryTabs from '@/features/patrol-zones/components/PatrolHistoryTabs'
 import PatrolRecordDialog from '@/features/patrol-points/components/PatrolRecordDialog'
 import { pointColumns } from '@/features/patrol-points/components/PointColumn'
+import { pointHistoryCard } from '@/features/patrol-points/components/PointHistoryCard'
 import type { PaginationState } from '@tanstack/react-table'
 import {
   CalendarIcon,
@@ -79,6 +80,8 @@ const PatrolPointsPage = () => {
         hidePagination
         pagination={pagination}
         onPaginationChange={setPagination}
+        // 🔴 `xl` 미만에서는 카드로 — 8컬럼이라 이 화면이 가장 심하게 찌그러진다(`spec 030`)
+        renderCard={pointHistoryCard(setSelectedRecord)}
       />
 
       <AppPagination

@@ -8,6 +8,7 @@ import AppPageHeader from '@/components/app/AppPageHeader'
 import AppPagination from '@/components/app/AppPagination'
 import AppTable from '@/components/AppTable'
 import CourseTabs from '@/features/courses/components/CourseTabs'
+import PointCard from '@/features/points/components/PointCard'
 import { pointColumns } from '@/features/points/components/PointColumn'
 import PointFilters from '@/features/points/components/PointFilters'
 import PointTopNav from '@/features/points/components/PointTopNav'
@@ -182,6 +183,8 @@ const PointsPage = () => {
             columns={columns}
             data={items}
             hidePagination
+            // 🔴 `xl` 미만에서는 카드로(`spec 030`)
+            renderCard={PointCard}
             onRowClick={(point) => navigate(paths.service.pointDetail(point.pointSeq))}
             // 🔴 미사용은 **행 전체**를 톤다운한다 — 셀 글자만 흐리면 눈에 안 띈다
             rowClassName={(point) => (point.useYn ? '' : 'bg-muted/40')}

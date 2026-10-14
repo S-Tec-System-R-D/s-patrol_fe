@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
@@ -58,11 +58,24 @@ afterEach(() => {
   clearTokens()
 })
 
+
+/**
+ * 🔴 **`spec 030` 부터 DOM 에 행이 두 벌이다** — 테이블(`xl` 이상)과 카드(`xl` 미만)를
+ * 동시에 렌더하고 **CSS 로** 숨기기 때문이다. 실제 브라우저에서는 `display:none` 이라
+ * 한쪽만 보이고 접근성 트리에도 하나만 올라가지만, **jsdom 에는 Tailwind 스타일시트가
+ * 없어 둘 다 조회된다.** 그래서 행을 찾을 때는 **테이블 영역으로 좁힌다.**
+ */
+const inTable = () => within(screen.getByRole('table'))
+
+/** 필터 버튼은 목록 바깥에 있다 — 카드의 접근성 이름과 겹치지 않게 영역을 좁힌다 */
+const inFilters = () => within(screen.getByRole('group', { name: '목록 필터' }))
+
 describe('ZonesPage — 목록 조회', () => {
   it('선택한 사업장의 코스 목록을 테이블로 렌더한다', async () => {
     renderPage()
 
-    expect(await screen.findByText('A동 순찰코스')).toBeInTheDocument()
+    await screen.findAllByText('A동 순찰코스')
+    expect(inTable().getByText('A동 순찰코스')).toBeInTheDocument()
     expect(screen.getByText('지점 수')).toBeInTheDocument()
     expect(screen.getByText('총 소요시간')).toBeInTheDocument()
     expect(screen.getByText('최근 순찰')).toBeInTheDocument()
@@ -72,14 +85,15 @@ describe('ZonesPage — 목록 조회', () => {
     setSite(8, '다른 사업장')
     renderPage()
 
-    expect(await screen.findByText('외벽 순회 코스')).toBeInTheDocument()
+    await screen.findAllByText('외벽 순회 코스')
+    expect(inTable().getByText('외벽 순회 코스')).toBeInTheDocument()
     expect(screen.queryByText('A동 순찰코스')).not.toBeInTheDocument()
   })
 
   it('🔴 좌/우 2단 mock 셸이 남아 있지 않다 — 트리와 "지점 순서·편집" 카드가 없다', async () => {
     renderPage()
 
-    await screen.findByText('A동 순찰코스')
+    await screen.findAllByText('A동 순찰코스')
     expect(screen.queryByText('코스 목록')).not.toBeInTheDocument()
     expect(screen.queryByText('지점 순서 · 편집')).not.toBeInTheDocument()
     expect(screen.queryByText('DETAIL_ROUTE')).not.toBeInTheDocument()
@@ -88,21 +102,23 @@ describe('ZonesPage — 목록 조회', () => {
   it('🔴 미사용 코스도 목록에 함께 나온다 — 서버가 제외하지 않는다', async () => {
     renderPage()
 
-    expect(await screen.findByText('구 주차장 코스(미사용)')).toBeInTheDocument()
-    expect(screen.getByText('미사용')).toBeInTheDocument()
+    await screen.findAllByText('구 주차장 코스(미사용)')
+    expect(inTable().getByText('구 주차장 코스(미사용)')).toBeInTheDocument()
+    expect(inTable().getByText('미사용')).toBeInTheDocument()
   })
 
   it('🔴 지점 0개 코스도 그대로 나온다 — 자동 조치·경고가 없다 (규칙 12)', async () => {
     renderPage()
 
-    expect(await screen.findByText('옥상 점검 코스')).toBeInTheDocument()
+    await screen.findAllByText('옥상 점검 코스')
+    expect(inTable().getByText('옥상 점검 코스')).toBeInTheDocument()
   })
 
   it('🔴 생성 모달은 명칭·설명만 묻는다 — 지점을 묻지 않는다 (B-27)', async () => {
     const user = userEvent.setup()
     renderPage()
 
-    await screen.findByText('A동 순찰코스')
+    await screen.findAllByText('A동 순찰코스')
     await user.click(screen.getByRole('button', { name: /코스 생성/ }))
 
     // 🔴 `AddCourse` 가 `points` 를 무시하므로(200 인데 pointCount: 0) 모달에서 지점을
@@ -119,7 +135,8 @@ describe('ZonesPage — 상세 이동', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(await screen.findByText('B동 순찰코스'))
+    await screen.findAllByText('B동 순찰코스')
+    await user.click(inTable().getByText('B동 순찰코스'))
 
     expect(await screen.findByText('DETAIL_ROUTE')).toBeInTheDocument()
   })
@@ -226,8 +243,8 @@ describe('ZonesPage — 검색·필터·페이지', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await screen.findByText('A동 순찰코스')
-    await user.click(screen.getByRole('button', { name: /교대/ }))
+    await screen.findAllByText('A동 순찰코스')
+    await user.click(inFilters().getByRole('button', { name: /교대/ }))
     await user.click(await screen.findByRole('option', { name: '허용' }))
 
     await waitFor(() => expect(url()).toContain('switchYn=true'))
@@ -237,7 +254,7 @@ describe('ZonesPage — 검색·필터·페이지', () => {
     const user = userEvent.setup()
     renderPage('/zones?switchYn=true')
 
-    await user.click(screen.getByRole('button', { name: /교대/ }))
+    await user.click(inFilters().getByRole('button', { name: /교대/ }))
     await user.click(await screen.findByRole('option', { name: '전체' }))
 
     await waitFor(() => expect(url()).not.toContain('switchYn'))
@@ -247,7 +264,7 @@ describe('ZonesPage — 검색·필터·페이지', () => {
     const user = userEvent.setup()
     renderPage('/zones?page=3')
 
-    await user.click(await screen.findByRole('button', { name: /사용여부/ }))
+    await user.click(await inFilters().findByRole('button', { name: /사용여부/ }))
     await user.click(await screen.findByRole('option', { name: '미사용' }))
 
     await waitFor(() => expect(url()).toContain('useYn=false'))

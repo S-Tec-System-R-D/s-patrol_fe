@@ -8,6 +8,7 @@ import AppPageHeader from '@/components/app/AppPageHeader'
 import AppPagination from '@/components/app/AppPagination'
 import AppTable from '@/components/AppTable'
 import CourseTabs from '@/features/courses/components/CourseTabs'
+import CourseCard from '@/features/courses/components/CourseCard'
 import { courseColumns } from '@/features/courses/components/CourseColumn'
 import CourseFilters from '@/features/courses/components/CourseFilters'
 import CourseTopNav from '@/features/courses/components/CourseTopNav'
@@ -180,6 +181,8 @@ const ZonesPage = () => {
             columns={columns}
             data={items}
             hidePagination
+            // 🔴 `xl` 미만에서는 카드로 — 6컬럼이 좁은 폭에서 찌그러진다(`spec 030`)
+            renderCard={CourseCard}
             onRowClick={(course) => navigate(paths.service.courseDetail(course.courseSeq))}
             // 🔴 미사용은 **행 전체**를 톤다운한다 — 셀 글자만 흐리면 눈에 안 띈다(027)
             rowClassName={(course) => (course.useYn ? '' : 'bg-muted/40')}

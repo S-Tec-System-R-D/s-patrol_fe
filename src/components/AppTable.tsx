@@ -31,6 +31,19 @@ interface AppTableProps<TData> {
    */
   rowClassName?: (data: TData) => string
   searchable?: boolean
+  /**
+   * 좁은 폭(`xl` 미만)에서 행 하나를 그리는 **카드 렌더**. `spec 030`.
+   *
+   * 🔴 **opt-in 이다 — 주지 않으면 아무것도 바뀌지 않는다.** 소비처가 7곳인데 그중
+   * **카드 안에 들어 있는 표**(`CoursePatrolLog` 코스 상세 · `DeploymentHistoryTabs`
+   * 배치 이력)가 자동으로 카드가 되면 **카드 안에 카드**가 생긴다. `/users` 도 제외 —
+   * 400px 고정 패널이 그대로라 카드가 들어갈 폭이 안 남는다(OQ-030-A).
+   *
+   * 🔴 **CSS 로 분기한다**(`hidden xl:block` / `xl:hidden`). JS 로 폭을 재서 하나만
+   * 그리면 ① 첫 렌더에 깜빡이고 ② 테스트·SSR 에서 폭이 0이라 **항상 카드**가 된다.
+   * DOM 이 두 벌이 되지만 행 수는 페이지당 20~100 이라 감당된다.
+   */
+  renderCard?: (data: TData) => React.ReactNode
   /** 페이지당 행 수. 기본 10. controlled `pagination` 미지정 시에만 사용. */
   pageSize?: number
   /** true면 내장 페이지네이션 footer를 숨긴다 (화면이 AppPagination으로 직접 대체할 때). 기본 false. */
@@ -46,6 +59,7 @@ const AppTable = <TData,>({
   searchable,
   onRowClick,
   rowClassName,
+  renderCard,
   pageSize = 10,
   hidePagination = false,
   pagination,
@@ -88,8 +102,9 @@ const AppTable = <TData,>({
         />
       )}
 
-      {/* 테이블 */}
-      <div className="border rounded-sm overflow-hidden">
+      {/* 테이블 — 🔴 `renderCard` 를 받은 화면만 `xl` 이상으로 제한한다. 받지 않은
+          소비처는 **클래스조차 붙지 않아** 지금과 완전히 같다(`spec 030` 제약 2) */}
+      <div className={`border rounded-sm overflow-hidden ${renderCard ? 'hidden xl:block' : ''}`}>
         <table className="w-full text-sm">
           <thead className="border-b bg-muted">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -139,6 +154,46 @@ const AppTable = <TData,>({
           </tbody>
         </table>
       </div>
+
+      {/* 카드 — 좁은 폭(`xl` 미만) 전용.
+          🔴 **행을 `data` 가 아니라 `table.getRowModel()` 에서 가져온다.** `data` 를 직접
+          돌면 정렬·페이지가 **카드에서만 안 먹어** 테이블과 카드가 서로 다른 것을 보여준다.
+          🔴 **클릭·톤다운은 테이블과 같은 함수**(`onRowClick`·`rowClassName`)를 쓴다 —
+          두 벌로 갈리면 한쪽만 고쳐진다. */}
+      {renderCard && (
+        <div className="flex flex-col gap-2 xl:hidden">
+          {table.getRowModel().rows.length > 0 ? (
+            table.getRowModel().rows.map((row) => {
+              const extra = rowClassName?.(row.original) ?? ''
+              /* 🔴 **카드는 `button` 이다**(`div onClick` 이 아니다). 키보드로 누를 수
+                 있어야 한다 — 기존 테이블 행(`tr onClick`)은 그 빚이 있지만, 새로 만드는
+                 카드까지 같은 빚을 지지 않는다(`patterns.md` 반응형 목록 규약) */
+              return onRowClick ? (
+                <button
+                  key={row.id}
+                  type="button"
+                  onClick={() => onRowClick(row.original)}
+                  className={`rounded-sm border border-border bg-card p-3 text-left transition-colors hover:bg-muted/50 ${extra}`}
+                >
+                  {renderCard(row.original)}
+                </button>
+              ) : (
+                <div
+                  key={row.id}
+                  className={`rounded-sm border border-border bg-card p-3 ${extra}`}
+                >
+                  {renderCard(row.original)}
+                </div>
+              )
+            })
+          ) : (
+            /* 테이블의 0건 문구는 `<td colSpan>` 안에 있어 카드 모드에서는 보이지 않는다 */
+            <div className="rounded-sm border border-border bg-card py-10 text-center text-muted-foreground">
+              데이터가 없습니다
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 페이지네이션 */}
       {!hidePagination && <TablePagination table={table} />}

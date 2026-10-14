@@ -58,14 +58,20 @@
 
 ### 기술 제약
 
-1. 🔴 **`AppTable` 의 카드 모드는 opt-in 이다.** 소비처가 **7곳**인데 그중 셋은 이번
+1. 🔴 **`AppTable` 의 카드 모드는 opt-in 이다.** 소비처가 **6곳**인데 그중 둘은 이번
    대상이 아니다:
 
    | 소비처 | 이번 대상 | 비고 |
    |---|:-:|---|
    | `/zones` · `/points` · `/patrol/zones` · `/patrol/points` | ✅ | |
    | `/users` | ✗ | 범위 밖(사용자 결정) — 붙이려면 카드 렌더만 넘기면 된다 |
-   | `CoursePatrolLog`(코스 상세 안) · `DeploymentHistoryTabs`(배치 이력 탭) | 🔴 **절대 아님** | **카드 안에 들어 있는 표**다. 자동으로 카드가 되면 카드 안에 카드가 생긴다 |
+   | `DeploymentHistoryTabs`(배치 이력 탭, 탭마다 1개씩 **2번**) | 🔴 **절대 아님** | **카드 안에 들어 있는 표**다. 자동으로 카드가 되면 카드 안에 카드가 생긴다 |
+
+   🔴 **정정(T443, 2026-10-13)**: `CoursePatrolLog` 은 `AppTable` 을 **쓰지 않는다** —
+   주석에서 "쓰지 않았다" 고 언급할 뿐인데 `grep "AppTable"` 이 그 문장을 세어 소비처로 잡혔다.
+   실제 사용처는 **6곳**(파일 5개 — `DeploymentHistoryTabs` 가 탭마다 하나씩 2번 쓴다):
+   `/zones` · `/points` · `/patrol/zones` · `/patrol/points` · `/users` · `DeploymentHistoryTabs`.
+   **비대상은 2곳**(`/users` · `DeploymentHistoryTabs`)이고 둘 다 `renderCard` 를 받지 않는다.
 
    → prop 을 준 곳만 바뀐다. **기본 동작은 지금 그대로**다.
 

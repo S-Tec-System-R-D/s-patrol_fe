@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
@@ -62,11 +62,24 @@ afterEach(() => {
   clearTokens()
 })
 
+
+/**
+ * 🔴 **`spec 030` 부터 DOM 에 행이 두 벌이다** — 테이블(`xl` 이상)과 카드(`xl` 미만)를
+ * 동시에 렌더하고 **CSS 로** 숨기기 때문이다. 실제 브라우저에서는 `display:none` 이라
+ * 한쪽만 보이고 접근성 트리에도 하나만 올라가지만, **jsdom 에는 Tailwind 스타일시트가
+ * 없어 둘 다 조회된다.** 그래서 행을 찾을 때는 **테이블 영역으로 좁힌다.**
+ */
+const inTable = () => within(screen.getByRole('table'))
+
+/** 필터 버튼은 목록 바깥에 있다 — 카드의 접근성 이름과 겹치지 않게 영역을 좁힌다 */
+const inFilters = () => within(screen.getByRole('group', { name: '목록 필터' }))
+
 describe('PointsPage — 목록 조회', () => {
   it('선택한 사업장의 지점 목록을 테이블로 렌더한다', async () => {
     renderPage()
 
-    expect(await screen.findByText('정문 입구')).toBeInTheDocument()
+    await screen.findAllByText('정문 입구')
+    expect(inTable().getByText('정문 입구')).toBeInTheDocument()
     // 전체 폭 테이블이 되면서 생긴 컬럼들
     expect(screen.getByText('소속 코스')).toBeInTheDocument()
     expect(screen.getByText('최근 순찰')).toBeInTheDocument()
@@ -78,7 +91,8 @@ describe('PointsPage — 목록 조회', () => {
     setSite(8, '강동 그랜드타워')
     renderPage()
 
-    expect(await screen.findByText('외벽 남측')).toBeInTheDocument()
+    await screen.findAllByText('외벽 남측')
+    expect(inTable().getByText('외벽 남측')).toBeInTheDocument()
     expect(screen.queryByText('정문 입구')).not.toBeInTheDocument()
   })
 
@@ -86,8 +100,9 @@ describe('PointsPage — 목록 조회', () => {
     renderPage()
 
     // mock 의 pointSeq 9 는 useYn: false
-    expect(await screen.findByText('비상구 B')).toBeInTheDocument()
-    expect(screen.getByText('미사용')).toBeInTheDocument()
+    await screen.findAllByText('비상구 B')
+    expect(inTable().getByText('비상구 B')).toBeInTheDocument()
+    expect(inTable().getByText('미사용')).toBeInTheDocument()
   })
 })
 
@@ -96,7 +111,8 @@ describe('PointsPage — 상세 이동', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(await screen.findByText('로비 1층'))
+    await screen.findAllByText('로비 1층')
+    await user.click(inTable().getByText('로비 1층'))
 
     expect(await screen.findByText('DETAIL_ROUTE')).toBeInTheDocument()
   })
@@ -104,9 +120,11 @@ describe('PointsPage — 상세 이동', () => {
   it('좌/우 2단 구조가 남아 있지 않다 — 첫 행이 자동 선택되지 않는다', async () => {
     renderPage()
 
-    await screen.findByText('정문 입구')
+    await screen.findAllByText('정문 입구')
     // 022 판은 첫 행을 자동 선택해 우측 패널에 같은 이름이 두 번 떴다.
-    expect(screen.getAllByText('정문 입구')).toHaveLength(1)
+    // 🔴 이제 **테이블 1 + 카드 1 = 2** 가 정상이다(spec 030) — 패널이 있으면 3이 된다
+    expect(inTable().getAllByText('정문 입구')).toHaveLength(1)
+    expect(screen.getAllByText('정문 입구')).toHaveLength(2)
     expect(screen.queryByText('DETAIL_ROUTE')).not.toBeInTheDocument()
   })
 })
@@ -189,8 +207,8 @@ describe('PointsPage — 검색·필터·페이지 (Phase 4)', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await screen.findByText('정문 입구')
-    await user.click(screen.getByRole('button', { name: /인증수단/ }))
+    await screen.findAllByText('정문 입구')
+    await user.click(inFilters().getByRole('button', { name: /인증수단/ }))
     await user.click(await screen.findByRole('option', { name: 'NFC' }))
 
     await waitFor(() => expect(url()).toContain('authMethod=10'))
@@ -200,7 +218,7 @@ describe('PointsPage — 검색·필터·페이지 (Phase 4)', () => {
     const user = userEvent.setup()
     renderPage('/points?authMethod=10')
 
-    await user.click(screen.getByRole('button', { name: /인증수단/ }))
+    await user.click(inFilters().getByRole('button', { name: /인증수단/ }))
     await user.click(await screen.findByRole('option', { name: '전체' }))
 
     await waitFor(() => expect(url()).not.toContain('authMethod'))
@@ -211,7 +229,7 @@ describe('PointsPage — 검색·필터·페이지 (Phase 4)', () => {
     // 3페이지는 결과가 없다(10건 / 20건씩) — 필터 바는 목록과 무관하게 항상 있다
     renderPage('/points?page=3')
 
-    await user.click(await screen.findByRole('button', { name: /사용여부/ }))
+    await user.click(await inFilters().findByRole('button', { name: /사용여부/ }))
     await user.click(await screen.findByRole('option', { name: '미사용' }))
 
     await waitFor(() => expect(url()).toContain('useYn=false'))

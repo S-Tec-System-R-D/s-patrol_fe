@@ -10,6 +10,7 @@ import AppSelect from '@/components/app/AppSelect'
 import AppTable from '@/components/AppTable'
 import PatrolHistoryTabs from '@/features/patrol-zones/components/PatrolHistoryTabs'
 import PatrolTimeline from '@/features/patrol-zones/components/PatrolTimeline'
+import ZoneHistoryCard from '@/features/patrol-zones/components/ZoneHistoryCard'
 import { patrolResultBadge, zoneColumns } from '@/features/patrol-zones/components/ZoneColumn'
 import {
   ALL_VALUE,
@@ -138,6 +139,8 @@ const PatrolZonesPage = () => {
                 pagination={pagination}
                 onPaginationChange={setPagination}
                 onRowClick={handleRowClick}
+                // 🔴 `xl` 미만에서는 카드로(`spec 030`)
+                renderCard={ZoneHistoryCard}
               />
 
               <AppPagination
