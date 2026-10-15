@@ -82,28 +82,21 @@ export const authSwitchSchema = z.object({
 export type AuthSwitchFormData = z.infer<typeof authSwitchSchema>
 
 /**
- * **수정 폼** 스키마 (`spec 029` T410).
+ * **수정 폼** 스키마 — 추가 폼과 **같은 스키마**를 쓴다(`pointSchema`).
  *
- * 🔴 **인증수단이 없다**(사용자 결정 2026-10-13). 전환은 상세 카드의 스위치 한 곳에서만
- * 한다 — 수단이 두 곳이면 그중 폼 쪽은 **TAG ID 를 비워도 저장되는 것처럼** 보인다.
+ * 🔴 **029 의 `makeEditPointSchema(isNfc)` 를 걷어냈다**(재측정 2026-10-15). 당시에는
+ * 수단이 폼 밖(서버값)에 있어 필수 여부를 인자로 받아야 했는데, 이제 수정 폼도 수단을
+ * 직접 고르므로 **`refine` 이 폼 값만 보고 판단할 수 있다** — 함수로 만들 이유가 사라졌다.
  *
- * 🔴 **함수인 이유**: TAG ID 의 필수 여부가 **폼 값이 아니라 `point.authMethod`(서버값)**
- * 로 정해진다. `refine` 으로 쓰면 폼 안에 없는 값을 보고 판단하는 꼴이 된다. 모달이
- * 열릴 때의 수단으로 한 번 만들고 그대로 쓴다.
+ * 🔴 **수단을 수정 폼에 되돌린 이유**: 서버는 `authMethod` 가 **함께 와야** `nfcTagId` 를
+ * 처리한다. 안 보내면 **무시하고 200** 을 준다(실측) — 029 의 "authMethod 를 보내지 않는다"
+ * 는 **TAG ID 가 조용히 저장되지 않는 버그**였다. 수단을 보내려면 폼이 그 값을 알아야 한다.
  *
- * ⚠️ **NFC 지점에서 TAG ID 를 남겨 둔 이유**는 수단 변경이 아니라 **태그 교체**다
- * (물리 태그 분실·파손). QR 지점에는 쓰이지 않는 값이 남아 있을 수 있어 **필드 자체를
- * 띄우지 않는다** — 띄우면 바꿀 수 있는 값처럼 보인다.
+ * ⚠️ 상세 카드의 전환 스위치는 **그대로 둔다**(중복 허용, 사용자 결정 2026-10-15).
+ * 나중에 한쪽을 뺀다.
  */
-export const makeEditPointSchema = (isNfc: boolean) =>
-  z.object({
-    name: z.string().min(2, '두 글자 이상 입력해주세요.'),
-    description: z.string(),
-    nfcTagId: isNfc ? requiredNfcTagId : z.string(),
-    useYn: z.boolean(),
-  })
-
-export type EditFormDataType = z.infer<ReturnType<typeof makeEditPointSchema>>
+// 수정 폼은 `pointSchema` 와 `FormDataType` 을 그대로 쓴다 — 별칭을 만들지 않는다
+// (같은 것에 이름이 둘이면 어느 쪽이 진짜인지 매번 확인해야 한다).
 
 /** 추가 폼 기본값. 수정 폼은 상세 응답을 직접 `defaultValues` 로 넣는다 */
 export const pointFormDefaults: FormDataType = {

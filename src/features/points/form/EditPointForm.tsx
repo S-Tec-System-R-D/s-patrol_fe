@@ -8,10 +8,11 @@ import AppInput from '@/components/app/AppInput'
 import { Switch } from '@/components/ui/switch'
 
 import { updatePoint } from '../api/updatePoint'
-import { toAuthMethodLabel } from '../lib/authMethod'
+import { toAuthMethodCode, toAuthMethodLabel } from '../lib/authMethod'
 import { pointKeys } from '../queryKeys'
 import type { PointDetail } from '../types'
-import { makeEditPointSchema, type EditFormDataType } from './schema'
+import AuthMethodSelector from './fields/AuthMethodSelector'
+import { pointSchema, type FormDataType } from './schema'
 
 /**
  * 지점 수정 폼 (`spec 022` Phase 5).
@@ -35,30 +36,35 @@ const EditPointForm = ({ point, onSuccess }: { point: PointDetail; onSuccess?: (
   // 🔴 모달이 열린 시점의 지점. 아래 `defaultValues` 도 같은 시점에 한 번만 읽힌다.
   const [pointSeq] = useState(point.pointSeq)
 
-  /**
-   * 🔴 **수단은 폼 값이 아니라 서버값이다**(`spec 029` T416). 전환은 상세 카드의
-   * 스위치가 하고, 이 폼은 **지금 수단에 맞는 필드만** 보여준다. 모달이 열린 시점으로
-   * 고정한다 — 뒤에서 수단이 바뀌어도 열려 있는 폼의 모양이 도중에 변하지 않게.
-   */
-  const [isNfc] = useState(() => toAuthMethodLabel(point.authMethod) === 'NFC')
-
   const {
     register,
     handleSubmit,
     setValue,
     control,
     formState: { errors },
-  } = useForm<EditFormDataType>({
-    resolver: zodResolver(makeEditPointSchema(isNfc)),
+  } = useForm<FormDataType>({
+    resolver: zodResolver(pointSchema),
     defaultValues: {
       name: point.name,
       description: point.memo ?? '',
+      /**
+       * 🔴 **미실측 코드(9·10 외)는 미선택으로 연다**(A1). 추측 라벨을 만들지 않는다 —
+       * 저장하려면 사용자가 골라야 하고, 스키마가 "인증수단을 선택해주세요." 로 막는다.
+       */
+      authenticationMethod: toAuthMethodLabel(point.authMethod) ?? undefined,
+      /**
+       * 🔴 **QR 지점에 남아 있는 값도 그대로 채운다**(사용자 결정 2026-10-15). NFC 로
+       * 되돌릴 때 같은 태그를 다시 쓰는 경우가 많고, QR 상태에서는 입력란 자체가 뜨지
+       * 않으므로 화면에 노출되지도 않는다.
+       */
       nfcTagId: point.nfcTagId ?? '',
       useYn: point.useYn,
     },
   })
 
   const useYn = useWatch({ control, name: 'useYn' })
+  /** 🔴 **표시 기준이 서버값에서 폼 값으로 바뀌었다** — 수단을 이 폼에서 고르기 때문이다 */
+  const authenticationMethod = useWatch({ control, name: 'authenticationMethod' })
 
   const mutation = useMutation({
     mutationFn: updatePoint,
@@ -73,20 +79,24 @@ const EditPointForm = ({ point, onSuccess }: { point: PointDetail; onSuccess?: (
     },
   })
 
-  const onSubmit = (data: EditFormDataType) => {
+  const onSubmit = (data: FormDataType) => {
     mutation.mutate({
       pointSeq,
       name: data.name,
       memo: data.description.trim() || null,
       /**
-       * 🔴 **`authMethod` 를 보내지 않는다**(`spec 029` T415). 전환은 상세 카드의
-       * 스위치가 전담하고, `UpdatePoint` 는 진짜 부분 갱신이라 생략하면 유지된다(실측).
-       * ⚠️ 보내면 **TAG ID 를 함께 실어야 하는 요청**이 되어(NFC 지점이면 400) 이름만
-       * 고치려던 저장이 실패한다 — 보강 실측 2026-10-13 이 그 경계를 확인했다.
+       * 🔴 **`authMethod` 를 항상 보낸다**(재측정 2026-10-15). 서버는 이 값이 **함께 와야**
+       * `nfcTagId` 를 처리하고, 없으면 **무시하면서 200** 을 준다 — 029 의 "보내지 않는다"
+       * 규칙 때문에 **TAG ID 수정이 저장되지 않고 성공으로 보였다.**
+       *
+       * ⚠️ 과거 400 을 맞았던 것은 **`authMethod: 10` 을 TAG ID 없이** 보낸 경우다.
+       * 아래처럼 **NFC 면 TAG ID 를 항상 동봉**하므로 그 경계에 걸리지 않는다(실측:
+       * 수단+태그 → 200 / 수단만 → 400 / QR 은 태그 없이 200).
        */
-      // 🔴 TAG ID 는 **NFC 지점일 때만** 보낸다. QR 지점에 남아 있는 값은 어차피 지울
-      // 수 없고(B-15) 화면에도 없다 — 폼이 그것을 되돌려 보낼 이유가 없다
-      nfcTagId: isNfc ? data.nfcTagId : undefined,
+      authMethod: toAuthMethodCode(data.authenticationMethod),
+      // 🔴 TAG ID 는 **NFC 일 때만** 보낸다. QR 로 보내 봐야 서버가 남은 값을 지우지
+      // 못하고(지울 수단이 아예 없다 — 백엔드 요청 P1), 보낸 쪽만 지운 줄 안다
+      nfcTagId: data.authenticationMethod === 'NFC' ? data.nfcTagId : undefined,
       useYn: data.useYn,
     })
   }
@@ -108,13 +118,19 @@ const EditPointForm = ({ point, onSuccess }: { point: PointDetail; onSuccess?: (
           error={errors.description?.message}
           {...register('description')}
         />
-        {/* 🔴 **인증수단 선택이 없다**(`spec 029` T415, 사용자 결정 2026-10-13).
-            전환은 상세의 **자격증명 카드 스위치** 한 곳에서만 한다 — 수단이 두 곳이면
-            그중 폼 쪽은 **TAG ID 를 비워도 저장되는 것처럼** 보인다.
-            ⚠️ TAG ID 필드는 남는다. 수단 변경이 아니라 **태그 교체**(분실·파손) 때문이고,
-            그래서 **NFC 지점일 때만** 뜬다 */}
+        {/* 🔴 **인증수단 선택을 되돌렸다**(사용자 결정 2026-10-15). 029 에서 뺀 이유는
+            "수단이 두 곳이면 폼 쪽이 TAG ID 를 비워도 저장되는 것처럼 보인다" 였는데,
+            서버가 **`authMethod` 없이는 `nfcTagId` 를 처리하지 않는다**는 사실이 드러나
+            수단을 함께 보내는 것이 전제가 됐다.
+            ⚠️ **상세 카드의 전환 스위치와 중복이다** — 둘 다 두고 나중에 한쪽을 뺀다 */}
+        <AuthMethodSelector
+          required
+          value={authenticationMethod}
+          onChange={(v) => setValue('authenticationMethod', v, { shouldValidate: true })}
+          error={errors.authenticationMethod?.message}
+        />
       </div>
-      {isNfc && (
+      {authenticationMethod === 'NFC' && (
         <AppInput
           label="NFC TAG ID"
           placeholder="14자리 HEX"

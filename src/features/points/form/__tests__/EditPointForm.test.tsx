@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -103,27 +103,36 @@ describe('EditPointForm — 초기값 주입', () => {
     expect(screen.getByPlaceholderText('설명을 입력해주세요')).toHaveValue('')
   })
 
-  it('🔴 인증수단 선택이 **없다** — 전환은 상세 카드 스위치가 전담한다 (spec 029)', () => {
-    // 029 에서 뺐다(사용자 결정 2026-10-13). 수단이 두 곳이면 그중 폼 쪽은
-    // **TAG ID 를 비워도 저장되는 것처럼** 보인다.
+  it('🔴 인증수단 선택이 **있다** — 서버가 authMethod 없이는 TAG ID 를 처리하지 않는다', () => {
+    // 029 에서 뺐다가 2026-10-15 되돌렸다. ⚠️ 상세 카드 스위치와 중복이고, 나중에
+    // 한쪽을 뺀다(사용자 결정).
     renderForm()
 
-    expect(screen.queryByRole('button', { name: /^QR$/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /^NFC$/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^QR$/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^NFC$/ })).toBeInTheDocument()
   })
 
-  it('🔴 TAG ID 필드는 **NFC 지점일 때만** 뜬다 — 태그 교체용이다 (spec 029)', () => {
+  it('🔴 TAG ID 필드는 **NFC 를 고를 때만** 뜬다 — 기준이 서버값에서 폼 값으로 바뀌었다', async () => {
+    const user = userEvent.setup()
     renderForm(detail({ authMethod: 9, authMethodName: 'QR' }))
     expect(screen.queryByPlaceholderText('14자리 HEX')).not.toBeInTheDocument()
-    cleanup()
 
-    renderForm(detail({ authMethod: 10, authMethodName: 'NFC', nfcTagId: '04A1B2C3D4E5F6' }))
+    await user.click(screen.getByRole('button', { name: /^NFC$/ }))
+    expect(screen.getByPlaceholderText('14자리 HEX')).toBeInTheDocument()
+  })
+
+  it('🔴 QR 지점에 남아 있던 TAG ID 가 NFC 를 고르면 채워져 있다 (사용자 결정 2026-10-15)', async () => {
+    // 같은 태그를 다시 쓰는 경우가 많다. QR 상태에서는 입력란이 없어 노출되지 않는다
+    const user = userEvent.setup()
+    renderForm(detail({ authMethod: 9, authMethodName: 'QR', nfcTagId: '04A1B2C3D4E5F6' }))
+
+    await user.click(screen.getByRole('button', { name: /^NFC$/ }))
     expect(screen.getByPlaceholderText('14자리 HEX')).toHaveValue('04A1B2C3D4E5F6')
   })
 })
 
 describe('EditPointForm — PATCH 전송', () => {
-  it('🔴 authMethod·reissueQrYn 을 보내지 않는다 — 전환은 스위치 몫이다 (spec 029)', async () => {
+  it('🔴 authMethod 를 **항상** 보낸다 — 없으면 서버가 nfcTagId 를 무시한다 (재측정 2026-10-15)', async () => {
     const user = userEvent.setup()
     const captured = captureBody()
     renderForm()
@@ -134,14 +143,15 @@ describe('EditPointForm — PATCH 전송', () => {
     await user.click(screen.getByRole('button', { name: '저장' }))
 
     await waitFor(() => expect(captured).toHaveLength(1))
-    // 🔴 `UpdatePoint` 는 진짜 부분 갱신이다 — 안 바꾸는 값은 **생략**한다.
-    //    `authMethod` 를 실으면 NFC 지점에서는 TAG ID 를 함께 보내야 해(400)
-    //    이름만 고치려던 저장이 실패한다(보강 실측 2026-10-13)
+    // 🔴 `authMethod` 가 없으면 서버가 `nfcTagId` 를 **무시하면서 200** 을 준다.
+    //    과거 400 은 `authMethod: 10` 을 **TAG ID 없이** 보낸 경우였고, NFC 일 때는
+    //    아래 케이스처럼 태그를 항상 동봉하므로 그 경계에 걸리지 않는다
     expect(captured[0]).toEqual({
       pointSeq: 1,
       name: '정문 입구(수정)',
       memo: '정문 CCTV 앞',
-      nfcTagId: undefined, // QR 지점이라 보내지 않는다
+      authMethod: 9, // QR
+      nfcTagId: undefined, // QR 이라 보내지 않는다 — 서버가 남은 값을 지울 수단이 없다
       useYn: true,
     })
   })
@@ -158,7 +168,7 @@ describe('EditPointForm — PATCH 전송', () => {
     expect(captured[0].useYn).toBe(false)
   })
 
-  it('🔴 NFC 지점은 TAG ID 를 함께 보낸다 — 태그 교체 경로다 (spec 029)', async () => {
+  it('🔴 NFC 는 authMethod 10 + TAG ID 를 함께 보낸다 — 태그 교체 경로다', async () => {
     const user = userEvent.setup()
     const captured = captureBody()
     renderForm(detail({ authMethod: 10, authMethodName: 'NFC', nfcTagId: '04A1B2C3D4E5F6' }))
@@ -170,7 +180,34 @@ describe('EditPointForm — PATCH 전송', () => {
 
     await waitFor(() => expect(captured).toHaveLength(1))
     expect(captured[0].nfcTagId).toBe('AABBCCDDEEFF11')
-    expect(captured[0].authMethod).toBeUndefined()
+    expect(captured[0].authMethod).toBe(10)
+  })
+
+  it('🔴 QR → NFC 로 바꿔 저장하면 수단과 태그가 함께 간다 — 확인 모달 없이 저장한다', async () => {
+    // 수단 변경을 별도 확인 없이 [저장] 한 번으로 반영한다(사용자 결정 2026-10-15).
+    const user = userEvent.setup()
+    const captured = captureBody()
+    renderForm(detail({ authMethod: 9, authMethodName: 'QR' }))
+
+    await user.click(screen.getByRole('button', { name: /^NFC$/ }))
+    await user.type(screen.getByPlaceholderText('14자리 HEX'), 'AABBCCDDEEFF11')
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(captured).toHaveLength(1))
+    expect(captured[0].authMethod).toBe(10)
+    expect(captured[0].nfcTagId).toBe('AABBCCDDEEFF11')
+  })
+
+  it('🔴 NFC 를 골랐는데 TAG ID 가 비어 있으면 보내지 않는다 — 서버 400 전에 막는다', async () => {
+    const user = userEvent.setup()
+    const captured = captureBody()
+    renderForm(detail({ authMethod: 9, authMethodName: 'QR' }))
+
+    await user.click(screen.getByRole('button', { name: /^NFC$/ }))
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(screen.getByText('NFC TAG ID를 입력해주세요.')).toBeInTheDocument())
+    expect(captured).toHaveLength(0)
   })
 
   it('🔴 모달이 열린 뒤 다른 지점이 선택돼도 pointSeq 는 바뀌지 않는다', async () => {
