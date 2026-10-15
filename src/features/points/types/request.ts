@@ -48,9 +48,15 @@ export interface UpdatePointRequest {
   pointSeq: number
   name?: string
   memo?: string | null
+  /**
+   * 🔴 **`nfcTagId` 를 바꾸려면 이 값을 함께 보내야 한다**(재측정 2026-10-15). 없으면
+   * 서버가 `nfcTagId` 를 **무시하면서 200** 을 준다. NFC(10)로 보낼 때는 `nfcTagId` 도
+   * 반드시 함께 — 없으면 400 이다(`"NFC 값을 입력해주세요."`).
+   */
   authMethod?: number
   nfcTagId?: string | null
   useYn?: boolean
+  /** ⚠️ **서버가 보지 않는다**(재측정 2026-10-15 · B-37 철회 → Q6). `false` 로 둔다 */
   reissueQrYn?: boolean
 }
 
