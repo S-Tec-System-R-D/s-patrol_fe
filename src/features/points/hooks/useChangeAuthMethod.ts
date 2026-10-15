@@ -40,7 +40,9 @@ export const useChangeAuthMethod = (pointSeq: number) => {
         pointSeq,
         authMethod: toAuthMethodCode(input.to),
         nfcTagId: input.to === 'NFC' ? input.nfcTagId : undefined,
-        // 재발행은 이 동작과 무관하다. 🔴 애초에 서버에서 **동작하지 않는다**(B-37)
+        // 🔴 **`false` 로 둬도 된다 — 서버가 이 플래그를 보지 않는다**(재측정 2026-10-15).
+        // NFC→QR 로 올 때 `qrCode` 가 없으면 서버가 **알아서 발급한다**(`false` 로 보낸
+        // 지점에서도 발급됐다). `true` 를 보내도 이미 있는 코드는 바뀌지 않는다 → Q6.
         reissueQrYn: false,
       }),
     onSuccess: async () => {
