@@ -30,7 +30,24 @@ const runnerLabel = (userList: CourseHistoryRow['userList']): string => {
 /** `'2026-05-01T09:00:00'` → `'2026-05-01 09:00'`. 초는 목록에서 버린다(비교에 쓰이지 않는다) */
 const formatDateTime = (value: string): string => value.replace('T', ' ').slice(0, 16)
 
-export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] => [
+/**
+ * 🔴🔴 **정렬을 전부 끈다.** `AppTable` 이 `getSortedRowModel` 을 **전역으로 켜 두고**
+ * TanStack 은 `accessorKey` 가 있는 컬럼의 `getCanSort()` 를 **기본 true** 로 본다 —
+ * 그래서 아무것도 안 하면 헤더에 화살표가 뜨고 **클릭이 먹는다.**
+ *
+ * 🔴 그게 왜 위험한가: 이 목록은 **서버 페이징**이다. 클릭하면 **현재 페이지의 N행만**
+ * 섞이는데 화면은 "정렬했다" 고 보인다 — 2페이지의 더 이른 시각이 1페이지 맨 위로
+ * 올라오지 않으므로 **사용자는 틀린 순서를 맞는 것으로 읽는다.** 서버에 정렬 파라미터가
+ * 없으므로(`api-spec.md` §5-1) 정렬은 **제공하지 않는 것이 맞다**(사용자 결정 2026-10-16).
+ *
+ * 🔴 **map 으로 일괄 적용한다** — 컬럼마다 적으면 새 컬럼을 추가할 때 빠뜨린다.
+ * ⚠️ 서버가 정렬을 주게 되면 **여기가 아니라 쿼리 파라미터로** 붙인다.
+ */
+const noSort = (columns: ColumnDef<CourseHistoryRow>[]): ColumnDef<CourseHistoryRow>[] =>
+  columns.map((column) => ({ ...column, enableSorting: false }))
+
+export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
+  noSort([
   {
     accessorKey: 'courseName',
     header: '코스명',
@@ -138,4 +155,4 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] => [
     //    같은 행에서 두 군데를 눌러야 하는 것처럼 보인다)
     cell: () => <ChevronRightIcon size={16} className="text-muted-foreground" aria-hidden />,
   },
-]
+  ])

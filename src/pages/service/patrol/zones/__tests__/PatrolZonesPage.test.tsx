@@ -95,12 +95,22 @@ describe('PatrolZonesPage — 서버 목록', () => {
     expect(screen.queryByRole('button', { name: '내보내기' })).not.toBeInTheDocument()
   })
 
-  it('🔴 정렬 화살표를 만들지 않는다 — 서버에 정렬 파라미터가 없다', async () => {
+  it('🔴 헤더를 클릭해도 정렬되지 않는다 — 서버에 정렬 파라미터가 없다', async () => {
+    const user = userEvent.setup()
     renderPage()
 
     await screen.findAllByText('A동 순찰코스')
-    // 서버 페이징 중 클라이언트 정렬은 현재 페이지만 섞어 거짓이 된다
-    expect(screen.queryByRole('button', { name: /코스명/ })).not.toBeInTheDocument()
+    const firstRowBefore = inTable().getAllByRole('row')[1].textContent
+
+    // 🔴 **아이콘이 아니라 동작으로 본다.** `AppTable` 은 정렬 아이콘을 접근성 이름이
+    //    없는 svg 로 그리고 헤더는 `button` 이 아니라 `th` 라, 아이콘을 찾는 단언은
+    //    **켜져 있어도 통과한다**(실제로 그래서 놓쳤다 — 브라우저 확인 2026-10-16).
+    await user.click(screen.getByText('시작 일시'))
+
+    // 서버 페이징 중 클라이언트 정렬은 **현재 페이지의 N행만** 섞는데 화면은 정렬된
+    // 것처럼 보인다 — 2페이지의 더 이른 시각은 올라오지 않으므로 틀린 순서를 맞는
+    // 것으로 읽는다
+    expect(inTable().getAllByRole('row')[1].textContent).toBe(firstRowBefore)
   })
 
   it('행을 클릭하면 회차 상세로 이동한다', async () => {
