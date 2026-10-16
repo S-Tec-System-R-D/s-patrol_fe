@@ -1,6 +1,7 @@
 import { MessageSquareTextIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
+import { cardBadge as COMPACT_BADGE } from '@/components/app/AppBadge.variants'
 import AppEmpty from '@/components/app/AppEmpty'
 import { checkGaps } from '@/features/course-history/lib/checkIntervals'
 import { formatDuration } from '@/features/course-history/lib/elapsed'
@@ -22,6 +23,11 @@ import { AUTH_METHOD, type CheckDetailRow } from '@/features/course-history/type
  * 것처럼** 보인다. 백엔드 회신 뒤에 표기를 정한다.
  *
  * 🔴 **위치 컬럼을 만들지 않는다** — 층·위치 필드가 **서버 어디에도 없다**(목업에는 있다).
+ *
+ * 🔴 **뱃지를 한 단계 작게 쓴다**(사용자 확인 2026-10-16). 기본 `AppBadge`(11px·px-2)는
+ * 행 높이가 조밀한 표에서 **지점명과 크기가 비슷해** 이름과 뱃지가 서로 다툰다 — 카드에서
+ * 쓰던 `cardBadge` 와 같은 치수다(`AppBadge.variants.ts`). 한 행에 뱃지가 **최대 3개**
+ * (인증수단 + 결과 + 시간초과)라 기본 크기로는 결과 칸이 줄바꿈된다.
  *
  * 🔴 **순번은 `orderNo` 를 그대로 쓴다.** 서버가 중복을 저장하지만(032) 그건 **편성의
  * 사실**이고, 배열 위치로 바꿔 매기면 **같은 지점을 화면마다 다른 번호**로 부른다.
@@ -79,9 +85,13 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                 <td className="px-3 py-2">
                   {/* 🔴 미인증·미완료 행은 `authMethod` 가 `null` 이다 — 빈 칸이 아니라 `—` */}
                   {row.authMethod === AUTH_METHOD.QR ? (
-                    <AppBadge variant="point">QR</AppBadge>
+                    <AppBadge variant="point" className={COMPACT_BADGE}>
+                      QR
+                    </AppBadge>
                   ) : row.authMethod === AUTH_METHOD.NFC ? (
-                    <AppBadge variant="success">NFC</AppBadge>
+                    <AppBadge variant="success" className={COMPACT_BADGE}>
+                      NFC
+                    </AppBadge>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
@@ -94,9 +104,15 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex flex-wrap items-center gap-1">
-                    <AppBadge variant={result.variant}>{result.label}</AppBadge>
+                    <AppBadge variant={result.variant} className={COMPACT_BADGE}>
+                      {result.label}
+                    </AppBadge>
                     {/* 🔴 결과와 **독립 축**이라 병기한다(목록과 같은 규칙) */}
-                    {overtime && <AppBadge variant={overtime.variant}>{overtime.label}</AppBadge>}
+                    {overtime && (
+                      <AppBadge variant={overtime.variant} className={COMPACT_BADGE}>
+                        {overtime.label}
+                      </AppBadge>
+                    )}
                   </div>
                 </td>
                 <td className="px-3 py-2">
