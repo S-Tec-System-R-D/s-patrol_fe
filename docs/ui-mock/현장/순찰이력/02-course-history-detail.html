@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>S-Patrol · 코스 순찰이력 상세</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{--bg:oklch(0.985 0.003 260);--surface:#fff;--border:oklch(0.914 0.006 260);--border-soft:oklch(0.951 0.004 260);--text:oklch(0.22 0.015 260);--text-2:oklch(0.5 0.02 260);--text-3:oklch(0.68 0.014 260);--accent:oklch(0.5 0.175 260);--accent-bg:oklch(0.955 0.025 260);--accent-dark:oklch(0.4 0.16 260);--success:oklch(0.62 0.14 155);--success-bg:oklch(0.955 0.035 155);--amber:oklch(0.68 0.13 70);--amber-bg:oklch(0.96 0.03 70);--amber-dark:oklch(0.52 0.12 70);--danger:oklch(0.58 0.19 25);--danger-bg:oklch(0.962 0.028 25);--gray-bg:oklch(0.955 0.004 260);--rail:oklch(0.19 0.014 262);--rail-2:oklch(0.27 0.016 262);--mono:'Geist Mono',ui-monospace,SFMono-Regular,monospace}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:13px;letter-spacing:-0.01em;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-dark);text-decoration:none}a:hover{color:var(--accent)}
+.shell{width:1920px;min-height:911px;display:flex;background:var(--bg)}
+.rail{width:68px;flex-shrink:0;background:var(--rail);display:flex;flex-direction:column;align-items:center;padding:18px 0 20px;position:sticky;top:0;height:100vh}
+.rail__mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(155deg,oklch(0.6 0.18 260),oklch(0.42 0.16 262));display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;margin-bottom:28px;flex-shrink:0}
+.rail__nav{display:flex;flex-direction:column;gap:6px}
+.rail__item{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;color:oklch(0.62 0.02 260);cursor:pointer;position:relative}
+.rail__item svg{width:20px;height:20px}
+.rail__item.is-active{background:oklch(0.29 0.02 262);color:#fff}
+.rail__item.is-active::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:2px;background:oklch(0.68 0.16 260)}
+.rail__spacer{flex:1}
+.rail__profile{width:44px;height:44px;border-radius:12px;background:var(--rail-2);display:grid;place-items:center;border:1px solid oklch(1 0 0/0.06);position:relative}
+.rail__profile .av{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700;background:oklch(0.5 0.13 300)}
+.rail__dot{position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--rail)}
+.main{flex:1;min-width:0;padding:22px 28px 44px}
+.crumb{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-3);margin-bottom:12px}
+.crumb svg{width:13px;height:13px}
+.crumb b{font-weight:600;color:var(--text-2)}
+.pagehead{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding-bottom:18px;border-bottom:1px solid var(--border-soft);margin-bottom:18px}
+.ph-left{display:flex;gap:13px;min-width:0}
+.ph-icon{width:40px;height:40px;border-radius:11px;background:var(--danger-bg);color:var(--danger);display:grid;place-items:center;flex-shrink:0}
+.ph-icon svg{width:20px;height:20px}
+.ph-titlerow{display:flex;align-items:center;gap:9px}
+.ph-titlerow h1{margin:0;font-size:17px;font-weight:700;letter-spacing:-0.015em}
+.ph-meta{display:flex;align-items:center;gap:10px;margin-top:7px;font-size:11.5px;color:var(--text-3)}
+.ph-meta .sep{width:1px;height:10px;background:var(--border)}
+.ph-meta code{font-family:var(--mono);font-size:11px;background:var(--gray-bg);padding:1.5px 6px;border-radius:5px;color:var(--text-2)}
+.ph-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pager{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.pager button{width:32px;height:34px;border:none;background:none;color:var(--text-2);display:grid;place-items:center;cursor:pointer}
+.pager button+button{border-left:1px solid var(--border-soft)}
+.pager svg{width:15px;height:15px}
+.btn{height:34px;padding:0 13px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:inherit}
+.btn svg{width:14px;height:14px}
+.btn:hover{background:var(--gray-bg)}
+.btn--primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn--primary:hover{background:var(--accent-dark)}
+.btn--ghost{border-color:transparent;background:none;color:var(--text-2)}
+.btn--sm{height:29px;padding:0 10px;font-size:12px;border-radius:7px}
+.badge{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge--accent{background:var(--accent-bg);color:var(--accent-dark)}
+.badge--gray{background:var(--gray-bg);color:var(--text-2)}
+.badge--amber{background:var(--amber-bg);color:var(--amber-dark)}
+.badge--green{background:var(--success-bg);color:var(--success)}
+.badge--danger{background:var(--danger-bg);color:var(--danger)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.kpi{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:15px 17px 16px;display:flex;flex-direction:column;min-height:132px}
+.kpi__top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lab{font-size:11.5px;font-weight:600;color:var(--text-2)}
+.ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;background:var(--gray-bg);color:var(--text-3)}
+.ico svg{width:14px;height:14px}
+.ico.g{background:var(--success-bg);color:var(--success)}
+.ico.a{background:var(--amber-bg);color:var(--amber-dark)}
+.ico.b{background:var(--accent-bg);color:var(--accent-dark)}
+.ico.r{background:var(--danger-bg);color:var(--danger)}
+.kpi__val{margin-top:11px;font-size:26px;font-weight:700;letter-spacing:-0.025em;line-height:1;display:flex;align-items:baseline;gap:4px}
+.kpi__val small{font-size:13px;font-weight:600;color:var(--text-3)}
+.kpi__foot{margin-top:auto;padding-top:12px}
+.pill{display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 7px;border-radius:20px;font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.pill--a{background:var(--amber-bg);color:var(--amber-dark)}
+.pill--g{background:var(--success-bg);color:var(--success)}
+.pill--r{background:var(--danger-bg);color:var(--danger)}
+.pill--n{background:var(--gray-bg);color:var(--text-2)}
+.meter{height:4px;border-radius:3px;background:var(--gray-bg);overflow:hidden;display:flex}
+.meter i{display:block;height:100%}
+.meter i.b{background:var(--accent)}.meter i.g{background:var(--success)}.meter i.a{background:var(--amber)}.meter i.r{background:var(--danger)}
+.mcap{margin-top:7px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-2);font-variant-numeric:tabular-nums}
+.mcap b{font-weight:700;color:var(--text)}
+.range{position:relative;height:4px;border-radius:3px;background:var(--gray-bg);margin-top:2px}
+.range span{position:absolute;top:-2px;width:8px;height:8px;border-radius:50%;background:var(--success);border:2px solid var(--surface);box-shadow:0 0 0 1px var(--success)}
+.range i{position:absolute;top:0;height:100%;border-radius:3px;background:oklch(0.93 0.03 155)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:16px}
+.card{border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.card__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px 0}
+.card__head h3{margin:0;font-size:12.5px;font-weight:700}
+.card__head p{margin:4px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.5}
+.card__body{padding:14px 16px 16px}
+.card__foot{padding:11px 16px;border-top:1px solid var(--border-soft);font-size:11.5px;color:var(--text-3);display:flex;align-items:center;justify-content:space-between}
+.floor{position:relative;border-radius:11px;background:var(--gray-bg);overflow:hidden;border:1px solid var(--border-soft)}
+.floor svg{display:block;width:100%;height:auto}
+.floor__bar{position:absolute;top:11px;left:12px;right:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none}
+.floorsel{display:flex;gap:4px;background:oklch(1 0 0/0.86);backdrop-filter:blur(6px);padding:3px;border-radius:8px;border:1px solid var(--border-soft)}
+.floorsel button{height:25px;padding:0 10px;border:none;border-radius:6px;background:none;font-family:inherit;font-size:11.5px;font-weight:600;color:var(--text-2);cursor:pointer}
+.floorsel button.is-on{background:var(--accent);color:#fff}
+.legend{display:flex;gap:12px;align-items:center;background:oklch(1 0 0/0.86);backdrop-filter:blur(6px);padding:5px 10px;border-radius:8px;border:1px solid var(--border-soft);font-size:11px;color:var(--text-2)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:8px;height:8px;border-radius:50%;display:block}
+.mapctl{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.zoomer{display:flex;flex-direction:column;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 1px 3px oklch(0 0 0/0.08)}
+.zoomer button{width:28px;height:28px;border:none;background:none;font-family:inherit;font-size:14px;color:var(--text-2);cursor:pointer}
+.zoomer button+button{border-top:1px solid var(--border-soft)}
+.scalebar{display:flex;align-items:center;gap:6px;background:oklch(1 0 0/0.88);border:1px solid var(--border-soft);border-radius:6px;padding:3px 7px;font-size:10.5px;color:var(--text-2);font-family:var(--mono)}
+.scalebar i{width:42px;height:5px;border:1px solid var(--text-3);border-top:none;display:block}
+.mapattr{position:absolute;left:12px;bottom:12px;font-size:10.5px;color:var(--text-3);background:oklch(1 0 0/0.84);border-radius:5px;padding:2px 7px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;color:var(--text-3);padding:0 10px 9px;border-bottom:1px solid var(--border-soft);white-space:nowrap}
+td{font-size:12.5px;padding:10px;border-bottom:1px solid var(--border-soft);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:oklch(0.985 0.002 260)}
+tr.is-miss td{background:oklch(0.988 0.008 25)}
+.t-mono{font-family:var(--mono);font-size:11.5px;color:var(--text-2)}
+.num{width:22px;height:22px;border-radius:7px;background:var(--surface);border:1px solid var(--border);color:var(--text-2);font-size:11px;font-weight:700;display:grid;place-items:center}
+.num.ok{background:var(--success-bg);border-color:oklch(0.9 0.05 155);color:var(--success)}
+.num.miss{background:var(--danger-bg);border-color:oklch(0.9 0.04 25);color:var(--danger)}
+.who{display:flex;align-items:center;gap:8px;font-weight:600}
+.av2{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.dl{display:grid;grid-template-columns:92px minmax(0,1fr)}
+.dl dt{font-size:12px;color:var(--text-2);padding:11px 0;border-top:1px solid var(--border-soft)}
+.dl dd{margin:0;font-size:12.5px;font-weight:500;padding:11px 0;border-top:1px solid var(--border-soft);line-height:1.55}
+.dl .first{border-top:none}
+.tlcard{border:1px solid var(--border-soft);border-radius:9px;margin-bottom:7px;overflow:hidden}
+.tlcard:last-child{margin-bottom:0}
+.tlcard__row{display:flex;align-items:center;gap:10px;padding:9px 11px}
+.tl-ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex-shrink:0}
+.tl-ic svg{width:14px;height:14px}
+.tl-ic--start,.tl-ic--end{background:var(--gray-bg);color:var(--text-2)}
+.tl-ic--ok{background:var(--success-bg);color:var(--success)}
+.tl-ic--issue{background:var(--danger-bg);color:var(--danger)}
+.tl-ic--miss{background:var(--gray-bg);color:var(--text-3)}
+.tl-title{font-size:12.5px;font-weight:600;flex:1;min-width:0}
+.tl-flag{font-size:10.5px;font-weight:700;color:var(--danger);background:var(--danger-bg);padding:2px 6px;border-radius:5px}
+.tl-time{font-size:11.5px;color:var(--text-3);font-family:var(--mono)}
+.tlcard.is-muted .tl-title{color:var(--text-2);font-weight:500}
+.tl-note{padding:0 11px 11px 47px;font-size:12px;color:var(--text-2);line-height:1.55}
+.tl-shots{display:flex;gap:6px;padding:0 11px 11px 47px}
+.tl-shots div{width:54px;height:40px;border-radius:6px;background:var(--gray-bg);border:1px solid var(--border-soft);display:grid;place-items:center;color:var(--text-3)}
+.tl-shots svg{width:15px;height:15px}
+.sechead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:18px 0 4px;padding-top:14px;border-top:1px solid var(--border-soft)}
+.slab{font-size:10.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-3)}
+.scount{font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.alert{display:flex;gap:9px;padding:9px 0 0}
+.adot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.adot.red{background:var(--danger)}
+.adot.amber{background:var(--amber)}
+.alert__b{min-width:0;flex:1}
+.alert__t{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:7px}
+.alert__m{font-size:11.5px;color:var(--text-3);margin-top:3px;line-height:1.5}
+.alert__time{font-size:11px;color:var(--text-3);font-family:var(--mono);flex-shrink:0;padding-top:2px}
+.strip{display:flex;align-items:center;gap:0;border-radius:9px;overflow:hidden;border:1px solid var(--border-soft);margin-bottom:12px}
+.strip div{flex:1;padding:8px 10px;border-left:1px solid var(--border-soft);font-size:11.5px;color:var(--text-3)}
+.strip div:first-child{border-left:none}
+.strip b{display:block;font-size:13px;font-weight:700;color:var(--text);margin-top:3px}
+tr.arow{cursor:pointer}
+tr.norow td{cursor:default}
+tr.arow.is-open td{background:var(--accent-bg)}
+.recbtn{display:inline-flex;align-items:center;gap:7px;justify-content:flex-end;font-size:11.5px;color:var(--text-3)}
+.recbtn .rcnt{font-weight:700;color:var(--accent-dark)}
+.recbtn .rdash{font-family:var(--mono);color:var(--text-3)}
+.recbtn .chev{width:13px;height:13px;color:var(--text-3);transition:transform .15s}
+tr.arow.is-open .recbtn .chev{transform:rotate(180deg)}
+tr.prow{display:none}
+tr.prow.is-open{display:table-row}
+td.pcell{padding:0;background:oklch(0.981 0.004 260);border-bottom:1px solid var(--border-soft)}
+.panel{padding:15px 16px 17px 46px;position:relative}
+.panel::before{content:"";position:absolute;left:28px;top:17px;bottom:19px;width:2px;border-radius:2px;background:var(--border)}
+.memo__h{display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:600;color:var(--text-2)}
+.memo__h .mlab{font-size:10.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-3)}
+.memo__h .t{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--text-3);font-weight:500}
+.memo__b{margin-top:6px;font-size:12.5px;color:var(--text);line-height:1.65;max-width:70ch}
+.pmeta{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px;font-size:11.5px;color:var(--text-3)}
+.pmeta b{font-weight:600;color:var(--text-2)}
+.pbottom{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}
+.thumbs{display:flex;align-items:flex-start;gap:10px;min-width:0;flex-wrap:wrap}
+.thumbs__l{font-size:10.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-3);margin:4px 2px 0 0}
+.thumb{width:92px;cursor:pointer}
+.thumb__img{height:62px;border-radius:7px;display:grid;place-items:center;background:repeating-linear-gradient(45deg,oklch(0.945 0.004 260),oklch(0.945 0.004 260) 6px,oklch(0.965 0.003 260) 6px,oklch(0.965 0.003 260) 12px)}
+.thumb:hover .thumb__img{outline:2px solid oklch(0.86 0.05 260);outline-offset:1px}
+.thumb__img svg{width:18px;height:18px;color:var(--text-3)}
+.thumb__m{display:flex;flex-direction:column;line-height:1.3;padding:5px 1px 0;min-width:0}
+.thumb__m b{font-size:10.5px;font-weight:600;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thumb__m span{font-size:9.5px;color:var(--text-3);font-family:var(--mono)}
+.plink{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:var(--accent-dark);white-space:nowrap;flex-shrink:0;align-self:flex-end;height:30px}
+.plink svg{width:12px;height:12px}
+.plink:hover{color:var(--accent)}
+
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail">
+    <div class="rail__mark">SP</div>
+    <div class="rail__nav">
+      <div class="rail__item is-active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1.5-4 4-6 7.5-6s6 2 7.5 6"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h10M7 12h10M7 17h6"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9h4l8-4v14l-8-4H4z"/></svg></div>
+    </div>
+    <div class="rail__spacer"></div>
+    <div class="rail__profile"><div class="av">홍</div><div class="rail__dot"></div></div>
+  </nav>
+
+  <main class="main">
+    <div class="crumb"><a href="S-Patrol Redesign - Course History List.html">순찰이력</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg><a href="S-Patrol Redesign - Course History List.html">코스 순찰이력</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg><b>순찰 상세</b></div>
+
+    <div class="pagehead">
+      <div class="ph-left">
+        <div class="ph-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.6 17.3A2 2 0 004.3 20.3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></div>
+        <div>
+          <div class="ph-titlerow"><h1>B동 순찰구역 · 2026-05-01 10:00</h1><span class="badge badge--danger">미완료</span><span class="badge badge--amber">특이사항 1건</span></div>
+          <div class="ph-meta"><code>PR-20260501-0032</code><span class="sep"></span><span>강동 테크노타워 · B동</span><span class="sep"></span><span>순찰자 박지우</span><span class="sep"></span><span>야간 2교대</span><span class="sep"></span><a href="S-Patrol Redesign - Course Detail.html">코스 정보 보기</a></div>
+        </div>
+      </div>
+      <div class="ph-actions">
+        <div class="pager"><button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg></button><button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg></button></div>
+        <button class="btn btn--ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="9" width="12" height="9" rx="1.5"/><path d="M7 9V4h10v5M8 18v2h8v-2"/></svg>인쇄</button>
+        <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg>보고서 내보내기</button>
+        <button class="btn btn--primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6L9 17l-5-5"/></svg>이력 확인 처리</button>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi__top"><span class="lab">지점 인증</span><span class="ico g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg></span></div>
+        <div class="kpi__val">7<small>/ 8개</small><span class="pill pill--r" style="margin-left:4px">미인증 1</span></div>
+        <div class="kpi__foot">
+          <div class="meter"><i class="g" style="width:87.5%"></i><i class="r" style="width:12.5%"></i></div>
+          <div class="mcap"><span>인증 <b>7</b></span><span>비상구 A <b>미인증</b></span></div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top"><span class="lab">소요시간</span><span class="ico b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span></div>
+        <div class="kpi__val">45<small>분</small><span class="pill pill--g" style="margin-left:4px">기준 충족</span></div>
+        <div class="kpi__foot">
+          <div class="range"><i style="left:14%;width:58%"></i><span style="left:66%"></span></div>
+          <div class="mcap"><span>설정 <b>45분</b></span><span>코스 평균 <b>47분</b></span></div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top"><span class="lab">특이사항</span><span class="ico a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.6 17.3A2 2 0 004.3 20.3h15.4a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></span></div>
+        <div class="kpi__val">1<small>건</small></div>
+        <div class="kpi__foot">
+          <div class="meter"><i class="a" style="width:12.5%"></i></div>
+          <div class="mcap"><span>B동 계단실 <b>처리중</b></span><span>사진 <b>3</b></span></div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top"><span class="lab">구간 평균 간격</span><span class="ico b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span></div>
+        <div class="kpi__val">6.4<small>분</small></div>
+        <div class="kpi__foot">
+          <div class="range"><i style="left:12%;width:60%"></i><span style="left:44%"></span></div>
+          <div class="mcap"><span>최단 <b>3분</b></span><span>최장 <b>8분</b></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="stack">
+        <section class="card">
+          <div class="card__head"><div><h3>순찰 동선</h3><p>실제 인증 지점과 순서 · 미인증 지점은 회색으로 표시됩니다</p></div><div style="display:flex;gap:7px"><button class="btn btn--sm btn--ghost">GPS 경로 표시</button><button class="btn btn--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>코스 동선과 비교</button></div></div>
+          <div class="card__body">
+            <div class="floor">
+              <div class="floor__bar">
+                <div class="floorsel"><button class="is-on">일반</button><button>위성</button><button>지적편집도</button></div>
+                <div class="legend"><span><i style="background:var(--success)"></i>인증 완료</span><span><i style="background:var(--danger)"></i>특이사항</span><span><i style="background:oklch(0.8 0.01 260)"></i>미인증</span></div>
+              </div>
+              <svg viewBox="0 0 980 420" role="img" aria-label="B동 순찰구역 실제 순찰 동선">
+                <defs>
+                  <marker id="arw" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0l9 5-9 5z" fill="oklch(0.62 0.14 155)"/></marker>
+                  <filter id="pinsh" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="oklch(0 0 0)" flood-opacity="0.25"/></filter>
+                </defs>
+                <rect x="0" y="0" width="980" height="420" fill="oklch(0.962 0.008 130)"/>
+                <g fill="oklch(0.94 0.028 145)"><rect x="0" y="0" width="980" height="46"/><rect x="0" y="330" width="150" height="90"/><path d="M840 300h140v120H840z"/></g>
+                <g stroke="oklch(0.9 0.006 260)" stroke-width="1" fill="none"><path d="M0 60h980M0 140h980M0 220h980M0 300h980M0 380h980M80 0v420M240 0v420M400 0v420M560 0v420M720 0v420M880 0v420" stroke-opacity="0.5"/></g>
+                <g stroke="oklch(0.86 0.006 260)" stroke-width="26" fill="none" stroke-linecap="round"><path d="M-10 372H990M118 -10V372M884 -10V372"/></g>
+                <g stroke="#fff" stroke-width="22" fill="none" stroke-linecap="round"><path d="M-10 372H990M118 -10V372M884 -10V372"/></g>
+                <g stroke="oklch(0.86 0.006 260)" stroke-width="14" fill="none"><path d="M118 96H884"/></g>
+                <g stroke="#fff" stroke-width="11" fill="none"><path d="M118 96H884"/></g>
+                <text x="500" y="396" font-family="Pretendard" font-size="11" fill="oklch(0.6 0.014 260)" text-anchor="middle">상암로 22길</text>
+                <rect x="250" y="150" width="300" height="170" rx="4" fill="oklch(0.9 0.012 265)" stroke="oklch(0.83 0.014 265)" stroke-width="1.5"/>
+                <rect x="610" y="160" width="190" height="130" rx="4" fill="oklch(0.92 0.01 265)" stroke="oklch(0.85 0.012 265)" stroke-width="1.5"/>
+                <g font-family="Pretendard" text-anchor="middle">
+                  <text x="400" y="240" font-size="14" font-weight="700" fill="oklch(0.42 0.02 265)">강동 테크노타워 B동</text>
+                  <text x="400" y="259" font-size="11" fill="oklch(0.56 0.016 265)">지상 9층 · 지하 2층</text>
+                  <text x="705" y="228" font-size="12.5" font-weight="600" fill="oklch(0.48 0.018 265)">옥외 주차장</text>
+                  <text x="175" y="365" font-size="10.5" fill="oklch(0.52 0.06 145)">근린공원</text>
+                </g>
+                <path d="M186 330V116h520v100h-120v120" fill="none" stroke="oklch(0.62 0.14 155)" stroke-opacity="0.16" stroke-width="13" stroke-linejoin="round" stroke-linecap="round"/>
+                <path d="M186 330V116h520v100h-120v120" fill="none" stroke="oklch(0.62 0.14 155)" stroke-width="2.4" stroke-dasharray="7 7" stroke-linejoin="round" marker-end="url(#arw)"/>
+                <path d="M586 336H870" fill="none" stroke="oklch(0.78 0.012 260)" stroke-width="2" stroke-dasharray="4 6"/>
+                <g filter="url(#pinsh)">
+                  <path d="M186 342c0 0-15-14-15-23a15 15 0 1130 0c0 9-15 23-15 23z" fill="oklch(0.62 0.14 155)"/><text x="186" y="324" font-family="Pretendard" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+                  <path d="M186 128c0 0-15-14-15-23a15 15 0 1130 0c0 9-15 23-15 23z" fill="oklch(0.62 0.14 155)"/><text x="186" y="110" font-family="Pretendard" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+                  <path d="M360 128c0 0-15-14-15-23a15 15 0 1130 0c0 9-15 23-15 23z" fill="oklch(0.62 0.14 155)"/><text x="360" y="110" font-family="Pretendard" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+                  <path d="M520 128c0 0-15-14-15-23a15 15 0 1130 0c0 9-15 23-15 23z" fill="oklch(0.58 0.19 25)"/><text x="520" y="110" font-family="Pretendard" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+                  <path d="M706 128c0 0-15-14-15-23a15 15 0 1130 0c0 9-15 23-15 23z" fill="oklch(0.62 0.14 155)"/><text x="706" y="110" font-family="Pretendard" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">5</text>
+                  <path d="M586 238c0 0-15-14-15-23a15 15 0 1130 0c0 9-15 23-15 23z" fill="oklch(0.62 0.14 155)"/><text x="586" y="220" font-family="Pretendard" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">6</text>
+                  <path d="M586 358c0 0-15-14-15-23a15 15 0 1130 0c0 9-15 23-15 23z" fill="oklch(0.62 0.14 155)"/><text x="586" y="340" font-family="Pretendard" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">7</text>
+                </g>
+                <g><circle cx="870" cy="336" r="9" fill="#fff" stroke="oklch(0.78 0.01 260)" stroke-width="2.6"/><text x="870" y="340" font-family="Pretendard" font-size="10" font-weight="700" fill="oklch(0.6 0.014 260)" text-anchor="middle">8</text></g>
+                <g font-family="Pretendard" text-anchor="middle">
+                  <rect x="128" y="350" width="116" height="32" rx="8" fill="#fff" stroke="oklch(0.92 0.006 260)"/><text x="186" y="364" font-size="11.5" font-weight="700" fill="oklch(0.22 0.015 260)">B동 후문</text><text x="186" y="376" font-size="10" fill="oklch(0.62 0.014 260)">10:06 · QR</text>
+                  <rect x="302" y="56" width="116" height="32" rx="8" fill="#fff" stroke="oklch(0.92 0.006 260)"/><text x="360" y="70" font-size="11.5" font-weight="700" fill="oklch(0.22 0.015 260)">B동 로비</text><text x="360" y="82" font-size="10" fill="oklch(0.62 0.014 260)">10:12 · QR</text>
+                  <rect x="458" y="22" width="124" height="32" rx="8" fill="#fff" stroke="oklch(0.92 0.04 25)"/><text x="520" y="36" font-size="11.5" font-weight="700" fill="oklch(0.22 0.015 260)">B동 계단실</text><text x="520" y="48" font-size="10" fill="oklch(0.58 0.19 25)">10:25 · 특이사항</text>
+                  <rect x="648" y="56" width="116" height="32" rx="8" fill="#fff" stroke="oklch(0.92 0.006 260)"/><text x="706" y="70" font-size="11.5" font-weight="700" fill="oklch(0.22 0.015 260)">외벽 남측</text><text x="706" y="82" font-size="10" fill="oklch(0.62 0.014 260)">10:30 · NFC</text>
+                  <rect x="606" y="330" width="116" height="32" rx="8" fill="#fff" stroke="oklch(0.92 0.006 260)"/><text x="664" y="344" font-size="11.5" font-weight="700" fill="oklch(0.22 0.015 260)">지하 주차장 B2</text><text x="664" y="356" font-size="10" fill="oklch(0.62 0.014 260)">10:39 · NFC</text>
+                  <rect x="800" y="296" width="140" height="32" rx="8" fill="oklch(0.985 0.003 260)" stroke="oklch(0.92 0.006 260)"/><text x="870" y="310" font-size="11.5" font-weight="700" fill="oklch(0.5 0.02 260)">비상구 A</text><text x="870" y="322" font-size="10" fill="oklch(0.68 0.014 260)">미인증</text>
+                </g>
+              </svg>
+              <div class="mapctl"><div class="scalebar"><i></i>50m</div><div class="zoomer"><button>+</button><button>−</button></div></div>
+              <div class="mapattr">NAVER Maps · 37.5451, 127.1365</div>
+            </div>
+          </div>
+          <div class="card__foot"><span>인증 위치는 앱에서 기록된 단말 GPS 좌표 기준입니다.</span><a href="#">좌표 오차 리포트</a></div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><div><h3>지점 인증 내역</h3><p>8개 지점 · 7개 인증 · 1개 미인증 · 행을 클릭하면 기록·사진·메모가 펼쳐집니다</p></div><div style="display:flex;gap:7px"><button class="btn btn--sm btn--ghost">기록 있는 지점만</button><button class="btn btn--sm">CSV</button></div></div>
+          <div class="card__body" style="padding:6px 6px 0">
+            <table>
+              <thead><tr><th style="padding-left:16px;width:44px">순서</th><th>순찰지점</th><th>위치</th><th>인증수단</th><th>인증시각</th><th>구간</th><th>결과</th><th style="text-align:right;padding-right:16px">기록</th></tr></thead>
+              <tbody>
+                <tr class="norow"><td style="padding-left:16px"><span class="num ok">1</span></td><td style="font-weight:600">B동 후문</td><td style="color:var(--text-2)">1F · 후문 출입구</td><td><span class="badge badge--accent">QR</span></td><td class="t-mono">10:06</td><td class="t-mono">+6분</td><td><span class="badge badge--green">이상없음</span></td><td style="text-align:right;padding-right:16px"><span class="recbtn"><span class="rdash">—</span></span></td></tr>
+                <tr class="norow"><td style="padding-left:16px"><span class="num ok">2</span></td><td style="font-weight:600">B동 로비</td><td style="color:var(--text-2)">1F · 안내 데스크</td><td><span class="badge badge--accent">QR</span></td><td class="t-mono">10:12</td><td class="t-mono">+6분</td><td><span class="badge badge--green">이상없음</span></td><td style="text-align:right;padding-right:16px"><span class="recbtn"><span class="rdash">—</span></span></td></tr>
+                <tr class="norow"><td style="padding-left:16px"><span class="num ok">3</span></td><td style="font-weight:600">엘리베이터홀 B</td><td style="color:var(--text-2)">1F · 승강기 앞</td><td><span class="badge badge--green">NFC</span></td><td class="t-mono">10:18</td><td class="t-mono">+6분</td><td><span class="badge badge--green">이상없음</span></td><td style="text-align:right;padding-right:16px"><span class="recbtn"><span class="rdash">—</span></span></td></tr>
+                <tr class="arow is-open" onclick="togglePatrolRow(this)"><td style="padding-left:16px"><span class="num miss">4</span></td><td style="font-weight:600">B동 계단실</td><td style="color:var(--text-2)">3F · 비상계단</td><td><span class="badge badge--green">NFC</span></td><td class="t-mono">10:25</td><td class="t-mono">+7분</td><td><span class="badge badge--danger">특이사항</span></td><td style="text-align:right;padding-right:16px"><span class="recbtn"><b class="rcnt">사진 3 · 메모 1</b><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></span></td></tr>
+                <tr class="prow"><td colspan="8" class="pcell"><div class="panel"><div class="memo"><div class="memo__h"><span class="mlab" style="color:var(--danger)">특이사항</span>박지우<span class="t">10:25</span></div><div class="memo__b">3층 계단 비상등 점멸 이상. 야간 시인성 저하로 시설팀 즉시 보고 필요. 계단 난간·소화기 상태는 정상.</div></div><div class="pmeta"><span>인증 좌표 오차 <b>6m</b></span><span>태그 <b>NFC-B3-07</b></span><span>단말 <b>Galaxy S23</b></span><span>처리 <b>시설팀 접수 · 이가온</b></span></div><div class="pbottom"><div class="thumbs"><span class="thumbs__l">사진 3장</span><div class="thumb"><span class="thumb__img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/><path d="M8 6l1.5-2h5L16 6"/></svg></span><div class="thumb__m"><b>계단실 비상등</b><span>10:24</span></div></div><div class="thumb"><span class="thumb__img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/><path d="M8 6l1.5-2h5L16 6"/></svg></span><div class="thumb__m"><b>3F 계단 전경</b><span>10:25</span></div></div><div class="thumb"><span class="thumb__img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/><path d="M8 6l1.5-2h5L16 6"/></svg></span><div class="thumb__m"><b>비상등 근접</b><span>10:25</span></div></div></div><a class="plink" href="S-Patrol Redesign - Point History Detail.html">상세정보 보기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></div></div></td></tr>
+                <tr class="norow"><td style="padding-left:16px"><span class="num ok">5</span></td><td style="font-weight:600">외벽 남측</td><td style="color:var(--text-2)">외곽 · 남측 통로</td><td><span class="badge badge--green">NFC</span></td><td class="t-mono">10:30</td><td class="t-mono">+5분</td><td><span class="badge badge--green">이상없음</span></td><td style="text-align:right;padding-right:16px"><span class="recbtn"><span class="rdash">—</span></span></td></tr>
+                <tr class="norow"><td style="padding-left:16px"><span class="num ok">6</span></td><td style="font-weight:600">지하 주차장 B1</td><td style="color:var(--text-2)">B1 · 램프 입구</td><td><span class="badge badge--green">NFC</span></td><td class="t-mono">10:33</td><td class="t-mono">+3분</td><td><span class="badge badge--green">이상없음</span></td><td style="text-align:right;padding-right:16px"><span class="recbtn"><span class="rdash">—</span></span></td></tr>
+                <tr class="arow" onclick="togglePatrolRow(this)"><td style="padding-left:16px"><span class="num ok">7</span></td><td style="font-weight:600">지하 주차장 B2</td><td style="color:var(--text-2)">B2 · 중앙 기둥</td><td><span class="badge badge--green">NFC</span></td><td class="t-mono">10:39</td><td class="t-mono">+6분</td><td><span class="badge badge--green">이상없음</span></td><td style="text-align:right;padding-right:16px"><span class="recbtn"><b class="rcnt">메모 1</b><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></span></td></tr>
+                <tr class="prow"><td colspan="8" class="pcell"><div class="panel"><div class="memo"><div class="memo__h"><span class="mlab">메모</span>박지우<span class="t">10:39</span></div><div class="memo__b">B2 중앙 기둥 주변 조도 낮음. 조명 교체 검토 요청.</div></div><div class="pmeta"><span>인증 좌표 오차 <b>9m</b></span><span>태그 <b>NFC-B2-02</b></span><span>단말 <b>Galaxy S23</b></span></div><div class="pbottom"><div class="thumbs"><span class="thumbs__l">첨부 사진 없음</span></div><a class="plink" href="S-Patrol Redesign - Point History Detail.html">상세정보 보기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></div></div></td></tr>
+                <tr class="arow is-miss" onclick="togglePatrolRow(this)"><td style="padding-left:16px"><span class="num ">8</span></td><td style="font-weight:600;color:var(--text-2)">비상구 A</td><td style="color:var(--text-2)">1F · 동측 비상구</td><td><span class="badge badge--gray">QR</span></td><td class="t-mono">—</td><td class="t-mono">—</td><td><span class="badge badge--danger">미인증</span></td><td style="text-align:right;padding-right:16px"><span class="recbtn"><span class="rdash">사유 미등록</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></span></td></tr>
+                <tr class="prow"><td colspan="8" class="pcell"><div class="panel"><div class="memo"><div class="memo__h"><span class="mlab" style="color:var(--danger)">미인증</span>사유 미등록<span class="t">10:45</span></div><div class="memo__b">예정 시각 내 방문 기록이 없습니다. 관리자 확인이 필요합니다.</div></div><div class="pmeta"><span>예정 시각 <b>10:43</b></span><span>직전 인증 <b>10:39 · 지하 주차장 B2</b></span><span>순찰 종료 <b>10:45</b></span></div><div class="pbottom"><button class="btn btn--sm btn--primary">사유 등록</button><a class="plink" href="S-Patrol Redesign - Point History Detail.html">상세정보 보기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card__foot"><span>미인증 지점은 코스 통계의 인증률에 반영됩니다.</span><a href="S-Patrol Redesign - Point History List.html">지점 순찰이력 전체</a></div>
+        </section>
+      </div>
+
+      <div class="stack">
+        <section class="card">
+          <div class="card__head"><h3>순찰 정보</h3><span class="badge badge--danger">미완료</span></div>
+          <div class="card__body" style="padding-top:4px">
+            <dl class="dl">
+              <dt class="first">순찰 코스</dt><dd class="first"><a href="S-Patrol Redesign - Course Detail.html">B동 순찰구역</a></dd>
+              <dt>이력 번호</dt><dd><span class="t-mono">PR-20260501-0032</span></dd>
+              <dt>사업장</dt><dd>강동 테크노타워 · B동</dd>
+              <dt>순찰자</dt><dd><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">박</span>박지우 <span style="color:var(--text-3);font-weight:400;font-size:11.5px">· 야간 2교대</span></div></dd>
+              <dt>시작 일시</dt><dd><span class="t-mono" style="font-size:12px">2026-05-01 10:00:00</span></dd>
+              <dt>종료 일시</dt><dd><span class="t-mono" style="font-size:12px">2026-05-01 10:45:00</span></dd>
+              <dt>소요시간</dt><dd>45분 <span style="color:var(--text-3);font-weight:400">(기준 45분)</span></dd>
+              <dt>지점 인증</dt><dd>7 / 8개 <span style="color:var(--danger);font-weight:600">· 미인증 1</span></dd>
+              <dt>인증수단</dt><dd>QR 2 · NFC 5</dd>
+              <dt>사용 단말</dt><dd>Galaxy S23 · 앱 v2.4.1</dd>
+              <dt>확인 처리</dt><dd><span class="badge badge--amber">미확인</span></dd>
+            </dl>
+          </div>
+          <div class="card__foot"><span>확인 처리 시 담당자와 처리 시각이 기록됩니다.</span><a href="#">비상구 A 사유 등록</a></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+<template id="__bundler_thumbnail"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#1c2a4a"/><text x="50" y="58" font-size="26" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="700">SP</text></svg></template>
+<script>
+function togglePatrolRow(tr){var p=tr.nextElementSibling;if(!p||!p.classList.contains('prow'))return;var on=p.classList.toggle('is-open');tr.classList.toggle('is-open',on)}
+document.querySelectorAll('tr.arow.is-open').forEach(function(tr){var p=tr.nextElementSibling;if(p&&p.classList.contains('prow'))p.classList.add('is-open')});
+</script>
+</body>
+</html>

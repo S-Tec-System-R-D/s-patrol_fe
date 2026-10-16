@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>S-Patrol · 지점 순찰이력 상세</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{--bg:oklch(0.985 0.003 260);--surface:#fff;--border:oklch(0.914 0.006 260);--border-soft:oklch(0.951 0.004 260);--text:oklch(0.22 0.015 260);--text-2:oklch(0.5 0.02 260);--text-3:oklch(0.68 0.014 260);--accent:oklch(0.5 0.175 260);--accent-bg:oklch(0.955 0.025 260);--accent-dark:oklch(0.4 0.16 260);--success:oklch(0.62 0.14 155);--success-bg:oklch(0.955 0.035 155);--amber:oklch(0.68 0.13 70);--amber-bg:oklch(0.96 0.03 70);--amber-dark:oklch(0.52 0.12 70);--danger:oklch(0.58 0.19 25);--danger-bg:oklch(0.962 0.028 25);--gray-bg:oklch(0.955 0.004 260);--rail:oklch(0.19 0.014 262);--rail-2:oklch(0.27 0.016 262);--mono:'Geist Mono',ui-monospace,SFMono-Regular,monospace}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:13px;letter-spacing:-0.01em;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-dark);text-decoration:none}a:hover{color:var(--accent)}
+.shell{width:1920px;min-height:911px;display:flex;background:var(--bg)}
+.rail{width:68px;flex-shrink:0;background:var(--rail);display:flex;flex-direction:column;align-items:center;padding:18px 0 20px;position:sticky;top:0;height:100vh}
+.rail__mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(155deg,oklch(0.6 0.18 260),oklch(0.42 0.16 262));display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;margin-bottom:28px;flex-shrink:0}
+.rail__nav{display:flex;flex-direction:column;gap:6px}
+.rail__item{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;color:oklch(0.62 0.02 260);cursor:pointer;position:relative}
+.rail__item svg{width:20px;height:20px}
+.rail__item.is-active{background:oklch(0.29 0.02 262);color:#fff}
+.rail__item.is-active::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:2px;background:oklch(0.68 0.16 260)}
+.rail__spacer{flex:1}
+.rail__profile{width:44px;height:44px;border-radius:12px;background:var(--rail-2);display:grid;place-items:center;border:1px solid oklch(1 0 0/0.06);position:relative}
+.rail__profile .av{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700;background:oklch(0.5 0.13 300)}
+.rail__dot{position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--rail)}
+.main{flex:1;min-width:0;padding:22px 28px 44px}
+.crumb{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-3);margin-bottom:12px}
+.crumb svg{width:13px;height:13px}
+.crumb b{font-weight:600;color:var(--text-2)}
+.pagehead{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding-bottom:18px;border-bottom:1px solid var(--border-soft);margin-bottom:18px}
+.ph-left{display:flex;gap:13px;min-width:0}
+.ph-icon{width:40px;height:40px;border-radius:11px;background:var(--accent-bg);color:var(--accent-dark);display:grid;place-items:center;flex-shrink:0}
+.ph-icon svg{width:20px;height:20px}
+.ph-titlerow{display:flex;align-items:center;gap:9px}
+.ph-titlerow h1{margin:0;font-size:17px;font-weight:700;letter-spacing:-0.015em}
+.ph-meta{display:flex;align-items:center;gap:10px;margin-top:7px;font-size:11.5px;color:var(--text-3)}
+.ph-meta .sep{width:1px;height:10px;background:var(--border)}
+.ph-meta code{font-family:var(--mono);font-size:11px;background:var(--gray-bg);padding:1.5px 6px;border-radius:5px;color:var(--text-2)}
+.ph-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pager{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.pager button{width:32px;height:34px;border:none;background:none;color:var(--text-2);display:grid;place-items:center;cursor:pointer}
+.pager button+button{border-left:1px solid var(--border-soft)}
+.pager svg{width:15px;height:15px}
+.btn{height:34px;padding:0 13px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:inherit}
+.btn svg{width:14px;height:14px}
+.btn:hover{background:var(--gray-bg)}
+.btn--primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn--primary:hover{background:var(--accent-dark)}
+.btn--ghost{border-color:transparent;background:none;color:var(--text-2)}
+.btn--sm{height:29px;padding:0 10px;font-size:12px;border-radius:7px}
+.badge{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge--accent{background:var(--accent-bg);color:var(--accent-dark)}
+.badge--gray{background:var(--gray-bg);color:var(--text-2)}
+.badge--amber{background:var(--amber-bg);color:var(--amber-dark)}
+.badge--green{background:var(--success-bg);color:var(--success)}
+.badge--danger{background:var(--danger-bg);color:var(--danger)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.kpi{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:15px 17px 16px;display:flex;flex-direction:column;min-height:132px}
+.kpi__top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lab{font-size:11.5px;font-weight:600;color:var(--text-2)}
+.ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;background:var(--gray-bg);color:var(--text-3)}
+.ico svg{width:14px;height:14px}
+.ico.g{background:var(--success-bg);color:var(--success)}
+.ico.a{background:var(--amber-bg);color:var(--amber-dark)}
+.ico.b{background:var(--accent-bg);color:var(--accent-dark)}
+.kpi__val{margin-top:11px;font-size:26px;font-weight:700;letter-spacing:-0.025em;line-height:1;display:flex;align-items:baseline;gap:4px}
+.kpi__val small{font-size:13px;font-weight:600;color:var(--text-3)}
+.kpi__foot{margin-top:auto;padding-top:12px}
+.pill{display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 7px;border-radius:20px;font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.pill--a{background:var(--amber-bg);color:var(--amber-dark)}
+.pill--g{background:var(--success-bg);color:var(--success)}
+.pill--n{background:var(--gray-bg);color:var(--text-2)}
+.meter{height:4px;border-radius:3px;background:var(--gray-bg);overflow:hidden;display:flex}
+.meter i{display:block;height:100%}
+.meter i.b{background:var(--accent)}.meter i.g{background:var(--success)}.meter i.a{background:var(--amber)}.meter i.r{background:var(--danger)}
+.mcap{margin-top:7px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-2);font-variant-numeric:tabular-nums}
+.mcap b{font-weight:700;color:var(--text)}
+.range{position:relative;height:4px;border-radius:3px;background:var(--gray-bg);margin-top:2px}
+.range span{position:absolute;top:-2px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid var(--surface);box-shadow:0 0 0 1px var(--danger)}
+.range i{position:absolute;top:0;height:100%;border-radius:3px;background:oklch(0.93 0.03 70)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:16px}
+.card{border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.card__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px 0}
+.card__head h3{margin:0;font-size:12.5px;font-weight:700}
+.card__head p{margin:4px 0 0;font-size:11.5px;color:var(--text-3);line-height:1.5}
+.card__body{padding:14px 16px 16px}
+.card__foot{padding:11px 16px;border-top:1px solid var(--border-soft);font-size:11.5px;color:var(--text-3);display:flex;align-items:center;justify-content:space-between}
+.floor{position:relative;border-radius:11px;background:var(--gray-bg);overflow:hidden;border:1px solid var(--border-soft)}
+.floor svg{display:block;width:100%;height:auto}
+.floor__bar{position:absolute;top:11px;left:12px;right:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none}
+.floorsel{display:flex;gap:4px;background:oklch(1 0 0/0.86);backdrop-filter:blur(6px);padding:3px;border-radius:8px;border:1px solid var(--border-soft)}
+.floorsel button{height:25px;padding:0 10px;border:none;border-radius:6px;background:none;font-family:inherit;font-size:11.5px;font-weight:600;color:var(--text-2);cursor:pointer}
+.floorsel button.is-on{background:var(--accent);color:#fff}
+.legend{display:flex;gap:12px;align-items:center;background:oklch(1 0 0/0.86);backdrop-filter:blur(6px);padding:5px 10px;border-radius:8px;border:1px solid var(--border-soft);font-size:11px;color:var(--text-2)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:8px;height:8px;border-radius:50%;display:block}
+.mapctl{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.zoomer{display:flex;flex-direction:column;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 1px 3px oklch(0 0 0/0.08)}
+.zoomer button{width:28px;height:28px;border:none;background:none;font-family:inherit;font-size:14px;color:var(--text-2);cursor:pointer}
+.zoomer button+button{border-top:1px solid var(--border-soft)}
+.scalebar{display:flex;align-items:center;gap:6px;background:oklch(1 0 0/0.88);border:1px solid var(--border-soft);border-radius:6px;padding:3px 7px;font-size:10.5px;color:var(--text-2);font-family:var(--mono)}
+.scalebar i{width:42px;height:5px;border:1px solid var(--text-3);border-top:none;display:block}
+.mapattr{position:absolute;left:12px;bottom:12px;font-size:10.5px;color:var(--text-3);background:oklch(1 0 0/0.84);border-radius:5px;padding:2px 7px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;color:var(--text-3);padding:0 10px 9px;border-bottom:1px solid var(--border-soft);white-space:nowrap}
+td{font-size:12.5px;padding:10px;border-bottom:1px solid var(--border-soft);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:oklch(0.985 0.002 260)}
+tr.is-cur td{background:var(--accent-bg)}
+tr.is-miss td{background:oklch(0.988 0.008 25)}
+.t-mono{font-family:var(--mono);font-size:11.5px;color:var(--text-2)}
+.who{display:flex;align-items:center;gap:8px;font-weight:600}
+.av2{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.dl{display:grid;grid-template-columns:92px minmax(0,1fr)}
+.dl dt{font-size:12px;color:var(--text-2);padding:11px 0;border-top:1px solid var(--border-soft)}
+.dl dd{margin:0;font-size:12.5px;font-weight:500;padding:11px 0;border-top:1px solid var(--border-soft);line-height:1.55}
+.dl .first{border-top:none}
+.rlab{font-size:10.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px}
+.rmemo{border-left:2px solid var(--border);padding-left:13px}
+.rmemo__h{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--text-3)}
+.rmemo__h .rwho{font-weight:600;color:var(--text-2)}
+.rmemo__h .rtime{font-family:var(--mono)}
+.rmemo p{margin:6px 0 0;font-size:12.5px;color:var(--text);line-height:1.65;max-width:72ch}
+.thumbs{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.thumb{width:108px;cursor:pointer;border:none;background:none;padding:0;font-family:inherit;text-align:left}
+.thumb__img{display:grid;place-items:center;height:72px;border-radius:8px;background:repeating-linear-gradient(45deg,oklch(0.945 0.004 260),oklch(0.945 0.004 260) 6px,oklch(0.965 0.003 260) 6px,oklch(0.965 0.003 260) 12px)}
+.thumb__img svg{width:19px;height:19px;color:var(--text-3)}
+.thumb:hover .thumb__img{outline:2px solid oklch(0.86 0.05 260);outline-offset:1px}
+.thumb--add .thumb__img{background:none;border:1px dashed var(--border)}
+.thumb__m{display:flex;flex-direction:column;line-height:1.3;padding:6px 1px 0}
+.thumb__m b{font-size:10.5px;font-weight:600;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thumb__m span{font-size:9.5px;color:var(--text-3);font-family:var(--mono)}
+.tlcard{border:1px solid var(--border-soft);border-radius:9px;margin-bottom:7px;overflow:hidden}
+.tlcard:last-child{margin-bottom:0}
+.tlcard__row{display:flex;align-items:center;gap:10px;padding:9px 11px}
+.tlcard.is-cur{border-color:oklch(0.86 0.05 260);background:var(--accent-bg)}
+.tl-ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex-shrink:0}
+.tl-ic svg{width:14px;height:14px}
+.tl-ic--start,.tl-ic--end{background:var(--gray-bg);color:var(--text-2)}
+.tl-ic--ok{background:var(--success-bg);color:var(--success)}
+.tl-ic--cur{background:var(--accent);color:#fff}
+.tl-ic--miss{background:var(--gray-bg);color:var(--text-3)}
+.tl-title{font-size:12.5px;font-weight:600;flex:1;min-width:0}
+.tl-time{font-size:11.5px;color:var(--text-3);font-family:var(--mono)}
+.tlcard.is-muted .tl-title{color:var(--text-2);font-weight:500}
+.strip{display:flex;align-items:center;gap:0;border-radius:9px;overflow:hidden;border:1px solid var(--border-soft);margin-bottom:12px}
+.strip div{flex:1;padding:8px 10px;border-left:1px solid var(--border-soft);font-size:11.5px;color:var(--text-3)}
+.strip div:first-child{border-left:none}
+.strip b{display:block;font-size:13px;font-weight:700;color:var(--text);margin-top:3px}
+.heat{display:flex;gap:3px}
+.heat i{flex:1;height:18px;border-radius:5px;display:block;background:var(--gray-bg)}
+.heat i.ok{background:oklch(0.88 0.07 155)}
+.heat i.rec{background:oklch(0.84 0.07 260)}
+.heat i.bad{background:oklch(0.86 0.08 25)}
+.heatlbl{display:flex;justify-content:space-between;font-size:11px;color:var(--text-2);margin-top:7px;font-variant-numeric:tabular-nums}
+.heatlbl b{font-weight:700;color:var(--text)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail">
+    <div class="rail__mark">SP</div>
+    <div class="rail__nav">
+      <div class="rail__item is-active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1.5-4 4-6 7.5-6s6 2 7.5 6"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h10M7 12h10M7 17h6"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9h4l8-4v14l-8-4H4z"/></svg></div>
+    </div>
+    <div class="rail__spacer"></div>
+    <div class="rail__profile"><div class="av">홍</div><div class="rail__dot"></div></div>
+  </nav>
+
+  <main class="main">
+    <div class="crumb"><a href="S-Patrol Redesign - Point History List.html">순찰이력</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg><a href="S-Patrol Redesign - Point History List.html">지점 순찰이력</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg><b>인증 상세</b></div>
+
+    <div class="pagehead">
+      <div class="ph-left">
+        <div class="ph-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="2.8"/><path d="M12 21s-7-6.5-7-11.5a7 7 0 0114 0C19 14.5 12 21 12 21z"/></svg></div>
+        <div>
+          <div class="ph-titlerow"><h1>B동 계단실 · 2026-05-01 10:28</h1><span class="badge badge--accent">순찰기록 3건</span><span class="badge badge--green">NFC 인증</span></div>
+          <div class="ph-meta"><code>PT-20260501-0418</code><span class="sep"></span><span>강동 테크노타워 · B동 3F 비상계단</span><span class="sep"></span><span>순찰자 박지우</span><span class="sep"></span><a href="S-Patrol Redesign - Course History Detail.html">코스 순찰 상세</a><span class="sep"></span><a href="S-Patrol Redesign - Point Detail.html">지점 정보</a></div>
+        </div>
+      </div>
+      <div class="ph-actions">
+        <div class="pager"><button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg></button><button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg></button></div>
+        <button class="btn btn--ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="9" width="12" height="9" rx="1.5"/><path d="M7 9V4h10v5M8 18v2h8v-2"/></svg>인쇄</button>
+        <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg>기록 내보내기</button>
+        <button class="btn btn--primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6L9 17l-5-5"/></svg>확인 처리</button>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi__top"><span class="lab">인증 결과</span><span class="ico a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg></span></div>
+        <div class="kpi__val">순찰기록<span class="pill pill--a" style="margin-left:4px">3건</span></div>
+        <div class="kpi__foot">
+          <div class="meter"><i class="a" style="width:66.6%"></i><i class="b" style="width:33.4%"></i></div>
+          <div class="mcap"><span>사진 <b>2</b></span><span>메모 <b>1</b></span></div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top"><span class="lab">14일 인증 추이</span><span class="ico g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></span></div>
+        <div class="kpi__val">26<small>/ 28회</small></div>
+        <div class="kpi__foot">
+          <div class="heat"><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="rec"></i><i class="ok"></i><i class="ok"></i><i class="bad"></i><i class="ok"></i><i class="ok"></i><i class="rec"></i><i class="ok"></i><i class="bad"></i><i class="ok"></i><i class="rec"></i></div>
+          <div class="heatlbl"><span>미인증 <b>2</b></span><span>기록 <b>4건</b></span></div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top"><span class="lab">직전 지점 간격</span><span class="ico a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span></div>
+        <div class="kpi__val">16<small>분</small><span class="pill pill--a" style="margin-left:4px">상한 +6분</span></div>
+        <div class="kpi__foot">
+          <div class="range"><i style="left:10%;width:52%"></i><span style="left:88%"></span></div>
+          <div class="mcap"><span>지점 평균 <b>7분</b></span><span>기준 상한 <b>10분</b></span></div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__top"><span class="lab">코스 내 순서</span><span class="ico b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span></div>
+        <div class="kpi__val">4<small>/ 8번째</small></div>
+        <div class="kpi__foot">
+          <div class="meter"><i class="g" style="width:87.5%"></i><i class="r" style="width:12.5%"></i></div>
+          <div class="mcap"><span>인증 <b>7</b></span><span>미인증 <b>1</b></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="stack">
+        <section class="card">
+          <div class="card__head"><div><h3>순찰기록</h3><p>사진 2장 · 메모 1건 · 현장에서 앱으로 등록</p></div><div style="display:flex;gap:7px"><button class="btn btn--sm btn--ghost">원본 다운로드</button><button class="btn btn--sm">기록 추가</button></div></div>
+          <div class="card__body">
+            <div class="rlab">메모 · 보고</div>
+            <div class="rmemo"><div class="rmemo__h"><span class="rwho">박지우</span><span class="rtime">10:28</span><span class="pill pill--a">시설팀 접수</span></div><p>3층 계단 비상등 점멸 이상. 야간 시인성 저하로 시설팀 즉시 보고 필요. 계단 난간 및 소화기 상태는 정상.</p></div>
+            <div class="rlab" style="margin-top:18px">현장 사진 2장</div>
+            <div class="thumbs"><div class="thumb"><span class="thumb__img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/><path d="M8 6l1.5-2h5L16 6"/></svg></span><div class="thumb__m"><b>계단실 비상등</b><span>10:26</span></div></div><div class="thumb"><span class="thumb__img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3"/><path d="M8 6l1.5-2h5L16 6"/></svg></span><div class="thumb__m"><b>3F 계단 전경</b><span>10:27</span></div></div><button class="thumb thumb--add"><span class="thumb__img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></span><div class="thumb__m"><b>관리자 첨부</b></div></button></div>
+          </div>
+          <div class="card__foot"><span>기록은 인증 시각 기준 ±5분 이내 등록 건만 자동 연결됩니다.</span></div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><div><h3>이 지점 최근 인증 이력</h3><p>B동 계단실 · 최근 7건</p></div><div style="display:flex;gap:7px"><button class="btn btn--sm btn--ghost">전체 기간</button><button class="btn btn--sm">CSV</button></div></div>
+          <div class="card__body" style="padding:6px 6px 0">
+            <table>
+              <thead><tr><th style="padding-left:16px">순찰일시</th><th>순찰코스</th><th>순찰자</th><th>인증수단</th><th>구간</th><th>결과</th><th style="text-align:right;padding-right:16px">기록</th></tr></thead>
+              <tbody>
+                <tr class="is-cur"><td style="padding-left:16px" class="t-mono">2026-05-01 10:28</td><td>B동 순찰코스</td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">박</span>박지우</div></td><td><span class="badge badge--green">NFC</span></td><td class="t-mono">+16분</td><td><span class="badge badge--accent">순찰기록</span></td><td style="text-align:right;padding-right:16px">사진 2 · 메모 1</td></tr>
+                <tr><td style="padding-left:16px" class="t-mono">2026-04-30 22:14</td><td>공용 코스</td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.13 300)">강</span>강도현</div></td><td><span class="badge badge--green">NFC</span></td><td class="t-mono">+7분</td><td><span class="badge badge--green">이상없음</span></td><td style="text-align:right;padding-right:16px" class="t-mono">—</td></tr>
+                <tr><td style="padding-left:16px" class="t-mono">2026-04-30 18:41</td><td>B동 순찰코스</td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">박</span>박지우</div></td><td><span class="badge badge--green">NFC</span></td><td class="t-mono">+6분</td><td><span class="badge badge--green">이상없음</span></td><td style="text-align:right;padding-right:16px" class="t-mono">—</td></tr>
+                <tr class="is-miss"><td style="padding-left:16px" class="t-mono">2026-04-30 10:00</td><td>B동 순찰코스</td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">정</span>정우현</div></td><td><span class="badge badge--gray">NFC</span></td><td class="t-mono">—</td><td><span class="badge badge--danger">미완료</span></td><td style="text-align:right;padding-right:16px"><a href="#">사유 보기</a></td></tr>
+                <tr><td style="padding-left:16px" class="t-mono">2026-04-29 22:08</td><td>공용 코스</td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.13 300)">강</span>강도현</div></td><td><span class="badge badge--green">NFC</span></td><td class="t-mono">+8분</td><td><span class="badge badge--green">이상없음</span></td><td style="text-align:right;padding-right:16px" class="t-mono">—</td></tr>
+                <tr><td style="padding-left:16px" class="t-mono">2026-04-29 18:33</td><td>B동 순찰코스</td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">박</span>박지우</div></td><td><span class="badge badge--green">NFC</span></td><td class="t-mono">+5분</td><td><span class="badge badge--accent">순찰기록</span></td><td style="text-align:right;padding-right:16px">사진 1</td></tr>
+                <tr><td style="padding-left:16px" class="t-mono">2026-04-29 10:21</td><td>B동 순찰코스</td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.14 250)">김</span>김민준</div></td><td><span class="badge badge--green">NFC</span></td><td class="t-mono">+9분</td><td><span class="badge badge--green">이상없음</span></td><td style="text-align:right;padding-right:16px" class="t-mono">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card__foot"><span>동일 지점이 여러 코스에 포함된 경우 모든 코스의 인증이 함께 표시됩니다.</span><a href="S-Patrol Redesign - Point Detail.html">지점 상세로 이동</a></div>
+        </section>
+      </div>
+
+      <div class="stack">
+        <section class="card">
+          <div class="card__head"><h3>인증 정보</h3><span class="badge badge--accent">순찰기록</span></div>
+          <div class="card__body" style="padding-top:4px">
+            <dl class="dl">
+              <dt class="first">순찰지점</dt><dd class="first"><a href="S-Patrol Redesign - Point Detail.html">B동 계단실</a></dd>
+              <dt>기록 번호</dt><dd><span class="t-mono">PT-20260501-0418</span></dd>
+              <dt>위치</dt><dd>강동 테크노타워 B동 · 3F 비상계단</dd>
+              <dt>순찰 코스</dt><dd><a href="S-Patrol Redesign - Course Detail.html">B동 순찰코스</a> <span style="color:var(--text-3);font-weight:400">· 4/8번째</span></dd>
+              <dt>코스 회차</dt><dd><a href="S-Patrol Redesign - Course History Detail.html">2026-05-01 10:00 회차</a></dd>
+              <dt>순찰자</dt><dd><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">박</span>박지우 <span style="color:var(--text-3);font-weight:400;font-size:11.5px">· 야간 2교대</span></div></dd>
+              <dt>인증 시각</dt><dd><span class="t-mono" style="font-size:12px">2026-05-01 10:28:14</span></dd>
+              <dt>인증수단</dt><dd>NFC <span style="color:var(--text-3);font-weight:400">· 태그 NFC-B3-07</span></dd>
+              <dt>위치 오차</dt><dd>6m <span style="color:var(--success);font-weight:600">· 허용 범위</span></dd>
+              <dt>직전 지점</dt><dd>엘리베이터홀 B <span style="color:var(--danger);font-weight:600">· +16분</span></dd>
+              <dt>사용 단말</dt><dd>Galaxy S23 · 앱 v2.4.1</dd>
+              <dt>확인 처리</dt><dd><span class="badge badge--amber">미확인</span></dd>
+            </dl>
+          </div>
+          <div class="card__foot"><span>인증 기록은 수정할 수 없으며 확인 처리 이력만 남습니다.</span></div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><div><h3>코스 내 위치</h3><p>B동 순찰코스 · 2026-05-01 10:00 회차</p></div><a class="btn btn--sm btn--ghost" href="S-Patrol Redesign - Course History Detail.html">코스 상세</a></div>
+          <div class="card__body">
+            <div class="strip"><div>시작<b>10:00</b></div><div>이 지점<b>10:28</b></div><div>종료<b>10:45</b></div></div>
+            <div class="tlcard is-muted"><div class="tlcard__row"><span class="tl-ic tl-ic--ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 6"/></svg></span><span class="tl-title">엘리베이터홀 B</span><span class="tl-time">10:12</span></div></div>
+            <div class="tlcard is-cur"><div class="tlcard__row"><span class="tl-ic tl-ic--cur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="9" r="2.6"/><path d="M12 21s-6-6-6-11a6 6 0 1112 0c0 5-6 11-6 11z"/></svg></span><span class="tl-title">B동 계단실</span><span class="tl-time">10:28</span></div></div>
+            <div class="tlcard is-muted"><div class="tlcard__row"><span class="tl-ic tl-ic--ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 6"/></svg></span><span class="tl-title">외벽 남측</span><span class="tl-time">10:30</span></div></div>
+            <div class="tlcard is-muted"><div class="tlcard__row"><span class="tl-ic tl-ic--miss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6L6 18"/></svg></span><span class="tl-title">비상구 A</span><span class="tl-time">—</span></div></div>
+          </div>
+          <div class="card__foot"><span>해당 회차는 미인증 1건으로 미완료 처리되었습니다.</span></div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+<template id="__bundler_thumbnail"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#1c2a4a"/><text x="50" y="58" font-size="26" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="700">SP</text></svg></template>
+</body>
+</html>

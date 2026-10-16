@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>S-Patrol · 코스 순찰이력</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{--bg:oklch(0.985 0.003 260);--surface:#fff;--border:oklch(0.914 0.006 260);--border-soft:oklch(0.951 0.004 260);--text:oklch(0.22 0.015 260);--text-2:oklch(0.5 0.02 260);--text-3:oklch(0.68 0.014 260);--accent:oklch(0.5 0.175 260);--accent-bg:oklch(0.955 0.025 260);--accent-dark:oklch(0.4 0.16 260);--success:oklch(0.62 0.14 155);--success-bg:oklch(0.955 0.035 155);--amber:oklch(0.68 0.13 70);--amber-bg:oklch(0.96 0.03 70);--amber-dark:oklch(0.52 0.12 70);--danger:oklch(0.58 0.19 25);--danger-bg:oklch(0.962 0.028 25);--gray-bg:oklch(0.955 0.004 260);--rail:oklch(0.19 0.014 262);--rail-2:oklch(0.27 0.016 262);--mono:'Geist Mono',ui-monospace,SFMono-Regular,monospace}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:13px;letter-spacing:-0.01em;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-dark);text-decoration:none}a:hover{color:var(--accent)}
+.shell{width:1920px;min-height:911px;display:flex;background:var(--bg)}
+.rail{width:68px;flex-shrink:0;background:var(--rail);display:flex;flex-direction:column;align-items:center;padding:18px 0 20px;position:sticky;top:0;height:100vh}
+.rail__mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(155deg,oklch(0.6 0.18 260),oklch(0.42 0.16 262));display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;margin-bottom:28px;flex-shrink:0}
+.rail__nav{display:flex;flex-direction:column;gap:6px}
+.rail__item{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;color:oklch(0.62 0.02 260);cursor:pointer;position:relative}
+.rail__item svg{width:20px;height:20px}
+.rail__item.is-active{background:oklch(0.29 0.02 262);color:#fff}
+.rail__item.is-active::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:2px;background:oklch(0.68 0.16 260)}
+.rail__spacer{flex:1}
+.rail__profile{width:44px;height:44px;border-radius:12px;background:var(--rail-2);display:grid;place-items:center;border:1px solid oklch(1 0 0/0.06);position:relative}
+.rail__profile .av{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700;background:oklch(0.5 0.13 300)}
+.rail__dot{position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--rail)}
+.main{flex:1;min-width:0;padding:24px 28px 44px}
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:14px}
+.pagehead h1{margin:0 0 4px;font-size:17px;font-weight:700;letter-spacing:-0.015em}
+.pagehead p{margin:0;font-size:12px;color:var(--text-2)}
+.tabs{display:flex;gap:28px;margin-bottom:18px;border-bottom:1px solid var(--border-soft)}
+.tab{height:34px;padding:0 2px;margin-bottom:-1px;border:none;background:none;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;text-decoration:none}
+.tab svg{width:15px;height:15px}
+.tab.is-active{color:var(--text);border-bottom-color:var(--accent)}
+.btn{height:34px;padding:0 13px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:inherit}
+.btn svg{width:14px;height:14px}
+.btn:hover{background:var(--gray-bg)}
+.btn--sm{height:30px;padding:0 11px;font-size:12px;border-radius:7px}
+.filters{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.filters .spacer{flex:1}
+.fchip{height:30px;padding:0 11px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.fchip svg{width:13px;height:13px}
+.fchip svg.cv{width:11px;height:11px;color:var(--text-3)}
+.fchip.is-on{border-color:oklch(0.86 0.05 260);background:var(--accent-bg);color:var(--accent-dark)}
+.search{height:30px;width:220px;border:1px solid var(--border);border-radius:7px;background:var(--surface);display:flex;align-items:center;gap:7px;padding:0 10px;color:var(--text-3)}
+.search svg{width:13px;height:13px;flex-shrink:0}
+.search span{font-size:12.5px}
+.sumbar{display:flex;gap:0;border:1px solid var(--border);border-radius:11px;background:var(--surface);overflow:hidden;margin-bottom:14px}
+.sum{flex:1;padding:12px 16px 13px;border-left:1px solid var(--border-soft)}
+.sum:first-child{border-left:none}
+.sum__l{font-size:11.5px;color:var(--text-3);font-weight:500}
+.sum__v{margin-top:5px;font-size:19px;font-weight:700;letter-spacing:-0.02em;display:flex;align-items:baseline;gap:4px}
+.sum__v small{font-size:12px;font-weight:600;color:var(--text-3)}
+.sum__v em{font-style:normal;font-size:11.5px;font-weight:600;color:var(--text-3);margin-left:4px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;font-size:10.5px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.03em;padding:9px 16px;border-bottom:1px solid var(--border-soft);background:oklch(0.976 0.003 260);white-space:nowrap}
+thead th .srt{display:inline-flex;align-items:center;gap:4px}
+thead th svg{width:10px;height:10px;opacity:0.6}
+tbody td{padding:10px 16px;border-bottom:1px solid var(--border-soft);font-size:12.5px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:oklch(0.976 0.004 260)}
+.mono{font-family:var(--mono);font-size:11.5px;color:var(--text-2)}
+.cname{font-weight:600;display:flex;align-items:center;gap:8px}
+.cname .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sub{font-size:11px;color:var(--text-3);margin-top:2px}
+.who{display:flex;align-items:center;gap:8px;font-weight:600}
+.av2{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.prog{display:flex;align-items:center;gap:8px}
+.prog .track{width:54px;height:4px;border-radius:3px;background:var(--gray-bg);overflow:hidden}
+.prog .track i{display:block;height:100%;border-radius:3px;background:var(--success)}
+.prog .track i.a{background:var(--amber)}
+.prog .track i.r{background:var(--danger)}
+.prog b{font-size:11.5px;font-weight:600;font-family:var(--mono)}
+.badge{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge--green{background:var(--success-bg);color:var(--success)}
+.badge--danger{background:var(--danger-bg);color:var(--danger)}
+.badge--amber{background:var(--amber-bg);color:var(--amber-dark)}
+.badge--accent{background:var(--accent-bg);color:var(--accent-dark)}
+.badge--gray{background:var(--gray-bg);color:var(--text-2)}
+.live{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px oklch(0.5 0.175 260/0.14)}
+.note{font-size:11.5px;color:var(--text-3)}
+.open{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--accent-dark)}
+.open svg{width:12px;height:12px}
+.tfoot{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border-soft);background:var(--surface)}
+.tfoot__left{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2)}
+.tfoot__select{height:27px;padding:0 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-weight:600;font-family:inherit}
+.tfoot__right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--text-2)}
+.tfoot__nav{display:flex;gap:4px}
+.tfoot__btn{width:27px;height:27px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);display:grid;place-items:center;cursor:pointer}
+.tfoot__btn.is-on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tfoot__btn:disabled{opacity:0.4;cursor:default}
+.tfoot__btn svg{width:14px;height:14px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail">
+    <div class="rail__mark">SP</div>
+    <div class="rail__nav">
+      <div class="rail__item is-active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1.5-4 4-6 7.5-6s6 2 7.5 6"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h10M7 12h10M7 17h6"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg></div>
+      <div class="rail__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9h4l8-4v14l-8-4H4z"/></svg></div>
+    </div>
+    <div class="rail__spacer"></div>
+    <div class="rail__profile"><div class="av">홍</div><div class="rail__dot"></div></div>
+  </nav>
+
+  <main class="main">
+    <div class="pagehead">
+      <div><h1>순찰이력</h1><p>코스·지점 단위 순찰 수행 이력을 확인합니다</p></div>
+      <div style="display:flex;gap:8px"><button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg>내보내기</button></div>
+    </div>
+
+    <div class="tabs">
+      <a class="tab is-active" href="S-Patrol Redesign - Course History List.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>코스 순찰이력</a>
+      <a class="tab" href="S-Patrol Redesign - Point History List.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="3"/><path d="M12 21s-7-6.5-7-11.5a7 7 0 0114 0C19 14.5 12 21 12 21z"/></svg>지점 순찰이력</a>
+    </div>
+
+    <div class="filters">
+      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>코스명 · 순찰자 검색</span></div>
+      <div class="fchip is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>2026.05.01 – 05.07<svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>코스 전체<svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c1.5-4 4-6 7.5-6s6 2 7.5 6"/></svg>순찰자 전체<svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="fchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>결과 전체<svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="spacer"></div>
+      <button class="btn btn--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M20 9A8 8 0 006 5.3M4 15a8 8 0 0014 3.7"/></svg>초기화</button>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead><tr>
+          <th style="width:18%"><span class="srt">코스명<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></th>
+          <th style="width:13%">순찰자</th>
+          <th style="width:14%"><span class="srt">시작 일시<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></th>
+          <th style="width:14%">종료 일시</th>
+          <th style="width:8%">소요</th>
+          <th style="width:11%">지점 인증</th>
+          <th style="width:10%">순찰 결과</th>
+          <th style="width:8%">특이사항</th>
+          <th style="width:4%"></th>
+        </tr></thead>
+        <tbody>
+<tr><td><div class="cname"><span class="dot" style="background:var(--accent)"></span>A동 순찰구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 4개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.14 250)">김</span>김민준</div></td><td class="mono">2026-05-01 09:00</td><td class="mono">2026-05-01 09:30</td><td class="mono">30분</td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>4/4</b></div></td><td><span class="badge badge--green">완료</span></td><td><span class="note">—</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:oklch(0.55 0.14 200)"></span>B동 순찰구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 8개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">박</span>박지우</div></td><td class="mono">2026-05-01 10:00</td><td class="mono">2026-05-01 10:45</td><td class="mono">45분</td><td><div class="prog"><div class="track"><i class="a" style="width:87.5%"></i></div><b>7/8</b></div></td><td><span class="badge badge--danger">미완료</span></td><td><span class="badge badge--amber">1건</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:oklch(0.6 0.13 300)"></span>C동 순찰구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 6개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.13 300)">강</span>강도현</div></td><td class="mono">2026-05-01 11:00</td><td class="mono">2026-05-01 11:20</td><td class="mono">20분</td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>6/6</b></div></td><td><span class="badge badge--green">완료</span></td><td><span class="note">—</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:oklch(0.65 0.12 70)"></span>공용 구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 5개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.14 250)">김</span>김민준</div></td><td class="mono">2026-05-01 13:00</td><td class="mono">2026-05-01 13:40</td><td class="mono">40분</td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>5/5</b></div></td><td><span class="badge badge--green">완료</span></td><td><span class="badge badge--amber">2건</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:var(--accent)"></span>A동 순찰구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 4개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">정</span>정우현</div></td><td class="mono">2026-05-02 09:00</td><td class="mono">—</td><td class="mono">진행 28분</td><td><div class="prog"><div class="track"><i style="width:50%"></i></div><b>2/4</b></div></td><td><span class="badge badge--accent"><span class="live"></span>진행중</span></td><td><span class="note">—</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:oklch(0.55 0.14 200)"></span>B동 순찰구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 8개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">박</span>박지우</div></td><td class="mono">2026-05-02 10:00</td><td class="mono">2026-05-02 10:50</td><td class="mono">50분</td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>8/8</b></div></td><td><span class="badge badge--green">완료</span></td><td><span class="note">—</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:oklch(0.6 0.13 300)"></span>C동 순찰구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 6개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.13 300)">강</span>강도현</div></td><td class="mono">2026-05-02 11:30</td><td class="mono">2026-05-02 12:00</td><td class="mono">30분</td><td><div class="prog"><div class="track"><i class="a" style="width:66%"></i></div><b>4/6</b></div></td><td><span class="badge badge--danger">미완료</span></td><td><span class="badge badge--amber">1건</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:oklch(0.62 0.1 145)"></span>외곽 순찰로</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 7개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.14 250)">김</span>김민준</div></td><td class="mono">2026-05-02 14:00</td><td class="mono">2026-05-02 14:30</td><td class="mono">30분</td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>7/7</b></div></td><td><span class="badge badge--green">완료</span></td><td><span class="note">—</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:var(--accent)"></span>A동 순찰구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 4개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">정</span>정우현</div></td><td class="mono">2026-05-03 09:00</td><td class="mono">2026-05-03 09:25</td><td class="mono">25분</td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>4/4</b></div></td><td><span class="badge badge--green">완료</span></td><td><span class="note">—</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:oklch(0.55 0.14 200)"></span>B동 순찰구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 8개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">박</span>박지우</div></td><td class="mono">2026-05-03 10:00</td><td class="mono">2026-05-03 10:40</td><td class="mono">40분</td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>8/8</b></div></td><td><span class="badge badge--green">완료</span></td><td><span class="badge badge--amber">1건</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:oklch(0.65 0.12 70)"></span>공용 구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 5개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.13 300)">강</span>강도현</div></td><td class="mono">2026-05-03 11:00</td><td class="mono">—</td><td class="mono">진행 12분</td><td><div class="prog"><div class="track"><i style="width:20%"></i></div><b>1/5</b></div></td><td><span class="badge badge--accent"><span class="live"></span>진행중</span></td><td><span class="note">—</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:oklch(0.62 0.1 145)"></span>외곽 순찰로</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 7개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.14 250)">김</span>김민준</div></td><td class="mono">2026-05-03 13:00</td><td class="mono">2026-05-03 13:45</td><td class="mono">45분</td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>7/7</b></div></td><td><span class="badge badge--green">완료</span></td><td><span class="note">—</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:oklch(0.6 0.13 300)"></span>C동 순찰구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 6개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">정</span>정우현</div></td><td class="mono">2026-05-04 09:30</td><td class="mono">2026-05-04 10:00</td><td class="mono">30분</td><td><div class="prog"><div class="track"><i class="r" style="width:33%"></i></div><b>2/6</b></div></td><td><span class="badge badge--danger">미완료</span></td><td><span class="badge badge--amber">3건</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:var(--accent)"></span>A동 순찰구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 4개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.5 0.14 250)">김</span>김민준</div></td><td class="mono">2026-05-04 13:00</td><td class="mono">2026-05-04 13:28</td><td class="mono">28분</td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>4/4</b></div></td><td><span class="badge badge--green">완료</span></td><td><span class="note">—</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+<tr><td><div class="cname"><span class="dot" style="background:oklch(0.55 0.14 200)"></span>B동 순찰구역</div><div class="sub" style="margin-left:15px">강동 테크노타워 · 지점 8개</div></td><td><div class="who"><span class="av2" style="background:oklch(0.54 0.13 160)">박</span>박지우</div></td><td class="mono">2026-05-05 10:00</td><td class="mono">2026-05-05 10:52</td><td class="mono">52분</td><td><div class="prog"><div class="track"><i style="width:100%"></i></div><b>8/8</b></div></td><td><span class="badge badge--amber">지연</span></td><td><span class="note">—</span></td><td><a class="open" href="S-Patrol Redesign - Course History Detail.html">열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a></td></tr>
+        </tbody>
+      </table>
+      <div class="tfoot">
+        <div class="tfoot__left">페이지당 행 수<select class="tfoot__select"><option>15</option><option selected>25</option><option>50</option><option>100</option></select></div>
+        <div class="tfoot__right"><span>1–15 / 128개 항목</span><div class="tfoot__nav"><button class="tfoot__btn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg></button><button class="tfoot__btn is-on">1</button><button class="tfoot__btn">2</button><button class="tfoot__btn">3</button><button class="tfoot__btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg></button></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+<template id="__bundler_thumbnail"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#1c2a4a"/><text x="50" y="58" font-size="26" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="700">SP</text></svg></template>
+</body>
+</html>
