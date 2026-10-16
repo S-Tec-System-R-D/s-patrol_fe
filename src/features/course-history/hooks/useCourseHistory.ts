@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchCourseHistory } from '../api/getCourseHistory'
 import { fetchPointHistory } from '../api/getPointHistory'
 import { POINT_HISTORY_STATUS } from '../types'
-import { courseKeys } from '../queryKeys'
+import { courseHistoryKeys } from '../queryKeys'
 import type { HistoryRange } from '../lib/historyRange'
 
 /**
@@ -26,7 +26,7 @@ export const useCourseHistory = (
   range: HistoryRange
 ) =>
   useQuery({
-    queryKey: courseKeys.history(siteSeq ?? -1, courseSeq ?? -1, range),
+    queryKey: courseHistoryKeys.history(siteSeq ?? -1, courseSeq ?? -1, range),
     queryFn: () =>
       fetchCourseHistory({
         siteSeq: siteSeq as number,
@@ -55,7 +55,7 @@ export const useUncheckedPoints = (
   range: HistoryRange
 ) =>
   useQuery({
-    queryKey: courseKeys.uncheckedCount(siteSeq ?? -1, courseSeq ?? -1, range),
+    queryKey: courseHistoryKeys.uncheckedCount(siteSeq ?? -1, courseSeq ?? -1, range),
     queryFn: () =>
       fetchPointHistory({
         siteSeq: siteSeq as number,

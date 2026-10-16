@@ -24,17 +24,15 @@ export type LocationStatus = 'OPERATING' | 'SUSPENDED' | 'TERMINATED'
 // 인증 수단
 export type AuthMethod = 'QR' | 'NFC'
 
-// 코스 이력 결과
-export type CourseResult = 'COMPLETE' | 'PROCESSING' | 'INCOMPLETE'
-
-// 지점 이력 결과 (코드 PatrolPointResultState 기반)
-export type PointResult =
-  | 'PENDING'
-  | 'RUNNING'
-  | 'SKIP'
-  | 'NORMAL'
-  | 'RECORDED'
-  | 'TIMEOUT'
+// 🔴 **순찰이력 결과는 여기 없다** — `features/course-history/lib/historyBadge.ts` 다.
+//
+// `CourseResult`('COMPLETE' | 'PROCESSING' | 'INCOMPLETE') 와 `PointResult`(6종) 를
+// 두고 있었지만 **소비처가 0개인 dead 선언**이었고(`spec 036` T492 확인), 무엇보다
+// 서버와 모양이 맞지 않았다: 결과는 **문자열 enum 이 아니라 정수 `status`** 이고
+// (코스 0~2 / 지점 0~4, 값이 겹치는데 뜻이 다르다) `overTimeYn`·`hasMemo` 와의
+// **조합으로 유도**된다. 문자열 사전을 SSOT 로 두면 서버 값을 그 사전으로 번역하는
+// 어댑터가 생기는데, 그 어댑터가 곧 조합 규칙이라 **사전 쪽이 군더더기가 된다.**
+// → 매핑은 `historyBadge.ts` 가 **화면 단위로** 갖는다(`api-spec.md` §4 실측 분포).
 
 // 요일
 export type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN'
@@ -77,21 +75,6 @@ export const locationStatusLabel: Record<LocationStatus, string> = {
 export const authMethodLabel: Record<AuthMethod, string> = {
   QR: 'QR',
   NFC: 'NFC',
-}
-
-export const courseResultLabel: Record<CourseResult, string> = {
-  COMPLETE: '완료',
-  PROCESSING: '진행중',
-  INCOMPLETE: '미완료',
-}
-
-export const pointResultLabel: Record<PointResult, string> = {
-  PENDING: '대기중',
-  RUNNING: '진행중',
-  SKIP: '순찰제외',
-  NORMAL: '이상없음',
-  RECORDED: '순찰기록',
-  TIMEOUT: '시간초과',
 }
 
 export const dayOfWeekLabel: Record<DayOfWeek, string> = {

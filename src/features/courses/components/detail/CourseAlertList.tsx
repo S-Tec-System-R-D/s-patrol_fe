@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 
-import { HISTORY_DAYS } from '../../lib/historyRange'
+import { HISTORY_DAYS } from '@/features/course-history/lib/historyRange'
 import type { CourseAlert, CourseAlertKind, CourseAlerts } from '../../lib/courseAlerts'
 
 /**

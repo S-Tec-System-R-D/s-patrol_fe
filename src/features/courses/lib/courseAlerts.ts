@@ -1,6 +1,6 @@
-import { formatElapsed } from './elapsed'
+import { formatElapsed } from '@/features/course-history/lib/elapsed'
 
-import { COURSE_HISTORY_STATUS, type CourseHistoryRow, type PointHistoryRow } from '../types'
+import { COURSE_HISTORY_STATUS, type CourseHistoryRow, type PointHistoryRow } from '@/features/course-history/types'
 
 /**
  * 이상 이력 모으기 (`spec 023` 코스 상세 C단).

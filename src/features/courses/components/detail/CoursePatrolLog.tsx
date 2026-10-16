@@ -4,9 +4,9 @@ import { HistoryIcon } from 'lucide-react'
 import AppBadge from '@/components/app/AppBadge'
 import AppEmpty from '@/components/app/AppEmpty'
 
-import { formatElapsed } from '../../lib/elapsed'
-import { COURSE_HISTORY_STATUS, type CourseHistoryRow } from '../../types'
-import { HISTORY_DAYS } from '../../lib/historyRange'
+import { formatElapsed } from '@/features/course-history/lib/elapsed'
+import { COURSE_HISTORY_STATUS, type CourseHistoryRow } from '@/features/course-history/types'
+import { HISTORY_DAYS } from '@/features/course-history/lib/historyRange'
 
 /**
  * 최근 순찰 기록 (`spec 023` 코스 상세 B단).

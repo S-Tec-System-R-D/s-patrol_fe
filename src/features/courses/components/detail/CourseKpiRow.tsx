@@ -2,9 +2,9 @@ import { CheckCircle2Icon, ClockIcon, FootprintsIcon, TriangleAlertIcon } from '
 
 import AppKpiCard from '@/components/app/AppKpiCard'
 
-import { formatDuration } from '../../lib/elapsed'
-import { formatRate, type CourseHistoryStats } from '../../lib/courseHistoryStats'
-import { HISTORY_DAYS } from '../../lib/historyRange'
+import { formatDuration } from '@/features/course-history/lib/elapsed'
+import { formatRate, type CourseHistoryStats } from '@/features/course-history/lib/courseHistoryStats'
+import { HISTORY_DAYS } from '@/features/course-history/lib/historyRange'
 
 /**
  * 코스 KPI 4종 (`spec 023` 코스 상세 B단 → **`spec 031` 에서 공용 카드로 재정렬**).

@@ -27,11 +27,11 @@ import { useCourseDetail } from '@/features/courses/hooks/useCourseDetail'
 import {
   useCourseHistory,
   useUncheckedPoints,
-} from '@/features/courses/hooks/useCourseHistory'
+} from '@/features/course-history/hooks/useCourseHistory'
 import { buildCourseAlerts, uncheckedByPoint } from '@/features/courses/lib/courseAlerts'
 import { usableCoords } from '@/features/courses/lib/courseCoords'
-import { courseHistoryStats } from '@/features/courses/lib/courseHistoryStats'
-import { recentRange } from '@/features/courses/lib/historyRange'
+import { courseHistoryStats } from '@/features/course-history/lib/courseHistoryStats'
+import { recentRange } from '@/features/course-history/lib/historyRange'
 import { toUpdateCourseBody } from '@/features/courses/lib/updateCourseBody'
 import { courseKeys } from '@/features/courses/queryKeys'
 import { getSiteSeq } from '@/lib/auth/site'

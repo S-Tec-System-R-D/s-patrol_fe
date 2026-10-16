@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import CourseKpiRow from '../CourseKpiRow'
-import type { CourseHistoryStats } from '../../../lib/courseHistoryStats'
+import type { CourseHistoryStats } from '@/features/course-history/lib/courseHistoryStats'
 
 /**
  * KPI 4종 (`spec 023` 코스 상세 B단).

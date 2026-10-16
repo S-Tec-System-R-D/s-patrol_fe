@@ -43,20 +43,10 @@ export const courseKeys = {
    */
   classificationPoints: (siteSeq: number) => ['course-point-candidates', siteSeq] as const,
 
-  /**
-   * 코스 순찰이력 키 (B단).
-   *
-   * 🔴 **루트를 따로 둔다**(`'course-history'`). 코스를 수정해도 **과거 순찰 기록은
-   * 바뀌지 않는다** — `detail` 무효화에 딸려 들어가면 기록을 매번 다시 받는다.
-   * ⚠️ 반대로 **편성을 바꿔도 지난 이력의 `pointCount` 는 그대로**다(그때의 편성이다).
-   *
-   * 🔴 규약 2: 스코프(`siteSeq`)와 **기간까지** 키에 들어간다 — 기간이 키에 없으면
-   * 30일 조회와 다른 기간 조회가 **같은 캐시를 덮어쓴다**.
-   */
-  history: (siteSeq: number, courseSeq: number, range: { fromDt: string; toDt: string }) =>
-    ['course-history', siteSeq, { courseSeq, ...range }] as const,
-
-  /** 미인증 건수 키 — 같은 이유로 루트를 분리한다 */
-  uncheckedCount: (siteSeq: number, courseSeq: number, range: { fromDt: string; toDt: string }) =>
-    ['course-unchecked-count', siteSeq, { courseSeq, ...range }] as const,
 }
+
+/**
+ * ⚠️ **이력 키는 여기 없다** — `features/course-history/queryKeys.ts` 의
+ * `courseHistoryKeys` 다(`spec 036` T488 에서 옮겼다). 코스를 수정해도 과거 순찰 기록은
+ * 바뀌지 않아 루트를 분리해 뒀던 것이고, 모듈째로 이력 feature 로 넘어갔다.
+ */

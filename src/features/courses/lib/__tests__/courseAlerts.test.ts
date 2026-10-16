@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildCourseAlerts, uncheckedByPoint } from '../courseAlerts'
-import type { CourseHistoryRow, PointHistoryRow } from '../../types'
+import type { CourseHistoryRow, PointHistoryRow } from '@/features/course-history/types'
 
 /**
  * 이상 이력 모으기 (`spec 023` 코스 상세 C단).

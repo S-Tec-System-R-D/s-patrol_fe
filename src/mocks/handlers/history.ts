@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-import type { CourseHistoryRow } from '@/features/courses/types'
+import type { CourseHistoryRow } from '@/features/course-history/types'
 
 /**
  * MSW 순찰이력 핸들러 (`spec 023` 코스 상세 B단).

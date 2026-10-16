@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import CoursePatrolLog from '../CoursePatrolLog'
-import type { CourseHistoryRow } from '../../../types'
+import type { CourseHistoryRow } from '@/features/course-history/types'
 
 /**
  * 최근 순찰 기록 (`spec 023` 코스 상세 B단).
