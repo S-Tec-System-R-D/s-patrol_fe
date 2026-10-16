@@ -35,7 +35,7 @@
 | `019/spec.md:18` · `roadmap.md` §13 | **결과 뱃지 ↔ 서버 `status` + enum SSOT 3중 분기** | 🔴 **본 spec 의 공용 기반에서 끝낸다**(§2-4) |
 | `023/tasks.md:371·842` | 이상 이력의 **사유**(메모 내용 표시) | 본 spec 코스 상세 인증 내역에서 표시 |
 | `030/tasks.md:140` | `ZoneHistoryCard` mock → 서버 매핑 | 본 spec |
-| `027/tasks.md:288` | `AppDatePicker` 단일선택 → **기간 선택** 확장 | 본 spec(필터 기간이 첫 소비처) |
+| `027/tasks.md:288` | **`AppFilterPopover` 다중 선택** 확장 | ❌ **넓히지 않는다** — 036 필터 4종이 전부 단일(코스·결과) 또는 텍스트(순찰자)다. **확정 수요 0건**이라 A6 대로 두고, 수요가 생기는 spec 이 넓힌다. ⚠️ **`AppDatePicker` 는 이미 범위 전용**이다(017 결정) — 손댈 것이 없다 |
 | `screens.md:54` | 코스 이력 서버 필터 전환 | 본 spec. ⚠️ **Export 는 범위 밖**(서버 엔드포인트 없음, 사용자 결정) |
 | `022` OQ-022-H · `023` DoD #15 | 구 `PointAuthenticationMethod` 소멸 자리 | ⚠️ **037 과 함께** 사라진다 — 036 단독으로는 못 지운다(`patrol-points` 가 아직 쓴다) |
 
@@ -129,7 +129,9 @@
 3. **`이상없음` ↔ `순찰기록` 은 `hasMemo` 로 갈린다**(서버 `status` 에 그 구분이 없다).
 4. **enum SSOT 일원화** — 지금 **3중 분기**다: `types/enum.ts` 의 `PointResult`(소비처 0개) ·
    feature types(dead) · 페이지 인라인(`PatrolZonesPage.tsx:28` `PATROL_RESULT`). 하나로 모은다.
-5. **필터 바** + **`AppDatePicker` 기간 선택 확장**(027 이 단일 선택만 만들어 뒀다).
+5. **필터 바** — `AppFilterPopover`(027) + `AppDatePicker`(017, **이미 범위 전용**) 조립.
+   🔴 **새 공용 컴포넌트를 만들지 않는다** — 둘 다 있고 `PatrolZonesPage` 가 이미 쓴다.
+   바뀌는 것은 **값의 출처**다(클라이언트 필터 → 서버 쿼리).
 
 ---
 
@@ -213,7 +215,8 @@
 - [ ] 3. 페이지네이션이 URL 에 실리고 `pageSize` 가 **100 이하**임을 테스트가 고정한다
 - [ ] 4. 결과 뱃지 + **시간초과 뱃지 병기**. 매핑이 **화면 단위**로 분리돼 있다
 - [ ] 5. **enum SSOT 1곳** — `PointResult` 3중 분기 해소, 페이지 인라인 상수 제거
-- [ ] 6. `AppDatePicker` **기간 선택** 지원(단일 선택 소비처는 그대로 동작)
+- [ ] 6. 필터가 **기존 공용 컴포넌트 2종으로만** 조립된다 — **신규 공용 컴포넌트 0개**
+      (`AppFilterPopover`·`AppDatePicker` 재사용. 027 이월인 다중 선택은 **수요 0건으로 닫는다**)
 - [ ] 7. `/patrol/zones/:historySeq` 신설 + 목록 행에서 진입 + 없는 `historySeq` 처리
 - [ ] 8. 상세 KPI 4종 — 지점 인증 / 소요시간(**판정 없음**) / 특이사항 / 구간 간격
 - [ ] 9. **코스 평균**이 `courseSeq` + `eventType=1` 로 계산된다. 100건 초과 시 문구가 바뀐다
