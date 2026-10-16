@@ -1,36 +1,53 @@
+import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeftIcon, ChevronRightIcon, HistoryIcon, TriangleAlertIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
-import AppDetailCard from '@/components/app/AppDetailCard'
-import AppDetailRow from '@/components/app/AppDetailRow'
 import AppEmpty from '@/components/app/AppEmpty'
 import AppPageHeader from '@/components/app/AppPageHeader'
-import { useCourseHistoryDetail } from '@/features/course-history/hooks/useCourseHistoryDetail'
+import {
+  useCourseHistoryCheckDetails,
+  useCourseHistoryDetail,
+} from '@/features/course-history/hooks/useCourseHistoryDetail'
+import { useCourseAverage } from '@/features/course-history/hooks/useCourseAverage'
+import { checkIntervals } from '@/features/course-history/lib/checkIntervals'
 import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
-import { formatElapsed } from '@/features/course-history/lib/elapsed'
+import CheckDetailTable from '@/features/patrol-zones/components/detail/CheckDetailTable'
+import HistoryInfoCard from '@/features/patrol-zones/components/detail/HistoryInfoCard'
+import HistoryKpiRow from '@/features/patrol-zones/components/detail/HistoryKpiRow'
+import { getSiteSeq } from '@/lib/auth/site'
 import { paths } from '@/router/paths'
 
 /**
- * 코스 순찰 상세 — 회차 하나 (`spec 036` T509·T510 일부).
- *
- * 🔴 **Phase 3 에서는 셸 + 순찰 정보까지다.** KPI 4종 · 인증 내역 표 · 지도 · 메모는
- * Phase 4~6 이 채운다. 라우트를 Phase 3 으로 끌어온 이유는 **목록의 행 클릭이 죽어 있으면
- * 브라우저 확인이 반쪽**이기 때문이다(사용자 결정 2026-10-16) — 빈 껍데기를 두지 않고
- * 상세 응답으로 채울 수 있는 것부터 채운다.
+ * 코스 순찰 상세 — 회차 하나 (`spec 036` Phase 4).
  *
  * 🔴 **`historySeq` 로 진입한다**(코스가 아니라 **회차**다). `/zones/:courseSeq` 는 코스의
  * 현재 편성이고 이쪽은 "그 코스를 언제 어떻게 돌았는지" 다.
  *
- * 🔴 **"기준 충족" 판정을 하지 않는다**(spec §3-4) — `totalMin` 이 검증되지 않고(B-31)
- * 어긋난 데이터가 전수 18건이며 `0` 인 코스도 있다. 값만 나란히 둔다.
+ * 🔴 **요청 3개를 조립한다.** 상세 · 인증 내역 · 코스 평균. `GetCourseDetail`(지도의 미인증
+ * 핀 좌표)은 **Phase 5 에서 이 페이지가 직접** 부른다 — 훅 안에서 부르면
+ * `course-history → courses` **역방향 의존**이 생긴다(T497 판단).
+ *
+ * 🔴 **인증 내역이 네 자리를 채운다**(요청 1회): 표 · KPI 3종 · 인증수단 집계 · (Phase 5)
+ * 지도의 인증 핀.
+ *
+ * 🔴 **조회 중과 "없음" 을 구분한다.** 빈 상태가 "삭제되었거나 접근할 수 없습니다" 라고
+ * 단정하면, 조회 중에 그것이 뜨는 순간 사용자는 **방금 지운 줄 안다**(023 T375 선례).
  */
 
 const PatrolZoneDetailPage = () => {
   const { historySeq: raw } = useParams<{ historySeq: string }>()
-  const historySeq = Number(raw)
-  const detail = useCourseHistoryDetail(Number.isInteger(historySeq) ? historySeq : null)
+  const parsed = Number(raw)
+  const historySeq = Number.isInteger(parsed) ? parsed : null
+  const siteSeq = getSiteSeq()
+
+  const detail = useCourseHistoryDetail(historySeq)
+  const checkDetails = useCourseHistoryCheckDetails(historySeq)
+  const average = useCourseAverage(siteSeq, detail.data?.courseSeq ?? null)
+
+  const checks = useMemo(() => checkDetails.data ?? [], [checkDetails.data])
+  const intervals = useMemo(() => checkIntervals(checks), [checks])
 
   const crumb = (
     <nav className="flex items-center gap-1 text-caption text-muted-foreground">
@@ -42,15 +59,16 @@ const PatrolZoneDetailPage = () => {
     </nav>
   )
 
-  /**
-   * 🔴 **조회 중과 "없음" 을 구분한다.** 빈 상태가 "삭제되었거나 접근할 수 없습니다" 라고
-   * 단정하면, 조회 중에 그것이 뜨는 순간 사용자는 **방금 지운 줄 안다**(023 T375 선례).
-   */
   if (detail.isPending) {
     return (
       <div className="flex flex-col gap-4 p-8">
         {crumb}
         <div className="h-9 w-80 animate-pulse rounded-md bg-muted" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-28 animate-pulse rounded-lg bg-muted" />
+          ))}
+        </div>
         <div className="h-64 animate-pulse rounded-lg bg-muted" />
       </div>
     )
@@ -107,57 +125,55 @@ const PatrolZoneDetailPage = () => {
         }
       />
 
-      <div className="max-w-xl">
-        <AppDetailCard title="순찰 정보">
-          <AppDetailRow
-            label="순찰 코스"
-            value={
-              <Link
-                to={paths.service.courseDetail(data.courseSeq)}
-                className="text-point-foreground hover:underline"
-              >
-                {data.courseName}
-              </Link>
-            }
-          />
-          <AppDetailRow
-            label="순찰자"
-            // 🔴 순찰자 없는 이력이 실측 35% 다 — 빈 칸으로 두지 않는다
-            value={data.startUserName || '순찰자 미지정'}
-          />
-          <AppDetailRow
-            label="시작 일시"
-            value={<span className="tabular-nums">{data.startDt.replace('T', ' ')}</span>}
-          />
-          <AppDetailRow
-            label="종료 일시"
-            value={
-              data.endDt === null ? (
-                '진행 중'
-              ) : (
-                <span className="tabular-nums">{data.endDt.replace('T', ' ')}</span>
-              )
-            }
-          />
-          <AppDetailRow
-            label="소요시간"
-            // 🔴 **판정하지 않는다** — 기준(`totalMin`)을 나란히 적기만 한다
-            value={
-              <span>
-                {formatElapsed(data.elapsedTime)}
-                <span className="text-muted-foreground"> (기준 {data.totalMin}분)</span>
+      <HistoryKpiRow
+        detail={data}
+        checks={checks}
+        intervals={intervals}
+        average={average.data}
+      />
+
+      {/* 🔴 **2열 골격**(목업 `02`) — 좌: 인증 내역(+ Phase 5 지도) / 우: 순찰 정보.
+          좁은 폭에서는 한 줄로 쌓인다 */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <section className="flex flex-col gap-4 lg:col-span-2">
+          <div className="rounded-lg border border-border bg-card">
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <h3 className="text-body font-semibold">지점 인증 내역</h3>
+              <span className="text-caption text-muted-foreground">
+                {data.totalPointCount}개 지점 · {data.completedPointCount}개 인증
               </span>
-            }
-          />
-          <AppDetailRow
-            label="지점 인증"
-            value={`${data.completedPointCount} / ${data.totalPointCount}개`}
-          />
-          {/* 🔴 교대가 있으면 적는다 — 목업에는 없지만 서버가 세어 준다(실측 2명 6건) */}
-          {data.handoverCount > 0 && (
-            <AppDetailRow label="교대" value={`${data.handoverCount}회`} />
-          )}
-        </AppDetailCard>
+            </div>
+
+            {checkDetails.isPending ? (
+              /* 🔴 로딩을 "없음" 으로 보여주지 않는다 — 인증 행이 0건인 회차가 실재해서
+                 둘을 섞으면 **사실과 장애를 구분할 수 없다** */
+              <div className="flex flex-col gap-2 p-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-8 animate-pulse rounded-md bg-muted" />
+                ))}
+              </div>
+            ) : checkDetails.isError ? (
+              <div>
+                <AppEmpty
+                  icon={TriangleAlertIcon}
+                  title="인증 내역을 불러오지 못했습니다"
+                  description={checkDetails.error?.message}
+                />
+                <div className="flex justify-center pb-6">
+                  <AppButton variant="sub" onClick={() => void checkDetails.refetch()}>
+                    다시 시도
+                  </AppButton>
+                </div>
+              </div>
+            ) : (
+              <CheckDetailTable rows={checks} />
+            )}
+          </div>
+        </section>
+
+        <section className="lg:col-span-1">
+          <HistoryInfoCard detail={data} checks={checks} />
+        </section>
       </div>
     </div>
   )

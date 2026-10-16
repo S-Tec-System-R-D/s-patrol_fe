@@ -134,6 +134,20 @@ export const POINT_HISTORY_STATUS = {
   COMPLETED: 4,
 } as const
 
+/**
+ * 인증수단 코드 (`api-spec.md` §4).
+ *
+ * ⚠️ **`features/points/lib/authMethod.ts` 와 겹치지 않는다** — 그쪽은 `'QR' | 'NFC'`
+ * **문자열 enum ↔ 코드** 변환기(지점 생성·수정 폼이 쓴다)이고, 이력은 **응답의 정수를
+ * 읽기만** 한다. 변환이 필요 없는데 변환기를 끌어오면 폼 전용 규약이 따라온다(A6).
+ *
+ * 🔴 **미인증·미완료 행은 `null`** 이다 — 사전에 없는 값이 아니라 **인증이 없었다**는 뜻이다.
+ */
+export const AUTH_METHOD = {
+  QR: 9,
+  NFC: 10,
+} as const
+
 /** 코스 상태 — 목록 `status` 와 요청 `eventType` 이 **같은 사전**을 쓴다(OQ-5 해소) */
 export const COURSE_HISTORY_STATUS = {
   IN_PROGRESS: 0,

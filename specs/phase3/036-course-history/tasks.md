@@ -67,13 +67,17 @@
 
 > **독립 테스트 기준**: 목록 행 → 상세 진입, KPI 4종·순찰 정보·인증 내역 표가 뜨고,
 > **없는 `historySeq`** 에서 빈 상태가 "삭제됐다" 로 **단정하지 않는다**(023 T375 선례).
+>
+> ✅ **Phase 4 완료(2026-10-16)** — `verify` 0 errors / `test` **919 → 933**(+14).
+> 상세가 **요청 3개**(상세 · 인증 내역 · 코스 평균)로 조립된다. 지도(Phase 5)가 들어올
+> 좌측 자리를 2열 골격으로 비워 뒀다.
 
-- [ ] T510 [US2] 상세 **2열 골격**으로 확장 in src/pages/service/patrol/zones/PatrolZoneDetailPage.tsx — ◩ **Phase 3 에서 1열(순찰 정보)까지 만들었다**(T509). 남은 것은 목업 `02` 의 2열 배치(좌: 지도·인증 내역 / 우: 순찰 정보). 🔴 **`AppDetailCard`·`AppPageHeader` 재사용**(이미 그렇게 했다) — 새 셸을 만들지 않는다(023 DoD #17)
-- [ ] T511 [US2] KPI 4종 in src/features/patrol-zones/components/detail/HistoryKpiRow.tsx — 지점 인증 / 소요시간 / 특이사항 / 구간 간격. 🔴 **소요시간에 "기준 충족" 판정을 넣지 않는다** — `totalMin` 이 검증되지 않고(B-31) 어긋난 데이터가 **전수 18건**이며 `totalMin: 0` 코스도 있다. **값만 나란히** 둔다(023 의 "인증률에 색을 입히지 않는다" 와 같은 판단). ⚠️ `AppKpiCard` 재사용(031)
-- [ ] T512 [US2] 순찰 정보 카드 — ◩ **Phase 3 에서 페이지 안에 만들었다**(T509): 코스·순찰자·시작·종료·소요(기준 병기)·지점 인증·교대. 남은 것은 **인증수단 집계(QR n · NFC n)** — `CheckDetails` 가 필요해 Phase 4 에서 붙인다. 컴포넌트 분리는 **파일이 커질 때** 한다(지금 300줄 미만, A6). 🔴 **빼는 것**: 이력번호 · 사업장 동 · 교대조 · 단말 · 확인 처리(§3-8)
-- [ ] T513 [US2] 🔴 인증 내역 표 in src/features/patrol-zones/components/detail/CheckDetailTable.tsx — 순서(`orderNo`) / 지점 / 인증수단 / 인증시각 / 구간 / 결과 / 기록. 🔴 **미완료를 2종으로 구분**한다: `checkDt === null` → **미인증**("방문 기록이 없습니다") / `checkDt !== null` → **미완료**(인증 실패). 🔴 **위치 컬럼을 만들지 않는다**(층·위치 필드가 **어디에도 없다**). ⚠️ **미완료 행의 `checkDt` 는 숨긴다** — 인증 시각이 아니다(OQ-036-B)
-- [ ] T514 [US2] [P] 상세 빈 상태·로딩 in src/pages/service/patrol/zones/PatrolZoneDetailPage.tsx — 🔴 **조회 중에 "삭제되었거나 접근할 수 없습니다" 가 뜨면 방금 지운 줄 안다**(023 T375). `isPending` 과 "없음" 을 구분한다
-- [ ] T515 [US2] [P] vitest in src/pages/service/patrol/zones/\_\_tests\_\_/PatrolZoneDetailPage.test.tsx — 4개 호출 조립 · 미인증/미완료 2종 분기 · 없는 `historySeq` · `status 0`·`1` **전 필드 null** 에서 터지지 않음 · 완료인데 인증 0
+- [x] T510 [US2] 상세 **2열 골격** in src/pages/service/patrol/zones/PatrolZoneDetailPage.tsx — `lg:grid-cols-3` 으로 좌(인증 내역 + **Phase 5 지도 자리**) 2칸 · 우(순찰 정보) 1칸. 좁은 폭에서는 한 줄로 쌓인다. 🔴 **`GetCourseDetail` 은 Phase 5 에서 이 페이지가 직접 부른다** — 훅 안에서 부르면 `course-history → courses` 역방향 의존이 생긴다(T497 판단)
+- [x] T511 [US2] KPI 4종 in src/features/patrol-zones/components/detail/HistoryKpiRow.tsx — 지점 인증(**segments 바 + 미인증 지점명**) · 소요시간(**판정 없음**, 기준·코스 평균을 hint 로) · 특이사항(메모/사진 수) · 구간 평균 간격(**range 바** = 최단~최장 안의 평균). 🔴 **없는 값을 `0` 으로 적지 않는다** — 간격을 만들 수 없으면 `—` 이고 **바도 그리지 않는다**(`0분` 은 "0분 만에 돌았다" 로 읽힌다). 🔴 **`totalMin: 0` 이면 "기준 0분" 이 아니라 "기준 미설정"** — 설정 안 됨과 0분은 다르다. 🔴 **뺀 행 수를 밝힌다**(`인증 시각이 없는 N개 제외`) — 지점 인증 / 소요시간 / 특이사항 / 구간 간격. 🔴 **소요시간에 "기준 충족" 판정을 넣지 않는다** — `totalMin` 이 검증되지 않고(B-31) 어긋난 데이터가 **전수 18건**이며 `totalMin: 0` 코스도 있다. **값만 나란히** 둔다(023 의 "인증률에 색을 입히지 않는다" 와 같은 판단). ⚠️ `AppKpiCard` 재사용(031)
+- [x] T512 [US2] 순찰 정보 카드 in src/features/patrol-zones/components/detail/HistoryInfoCard.tsx — 페이지가 2열로 커져 **컴포넌트로 분리**했다. **인증수단 집계(QR n · NFC n)** 추가 — `CheckDetails` 에서 세므로 **요청은 늘지 않는다**. 🔴 인증이 0건이면 집계 줄을 **만들지 않는다**(`QR 0 · NFC 0` 은 정보가 없다). 🔴 **빼는 것**: 이력번호 · 사업장 동 · 교대조 · 단말 · 확인 처리(§3-8)
+- [x] T513 [US2] 🔴 인증 내역 표 in src/features/patrol-zones/components/detail/CheckDetailTable.tsx — ✅ **미완료 2종 구분**(무방문 → `미인증` / 방문 → `미완료`) · 결과 + **시간초과 병기** · 기록 아이콘 · 위치 컬럼 없음. 🔴 **미완료 행의 `checkDt` 를 인증시각 칸에 쓰지 않는다**(OQ-15 — 의미 미확정). 🔴 **순번은 `orderNo` 그대로**(서버가 중복을 저장하지만 배열 위치로 다시 매기면 **같은 지점을 화면마다 다른 번호**로 부른다). 🔴 **구간은 `checkDt` 순으로 뺀다** — `lib/checkGaps` 신설(편성 순서로 빼면 음수가 나온다). 🔴 **`AppTable` 을 쓰지 않았다** — 카드 안에 들어가는 고정 표라 페이지네이션·카드 모드·정렬이 전부 불필요하고, 넘기면 **끄는 prop 만 늘어난다**(A6) — 순서(`orderNo`) / 지점 / 인증수단 / 인증시각 / 구간 / 결과 / 기록. 🔴 **미완료를 2종으로 구분**한다: `checkDt === null` → **미인증**("방문 기록이 없습니다") / `checkDt !== null` → **미완료**(인증 실패). 🔴 **위치 컬럼을 만들지 않는다**(층·위치 필드가 **어디에도 없다**). ⚠️ **미완료 행의 `checkDt` 는 숨긴다** — 인증 시각이 아니다(OQ-036-B)
+- [x] T514 [US2] [P] 상세 빈 상태·로딩 in src/pages/service/patrol/zones/PatrolZoneDetailPage.tsx — 상세·인증 내역 **각각** 로딩/실패/빈 상태를 가른다. 🔴 **인증 행이 0건인 회차가 실재한다**(완료인데 `checkedCount: 0`) — 그래서 "없음" 과 "못 불러옴" 을 섞으면 **사실과 장애를 구분할 수 없다**. KPI 자리까지 스켈레톤으로 채워 로딩 → 본문 전환에서 레이아웃이 튀지 않게 했다
+- [x] T515 [US2] [P] vitest in src/pages/service/patrol/zones/\_\_tests\_\_/PatrolZoneDetailPage.test.tsx — **11건 신설** + `checkGaps` **3건**(총 +14). 조립 · 미인증/미완료 2종 · **미완료 `checkDt` 미표시** · `status 0`·`1` 전 필드 null · **판정 문구 없음** · `기준 미설정` · 인증수단 집계 · 인증 0건 ≠ 실패 · 없는 회차 · `orderNo` 유지. ⚠️ 작성 중 `지점 인증`·`소요시간` 라벨이 **KPI 와 정보 카드 양쪽에** 있어 `getByText` 가 걸렸다 — 목업 `02` 도 양쪽에 두므로 **중복이 아니라 역할 분담**이다(KPI 는 구성, 카드는 값)
 
 ## Phase 5: US3 — 상세 지도
 
