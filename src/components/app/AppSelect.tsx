@@ -54,9 +54,12 @@ const AppSelect = ({
         )}
       >
         {/* 아이콘과 값을 한 묶음으로 둔다 — 트리거의 `justify-between`이 chevron만 우측으로 밀도록 */}
-        <span className="flex min-w-0 items-center gap-1.5">
+        {/* 🔴 **`whitespace-nowrap`**(사용자 확인 2026-10-16) — 목록 필터로 쓸 때는 트리거
+            폭이 `w-auto` 라, 코스명처럼 긴 값이 오면 **글자가 두 줄로 접혀 깨졌다.**
+            선택값은 한 줄로 두고 넘치면 `truncate` 가 자른다(트리거 폭은 호출부가 정한다) */}
+        <span className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
           {Icon && <Icon size={14} strokeWidth={1.75} className="shrink-0" />}
-          <SelectValue placeholder={placeholder} />
+          <SelectValue placeholder={placeholder} className="truncate" />
         </span>
       </SelectTrigger>
       <SelectContent>

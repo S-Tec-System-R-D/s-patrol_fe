@@ -46,8 +46,16 @@ function Calendar({
           * 시맨틱은 `point`(강조·선택) 트리오를 쓴다 — `design-system.md` §1-1.
           */
         range_start: "rounded-l-md bg-point-bg",
+        /**
+          * 🔴 **`!` 가 필요하다**(사용자 확인 2026-10-16 — 색을 바꿨는데도 글자가 흰색이었다).
+          * react-day-picker 는 범위의 **사이 날짜에도 `selected` 를 함께 붙인다.** 그래서
+          * 위 `selected` 의 `[&>button]:text-primary-foreground`(흰색)와 여기가 **같은
+          * 특이도로 충돌**하고, 어느 쪽이 이기는지는 Tailwind 가 CSS 를 찍는 순서에 달려
+          * 있어 **흰 글자 + 하늘색 배경**이 됐다(글자가 사라져 보인다).
+          * `!` 로 못 박는다 — Tailwind v4 는 **접미사** 형태다.
+          */
         range_middle:
-          "bg-point-bg [&>button]:bg-transparent [&>button]:text-point-foreground [&>button]:hover:bg-point/20",
+          "bg-point-bg [&>button]:bg-transparent! [&>button]:text-point-foreground! [&>button]:hover:bg-point/20",
         range_end: "rounded-r-md bg-point-bg",
         today: "[&>button]:ring-1 [&>button]:ring-border",
         outside: "text-muted-foreground/50",
