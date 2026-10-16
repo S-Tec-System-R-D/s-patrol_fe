@@ -1,3 +1,4 @@
+import { ALL_VALUE } from '@/lib/listQuery'
 import type { CourseListParams } from '../types'
 
 /**
@@ -17,13 +18,11 @@ import type { CourseListParams } from '../types'
  */
 
 /**
- * "전체" 센티넬. URL 에 남기지 않고 서버 파라미터에서도 뺀다.
- *
- * ⚠️ `points/lib/pointListParams.ts` · `patrol-zones/lib/courseHistoryOptions.ts` 에 같은
- * 상수가 있다. **세 번째 중복이다** — T373 에서 `AppSelect` 옆으로 올릴지 함께 판단한다
- * (027 이 "세 번째 소비처가 생기면 검토" 로 적어 둔 바로 그 시점이다).
+ * ✅ **공용으로 올렸다**(`spec 036` T493, 사용자 결정 2026-10-16) — 네 번째 사본이
+ * 생기려 해서다. 🔴 **import 한 뒤 re-export 한다** — `export { X } from '...'` 만 쓰면
+ * 이 파일의 로컬 스코프에 바인딩되지 않아 아래 `omitIfAll` 이 깨진다.
  */
-export const ALL_VALUE = 'ALL'
+export { ALL_VALUE }
 
 /** 서버 기본값과 동일(`api-spec.md` §1-5). 기본값에 의존하지 않고 명시 전송한다 */
 export const DEFAULT_PAGE_SIZE = 20

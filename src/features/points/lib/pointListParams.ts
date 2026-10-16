@@ -1,3 +1,4 @@
+import { ALL_VALUE } from '@/lib/listQuery'
 import type { PointListParams } from '../types'
 
 /**
@@ -19,13 +20,11 @@ import type { PointListParams } from '../types'
  */
 
 /**
- * `AppSelect` 의 "전체" 센티넬. 이 값은 URL 에 남기지 않고 서버 파라미터에서도 뺀다.
- *
- * ⚠️ `features/patrol-zones/lib/courseHistoryOptions.ts:20` 에 같은 상수가 있다
- * (018). 지금은 **feature 로컬로 중복**을 둔다 — 두 화면이 서로를 import 하는 것보다
- * 1줄 중복이 낫다(A6). 세 번째 소비처가 생기면 `AppSelect` 옆으로 올리는 것을 검토한다.
+ * ✅ **공용으로 올렸다**(`spec 036` T493, 사용자 결정 2026-10-16) — 이 파일이 적어 둔
+ * "세 번째 소비처가 생기면 검토" 의 시점이 지났다(036 이 네 번째였다). 🔴 **import 한 뒤
+ * re-export 한다** — 아래 변환 함수들이 로컬 바인딩을 쓴다.
  */
-export const ALL_VALUE = 'ALL'
+export { ALL_VALUE }
 
 /** 서버 기본값과 동일(`api-spec.md` §1-5). 기본값에 의존하지 않고 명시 전송한다 */
 export const DEFAULT_PAGE_SIZE = 20

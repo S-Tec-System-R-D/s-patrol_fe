@@ -1,3 +1,4 @@
+import { ALL_VALUE } from '@/lib/listQuery'
 import type { AppSelectOption } from '@/components/app/AppSelect'
 import { patrolResultBadge } from '@/features/patrol-zones/components/ZoneColumn'
 import type {
@@ -12,12 +13,8 @@ import type {
  * - 코스는 목 데이터에서 유도한다(별도 목록 API 없음, spec §2).
  */
 
-/**
- * "전체"의 값. Radix Select는 `SelectItem`에 빈 문자열을 허용하지 않아
- * (빈 문자열은 선택 해제용으로 예약) 센티넬 값을 쓴다.
- * URL에는 쓰지 않는다 — 화면 경계에서 `undefined`로 바꿔 키를 지운다.
- */
-export const ALL_VALUE = 'ALL'
+/** ✅ **공용으로 올렸다**(`spec 036` T493) — 소비처를 위해 re-export 로 둔다 */
+export { ALL_VALUE }
 
 const allOption: AppSelectOption = { value: ALL_VALUE, label: '전체' }
 

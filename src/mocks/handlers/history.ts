@@ -1,6 +1,10 @@
 import { http, HttpResponse } from 'msw'
 
-import type { CourseHistoryRow } from '@/features/course-history/types'
+import type {
+  CheckDetailRow,
+  CourseHistoryDetail,
+  CourseHistoryRow,
+} from '@/features/course-history/types'
 
 /**
  * MSW 순찰이력 핸들러 (`spec 023` 코스 상세 B단).
@@ -27,6 +31,8 @@ import type { CourseHistoryRow } from '@/features/course-history/types'
  */
 
 const GET_COURSE_HISTORY_PATH = '/api/v1/History/W/sign/GetCourseHistory'
+const GET_COURSE_HISTORY_DETAIL_PATH = '/api/v1/History/W/sign/GetCourseHistoryDetail'
+const GET_CHECK_DETAILS_PATH = '/api/v1/History/W/sign/GetCourseHistoryCheckDetails'
 
 interface MockHistory extends CourseHistoryRow {
   siteSeq: number
@@ -214,6 +220,200 @@ const pageSizeError = (query: URLSearchParams) => {
   return null
 }
 
+/**
+ * 회차 상세 (`spec 036`). 목록 시드에서 **파생**시킨다 — 상세를 따로 손으로 적으면
+ * 목록과 값이 어긋나고, 그 어긋남이 **화면 버그처럼 보인다**.
+ *
+ * 🔴 목록에 없는 필드는 여기서 만든다: `totalMin`(기준) · `elapsedTime` · `pauseTime`
+ * (**number** — 목록은 문자열, B-5) · `handoverCount` · `startUserSeq`.
+ * 🔴 **`statusName` 을 넣지 않는다** — 실 서버 상세에는 없다(프론트 매핑이 그 근거다).
+ * 🔴 **`overTimeYn`(대문자 T)** 로 내린다 — 목록은 소문자 t 다(B-4). mock 이 이름을
+ * 맞춰 주면 그 불일치를 코드가 영원히 모른다.
+ */
+const toCourseHistoryDetail = (item: MockHistory): CourseHistoryDetail => ({
+  historySeq: item.historySeq,
+  courseSeq: item.courseSeq,
+  courseName: item.courseName,
+  overTimeYn: item.overtimeYn,
+  status: item.status,
+  startUserSeq: item.userList[0]?.userSeq ?? 0,
+  startUserName: item.userList[0]?.userName ?? '',
+  startDt: item.startDt,
+  endDt: item.endDt,
+  // 🔴 기준(`totalMin`)을 실제 소요와 **일부러 어긋나게** 둔다 — B-31 이 실재하고
+  //    036 은 "기준 충족" 판정을 하지 않기로 했다(spec §3-4). 판정을 넣으면 여기서 들킨다.
+  totalMin: item.historySeq === 104 ? 0 : 45,
+  elapsedTime: item.actualElapsedTime,
+  pauseTime: 0,
+  totalPointCount: item.pointCount,
+  completedPointCount: item.checkedCount,
+  handoverCount: item.userList.length > 1 ? 1 : 0,
+})
+
+/**
+ * 지점 인증 내역 (`spec 036`).
+ *
+ * 🔴🔴 **실측 예외를 전부 심는다** — `api-spec.md` §4 분포표가 근거다. 정상 행만 두면
+ * 036 의 설계 근거(미완료 2종 · null 필드 · 좌표 2출처)가 **화면에서 사라진다**:
+ * 1. `status 0`·`1` — **전 필드 null**(checkDt·authMethod·좌표·순찰자·overtimeYn)
+ * 2. `status 3` + `checkDt === null` — **미인증**(아예 가지 않았다)
+ * 3. `status 3` + `checkDt` 있음 — **미완료**(갔는데 인증 실패. `authMethod` 는 null)
+ * 4. `status 4` + 메모 + 첨부 — 🔴 **첨부 URL 은 404 다**(B-40). 폴백을 보려면 필요하다
+ * 5. **좌표 없는 인증 행** — 지도가 "좌표 없음 N개" 를 적어야 한다
+ */
+const checkDetail = (
+  overrides: Partial<CheckDetailRow> & Pick<CheckDetailRow, 'detailSeq' | 'pointSeq' | 'orderNo'>
+): CheckDetailRow => ({
+  pointName: '지점 ' + overrides.orderNo,
+  status: 4,
+  checkDt: daysAgo(1, '02:45:00'),
+  authMethod: 10,
+  checkUserSeq: 21,
+  userName: '박성민',
+  gpsLat: 37.4936289,
+  gpsLng: 127.0780667,
+  overtimeYn: false,
+  memos: [],
+  ...overrides,
+})
+
+const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
+  // 정상 3건 — 간격 6분·7분
+  101: [
+    checkDetail({ detailSeq: 1001, pointSeq: 60, orderNo: 1, pointName: '정문 입구' }),
+    checkDetail({
+      detailSeq: 1002,
+      pointSeq: 61,
+      orderNo: 2,
+      pointName: '로비 1층',
+      checkDt: daysAgo(1, '02:51:00'),
+      authMethod: 9,
+    }),
+    checkDetail({
+      detailSeq: 1003,
+      pointSeq: 62,
+      orderNo: 3,
+      pointName: '지하 주차장 B1',
+      checkDt: daysAgo(1, '02:58:00'),
+    }),
+  ],
+  // 🔴 미완료 회차 — 미인증(무방문) 1건 + 미완료(방문) 1건이 섞여 있다
+  103: [
+    checkDetail({ detailSeq: 1031, pointSeq: 60, orderNo: 1, pointName: '정문 입구' }),
+    checkDetail({
+      detailSeq: 1032,
+      pointSeq: 61,
+      orderNo: 2,
+      pointName: '로비 1층',
+      checkDt: daysAgo(3, '02:52:00'),
+      // 🔴 미완료 + 방문 흔적 — 순찰자·시각은 있고 인증수단만 없다
+      status: 3,
+      authMethod: null,
+      gpsLat: null,
+      gpsLng: null,
+    }),
+    checkDetail({
+      detailSeq: 1033,
+      pointSeq: 62,
+      orderNo: 3,
+      pointName: '비상구 A',
+      // 🔴 미인증 — 전부 null. 지도는 **지점 등록 좌표**로 회색 핀을 찍어야 한다
+      status: 3,
+      checkDt: null,
+      authMethod: null,
+      checkUserSeq: null,
+      userName: null,
+      gpsLat: null,
+      gpsLng: null,
+      overtimeYn: null,
+    }),
+  ],
+  // 🔴 메모 + 첨부(404 URL) + 초과 + 좌표 없는 인증 행
+  104: [
+    checkDetail({
+      detailSeq: 1041,
+      pointSeq: 60,
+      orderNo: 1,
+      pointName: 'B동 계단실',
+      checkDt: daysAgo(5, '10:45:00'),
+      overtimeYn: true,
+      memos: [
+        {
+          memoSeq: 50,
+          memo: '3층 계단 비상등 점멸 이상. 야간 시인성 저하로 시설팀 보고 필요.',
+          attaches: [
+            {
+              attachSeq: 46,
+              // 🔴 실 서버와 **같은 모양의 URL 이고 똑같이 404 다**(B-40)
+              imagePath:
+                'http://123.2.156.148:5231/UploadedFiles/patrols/202610/5c2e9908843d4cb1af3cda16bd8152ac.jpg',
+              fileName: '1000000282.jpg',
+              fileExt: '.jpg',
+            },
+          ],
+        },
+      ],
+    }),
+    checkDetail({
+      detailSeq: 1042,
+      pointSeq: 61,
+      orderNo: 2,
+      pointName: '외벽 남측',
+      checkDt: daysAgo(5, '11:30:00'),
+      // 🔴 인증은 됐는데 좌표가 없다 — "좌표 없음 1개"
+      gpsLat: null,
+      gpsLng: null,
+      // 🔴 첨부가 **빈 배열이 아니라 null** 인 경우(실측)
+      memos: [{ memoSeq: 51, memo: 'B2 중앙 기둥 주변 조도 낮음.', attaches: null }],
+    }),
+    checkDetail({
+      detailSeq: 1043,
+      pointSeq: 62,
+      orderNo: 3,
+      pointName: '옥상 출입문',
+      checkDt: daysAgo(5, '12:58:00'),
+    }),
+  ],
+  // 🔴 진행 중 회차 — `대기중`(0)·`진행중`(1) 이 전 필드 null 로 섞여 있다
+  107: [
+    checkDetail({
+      detailSeq: 1071,
+      pointSeq: 60,
+      orderNo: 1,
+      pointName: '정문 입구',
+      checkDt: daysAgo(0, '09:15:00'),
+    }),
+    checkDetail({
+      detailSeq: 1072,
+      pointSeq: 61,
+      orderNo: 2,
+      pointName: '로비 1층',
+      status: 1,
+      checkDt: null,
+      authMethod: null,
+      checkUserSeq: null,
+      userName: null,
+      gpsLat: null,
+      gpsLng: null,
+      overtimeYn: null,
+    }),
+    checkDetail({
+      detailSeq: 1073,
+      pointSeq: 62,
+      orderNo: 3,
+      pointName: '지하 주차장 B1',
+      status: 0,
+      checkDt: null,
+      authMethod: null,
+      checkUserSeq: null,
+      userName: null,
+      gpsLat: null,
+      gpsLng: null,
+      overtimeYn: null,
+    }),
+  ],
+}
+
 export const historyHandlers = [
   http.get(GET_COURSE_HISTORY_PATH, ({ request }) => {
     const query = new URL(request.url).searchParams
@@ -224,16 +424,51 @@ export const historyHandlers = [
     const siteSeq = Number(query.get('siteSeq'))
     const courseSeq = query.get('courseSeq')
     const eventType = query.get('eventType')
+    // 🔴 순찰자는 **부분 문자열 검색**이다 — 드롭다운이 아니라 텍스트 입력이다
+    //    (현장 계정은 `UserList` 가 403 이라 선택 목록을 만들 수 없다)
+    const userName = query.get('userName')
 
     const filtered = seeds
       .filter((item) => item.siteSeq === siteSeq)
       .filter((item) => (courseSeq === null ? true : item.courseSeq === Number(courseSeq)))
       // `eventType` 은 **코스 상태 필터**다(OQ-5 해소)
       .filter((item) => (eventType === null ? true : item.status === Number(eventType)))
+      .filter((item) =>
+        userName === null ? true : item.userList.some((user) => user.userName.includes(userName))
+      )
       .filter((item) => inRange(item.startDt, query.get('fromDt'), query.get('toDt')))
       .sort((a, b) => b.startDt.localeCompare(a.startDt))
       .map(toCourseHistoryRow)
 
     return HttpResponse.json(paged(filtered, query))
+  }),
+
+  http.get(GET_COURSE_HISTORY_DETAIL_PATH, ({ request }) => {
+    const historySeq = Number(new URL(request.url).searchParams.get('historySeq'))
+    const found = seeds.find((item) => item.historySeq === historySeq)
+    // 🔴 없는 회차는 **빈 데이터가 아니라 비즈니스 오류**다(에러 형태 A) — 화면이
+    //    "조회 중" 과 "없음" 을 구분할 수 있어야 한다
+    if (!found) {
+      return HttpResponse.json(
+        { message: '해당 순찰 이력을 찾을 수 없습니다.', data: null, code: 400 },
+        { status: 400 }
+      )
+    }
+    return HttpResponse.json({
+      message: '요청이 정상 처리되었습니다.',
+      code: 200,
+      data: toCourseHistoryDetail(found),
+    })
+  }),
+
+  http.get(GET_CHECK_DETAILS_PATH, ({ request }) => {
+    const historySeq = Number(new URL(request.url).searchParams.get('historySeq'))
+    // 🔴 **`PagedData` 가 아니라 배열 직접**이다(실측). 시드가 없는 회차는 빈 배열 —
+    //    이력은 있는데 인증 행이 0건인 경우가 실재한다(완료인데 `checkedCount: 0`)
+    return HttpResponse.json({
+      message: '요청이 정상 처리되었습니다.',
+      code: 200,
+      data: checkDetailSeeds[historySeq] ?? [],
+    })
   }),
 ]

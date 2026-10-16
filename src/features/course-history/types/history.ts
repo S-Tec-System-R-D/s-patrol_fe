@@ -60,6 +60,40 @@ export interface CourseHistoryRow {
 }
 
 /**
+ * `GET /api/v1/History/W/sign/GetCourseHistoryDetail?historySeq=` → `CourseHistoryDetail`
+ *
+ * 🔴 **목록과 필드명·타입이 어긋난다**(B-4·B-5) — 같은 값인데 이름이 다르다:
+ * - `overTimeYn`(대문자 T) ↔ 목록은 `overtimeYn`
+ * - `pauseTime: number` ↔ 목록은 `'HH:mm:ss'` **문자열**
+ * 어댑터를 만들지 않고 **각자 실측대로 선언**한다(`CLAUDE.md` B4) — 어댑터로 이름을
+ * 맞추면 어느 응답을 보고 있는지 호출부에서 사라진다.
+ *
+ * ⚠️ **`statusName` 이 없다**(목록에는 있다) — 라벨은 `lib/historyBadge.ts` 가 만든다.
+ * ⚠️ **`siteSeq` 가 없다**(OQ-9 계열) — 다른 요청에 실을 값은 `getSiteSeq()` 로 보충한다.
+ */
+export interface CourseHistoryDetail {
+  historySeq: number
+  courseSeq: number
+  courseName: string
+  /** 🔴 상세는 대문자 T */
+  overTimeYn: boolean
+  /** 코스 사전(0·1·2). `statusName` 은 없다 */
+  status: number
+  startUserSeq: number
+  startUserName: string
+  startDt: string
+  endDt: string | null
+  /** 🔴 **검증되지 않은 값이다**(B-31) — 구간 합과 다를 수 있고 `0` 인 코스도 있다 */
+  totalMin: number
+  elapsedTime: string // 'HH:mm:ss'
+  /** 🔴 상세는 number — 목록은 문자열(B-5) */
+  pauseTime: number
+  totalPointCount: number
+  completedPointCount: number
+  handoverCount: number
+}
+
+/**
  * `GET /api/v1/History/W/sign/GetPointHistory` → `PagedData<PointHistoryRow>`
  *
  * B단은 **`totalCount` 만** 쓴다(미인증 건수). 행은 C단에서 쓴다.

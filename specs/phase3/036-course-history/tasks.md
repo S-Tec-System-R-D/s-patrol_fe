@@ -25,16 +25,19 @@
 > **독립 테스트 기준**: MSW 200 에서 훅이 서버 파라미터를 **그대로 실어 보내는 것**을
 > 쿼리 가로채기로 확인. 🔴 **화면 결과가 아니라 나간 쿼리를 본다**(027 선례 — 화면만 보면
 > "서버가 걸렀는지 우리가 걸렀는지" 알 수 없다).
+>
+> ✅ **Phase 2 완료(2026-10-16)** — `verify` 0 errors / `test` **887 → 920**(+33, 90 files).
+> 화면은 바뀌지 않았다. 🔴 **계획이 바뀐 것 2건**은 T493·T497 에 적었다.
 
-- [ ] T493 목록 파라미터 변환 in src/features/course-history/lib/courseHistoryListParams.ts — URL 쿼리 ↔ `CourseHistoryParams`. 🔴 **`pageSize` 상한 100 을 이 한 곳에서 막는다**(`spec 027` 이 200 을 보내 **장애가 빈 상태로 읽혔다**). `courseListParams.ts` 와 같은 모양으로
-- [ ] T494 목록 훅 in src/features/course-history/hooks/useCourseHistoryList.ts — 🔴 기존 `useCourseHistory`(코스 상세 B단, 기간 30일 고정)와 **다른 훅**이다. 그쪽은 KPI 집계용이고 이쪽은 **페이지네이션 목록**이다. ⚠️ `siteSeq === null` 이면 호출하지 않는다(B-9: 권한 밖도 200 이 와서 **장애가 정상 화면으로 보인다**)
-- [ ] T495 [P] queryKeys 확장 in src/features/course-history/queryKeys.ts — `list(params)`·`detail(historySeq)`·`checkDetails(historySeq)`·`courseAverage(courseSeq)`. 🔴 `data-model.md` §8 규약 — **`siteSeq` 를 키에 넣는다**(URL 에 없으므로 키가 유일한 구분자)
-- [ ] T496 [P] 상세 API 2종 in src/features/course-history/api/{getCourseHistoryDetail,getCourseHistoryCheckDetails}.ts — 조회계라 실측돼 있다(`api-spec.md` §5-1 16·17번)
-- [ ] T497 상세 훅 in src/features/course-history/hooks/useCourseHistoryDetail.ts — 4개 호출을 묶는다(상세·CheckDetails·`GetCourseDetail`·코스 평균). 🔴 **`GetCourseDetail` 을 왜 부르는지 주석에 남긴다** — 미인증 핀의 좌표 출처다(§2-3)
-- [ ] T498 코스 평균 계산 in src/features/course-history/lib/courseAverage.ts — `courseSeq` + `eventType=1`(완료만). 🔴 **미완료를 섞지 않는다**(소요 0·중단이 평균을 끌어내린다). ⚠️ `totalCount > 100` 이면 **"최근 100회 평균"** 으로 문구가 바뀐다(페이지 루프 금지)
-- [ ] T499 [P] 구간 간격 계산 in src/features/course-history/lib/checkIntervals.ts — `CheckDetails` 의 `checkDt` 차이로 평균·최단·최장. 🔴 **`checkDt` 가 없는 행은 계산에서 빼고**, 뺀 건수를 호출부가 알 수 있게 반환한다
-- [ ] T500 [P] MSW 핸들러 확장 in src/mocks/handlers/history.ts — 상세·CheckDetails 추가 + **실측 예외를 시드로 박는다**: `status 0` 진행 중 1건 · `userList: []` 1건 · 완료인데 `checkedCount: 0` 1건 · 미인증(무방문) 1건 · 좌표 없는 지점 1건. 🔴 **`GetPointHistory` 핸들러를 새로 선언하지 않는다** — `points.ts:217` 에 이미 있고, 중복 선언하면 MSW 가 앞의 것만 써 **조용히 0건**이 온다(023 사고)
-- [ ] T501 [P] vitest — 공용 기반 in src/features/course-history/\_\_tests\_\_/{historyBadge,courseHistoryListParams,courseAverage,checkIntervals}.test.ts — 뱃지 조합(`4`+`overTime`+`memo` **동시 참** 포함) · `pageSize` 상한 · 평균에서 미완료 제외 · 간격에서 null 제외
+- [x] T493 목록 파라미터 변환 in src/features/course-history/lib/courseHistoryListParams.ts — URL 쿼리 ↔ `CourseHistoryParams`. ✅ `clampPageSize` 가 **상한 100 을 한 곳에서** 막는다(`spec 027` 이 200 을 보내 **장애가 빈 상태로 읽혔다**). ✅ `orderRange` 로 **기간 순서를 보장**한다 — `from > to` 는 에러가 아니라 **200 + 0건**이라 뒤집히면 "이력 없음" 으로 보인다. 🔴 **계획 외 1건**: `ALL_VALUE` 가 **네 번째 사본**이 될 상황이어서 `src/lib/listQuery.ts` 로 **공용 승격**했다(사용자 결정 2026-10-16). `spec 027` 이 "세 번째 소비처가 생기면 검토" 로, `023` T373 이 "함께 판단한다" 로 적어 둔 시점이 지나 있었다. 기존 3곳은 **import + re-export 한 줄**로 바꿔 소비처를 전혀 건드리지 않았다. ⚠️ **변환 함수는 올리지 않았다** — 도메인마다 필터 집합이 달라 공용화하면 키 이름 매핑표를 넘기게 된다(A6)
+- [x] T494 목록 훅 in src/features/course-history/hooks/useCourseHistoryList.ts — 🔴 기존 `useCourseHistory`(코스 상세 B단, 기간 30일 고정)와 **다른 훅**이다. 그쪽은 KPI 집계용이고 이쪽은 **페이지네이션 목록**이다. ⚠️ `siteSeq === null` 이면 호출하지 않는다(B-9: 권한 밖도 200 이 와서 **장애가 정상 화면으로 보인다**)
+- [x] T495 [P] queryKeys 확장 in src/features/course-history/queryKeys.ts — `list(params)`·`detail(historySeq)`·`checkDetails(historySeq)`·`courseAverage(courseSeq)`. 🔴 `data-model.md` §8 규약 — **`siteSeq` 를 키에 넣는다**(URL 에 없으므로 키가 유일한 구분자)
+- [x] T496 [P] 상세 API 2종 in src/features/course-history/api/{getCourseHistoryDetail,getCourseHistoryCheckDetails}.ts — 조회계라 실측돼 있다(`api-spec.md` §5-1 16·17번). 🔴 **`CourseHistoryDetail` 타입이 아직 없었다** — `types/history.ts` 에 신설했다(목록과 `overTimeYn`·`pauseTime` 이 어긋나는 것을 어댑터 없이 실측대로 선언)
+- [x] T497 상세 훅 in src/features/course-history/hooks/{useCourseHistoryDetail,useCourseAverage}.ts — 🔴 **계획을 바꿨다: 4호출 묶음 → 2호출 + 별 훅**(2026-10-16 구현 판단). ① **`GetCourseDetail` 은 여기서 부르지 않는다** — 부르면 `course-history → courses` **역방향 의존**이 생겨 T488 에서 `elapsed.ts` 까지 옮겨 정리한 한 방향(**코스 관리 → 이력**)을 되돌린다. 페이지(`pages/`)가 기존 **`useCourseDetail` 을 재사용**해 합친다(A6: 022·027·023 이 쓰던 훅이고 캐시도 공유된다). ② **코스 평균은 `useCourseAverage` 로 분리** — 평균은 **코스 단위**라 회차가 바뀌어도 값이 같은데, 상세에 묶으면 `historySeq` 마다 100건을 다시 받는다
+- [x] T498 코스 평균 계산 in src/features/course-history/lib/courseAverage.ts — `courseSeq` + `eventType=1`(완료만). 🔴 **미완료를 섞지 않는다**(소요 0·중단이 평균을 끌어내린다). ⚠️ `totalCount > 100` 이면 **"최근 100회 평균"** 으로 문구가 바뀐다(페이지 루프 금지)
+- [x] T499 [P] 구간 간격 계산 in src/features/course-history/lib/checkIntervals.ts — `checkDt` 차이로 평균·최단·최장. 🔴 **`checkDt` 없는 행 제외 + 제외 건수 반환**(조용히 빼면 8개 지점 코스의 평균이 2개로 계산됐는데도 평균처럼 보인다). 🔴 **계획 외 판단**: `orderNo` 가 아니라 **`checkDt` 로 정렬**한다 — ① 서버가 `orderNo` 중복을 저장한다(032 에서 확인) ② 간격은 **실제로 찍힌 순서**의 차이다(편성 순서로 빼면 음수가 나온다)
+- [x] T500 [P] MSW 핸들러 확장 in src/mocks/handlers/history.ts — 상세·CheckDetails 핸들러 + `userName` 부분검색 필터 추가. ✅ **목록 쪽 실측 예외 5종은 023 이 이미 심어 뒀다**(`userList: []` · 완료인데 인증 0 · 시 단위 소요 · 진행 중 · 기간 밖) — 다시 만들지 않고 **CheckDetails 쪽 예외를 새로 심었다**: `status 0`·`1` **전 필드 null** · 미완료 **무방문/방문 2종** · 메모+첨부(**404 URL 그대로**) · `attaches: null` · **좌표 없는 인증 행**. 🔴 상세는 목록 시드에서 **파생**시킨다(따로 적으면 목록과 어긋나고 그 어긋남이 화면 버그처럼 보인다) + **`statusName` 을 넣지 않고 `overTimeYn` 대문자로** 내린다(mock 이 불일치를 맞춰 주면 코드가 영원히 모른다). 🔴 **`GetPointHistory` 는 새로 선언하지 않았다** — `points.ts` 가 이미 소유한다(023 사고 재발 방지)
+- [x] T501 [P] vitest — 공용 기반 in src/features/course-history/lib/\_\_tests\_\_/{historyBadge,courseHistoryListParams,courseAverage,checkIntervals}.test.ts — **33건 신설**(887 → 920). 뱃지 조합(`4`+`overTime`+`memo` **동시 참** = 실측 `detailSeq 85`) · 미완료 2종 분기 · `pageSize` 상한 · 기간 swap · 모르는 코드 통과(A1) · 시 단위 소요 · 평균 null(0 이 아니다) · `partial` · 간격 null 제외·`checkDt` 정렬
 
 ## Phase 3: US1 — 코스 이력 목록 (서버 전환)
 
