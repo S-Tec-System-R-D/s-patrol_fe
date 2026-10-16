@@ -7,9 +7,11 @@ import type { CourseHistoryRow } from '@/features/course-history/types'
 /**
  * 좁은 폭 카드 (`spec 030` T446 → `spec 036` T506 서버 전환).
  *
- * 🔴 **구조는 030·034 가 세운 것을 그대로 두고 필드만 바꿨다.** 다만 진행 중 표기는
- * **030 의 규칙을 뒤집었다**(사용자 결정 2026-10-16) — 카드 안에 `진행중` 뱃지가 함께
- * 있어 맥락이 생겼고, "종료 진행 중" 은 같은 말을 두 번 하는 것이다.
+ * 🔴 **`spec 034` 의 카드 골격**(타일 + 이름·뱃지 + 지표 줄 + 꺾쇠)으로 다시 짰다
+ * (목업 "반응형카드" 반영, 2026-10-16). 관심사 셋을 고정한다:
+ * ① **축이 비지 않는다**(순찰자 없는 이력 35% — 그래서 아바타가 아니라 아이콘 타일)
+ * ② **뱃지 2개 병기**를 좁은 폭에서도 유지한다
+ * ③ **날짜를 자르지 않는다**(이력은 여러 날에 걸쳐 있어 "언제" 가 선택 기준이다)
  */
 
 const row = (overrides: Partial<CourseHistoryRow> = {}): CourseHistoryRow => ({
@@ -38,16 +40,26 @@ describe('ZoneHistoryCard', () => {
     expect(screen.getByText('A동 순찰코스')).toBeInTheDocument()
     expect(screen.getByText('완료')).toBeInTheDocument()
     expect(screen.getByText('박성민')).toBeInTheDocument()
-    expect(screen.getByText('시작 2026-05-01 09:00')).toBeInTheDocument()
-    expect(screen.getByText('지점 인증 3/3')).toBeInTheDocument()
+    // 🔴 **날짜를 자르지 않는다** — 시:분만 두면 다른 날 회차와 구분되지 않는다
+    expect(screen.getByText('2026-05-01 09:00')).toBeInTheDocument()
+    expect(screen.getByText('3/3 인증')).toBeInTheDocument()
   })
 
-  it('🔴 진행 중이면 종료를 "—" 로 두고 상태는 뱃지가 말한다', () => {
+  it('🔴 진행 막대를 넣지 않는다 — 좁은 폭에는 고르는 데 쓰는 값만 둔다', () => {
+    const { container } = render(<ZoneHistoryCard {...row({ checkedCount: 1 })} />)
+
+    // 비율은 `1/3` 이 이미 말한다(`spec 030` §3 규칙 5). 테이블에는 막대가 남아 있다
+    expect(container.querySelector('[style*="width"]')).toBeNull()
+    expect(screen.getByText('1/3 인증')).toBeInTheDocument()
+  })
+
+  it('🔴 진행 중이면 상태는 뱃지만 말한다 — 종료 줄을 따로 두지 않는다', () => {
     render(<ZoneHistoryCard {...row({ endDt: null, status: 0 })} />)
 
     expect(screen.getByText('진행중')).toBeInTheDocument()
-    expect(screen.getByText(/종료 —/)).toBeInTheDocument()
-    expect(screen.queryByText(/종료 진행 중/)).not.toBeInTheDocument()
+    // 034 골격에서 종료 일시는 카드에 없다 — 고르는 데 쓰는 값이 아니다(030 규칙 5).
+    // "종료 진행 중" 처럼 같은 말을 두 번 하던 자리가 사라졌다
+    expect(screen.queryByText(/종료/)).not.toBeInTheDocument()
   })
 
   it('🔴 순찰자가 없으면 "순찰자 미지정" — 빈 칸으로 두지 않는다 (실측 35%)', () => {
@@ -88,6 +100,14 @@ describe('ZoneHistoryCard', () => {
   it('🔴 시 단위 소요시간을 분으로 읽지 않는다', () => {
     render(<ZoneHistoryCard {...row({ actualElapsedTime: '02:17:40' })} />)
 
-    expect(screen.getByText(/2시간 18분/)).toBeInTheDocument()
+    expect(screen.getByText('2시간 18분')).toBeInTheDocument()
+  })
+
+  it('🔴 순찰자가 없어도 축(타일)이 남는다 — 아바타를 축으로 쓰지 않은 이유다', () => {
+    const { container } = render(<ZoneHistoryCard {...row({ userList: [] })} />)
+
+    // 실측 35% 가 순찰자 없는 이력이다. 아바타가 축이면 3건 중 1건은 축이 사라진다
+    expect(container.querySelector('.size-11')).not.toBeNull()
+    expect(screen.getByText('순찰자 미지정')).toBeInTheDocument()
   })
 })

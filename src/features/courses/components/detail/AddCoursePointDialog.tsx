@@ -3,6 +3,7 @@ import { XIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import AppBadge from '@/components/app/AppBadge'
+import { cardBadge } from '@/components/app/AppBadge.variants'
 import AppButton from '@/components/app/AppButton'
 import AppCheckbox from '@/components/app/AppCheckbox'
 import AppDialog from '@/components/app/AppDialog'
@@ -262,7 +263,7 @@ const AddCoursePointDialog = ({
                       {method && (
                         <AppBadge
                           variant={method === 'QR' ? 'point' : 'success'}
-                          className="px-1.5 py-0.5 text-[10.5px] leading-4"
+                          className={cardBadge}
                         >
                           {method}
                         </AppBadge>

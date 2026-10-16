@@ -1,6 +1,7 @@
 import { ChevronRightIcon, ClockIcon, MapPinIcon, RouteIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
+import { cardBadge as CARD_BADGE } from '@/components/app/AppBadge.variants'
 
 import type { CourseRow } from '../types'
 
@@ -18,19 +19,6 @@ import type { CourseRow } from '../types'
  *
  * ⚠️ **셸(테두리·배경·클릭·미사용 톤다운)은 `AppTable` 이 그린다.** 여기는 내용만 반환한다.
  */
-
-/**
- * 카드 뱃지는 **한 단계 작다**(사용자 지적 2026-10-14). 기본 `AppBadge`(11px·px-2)는
- * 지점명과 크기가 비슷해 **이름과 뱃지가 서로 다툰다** — 카드에서 주인공은 이름이고
- * 뱃지는 곁들이는 상태다(`spec 028` 의 편성 모달에서 같은 판단을 했다).
- *
- * 🔴🔴 **`text-label`(폰트 크기 토큰)을 쓰면 안 된다.** `AppBadge` 는
- * `cn(badgeVariants(...), className)` 으로 병합하는데, **`tailwind-merge` 가 `text-label`
- * 을 글자색으로 분류해** variant 의 색(`text-success-foreground` 등)을 **지워 버린다** —
- * 뱃지 글자가 전부 검정이 된다(2026-10-14 실제로 겪었다). 임의값 `text-[10.5px]` 은
- * **폰트 크기로 인식**되어 색과 충돌하지 않는다(`spec 028` 이 같은 자리에서 쓴 방식).
- */
-const CARD_BADGE = 'px-1.5 py-0.5 text-[10.5px] leading-4'
 
 const CourseCard = (course: CourseRow) => (
   <div className="flex items-center gap-3">
