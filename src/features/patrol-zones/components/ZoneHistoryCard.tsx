@@ -11,9 +11,10 @@ import type { CourseHistoryRow } from '@/features/course-history/types'
  * 🔴 **구조는 030·034 가 세운 것을 그대로 두고 필드만 바꿨다** — 030 이 "서버로 전환하면
  * 필드명이 바뀐다. 카드 구조는 유지하고 매핑만 손본다" 로 적어 둔 그 작업이다.
  *
- * 🔴 **종료 일시를 비워 두지 않는다.** 진행 중이면 `—` 가 아니라 **"진행 중"** 이라고
- * 적는다 — 테이블에서는 같은 열의 다른 행과 비교돼 `—` 가 읽히지만, 카드에서는 그 줄
- * 하나만 보이므로 **값이 빠진 것처럼** 읽힌다.
+ * 🔴 **진행 중이면 종료를 `—` 로 둔다**(사용자 결정 2026-10-16 — **030 의 규칙을
+ * 뒤집었다**). 030 은 카드에서 `—` 가 **값 누락**으로 읽힌다고 봤지만, 지금 카드에는
+ * **`진행중` 결과 뱃지가 같은 블록 안에** 있어 맥락이 이미 있다 — "종료 진행 중" 은
+ * 같은 말을 두 번 하는 것이고 문장으로도 어색하다. 테이블과 표기를 맞춘다.
  *
  * 🔴 **순찰자가 없는 이력이 실측 35%** 다 — 빈 칸으로 두면 데이터 누락처럼 보인다.
  */
@@ -50,7 +51,7 @@ const ZoneHistoryCard = (row: CourseHistoryRow) => {
         <span>{runner}</span>
         <span>시작 {formatDateTime(row.startDt)}</span>
         <span>
-          종료 {row.endDt === null ? '진행 중' : formatDateTime(row.endDt)}
+          종료 {row.endDt === null ? '—' : formatDateTime(row.endDt)}
           {' · '}
           {formatElapsed(row.actualElapsedTime)}
         </span>

@@ -38,10 +38,17 @@ function Calendar({
         day_button:
           "grid size-8 place-items-center rounded-md transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden",
         selected: "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary",
-        range_start: "rounded-l-md bg-accent",
+        /**
+          * 🔴 **범위 배경을 `accent` 에서 `point-bg` 로 바꿨다**(사용자 확인 2026-10-16).
+          * `accent` 는 본문 글자색과 명도가 비슷해 **선택한 기간이 구분되지 않았다** —
+          * 양 끝은 `selected`(`bg-primary`)로 진하게 칠해지는데 **사이 날짜가 사라져
+          * 보여서** "어디부터 어디까지" 를 읽을 수 없었다.
+          * 시맨틱은 `point`(강조·선택) 트리오를 쓴다 — `design-system.md` §1-1.
+          */
+        range_start: "rounded-l-md bg-point-bg",
         range_middle:
-          "bg-accent [&>button]:bg-transparent [&>button]:text-accent-foreground [&>button]:hover:bg-muted",
-        range_end: "rounded-r-md bg-accent",
+          "bg-point-bg [&>button]:bg-transparent [&>button]:text-point-foreground [&>button]:hover:bg-point/20",
+        range_end: "rounded-r-md bg-point-bg",
         today: "[&>button]:ring-1 [&>button]:ring-border",
         outside: "text-muted-foreground/50",
         disabled: "pointer-events-none opacity-40",

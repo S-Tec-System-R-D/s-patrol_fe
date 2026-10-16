@@ -78,8 +78,15 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
     header: '종료 일시',
     cell: ({ getValue }) => {
       const value = getValue<string | null>()
-      // 🔴 진행 중이면 `—` 가 아니라 **"진행 중"** — `—` 는 값 누락으로 읽힌다(030 선례)
-      if (value === null) return <span className="text-muted-foreground">진행 중</span>
+      /**
+       * 🔴 **진행 중이면 `—` 다**(사용자 결정 2026-10-16 — **030 의 규칙을 뒤집었다**).
+       *
+       * 030 은 "`—` 가 값 누락으로 읽힌다" 며 **"진행 중"** 이라고 적게 했는데, 그 판단은
+       * **결과 컬럼이 없던 4컬럼 시절**의 것이다. 지금은 같은 행에 **`진행중` 결과 뱃지**가
+       * 있어 맥락이 이미 있고, 같은 말을 두 칸에서 두 번 하면 **종료 일시 칸이 상태 칸처럼**
+       * 읽힌다. 종료 일시는 **아직 값이 없는 것이 사실**이므로 `—` 가 맞다.
+       */
+      if (value === null) return <span className="text-muted-foreground">—</span>
       return (
         <span className="tabular-nums text-muted-foreground">{formatDateTime(value)}</span>
       )

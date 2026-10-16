@@ -1,11 +1,19 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FilterIcon, FilterXIcon, HistoryIcon, LayoutListIcon, TriangleAlertIcon } from 'lucide-react'
+import {
+  FilterIcon,
+  FilterXIcon,
+  HistoryIcon,
+  LayoutListIcon,
+  RotateCcwIcon,
+  TriangleAlertIcon,
+} from 'lucide-react'
 
 import AppButton from '@/components/app/AppButton'
 import AppDatePicker from '@/components/app/AppDatePicker'
 import AppEmpty from '@/components/app/AppEmpty'
 import AppInput from '@/components/app/AppInput'
+import AppIconButton from '@/components/app/AppIconButton'
 import AppPageHeader from '@/components/app/AppPageHeader'
 import AppPagination from '@/components/app/AppPagination'
 import AppSelect from '@/components/app/AppSelect'
@@ -177,54 +185,72 @@ const PatrolZonesPage = () => {
 
       <PatrolHistoryTabs />
 
-      {/* 🔴 **필터 영역에 이름을 붙인다**(`spec 030`) — 좁은 폭 카드가 `button` 이라
-          접근성 이름에 행 내용이 전부 들어가고 필터 버튼과 이름이 겹친다 */}
-      <div role="group" aria-label="목록 필터" className="flex flex-wrap items-center gap-2">
-        <AppDatePicker
-          value={range}
-          onChange={(next) =>
-            updateFilter({
-              from: next.from ? toDateQuery(next.from) : undefined,
-              to: next.to ? toDateQuery(next.to) : undefined,
-            })
-          }
-          active={Boolean(params.from)}
-          className="w-auto"
-        />
-        <AppSelect
-          aria-label="코스"
-          icon={LayoutListIcon}
-          options={courseOptions}
-          value={params.course ?? ALL_VALUE}
-          onChange={(value) => updateFilter({ course: selectValue(value) })}
-          active={Boolean(params.course)}
-          className="w-auto"
-        />
-        <AppSelect
-          aria-label="결과"
-          icon={FilterIcon}
-          options={resultFilterOptions}
-          value={params.result ?? ALL_VALUE}
-          onChange={(value) => updateFilter({ result: selectValue(value) })}
-          active={Boolean(params.result)}
-          className="w-auto"
-        />
+      {/**
+        * 🔴 **한 줄로 둔다**(사용자 확인 2026-10-16) — 검색과 필터가 2열로 접히면
+        * "검색은 필터와 다른 것" 처럼 보였다. **코스/지점 관리(`CourseTopNav`)와 같은
+        * 배치**다: 검색이 맨 앞, 필터가 뒤, 남는 폭은 spacer 가 먹는다.
+        *
+        * 🔴 **필터 영역에만 이름을 붙인다**(`spec 030`) — 좁은 폭 카드가 `button` 이라
+        * 접근성 이름에 행 내용이 전부 들어가고 필터 버튼과 이름이 겹친다. 검색은 자기
+        * `aria-label` 이 있어 그룹 밖에 둔다(`CourseTopNav` 와 같다).
+        * ⚠️ `contents` 라 그룹이 **flex 줄을 끊지 않는다.**
+        */}
+      <div className="flex items-center gap-2">
         <AppInput
           variant="search"
           placeholder="순찰자 검색"
           aria-label="순찰자 검색"
-          className="w-[200px]"
+          className="w-[260px]"
           value={userDraft}
           onChange={(event) => {
             setUserDraft(event.target.value)
             pushUser(event.target.value)
           }}
         />
-        {hasFilter && (
-          <AppButton variant="sub" onClick={resetFilters}>
-            초기화
-          </AppButton>
-        )}
+        <div role="group" aria-label="목록 필터" className="contents">
+          <AppDatePicker
+            value={range}
+            onChange={(next) =>
+              updateFilter({
+                from: next.from ? toDateQuery(next.from) : undefined,
+                to: next.to ? toDateQuery(next.to) : undefined,
+              })
+            }
+            active={Boolean(params.from)}
+            className="w-auto"
+          />
+          <AppSelect
+            aria-label="코스"
+            icon={LayoutListIcon}
+            options={courseOptions}
+            value={params.course ?? ALL_VALUE}
+            onChange={(value) => updateFilter({ course: selectValue(value) })}
+            active={Boolean(params.course)}
+            className="w-auto"
+          />
+          <AppSelect
+            aria-label="결과"
+            icon={FilterIcon}
+            options={resultFilterOptions}
+            value={params.result ?? ALL_VALUE}
+            onChange={(value) => updateFilter({ result: selectValue(value) })}
+            active={Boolean(params.result)}
+            className="w-auto"
+          />
+          {/* 🔴 **아이콘 버튼으로 둔다**(사용자 결정 2026-10-16) — 글자 버튼이 필터
+              컨트롤들과 같은 무게로 보여 "네 번째 필터" 처럼 읽혔다. 🔴 `aria-label` 은
+              남긴다(아이콘만 있는 버튼은 이름이 없으면 스크린리더에서 사라진다) */}
+          {hasFilter && (
+            <AppIconButton
+              icon={RotateCcwIcon}
+              aria-label="필터 초기화"
+              title="필터 초기화"
+              onClick={resetFilters}
+              className="bg-card"
+            />
+          )}
+        </div>
+        <div className="flex-1" />
       </div>
 
       {list.isError ? (
@@ -260,18 +286,14 @@ const PatrolZonesPage = () => {
            없습니다" 라고 하면 사용자는 데이터가 없다고 믿는다 */
         <div className="rounded-lg border border-border bg-card">
           {hasFilter ? (
-            <>
-              <AppEmpty
-                icon={FilterXIcon}
-                title="조건에 맞는 순찰이력이 없습니다"
-                description="기간이나 필터를 바꿔보세요."
-              />
-              <div className="flex justify-center pb-6">
-                <AppButton variant="sub" onClick={resetFilters}>
-                  필터 초기화
-                </AppButton>
-              </div>
-            </>
+            /* 🔴 **빈 상태에 초기화 버튼을 두지 않는다**(사용자 결정 2026-10-16) —
+               바로 위 필터 바에 초기화 아이콘이 **항상 보이는 자리**에 있어 같은 버튼이
+               두 개가 된다. 023 은 그 아이콘이 없어서 여기에 뒀던 것이다 */
+            <AppEmpty
+              icon={FilterXIcon}
+              title="조건에 맞는 순찰이력이 없습니다"
+              description="기간이나 필터를 바꿔보세요."
+            />
           ) : (
             <AppEmpty
               icon={HistoryIcon}

@@ -138,6 +138,11 @@ describe('PatrolZonesPage — 서버 목록', () => {
 
     expect(await screen.findByText('조건에 맞는 순찰이력이 없습니다')).toBeInTheDocument()
     expect(screen.queryByText('순찰이력이 없습니다.')).not.toBeInTheDocument()
+    // 🔴 **빈 상태에 초기화 버튼을 두지 않는다**(사용자 결정 2026-10-16) — 필터 바의
+    //    아이콘 버튼이 **항상 보이는 자리**에 있어 같은 버튼이 두 개가 된다.
+    //    ⚠️ 0개가 아니라 **1개**다 — 툴바의 것은 있어야 한다(023 은 그 아이콘이 없어서
+    //    빈 상태에 뒀던 것이다)
+    expect(screen.getAllByLabelText('필터 초기화')).toHaveLength(1)
   })
 })
 
@@ -197,8 +202,19 @@ describe('PatrolZonesPage — 필터가 서버로 나간다', () => {
     renderPage()
 
     await screen.findAllByText('A동 순찰코스')
-    expect(inFilters().getByLabelText('순찰자 검색')).toBeInTheDocument()
-    expect(inFilters().queryByLabelText('순찰자')).not.toBeInTheDocument()
+    // ⚠️ 검색은 **필터 그룹 밖**이다(`CourseTopNav` 와 같은 배치) — 자기 `aria-label` 이 있다
+    expect(screen.getByLabelText('순찰자 검색')).toBeInTheDocument()
+    expect(screen.queryByLabelText('순찰자')).not.toBeInTheDocument()
+  })
+
+  it('🔴 초기화는 아이콘 버튼이고 필터가 걸렸을 때만 나온다', async () => {
+    renderPage()
+    await screen.findAllByText('A동 순찰코스')
+    expect(screen.queryByLabelText('필터 초기화')).not.toBeInTheDocument()
+
+    renderPage('/patrol/zones?result=1')
+    // 아이콘만 있는 버튼이라 `aria-label` 이 없으면 스크린리더에서 사라진다
+    expect((await screen.findAllByLabelText('필터 초기화')).length).toBeGreaterThan(0)
   })
 })
 
@@ -210,11 +226,15 @@ describe('PatrolZonesPage — 실측 예외를 화면이 감당한다', () => {
     expect((await screen.findAllByText('순찰자 미지정')).length).toBeGreaterThan(0)
   })
 
-  it('🔴 진행 중 회차의 종료 일시는 "—" 가 아니라 "진행 중" 이다', async () => {
+  it('🔴 진행 중 회차는 종료 일시를 "—" 로 두고 상태는 뱃지가 말한다', async () => {
     renderPage()
 
-    // `—` 는 값 누락으로 읽힌다(030 선례)
-    expect((await screen.findAllByText('진행 중')).length).toBeGreaterThan(0)
+    await screen.findAllByText('A동 순찰코스')
+    // 🔴 **030 의 규칙을 뒤집었다**(사용자 결정 2026-10-16): 같은 행에 `진행중` 뱃지가
+    //    있어 맥락이 이미 있고, 종료 일시 칸에 상태를 적으면 같은 말을 두 번 한다
+    expect(inTable().getAllByText('진행중').length).toBeGreaterThan(0)
+    expect(inTable().getAllByText('—').length).toBeGreaterThan(0)
+    expect(inTable().queryByText('진행 중')).not.toBeInTheDocument()
   })
 
   it('🔴 결과 뱃지와 시간초과 뱃지를 함께 보여준다', async () => {

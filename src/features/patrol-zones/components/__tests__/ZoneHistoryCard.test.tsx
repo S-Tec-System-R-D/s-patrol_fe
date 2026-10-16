@@ -7,8 +7,9 @@ import type { CourseHistoryRow } from '@/features/course-history/types'
 /**
  * 좁은 폭 카드 (`spec 030` T446 → `spec 036` T506 서버 전환).
  *
- * 🔴 **구조는 030·034 가 세운 것을 그대로 두고 필드만 바꿨다.** 그래서 이 테스트도
- * 관심사가 같다 — **카드에서는 `—` 가 값 누락으로 읽힌다**(그 줄 하나만 보이므로).
+ * 🔴 **구조는 030·034 가 세운 것을 그대로 두고 필드만 바꿨다.** 다만 진행 중 표기는
+ * **030 의 규칙을 뒤집었다**(사용자 결정 2026-10-16) — 카드 안에 `진행중` 뱃지가 함께
+ * 있어 맥락이 생겼고, "종료 진행 중" 은 같은 말을 두 번 하는 것이다.
  */
 
 const row = (overrides: Partial<CourseHistoryRow> = {}): CourseHistoryRow => ({
@@ -41,11 +42,12 @@ describe('ZoneHistoryCard', () => {
     expect(screen.getByText('지점 인증 3/3')).toBeInTheDocument()
   })
 
-  it('🔴 진행 중이면 "진행 중" 이라고 적는다 — 카드에서 "—" 는 값 누락으로 읽힌다', () => {
+  it('🔴 진행 중이면 종료를 "—" 로 두고 상태는 뱃지가 말한다', () => {
     render(<ZoneHistoryCard {...row({ endDt: null, status: 0 })} />)
 
-    expect(screen.getByText(/진행 중/)).toBeInTheDocument()
-    expect(screen.queryByText(/종료 —/)).not.toBeInTheDocument()
+    expect(screen.getByText('진행중')).toBeInTheDocument()
+    expect(screen.getByText(/종료 —/)).toBeInTheDocument()
+    expect(screen.queryByText(/종료 진행 중/)).not.toBeInTheDocument()
   })
 
   it('🔴 순찰자가 없으면 "순찰자 미지정" — 빈 칸으로 두지 않는다 (실측 35%)', () => {
