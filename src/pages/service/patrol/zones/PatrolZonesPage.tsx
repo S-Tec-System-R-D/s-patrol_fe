@@ -1,93 +1,175 @@
-import AppBadge from '@/components/app/AppBadge'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { FilterIcon, FilterXIcon, HistoryIcon, LayoutListIcon, TriangleAlertIcon } from 'lucide-react'
+
 import AppButton from '@/components/app/AppButton'
-import AppDetailCard from '@/components/app/AppDetailCard'
 import AppDatePicker from '@/components/app/AppDatePicker'
-import AppDetailRow from '@/components/app/AppDetailRow'
 import AppEmpty from '@/components/app/AppEmpty'
+import AppInput from '@/components/app/AppInput'
 import AppPageHeader from '@/components/app/AppPageHeader'
 import AppPagination from '@/components/app/AppPagination'
 import AppSelect from '@/components/app/AppSelect'
 import AppTable from '@/components/AppTable'
-import PatrolHistoryTabs from '@/features/patrol-zones/components/PatrolHistoryTabs'
-import PatrolTimeline from '@/features/patrol-zones/components/PatrolTimeline'
-import ZoneHistoryCard from '@/features/patrol-zones/components/ZoneHistoryCard'
-import { patrolResultBadge, zoneColumns } from '@/features/patrol-zones/components/ZoneColumn'
+import { useCourseHistoryList } from '@/features/course-history/hooks/useCourseHistoryList'
 import {
-  ALL_VALUE,
-  courseOptions,
-  courseResultOptions,
-} from '@/features/patrol-zones/lib/courseHistoryOptions'
-import { filterCourseHistory } from '@/features/patrol-zones/lib/filterCourseHistory'
+  DEFAULT_PAGE_SIZE,
+  parsePageNumber,
+  toCourseHistoryListParams,
+  type CourseHistoryQuery,
+} from '@/features/course-history/lib/courseHistoryListParams'
+import { useCourseList } from '@/features/courses/hooks/useCourseList'
+import PatrolHistoryTabs from '@/features/patrol-zones/components/PatrolHistoryTabs'
+import ZoneHistoryCard from '@/features/patrol-zones/components/ZoneHistoryCard'
+import { zoneHistoryColumns } from '@/features/patrol-zones/components/ZoneColumn'
+import {
+  courseFilterOptions,
+  resultFilterOptions,
+} from '@/features/patrol-zones/lib/courseHistoryFilters'
+import { toPageIndex, toPageNumber } from '@/features/courses/lib/courseListParams'
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback'
 import { useQueryParams } from '@/hooks/useQueryParams'
-import { parseDateRangeQuery, toDateRangeQuery } from '@/lib/dateRangeQuery'
-import type { PaginationState } from '@tanstack/react-table'
-import { format } from 'date-fns'
-import { DownloadIcon, FilterIcon, LayersIcon, LayoutListIcon, ListIcon } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { getSiteSeq } from '@/lib/auth/site'
+import { ALL_VALUE } from '@/lib/listQuery'
+import { paths } from '@/router/paths'
 
-const PATROL_RESULT = {
-  COMPLETE: 'COMPLETE',
-  INCOMPLETE: 'INCOMPLETE',
-  IN_PROGRESS: 'IN_PROGRESS',
-} as const
+/**
+ * 순찰이력 — 코스 순찰이력 목록 (`spec 036` Phase 3).
+ *
+ * 🔴 **mock 셸을 통째로 걷어냈다.** 이전 판은 페이지 안에 **이력 24건이 배열로 박혀
+ * 있었고**(`zonePatrols`, 215~586행) 필터도 클라이언트 함수(`filterCourseHistory`)였다.
+ * 서버 타입과 **이름·타입·개수가 전부 달라** 어댑터로 이을 수 없었다(023 이 코스 목록에서
+ * 한 것과 같은 전환).
+ *
+ * 🔴 **마스터-디테일을 버렸다.** 우측 상세 패널(`PatrolDetailPanel`) 대신
+ * **`/patrol/zones/:historySeq` 별 페이지**로 간다 — 선택 상태가 `useState` 라
+ * **새로고침하면 날아갔고**, 목업(`01`·`02`)도 목록/상세 2화면이다. 027(지점)·023(코스)이
+ * 이미 같은 전환을 했다.
+ *
+ * 🔴 **필터·검색·페이지는 전부 URL 에 있고 서버 파라미터로 나간다**(`CLAUDE.md` B4).
+ * **클라이언트 필터 함수는 0건.**
+ *
+ * 🔴 **`siteSeq` 는 URL 에 노출하지 않는다**(`spec 021` DoD #13) — 서버가 권한을 검사하지
+ * 않으므로(B-9) 사용자가 고칠 수 있는 자리에 두면 남의 사업장 이력이 열린다.
+ */
 
-export type PatrolResultType = (typeof PATROL_RESULT)[keyof typeof PATROL_RESULT]
-
-export interface ZonePatrolType {
-  name: string
-  startedAt: Date
-  endedAt: Date
-  result: PatrolResultType
-  points: PointPatrolType[]
-}
-
-export interface PointPatrolType {
-  name: string // 지점명
-  status: boolean // true 이상없음, false 이상
-  completedAt: Date // 지점 완료시간
-  note: string // 특이사항
-}
-
-type FilterKey = 'from' | 'to' | 'courseId' | 'result'
+type FilterKey = keyof CourseHistoryQuery
+const SEARCH_DEBOUNCE_MS = 300
+/** 코스 필터 옵션을 한 번에 받는 수. 🔴 서버 `pageSize` 상한이 100 이다 */
+const COURSE_OPTION_PAGE_SIZE = 100
 
 const PatrolZonesPage = () => {
-  const [selectedPatrol, setSelectedPatrol] = useState<ZonePatrolType | null>(null)
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 50,
-  })
+  const navigate = useNavigate()
+  const siteSeq = getSiteSeq()
 
   const [params, setParams] = useQueryParams<FilterKey>()
-  const range = useMemo(() => parseDateRangeQuery(params), [params])
-
-  const filtered = useMemo(
-    () =>
-      filterCourseHistory(zonePatrols, {
-        range,
-        courseId: params.courseId,
-        result: params.result,
-      }),
-    [range, params.courseId, params.result]
+  const query: CourseHistoryQuery = useMemo(
+    () => ({
+      from: params.from,
+      to: params.to,
+      course: params.course,
+      result: params.result,
+      user: params.user,
+      page: params.page,
+      size: params.size,
+    }),
+    [params.from, params.to, params.course, params.result, params.user, params.page, params.size]
   )
 
   /**
-   * 필터 변경은 히스토리를 쌓지 않는다(`replace`) — 탭 이동 뒤로가기를 보존하기 위해(spec §3).
-   * 필터가 바뀌면 현재 페이지가 결과 범위를 벗어날 수 있어 첫 페이지로 돌린다.
+   * 🔴 **행 수는 URL 에 두지 않지만 동작은 한다**(027·023 승계). 공유할 상태가 아니라서
+   * 로컬이되, 컨트롤을 비활성·무동작으로 두지 않는다. 바꾸면 **첫 페이지로 되돌린다**.
+   */
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+
+  const listParams = useMemo(
+    () =>
+      siteSeq === null
+        ? null
+        : { ...toCourseHistoryListParams(siteSeq, query), pageSize },
+    [siteSeq, query, pageSize]
+  )
+  const list = useCourseHistoryList(listParams)
+  const items = list.data?.items ?? []
+
+  /**
+   * 코스 필터 옵션.
+   *
+   * 🔴 **이전 판은 mock 행에서 코스 이름을 모았다** — 서버 목록에서는 그렇게 할 수 없다
+   * (현재 페이지에 없는 코스가 필터에서 사라진다). 사업장의 코스 목록을 따로 받는다.
+   */
+  const courses = useCourseList(siteSeq, {}, COURSE_OPTION_PAGE_SIZE)
+  const courseOptions = useMemo(
+    () => courseFilterOptions(courses.data?.items ?? []),
+    [courses.data?.items]
+  )
+
+  /**
+   * 🔴 **컬럼 정의를 메모이즈한다.** 렌더마다 만들면 `cell` 함수 참조가 바뀌고
+   * `flexRender` 가 **새 컴포넌트 타입**으로 보아 행이 언마운트→리마운트된다 — 화면은
+   * 같아 보이지만 포커스가 날아가고 재조회마다 깜빡인다(027 에서 테스트가 잡아냈다).
+   */
+  const columns = useMemo(() => zoneHistoryColumns(), [])
+
+  /**
+   * 필터·검색 변경.
+   *
+   * 🔴 **첫 페이지로 되돌린다** — 3페이지에서 필터를 걸면 결과가 1페이지뿐일 수 있고,
+   * 그러면 **정상 응답인 빈 화면**이 된다(018 선례).
+   *
+   * 🔴 **히스토리를 쌓는다(`replace` 아님).** 이전 판은 `replace: true` 였는데 **027
+   * 실측에서 그게 문제였다**: `replace` 면 필터를 걸고 뒤로가기를 눌렀을 때 **필터 이전이
+   * 아니라 아예 이전 화면으로 튄다.** 검색은 디바운스가 걸려 글자마다 쌓이지 않는다.
    */
   const updateFilter = (next: Partial<Record<FilterKey, string | undefined>>) => {
-    setParams(next, { replace: true })
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+    setParams({ ...next, page: undefined })
   }
 
-  /** "전체"는 URL에 남기지 않는다 — 키를 지운다. */
+  /** 🔴 "전체" 는 값이 아니라 **해제**다 — URL·서버 파라미터에서 키를 지운다 */
   const selectValue = (value: string) => (value === ALL_VALUE ? undefined : value)
 
-  // 선택된 이력이 필터에서 빠지면 상세 패널도 함께 비운다.
-  const activePatrol = selectedPatrol && filtered.includes(selectedPatrol) ? selectedPatrol : null
-
-  const handleRowClick = (data: ZonePatrolType) => {
-    setSelectedPatrol(data)
+  /**
+   * 순찰자 검색.
+   *
+   * 🔴 **드롭다운이 아니다.** 현장 계정은 `User/W/sign/UserList` 가 **403** 이라 순찰자
+   * 선택 목록을 받을 수 없다(백엔드에 목록 API 를 요청해 둔 상태). 서버는 `userName`
+   * **부분 문자열**을 받으므로 텍스트 입력으로 간다.
+   *
+   * 🔴 **입력은 로컬 state, URL 은 디바운스 뒤에**(027 규약) — URL 을 바로 쓰면 글자마다
+   * 내비게이션이 걸려 입력이 끊긴다. 반대로 **URL 이 밖에서 바뀌면**(뒤로가기·초기화)
+   * 입력창을 맞춘다. effect 가 아니라 **렌더 중 조정**이다(`react-hooks/set-state-in-effect`).
+   */
+  const [userDraft, setUserDraft] = useState(params.user ?? '')
+  const [lastUser, setLastUser] = useState(params.user)
+  if (params.user !== lastUser) {
+    setLastUser(params.user)
+    setUserDraft(params.user ?? '')
   }
+  const pushUser = useDebouncedCallback(
+    (value: string) => updateFilter({ user: value.trim() || undefined }),
+    SEARCH_DEBOUNCE_MS
+  )
+
+  const pageNumber = parsePageNumber(params.page)
+  const hasFilter = Boolean(
+    params.from || params.to || params.course || params.result || params.user
+  )
+  const resetFilters = () =>
+    setParams({
+      from: undefined,
+      to: undefined,
+      course: undefined,
+      result: undefined,
+      user: undefined,
+      page: undefined,
+    })
+
+  const range = useMemo(
+    () => ({
+      from: params.from ? new Date(params.from) : undefined,
+      to: params.to ? new Date(params.to) : undefined,
+    }),
+    [params.from, params.to]
+  )
 
   return (
     <div className="flex flex-col gap-4 p-8">
@@ -95,503 +177,144 @@ const PatrolZonesPage = () => {
 
       <PatrolHistoryTabs />
 
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <AppDatePicker
-            value={range}
-            onChange={(next) => updateFilter(toDateRangeQuery(next))}
-            active={Boolean(range.from)}
-            className="w-auto"
-          />
-          <AppSelect
-            aria-label="코스"
-            icon={LayoutListIcon}
-            options={courseOptions(zonePatrols)}
-            value={params.courseId ?? ALL_VALUE}
-            onChange={(value) => updateFilter({ courseId: selectValue(value) })}
-            active={Boolean(params.courseId)}
-            className="w-auto"
-          />
-          <AppSelect
-            aria-label="결과"
-            icon={FilterIcon}
-            options={courseResultOptions}
-            value={params.result ?? ALL_VALUE}
-            onChange={(value) => updateFilter({ result: selectValue(value) })}
-            active={Boolean(params.result)}
-            className="w-auto"
-          />
-        </div>
-        <AppButton variant="sub" className="bg-card">
-          <DownloadIcon size={14} />
-          내보내기
-        </AppButton>
+      {/* 🔴 **필터 영역에 이름을 붙인다**(`spec 030`) — 좁은 폭 카드가 `button` 이라
+          접근성 이름에 행 내용이 전부 들어가고 필터 버튼과 이름이 겹친다 */}
+      <div role="group" aria-label="목록 필터" className="flex flex-wrap items-center gap-2">
+        <AppDatePicker
+          value={range}
+          onChange={(next) =>
+            updateFilter({
+              from: next.from ? toDateQuery(next.from) : undefined,
+              to: next.to ? toDateQuery(next.to) : undefined,
+            })
+          }
+          active={Boolean(params.from)}
+          className="w-auto"
+        />
+        <AppSelect
+          aria-label="코스"
+          icon={LayoutListIcon}
+          options={courseOptions}
+          value={params.course ?? ALL_VALUE}
+          onChange={(value) => updateFilter({ course: selectValue(value) })}
+          active={Boolean(params.course)}
+          className="w-auto"
+        />
+        <AppSelect
+          aria-label="결과"
+          icon={FilterIcon}
+          options={resultFilterOptions}
+          value={params.result ?? ALL_VALUE}
+          onChange={(value) => updateFilter({ result: selectValue(value) })}
+          active={Boolean(params.result)}
+          className="w-auto"
+        />
+        <AppInput
+          variant="search"
+          placeholder="순찰자 검색"
+          aria-label="순찰자 검색"
+          className="w-[200px]"
+          value={userDraft}
+          onChange={(event) => {
+            setUserDraft(event.target.value)
+            pushUser(event.target.value)
+          }}
+        />
+        {hasFilter && (
+          <AppButton variant="sub" onClick={resetFilters}>
+            초기화
+          </AppButton>
+        )}
       </div>
 
-      <div className="flex items-start gap-6">
-        <div className="flex-1 min-w-0 flex flex-col gap-4 ">
-          {filtered.length > 0 ? (
+      {list.isError ? (
+        /* 🔴 조회 실패와 0건을 다르게 그린다 — 둘 다 "아무것도 없음" 이면 장애를
+           **데이터 없음**으로 오해한다(022·027·023 승계) */
+        <div className="rounded-lg border border-border bg-card">
+          <AppEmpty
+            icon={TriangleAlertIcon}
+            title="순찰이력을 불러오지 못했습니다"
+            description={list.error?.message}
+          />
+          <div className="flex justify-center pb-6">
+            <AppButton variant="sub" onClick={() => void list.refetch()}>
+              다시 시도
+            </AppButton>
+          </div>
+        </div>
+      ) : list.isPending ? (
+        /**
+         * 🔴 **로딩을 "데이터 없음" 으로 보여주지 않는다.** `AppTable` 은 행이 0개면
+         * "데이터가 없습니다" 를 그리는데, 조회 중에 그것이 뜨면 사용자는 순찰이 없었다고
+         * 믿는다. 행 높이를 유지해 로딩 → 목록 전환에서 레이아웃이 튀지 않게 한다.
+         */
+        <div className="rounded-sm border border-border bg-card">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="border-b border-border/50 px-3 py-3 last:border-0">
+              <div className="h-[22px] animate-pulse rounded-md bg-muted" />
+            </div>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        /* 🔴 **필터 0건과 "이력 없음" 도 다르다.** 필터 때문에 비었는데 "아직 순찰이
+           없습니다" 라고 하면 사용자는 데이터가 없다고 믿는다 */
+        <div className="rounded-lg border border-border bg-card">
+          {hasFilter ? (
             <>
-              <AppTable
-                columns={zoneColumns}
-                data={filtered}
-                hidePagination
-                pagination={pagination}
-                onPaginationChange={setPagination}
-                onRowClick={handleRowClick}
-                // 🔴 `xl` 미만에서는 카드로(`spec 030`)
-                renderCard={ZoneHistoryCard}
+              <AppEmpty
+                icon={FilterXIcon}
+                title="조건에 맞는 순찰이력이 없습니다"
+                description="기간이나 필터를 바꿔보세요."
               />
-
-              <AppPagination
-                pageIndex={pagination.pageIndex}
-                pageSize={pagination.pageSize}
-                total={filtered.length}
-                onPageChange={(pageIndex) => setPagination((prev) => ({ ...prev, pageIndex }))}
-                onPageSizeChange={(pageSize) => setPagination({ pageIndex: 0, pageSize })}
-              />
+              <div className="flex justify-center pb-6">
+                <AppButton variant="sub" onClick={resetFilters}>
+                  필터 초기화
+                </AppButton>
+              </div>
             </>
           ) : (
-            <div className="flex flex-col rounded-lg border border-border bg-card">
-              <AppEmpty
-                title="조건에 맞는 순찰이력이 없습니다"
-                description="기간·코스·결과 필터를 바꾸거나 전체로 되돌려 보세요."
-                icon={FilterIcon}
-              />
-            </div>
+            <AppEmpty
+              icon={HistoryIcon}
+              title="순찰이력이 없습니다."
+              description="순찰이 수행되면 여기에 기록됩니다."
+            />
           )}
         </div>
+      ) : (
+        <>
+          <AppTable
+            columns={columns}
+            data={items}
+            hidePagination
+            // 🔴 `xl` 미만에서는 카드로 — 8컬럼이 좁은 폭에서 찌그러진다(`spec 030`)
+            renderCard={ZoneHistoryCard}
+            onRowClick={(row) => navigate(paths.service.patrolZoneDetail(row.historySeq))}
+          />
 
-        <aside className="w-100 sticky top-6">
-          {activePatrol ? (
-            <PatrolDetailPanel patrol={activePatrol} />
-          ) : (
-            <div className="flex h-full flex-col rounded-lg border border-border bg-card p-4">
-              <AppEmpty
-                title="순찰이력을 선택해주세요"
-                description="왼쪽 목록에서 이력을 선택하면 상세내용이 표시됩니다."
-                icon={LayersIcon}
-              />
-            </div>
-          )}
-        </aside>
-      </div>
+          <AppPagination
+            // 🔴 1-based ↔ 0-based 변환은 `courseListParams.ts` 한 자리에서만 한다
+            pageIndex={toPageIndex(pageNumber)}
+            pageSize={pageSize}
+            total={list.data?.totalCount ?? items.length}
+            // 🔴 **100 을 넘기지 않는다** — 서버 상한이다(넘기면 400 + 빈 화면)
+            pageSizeOptions={[20, 50, 100]}
+            onPageChange={(pageIndex) => setParams({ page: String(toPageNumber(pageIndex)) })}
+            onPageSizeChange={(next) => {
+              setPageSize(next)
+              setParams({ page: undefined })
+            }}
+          />
+        </>
+      )}
     </div>
   )
 }
 
-const PatrolDetailPanel = ({ patrol }: { patrol: ZonePatrolType }) => {
-  const { variant, label } = patrolResultBadge[patrol.result]
-  const endedValue =
-    patrol.result === 'IN_PROGRESS' ? '—' : format(patrol.endedAt, 'yyyy-MM-dd HH:mm:ss')
-  return (
-    <AppDetailCard
-      icon={ListIcon}
-      title={patrol.name}
-      badge={<AppBadge variant={variant}>{label}</AppBadge>}
-    >
-      <section className="flex flex-col gap-1">
-        <h4 className="text-label font-medium uppercase tracking-wide text-muted-foreground">
-          순찰 정보
-        </h4>
-        <div className="flex flex-col divide-y divide-border/60">
-          <AppDetailRow label="시작 일시" value={format(patrol.startedAt, 'yyyy-MM-dd HH:mm:ss')} />
-          <AppDetailRow label="종료 일시" value={endedValue} />
-          <AppDetailRow label="지점 수" value={`${patrol.points.length}개`} />
-        </div>
-      </section>
-      <section className="flex flex-col gap-2">
-        <h4 className="text-label font-medium uppercase tracking-wide text-muted-foreground">
-          타임라인
-        </h4>
-        <PatrolTimeline patrol={patrol} />
-      </section>
-    </AppDetailCard>
-  )
+/** `Date` → `yyyy-MM-dd`. 🔴 타임존 없이 **로컬 날짜**로 찍는다(서버가 날짜만 받는다) */
+const toDateQuery = (date: Date): string => {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
 }
 
 export default PatrolZonesPage
-
-const zonePatrols: ZonePatrolType[] = [
-  {
-    name: 'A동 순찰구역',
-    startedAt: new Date(2026, 4, 1, 9, 0),
-    endedAt: new Date(2026, 4, 1, 9, 30),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '정문 입구', status: true, completedAt: new Date(2026, 4, 1, 9, 7), note: '' },
-      { name: '로비 1층', status: true, completedAt: new Date(2026, 4, 1, 9, 13), note: '' },
-      { name: '엘리베이터홀', status: true, completedAt: new Date(2026, 4, 1, 9, 20), note: '' },
-      { name: '지하 주차장', status: true, completedAt: new Date(2026, 4, 1, 9, 28), note: '' },
-    ],
-  },
-  {
-    name: 'B동 순찰구역',
-    startedAt: new Date(2026, 4, 1, 10, 0),
-    endedAt: new Date(2026, 4, 1, 10, 45),
-    result: PATROL_RESULT.INCOMPLETE,
-    points: [
-      { name: 'B동 후문', status: true, completedAt: new Date(2026, 4, 1, 10, 10), note: '' },
-      {
-        name: 'B동 계단실',
-        status: false,
-        completedAt: new Date(2026, 4, 1, 10, 25),
-        note: '비상구 잠금 해제 상태 확인됨',
-      },
-      { name: '비상구', status: true, completedAt: new Date(2026, 4, 1, 10, 40), note: '' },
-    ],
-  },
-  {
-    name: 'C동 순찰구역',
-    startedAt: new Date(2026, 4, 1, 11, 0),
-    endedAt: new Date(2026, 4, 1, 11, 20),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '외벽 북측', status: true, completedAt: new Date(2026, 4, 1, 11, 8), note: '' },
-      { name: '외벽 남측', status: true, completedAt: new Date(2026, 4, 1, 11, 17), note: '' },
-    ],
-  },
-  {
-    name: '공용 구역',
-    startedAt: new Date(2026, 4, 1, 13, 0),
-    endedAt: new Date(2026, 4, 1, 13, 40),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '옥상 출입구', status: true, completedAt: new Date(2026, 4, 1, 13, 15), note: '' },
-      { name: '화재 비상구 A', status: true, completedAt: new Date(2026, 4, 1, 13, 35), note: '' },
-    ],
-  },
-  {
-    name: 'A동 순찰구역',
-    startedAt: new Date(2026, 4, 2, 9, 0),
-    endedAt: new Date(2026, 4, 2, 9, 35),
-    result: PATROL_RESULT.IN_PROGRESS,
-    points: [
-      { name: '정문 입구', status: true, completedAt: new Date(2026, 4, 2, 9, 8), note: '' },
-      { name: '로비 1층', status: true, completedAt: new Date(2026, 4, 2, 9, 16), note: '' },
-      { name: '엘리베이터홀', status: true, completedAt: new Date(2026, 4, 2, 9, 25), note: '' },
-      {
-        name: '지하 주차장',
-        status: false,
-        completedAt: new Date(2026, 4, 2, 9, 33),
-        note: '차량 불법 주차 발견',
-      },
-    ],
-  },
-  {
-    name: 'B동 순찰구역',
-    startedAt: new Date(2026, 4, 2, 10, 0),
-    endedAt: new Date(2026, 4, 2, 10, 50),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: 'B동 후문', status: true, completedAt: new Date(2026, 4, 2, 10, 15), note: '' },
-      { name: 'B동 계단실', status: true, completedAt: new Date(2026, 4, 2, 10, 30), note: '' },
-      { name: '비상구', status: true, completedAt: new Date(2026, 4, 2, 10, 45), note: '' },
-    ],
-  },
-  {
-    name: 'C동 순찰구역',
-    startedAt: new Date(2026, 4, 2, 11, 30),
-    endedAt: new Date(2026, 4, 2, 12, 0),
-    result: PATROL_RESULT.INCOMPLETE,
-    points: [
-      {
-        name: '외벽 북측',
-        status: false,
-        completedAt: new Date(2026, 4, 2, 11, 42),
-        note: '외벽 균열 발견',
-      },
-      { name: '외벽 남측', status: true, completedAt: new Date(2026, 4, 2, 11, 55), note: '' },
-    ],
-  },
-  {
-    name: '외곽 순찰로',
-    startedAt: new Date(2026, 4, 2, 14, 0),
-    endedAt: new Date(2026, 4, 2, 14, 30),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '외벽 동측', status: true, completedAt: new Date(2026, 4, 2, 14, 10), note: '' },
-      { name: '외벽 북측', status: true, completedAt: new Date(2026, 4, 2, 14, 20), note: '' },
-      { name: '외벽 남측', status: true, completedAt: new Date(2026, 4, 2, 14, 28), note: '' },
-    ],
-  },
-  {
-    name: 'A동 순찰구역',
-    startedAt: new Date(2026, 4, 3, 9, 0),
-    endedAt: new Date(2026, 4, 3, 9, 25),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '정문 입구', status: true, completedAt: new Date(2026, 4, 3, 9, 6), note: '' },
-      { name: '로비 1층', status: true, completedAt: new Date(2026, 4, 3, 9, 12), note: '' },
-      { name: '엘리베이터홀', status: true, completedAt: new Date(2026, 4, 3, 9, 18), note: '' },
-      { name: '지하 주차장', status: true, completedAt: new Date(2026, 4, 3, 9, 23), note: '' },
-    ],
-  },
-  {
-    name: 'B동 순찰구역',
-    startedAt: new Date(2026, 4, 3, 10, 0),
-    endedAt: new Date(2026, 4, 3, 10, 40),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: 'B동 후문', status: true, completedAt: new Date(2026, 4, 3, 10, 12), note: '' },
-      { name: 'B동 계단실', status: true, completedAt: new Date(2026, 4, 3, 10, 25), note: '' },
-      { name: '비상구', status: true, completedAt: new Date(2026, 4, 3, 10, 37), note: '' },
-    ],
-  },
-  {
-    name: '공용 구역',
-    startedAt: new Date(2026, 4, 3, 11, 0),
-    endedAt: new Date(2026, 4, 3, 11, 30),
-    result: PATROL_RESULT.IN_PROGRESS,
-    points: [
-      { name: '옥상 출입구', status: true, completedAt: new Date(2026, 4, 3, 11, 14), note: '' },
-      {
-        name: '화재 비상구 A',
-        status: false,
-        completedAt: new Date(2026, 4, 3, 11, 27),
-        note: '소화기 위치 이탈 확인',
-      },
-    ],
-  },
-  {
-    name: '외곽 순찰로',
-    startedAt: new Date(2026, 4, 3, 13, 0),
-    endedAt: new Date(2026, 4, 3, 13, 45),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '외벽 동측', status: true, completedAt: new Date(2026, 4, 3, 13, 15), note: '' },
-      { name: '외벽 북측', status: true, completedAt: new Date(2026, 4, 3, 13, 28), note: '' },
-      { name: '외벽 남측', status: true, completedAt: new Date(2026, 4, 3, 13, 42), note: '' },
-    ],
-  },
-  {
-    name: 'C동 순찰구역',
-    startedAt: new Date(2026, 4, 4, 9, 30),
-    endedAt: new Date(2026, 4, 4, 10, 0),
-    result: PATROL_RESULT.INCOMPLETE,
-    points: [
-      { name: '외벽 북측', status: true, completedAt: new Date(2026, 4, 4, 9, 43), note: '' },
-      {
-        name: '외벽 남측',
-        status: false,
-        completedAt: new Date(2026, 4, 4, 9, 56),
-        note: '외부인 접근 흔적 발견',
-      },
-    ],
-  },
-  {
-    name: 'A동 순찰구역',
-    startedAt: new Date(2026, 4, 4, 10, 30),
-    endedAt: new Date(2026, 4, 4, 11, 0),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '정문 입구', status: true, completedAt: new Date(2026, 4, 4, 10, 38), note: '' },
-      { name: '로비 1층', status: true, completedAt: new Date(2026, 4, 4, 10, 45), note: '' },
-      { name: '엘리베이터홀', status: true, completedAt: new Date(2026, 4, 4, 10, 52), note: '' },
-      { name: '지하 주차장', status: true, completedAt: new Date(2026, 4, 4, 10, 58), note: '' },
-    ],
-  },
-  {
-    name: 'B동 순찰구역',
-    startedAt: new Date(2026, 4, 4, 13, 0),
-    endedAt: new Date(2026, 4, 4, 13, 30),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: 'B동 후문', status: true, completedAt: new Date(2026, 4, 4, 13, 10), note: '' },
-      { name: 'B동 계단실', status: true, completedAt: new Date(2026, 4, 4, 13, 20), note: '' },
-      { name: '비상구', status: true, completedAt: new Date(2026, 4, 4, 13, 28), note: '' },
-    ],
-  },
-  {
-    name: '공용 구역',
-    startedAt: new Date(2026, 4, 5, 9, 0),
-    endedAt: new Date(2026, 4, 5, 9, 40),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '옥상 출입구', status: true, completedAt: new Date(2026, 4, 5, 9, 18), note: '' },
-      { name: '화재 비상구 A', status: true, completedAt: new Date(2026, 4, 5, 9, 36), note: '' },
-    ],
-  },
-  {
-    name: '외곽 순찰로',
-    startedAt: new Date(2026, 4, 5, 10, 0),
-    endedAt: new Date(2026, 4, 5, 10, 50),
-    result: PATROL_RESULT.IN_PROGRESS,
-    points: [
-      { name: '외벽 동측', status: true, completedAt: new Date(2026, 4, 5, 10, 16), note: '' },
-      {
-        name: '외벽 북측',
-        status: false,
-        completedAt: new Date(2026, 4, 5, 10, 32),
-        note: 'CCTV 화각 이탈 확인 필요',
-      },
-      { name: '외벽 남측', status: true, completedAt: new Date(2026, 4, 5, 10, 46), note: '' },
-    ],
-  },
-  {
-    name: 'A동 순찰구역',
-    startedAt: new Date(2026, 4, 5, 11, 0),
-    endedAt: new Date(2026, 4, 5, 11, 25),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '정문 입구', status: true, completedAt: new Date(2026, 4, 5, 11, 6), note: '' },
-      { name: '로비 1층', status: true, completedAt: new Date(2026, 4, 5, 11, 12), note: '' },
-      { name: '엘리베이터홀', status: true, completedAt: new Date(2026, 4, 5, 11, 18), note: '' },
-      { name: '지하 주차장', status: true, completedAt: new Date(2026, 4, 5, 11, 23), note: '' },
-    ],
-  },
-  {
-    name: 'B동 순찰구역',
-    startedAt: new Date(2026, 4, 6, 9, 0),
-    endedAt: new Date(2026, 4, 6, 9, 45),
-    result: PATROL_RESULT.INCOMPLETE,
-    points: [
-      {
-        name: 'B동 후문',
-        status: false,
-        completedAt: new Date(2026, 4, 6, 9, 15),
-        note: '후문 잠금장치 고장',
-      },
-      { name: 'B동 계단실', status: true, completedAt: new Date(2026, 4, 6, 9, 30), note: '' },
-      { name: '비상구', status: true, completedAt: new Date(2026, 4, 6, 9, 42), note: '' },
-    ],
-  },
-  {
-    name: 'C동 순찰구역',
-    startedAt: new Date(2026, 4, 6, 10, 30),
-    endedAt: new Date(2026, 4, 6, 11, 0),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '외벽 북측', status: true, completedAt: new Date(2026, 4, 6, 10, 43), note: '' },
-      { name: '외벽 남측', status: true, completedAt: new Date(2026, 4, 6, 10, 56), note: '' },
-    ],
-  },
-  {
-    name: '공용 구역',
-    startedAt: new Date(2026, 4, 6, 13, 0),
-    endedAt: new Date(2026, 4, 6, 13, 20),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '옥상 출입구', status: true, completedAt: new Date(2026, 4, 6, 13, 8), note: '' },
-      { name: '화재 비상구 A', status: true, completedAt: new Date(2026, 4, 6, 13, 17), note: '' },
-    ],
-  },
-  {
-    name: 'A동 순찰구역',
-    startedAt: new Date(2026, 4, 7, 9, 0),
-    endedAt: new Date(2026, 4, 7, 9, 30),
-    result: PATROL_RESULT.IN_PROGRESS,
-    points: [
-      { name: '정문 입구', status: true, completedAt: new Date(2026, 4, 7, 9, 7), note: '' },
-      { name: '로비 1층', status: true, completedAt: new Date(2026, 4, 7, 9, 14), note: '' },
-      {
-        name: '엘리베이터홀',
-        status: false,
-        completedAt: new Date(2026, 4, 7, 9, 22),
-        note: '엘리베이터 오작동 발생',
-      },
-      { name: '지하 주차장', status: true, completedAt: new Date(2026, 4, 7, 9, 28), note: '' },
-    ],
-  },
-  {
-    name: '외곽 순찰로',
-    startedAt: new Date(2026, 4, 7, 10, 0),
-    endedAt: new Date(2026, 4, 7, 10, 35),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '외벽 동측', status: true, completedAt: new Date(2026, 4, 7, 10, 11), note: '' },
-      { name: '외벽 북측', status: true, completedAt: new Date(2026, 4, 7, 10, 23), note: '' },
-      { name: '외벽 남측', status: true, completedAt: new Date(2026, 4, 7, 10, 33), note: '' },
-    ],
-  },
-  {
-    name: 'B동 순찰구역',
-    startedAt: new Date(2026, 4, 7, 11, 0),
-    endedAt: new Date(2026, 4, 7, 11, 40),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: 'B동 후문', status: true, completedAt: new Date(2026, 4, 7, 11, 13), note: '' },
-      { name: 'B동 계단실', status: true, completedAt: new Date(2026, 4, 7, 11, 26), note: '' },
-      { name: '비상구', status: true, completedAt: new Date(2026, 4, 7, 11, 38), note: '' },
-    ],
-  },
-  {
-    name: 'C동 순찰구역',
-    startedAt: new Date(2026, 4, 8, 9, 30),
-    endedAt: new Date(2026, 4, 8, 10, 0),
-    result: PATROL_RESULT.INCOMPLETE,
-    points: [
-      {
-        name: '외벽 북측',
-        status: false,
-        completedAt: new Date(2026, 4, 8, 9, 44),
-        note: '낙서 및 훼손 흔적 발견',
-      },
-      { name: '외벽 남측', status: true, completedAt: new Date(2026, 4, 8, 9, 57), note: '' },
-    ],
-  },
-  {
-    name: 'A동 순찰구역',
-    startedAt: new Date(2026, 4, 8, 10, 0),
-    endedAt: new Date(2026, 4, 8, 10, 30),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '정문 입구', status: true, completedAt: new Date(2026, 4, 8, 10, 7), note: '' },
-      { name: '로비 1층', status: true, completedAt: new Date(2026, 4, 8, 10, 14), note: '' },
-      { name: '엘리베이터홀', status: true, completedAt: new Date(2026, 4, 8, 10, 21), note: '' },
-      { name: '지하 주차장', status: true, completedAt: new Date(2026, 4, 8, 10, 28), note: '' },
-    ],
-  },
-  {
-    name: '공용 구역',
-    startedAt: new Date(2026, 4, 8, 11, 0),
-    endedAt: new Date(2026, 4, 8, 11, 45),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: '옥상 출입구', status: true, completedAt: new Date(2026, 4, 8, 11, 20), note: '' },
-      { name: '화재 비상구 A', status: true, completedAt: new Date(2026, 4, 8, 11, 42), note: '' },
-    ],
-  },
-  {
-    name: '외곽 순찰로',
-    startedAt: new Date(2026, 4, 9, 9, 0),
-    endedAt: new Date(2026, 4, 9, 9, 50),
-    result: PATROL_RESULT.IN_PROGRESS,
-    points: [
-      { name: '외벽 동측', status: true, completedAt: new Date(2026, 4, 9, 9, 16), note: '' },
-      {
-        name: '외벽 북측',
-        status: false,
-        completedAt: new Date(2026, 4, 9, 9, 33),
-        note: '외벽 조명 고장 확인',
-      },
-      { name: '외벽 남측', status: true, completedAt: new Date(2026, 4, 9, 9, 47), note: '' },
-    ],
-  },
-  {
-    name: 'B동 순찰구역',
-    startedAt: new Date(2026, 4, 9, 10, 30),
-    endedAt: new Date(2026, 4, 9, 11, 0),
-    result: PATROL_RESULT.COMPLETE,
-    points: [
-      { name: 'B동 후문', status: true, completedAt: new Date(2026, 4, 9, 10, 40), note: '' },
-      { name: 'B동 계단실', status: true, completedAt: new Date(2026, 4, 9, 10, 50), note: '' },
-      { name: '비상구', status: true, completedAt: new Date(2026, 4, 9, 10, 58), note: '' },
-    ],
-  },
-  {
-    name: 'C동 순찰구역',
-    startedAt: new Date(2026, 4, 9, 13, 0),
-    endedAt: new Date(2026, 4, 9, 13, 35),
-    result: PATROL_RESULT.INCOMPLETE,
-    points: [
-      { name: '외벽 북측', status: true, completedAt: new Date(2026, 4, 9, 13, 14), note: '' },
-      {
-        name: '외벽 남측',
-        status: false,
-        completedAt: new Date(2026, 4, 9, 13, 30),
-        note: '배수구 막힘 발견',
-      },
-    ],
-  },
-]

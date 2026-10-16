@@ -15,6 +15,14 @@ const noticeDetail = (id: string) => `/notice/${id}`
 const pointDetail = (pointSeq: number) => `/points/${pointSeq}`
 /** 🔴 `courseSeq` 도 number 다 — `pointDetail` 과 같은 모양으로 둔다(새 관례를 만들지 않는다) */
 const courseDetail = (courseSeq: number) => `/zones/${courseSeq}`
+/**
+ * 코스 **순찰 회차** 상세 (`spec 036`).
+ *
+ * 🔴 **`courseDetail` 과 다른 것이다.** 앞에 `/patrol` 이 붙고 키가 **`historySeq`(회차)**
+ * 다 — `/zones/:courseSeq` 는 "그 코스의 현재 편성"(코스 관리), 이쪽은 "그 코스를 언제
+ * 어떻게 돌았는지"(순찰이력)다. 같은 코스가 회차마다 다른 결과를 갖는다.
+ */
+const patrolZoneDetail = (historySeq: number) => `/patrol/zones/${historySeq}`
 
 export const paths = {
   // 공개 영역
@@ -29,6 +37,7 @@ export const paths = {
   // 현장 사이트(/*)
   service: {
     patrolZones: '/patrol/zones',
+    patrolZoneDetail: patrolZoneDetail,
     patrolPoints: '/patrol/points',
     zones: '/zones',
     courseDetail: courseDetail,
@@ -58,6 +67,7 @@ export const pathPatterns = {
   noticeDetail: '/notice/:id',
   pointDetail: '/points/:pointSeq',
   courseDetail: '/zones/:courseSeq',
+  patrolZoneDetail: '/patrol/zones/:historySeq',
 } as const
 
 /**

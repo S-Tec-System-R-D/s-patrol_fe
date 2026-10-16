@@ -43,24 +43,30 @@
 
 > **독립 테스트 기준**: MSW 200 에서 목록이 뜨고, 필터 4종 변경이 **URL 과 서버 쿼리**에
 > 동시에 반영되며, 뒤로가기로 보존된다. **mock 배열이 0줄**임을 grep 으로 확인.
+>
+> ✅ **Phase 3 완료(2026-10-16)** — `verify` 0 errors / `test` **920 → 916**(88 files).
+> 🔴 **줄어든 것이 맞다**: 죽은 mock 테스트 **15건을 지우고**(`filterCourseHistory` 12 ·
+> `PatrolTimeline` 3) 서버 기준으로 **11건을 새로 썼다**(목록 8→15 · 카드 3→7). 지운 테스트는
+> **지운 코드를 검증하던 것**이다. 🔴 **T509(라우트)를 Phase 3 으로 끌어왔다**(사용자 결정
+> 2026-10-16) — 목록의 행 클릭이 죽어 있으면 브라우저 확인이 반쪽이다.
 
-- [ ] T502 [US1] 🔴 페이지 재작성 in src/pages/service/patrol/zones/PatrolZonesPage.tsx — 597줄 중 **`zonePatrols` mock 배열(215행~)과 `PatrolDetailPanel`(183행~)을 삭제**한다. 마스터-디테일 → **목록 전용**(상세는 T506 의 별도 라우트). 🔴 **구조가 바뀌는 것이라 "매핑만 손본다" 가 아니다**(030 이 예상한 것보다 크다)
-- [ ] T503 [US1] 컬럼 정의 in src/features/patrol-zones/components/ZoneColumn.tsx — 코스명 / 순찰자 / 시작 / 종료 / 소요 / 지점 인증 / 결과(**+시간초과 병기**) / 특이사항 **아이콘** / 열기. 🔴 **제거**: 서브텍스트 · dot 색상 · **정렬 화살표**(서버 정렬 파라미터가 없다 — 서버 페이징 중 클라 정렬은 **현재 페이지만 섞어 거짓이 된다**). ⚠️ 결과 컬럼은 **뱃지 2개가 들어가므로 폭을 늘린다**
-- [ ] T504 [US1] 🔴 null 폴백 in src/features/patrol-zones/components/ZoneColumn.tsx — `userList: []`(**실측 19/54 = 35%**) · 진행 중이면 종료 일시를 `—` 가 아니라 **"진행 중"**(030 선례: `—` 는 값 누락으로 읽힌다) · 교대 **2명 이상** 표기
-- [ ] T505 [US1] 필터·검색·페이지 URL 연동 in src/pages/service/patrol/zones/PatrolZonesPage.tsx — `useQueryParams` + 기간·코스(`courseSeq`)·결과(`eventType`)·순찰자명(`userName`, **300ms 디바운스**). 🔴 **"전체" 는 값이 아니라 해제**(`undefined`) — `ALL` 센티넬이 URL·서버로 새지 않는 것을 테스트로 고정(018·027 규약). **필터 변경 시 첫 페이지 복귀 + `replace`**. 🔴 **순찰자는 드롭다운이 불가능하다** — 현장 계정은 `UserList` 가 **403** 이라 선택 목록을 받을 수 없다(백엔드 요청 중)
-- [ ] T506 [US1] [P] 카드 모드 매핑 in src/features/patrol-zones/components/ZoneHistoryCard.tsx — 030·034 골격 유지, 필드명만 서버로(**OQ-034-A 코스 쪽 확정**). 🔴 **구조를 새로 만들지 않는다**
-- [ ] T507 [US1] [P] vitest in src/pages/service/patrol/zones/\_\_tests\_\_/PatrolZonesPage.test.tsx — 서버 쿼리 가로채기 · 필터→첫 페이지 복귀 · 뒤로가기 보존 · `ALL` 미노출 · `userList: []` 폴백 · 진행 중 행
-- [ ] T508 [US1] 🔴 `filterCourseHistory.ts` 삭제 in src/features/patrol-zones/lib/filterCourseHistory.ts — **018 이월의 종결점**. 함께: `courseHistoryOptions.ts` 가 mock 기반이면 서버 옵션(`GetCourseList`)으로 교체. ⚠️ **클라이언트 필터 함수 0건**이 DoD #2 다
+- [x] T502 [US1] 🔴 페이지 재작성 in src/pages/service/patrol/zones/PatrolZonesPage.tsx — **597 → 320줄**. mock 배열(24건)·`PatrolDetailPanel`·`selectedPatrol`·`ZonePatrolType`·`PointPatrolType`·`PATROL_RESULT` 전부 삭제. 마스터-디테일 → **목록 전용**. 구조는 `ZonesPage.tsx`(023) 를 미러링했다 — `error → pending → 필터0건 → 전체0건 → 테이블+페이지네이션` **5분기**
+- [x] T503 [US1] 컬럼 정의 in src/features/patrol-zones/components/ZoneColumn.tsx — 코스명 / 순찰자 / 시작 / 종료 / 소요 / 지점 인증 / 결과(**+시간초과 병기**) / 특이사항 **아이콘** / 열기. 🔴 **제거**: 서브텍스트 · dot 색상 · **정렬 화살표**(서버 정렬 파라미터가 없다 — 서버 페이징 중 클라 정렬은 **현재 페이지만 섞어 거짓이 된다**). ⚠️ 결과 컬럼은 **뱃지 2개가 들어가므로 폭을 늘린다**
+- [x] T504 [US1] 🔴 null 폴백 in src/features/patrol-zones/components/ZoneColumn.tsx — `userList: []`(**실측 19/54 = 35%**) · 진행 중이면 종료 일시를 `—` 가 아니라 **"진행 중"**(030 선례: `—` 는 값 누락으로 읽힌다) · 교대 **2명 이상** 표기
+- [x] T505 [US1] 필터·검색·페이지 URL 연동 in src/pages/service/patrol/zones/PatrolZonesPage.tsx — 🔴 **`replace: true` 를 뗐다**(동작 변경, 사용자 승인): 027 실측에서 `replace` 면 필터를 걸고 뒤로가기를 눌렀을 때 **필터 이전이 아니라 아예 이전 화면으로 튄다**. 023 과 같은 규약으로 맞췄다. 🔴 **코스 옵션은 `GetCourseList?pageSize=100`**(`lib/courseHistoryFilters.ts` 신설 — 이전 판은 **mock 행에서 코스명을 모았고** 값도 이름이었다. 서버 필터는 `courseSeq` 를 받고 **이름은 중복될 수 있다**) — `useQueryParams` + 기간·코스(`courseSeq`)·결과(`eventType`)·순찰자명(`userName`, **300ms 디바운스**). 🔴 **"전체" 는 값이 아니라 해제**(`undefined`) — `ALL` 센티넬이 URL·서버로 새지 않는 것을 테스트로 고정(018·027 규약). **필터 변경 시 첫 페이지 복귀 + `replace`**. 🔴 **순찰자는 드롭다운이 불가능하다** — 현장 계정은 `UserList` 가 **403** 이라 선택 목록을 받을 수 없다(백엔드 요청 중)
+- [x] T506 [US1] [P] 카드 모드 매핑 in src/features/patrol-zones/components/ZoneHistoryCard.tsx — 030·034 골격 유지, 필드명만 서버로(**OQ-034-A 코스 쪽 확정**). 🔴 **구조를 새로 만들지 않는다**
+- [x] T507 [US1] [P] vitest in src/pages/service/patrol/zones/\_\_tests\_\_/PatrolZonesPage.test.tsx — **8 → 15건**. `server.events` 로 **나간 쿼리를 가로채** 검증한다(화면만 보면 서버가 걸렀는지 우리가 걸렀는지 알 수 없다). 필터 5종 전송 · `ALL` 미노출 · 첫 페이지 복귀 · **`pageSize` 상한** · 실패≠0건≠필터0건 · 행 클릭 이동 · 실측 예외 4종(순찰자 미지정 · 진행 중 · 뱃지 2개 병기 · 완료인데 인증 0). 카드 테스트도 **3 → 7건**
+- [x] T508 [US1] 🔴 **삭제 7파일** — `lib/filterCourseHistory.ts`(+테스트) **018 이월의 종결점** · `lib/courseHistoryOptions.ts`(mock 에서 코스 유도) · `components/PatrolTimeline.tsx`(+테스트) · `types/PatrolZone.ts` · `types/PatrolZoneResult.ts`. ✅ **클라이언트 필터 함수 0건**(DoD #2). ✅ **T492-B 해소** — `PATROL_RESULT`·`PatrolZoneResult` 가 mock 과 함께 사라졌다. ⚠️ `PatrolTimeline` 은 목업 `02` 에 타임라인이 없어 지웠다 — 지점 상세(`04`)의 "코스 내 위치" 는 **037 소관**이고 mock 타입 기반이라 그때 새로 만든다. ✅ **`patrol-points` 는 영향 없다**(자기 페이지의 타입을 쓴다 — 확인 2026-10-16)
+- [x] T509 [US2] 라우트 신설 in src/router/{paths.ts,index.tsx} · src/pages/service/patrol/zones/PatrolZoneDetailPage.tsx — 🔴 **Phase 4 에서 Phase 3 으로 끌어왔다**(사용자 결정). 빈 껍데기를 두지 않으려고 **상세 응답으로 채울 수 있는 것부터** 채웠다: 브레드크럼 · 헤더(결과 + 시간초과 뱃지) · **순찰 정보 카드**(T512 선취분) · 로딩/실패 분기. 🔴 **"기준 충족" 판정 없이** 소요시간과 기준을 나란히 적는다(B-31). ⚠️ KPI 4종 · 인증 내역 표 · 지도 · 메모는 Phase 4~6 이 채운다
 
 ## Phase 4: US2 — 코스 순찰 상세 (골격)
 
 > **독립 테스트 기준**: 목록 행 → 상세 진입, KPI 4종·순찰 정보·인증 내역 표가 뜨고,
 > **없는 `historySeq`** 에서 빈 상태가 "삭제됐다" 로 **단정하지 않는다**(023 T375 선례).
 
-- [ ] T509 [US2] 라우트 신설 in src/router/{paths.ts,index.tsx} — `patrolZoneDetail(historySeq)` = `/patrol/zones/:historySeq`. 🔴 **코스 관리 상세 `/zones/:courseSeq` 와 다르다** — 키가 **회차**다. `paths.ts:17` 의 `courseDetail` 과 나란히 두고 주석으로 구분을 남긴다
-- [ ] T510 [US2] 상세 페이지 셸 in src/pages/service/patrol/zones/PatrolZoneDetailPage.tsx — 목업 `02` 의 2열 골격(좌: 지도·인증 내역 / 우: 순찰 정보). 브레드크럼 + 헤더 뱃지(결과 + **시간초과**). 🔴 **`AppDetailCard`·`AppPageHeader` 재사용** — 새 셸을 만들지 않는다(023 DoD #17: 카드 셸은 머리 구성이 제각각이라 prop 6개짜리 추상화가 된다)
+- [ ] T510 [US2] 상세 **2열 골격**으로 확장 in src/pages/service/patrol/zones/PatrolZoneDetailPage.tsx — ◩ **Phase 3 에서 1열(순찰 정보)까지 만들었다**(T509). 남은 것은 목업 `02` 의 2열 배치(좌: 지도·인증 내역 / 우: 순찰 정보). 🔴 **`AppDetailCard`·`AppPageHeader` 재사용**(이미 그렇게 했다) — 새 셸을 만들지 않는다(023 DoD #17)
 - [ ] T511 [US2] KPI 4종 in src/features/patrol-zones/components/detail/HistoryKpiRow.tsx — 지점 인증 / 소요시간 / 특이사항 / 구간 간격. 🔴 **소요시간에 "기준 충족" 판정을 넣지 않는다** — `totalMin` 이 검증되지 않고(B-31) 어긋난 데이터가 **전수 18건**이며 `totalMin: 0` 코스도 있다. **값만 나란히** 둔다(023 의 "인증률에 색을 입히지 않는다" 와 같은 판단). ⚠️ `AppKpiCard` 재사용(031)
-- [ ] T512 [US2] 순찰 정보 카드 in src/features/patrol-zones/components/detail/HistoryInfoCard.tsx — 코스·순찰자·시작·종료·소요·지점 인증·인증수단 집계(QR n · NFC n). 🔴 **빼는 것**: 이력번호 · 사업장 동 · 교대조 · 단말 · 확인 처리(§3-8). `AppDetailRow` 재사용
+- [ ] T512 [US2] 순찰 정보 카드 — ◩ **Phase 3 에서 페이지 안에 만들었다**(T509): 코스·순찰자·시작·종료·소요(기준 병기)·지점 인증·교대. 남은 것은 **인증수단 집계(QR n · NFC n)** — `CheckDetails` 가 필요해 Phase 4 에서 붙인다. 컴포넌트 분리는 **파일이 커질 때** 한다(지금 300줄 미만, A6). 🔴 **빼는 것**: 이력번호 · 사업장 동 · 교대조 · 단말 · 확인 처리(§3-8)
 - [ ] T513 [US2] 🔴 인증 내역 표 in src/features/patrol-zones/components/detail/CheckDetailTable.tsx — 순서(`orderNo`) / 지점 / 인증수단 / 인증시각 / 구간 / 결과 / 기록. 🔴 **미완료를 2종으로 구분**한다: `checkDt === null` → **미인증**("방문 기록이 없습니다") / `checkDt !== null` → **미완료**(인증 실패). 🔴 **위치 컬럼을 만들지 않는다**(층·위치 필드가 **어디에도 없다**). ⚠️ **미완료 행의 `checkDt` 는 숨긴다** — 인증 시각이 아니다(OQ-036-B)
 - [ ] T514 [US2] [P] 상세 빈 상태·로딩 in src/pages/service/patrol/zones/PatrolZoneDetailPage.tsx — 🔴 **조회 중에 "삭제되었거나 접근할 수 없습니다" 가 뜨면 방금 지운 줄 안다**(023 T375). `isPending` 과 "없음" 을 구분한다
 - [ ] T515 [US2] [P] vitest in src/pages/service/patrol/zones/\_\_tests\_\_/PatrolZoneDetailPage.test.tsx — 4개 호출 조립 · 미인증/미완료 2종 분기 · 없는 `historySeq` · `status 0`·`1` **전 필드 null** 에서 터지지 않음 · 완료인데 인증 0
