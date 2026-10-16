@@ -95,4 +95,4 @@ export const courseHistoryStats = (
 
 /** 0~1 → `96.7%`. 🔴 `null` 은 `—` 다 — `0%` 와 구분한다 */
 export const formatRate = (rate: number | null): string =>
-  rate === null ? '—' : `${(rate * 100).toFixed(1)}%`
+  rate === null ? '-' : `${(rate * 100).toFixed(1)}%`

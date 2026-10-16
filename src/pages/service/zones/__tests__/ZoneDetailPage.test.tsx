@@ -422,7 +422,7 @@ describe('ZoneDetailPage — 순찰 기록·KPI (B단)', () => {
 
     await screen.findByText('옥상 점검 코스')
     expect(await screen.findByText('순찰 기록이 없습니다')).toBeInTheDocument()
-    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('-').length).toBeGreaterThan(0)
   })
 
   it('이상 이력 카드가 우측 열에 쌓인다 (C단)', async () => {

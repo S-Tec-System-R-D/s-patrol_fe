@@ -93,14 +93,14 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                       NFC
                     </AppBadge>
                   ) : (
-                    <span className="text-muted-foreground">—</span>
+                    <span className="text-muted-foreground">-</span>
                   )}
                 </td>
                 <td className="px-3 py-2 tabular-nums text-muted-foreground">
-                  {authenticated ? formatTime(row.checkDt as string) : '—'}
+                  {authenticated ? formatTime(row.checkDt as string) : '-'}
                 </td>
                 <td className="px-3 py-2 tabular-nums text-muted-foreground">
-                  {gap === null ? '—' : `+${formatDuration(gap)}`}
+                  {gap === null ? '-' : `+${formatDuration(gap)}`}
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex flex-wrap items-center gap-1">
@@ -123,7 +123,7 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                       aria-label="기록 있음"
                     />
                   ) : (
-                    <span className="text-muted-foreground">—</span>
+                    <span className="text-muted-foreground">-</span>
                   )}
                 </td>
               </tr>

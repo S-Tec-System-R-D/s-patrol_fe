@@ -55,7 +55,7 @@ const HistoryInfoCard = ({ detail, checks }: HistoryInfoCardProps) => {
         value={
           detail.endDt === null ? (
             /* 🔴 목록과 같은 규칙 — 상태는 헤더 뱃지가 말한다(030 규칙을 뒤집은 자리) */
-            <span className="text-muted-foreground">—</span>
+            <span className="text-muted-foreground">-</span>
           ) : (
             <span className="tabular-nums">{detail.endDt.replace('T', ' ')}</span>
           )

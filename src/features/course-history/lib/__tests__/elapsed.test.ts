@@ -50,7 +50,7 @@ describe('formatDuration', () => {
   })
 
   it('🔴 null 은 — 다. 0분으로 적지 않는다', () => {
-    expect(formatDuration(null)).toBe('—')
+    expect(formatDuration(null)).toBe('-')
   })
 })
 
@@ -61,7 +61,7 @@ describe('formatElapsed', () => {
   })
 
   it('읽을 수 없는 값은 — 로 끝난다 — 화면이 깨지지 않는다', () => {
-    expect(formatElapsed(null)).toBe('—')
-    expect(formatElapsed('이상한 값')).toBe('—')
+    expect(formatElapsed(null)).toBe('-')
+    expect(formatElapsed('이상한 값')).toBe('-')
   })
 })

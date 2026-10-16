@@ -111,7 +111,7 @@ const CourseKpiRow = ({ stats, uncheckedCount, uncheckedParts = [] }: CourseKpiR
     <AppKpiCard
       icon={TriangleAlertIcon}
       label="미인증 지점"
-      value={uncheckedCount ?? '—'}
+      value={uncheckedCount ?? '-'}
       unit={uncheckedCount === undefined ? undefined : '건'}
       tone={uncheckedCount ? 'warning' : 'neutral'}
       /* 🔴 **어디가 문제인지**를 보여준다. `미인증 8건` 이 한 지점에서 8번인지 여덟

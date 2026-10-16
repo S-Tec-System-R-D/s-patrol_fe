@@ -86,7 +86,7 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
        * 있어 맥락이 이미 있고, 같은 말을 두 칸에서 두 번 하면 **종료 일시 칸이 상태 칸처럼**
        * 읽힌다. 종료 일시는 **아직 값이 없는 것이 사실**이므로 `—` 가 맞다.
        */
-      if (value === null) return <span className="text-muted-foreground">—</span>
+      if (value === null) return <span className="text-muted-foreground">-</span>
       return (
         <span className="tabular-nums text-muted-foreground">{formatDateTime(value)}</span>
       )
@@ -152,7 +152,7 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
           aria-label="특이사항 있음"
         />
       ) : (
-        <span className="text-muted-foreground">—</span>
+        <span className="text-muted-foreground">-</span>
       ),
   },
   {

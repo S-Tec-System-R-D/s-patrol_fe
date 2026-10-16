@@ -80,7 +80,7 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
     // 의미가 확정되지 않아(코스 endDt 와 같은 것 12건 / 다른 것 33건) 숨긴다
     const row = inCheckTable().getByText('로비 1층').closest('tr')
     expect(row).not.toBeNull()
-    expect(within(row as HTMLElement).getAllByText('—').length).toBeGreaterThan(0)
+    expect(within(row as HTMLElement).getAllByText('-').length).toBeGreaterThan(0)
   })
 
   it('🔴 전 필드가 null 인 행(대기중·진행중)에서 터지지 않는다', async () => {

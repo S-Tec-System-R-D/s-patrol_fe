@@ -226,14 +226,14 @@ describe('PatrolZonesPage — 실측 예외를 화면이 감당한다', () => {
     expect((await screen.findAllByText('순찰자 미지정')).length).toBeGreaterThan(0)
   })
 
-  it('🔴 진행 중 회차는 종료 일시를 "—" 로 두고 상태는 뱃지가 말한다', async () => {
+  it('🔴 진행 중 회차는 종료 일시를 "-" 로 두고 상태는 뱃지가 말한다', async () => {
     renderPage()
 
     await screen.findAllByText('A동 순찰코스')
     // 🔴 **030 의 규칙을 뒤집었다**(사용자 결정 2026-10-16): 같은 행에 `진행중` 뱃지가
     //    있어 맥락이 이미 있고, 종료 일시 칸에 상태를 적으면 같은 말을 두 번 한다
     expect(inTable().getAllByText('진행중').length).toBeGreaterThan(0)
-    expect(inTable().getAllByText('—').length).toBeGreaterThan(0)
+    expect(inTable().getAllByText('-').length).toBeGreaterThan(0)
     expect(inTable().queryByText('진행 중')).not.toBeInTheDocument()
   })
 

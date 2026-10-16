@@ -68,7 +68,7 @@ const PointStats = ({
       <AppKpiCard
         icon={ClockIcon}
         label="최근 순찰"
-        value={lastPatrol ?? '—'}
+        value={lastPatrol ?? '-'}
         /* 🔴 **숫자가 아니라 시각이다** — 큰 숫자 자리에 그대로 넣으면 줄바꿈된다 */
         compactValue
         /* 🔴 **"얼마 전" 이 시각보다 먼저 읽힌다** — `10.14 10:14` 만 있으면 오늘인지

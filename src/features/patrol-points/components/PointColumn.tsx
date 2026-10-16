@@ -43,7 +43,7 @@ export const pointColumns = (
     header: '시간',
     cell: ({ row }) => (
       <span className="tabular-nums text-muted-foreground">
-        {row.original.result === 'INCOMPLETE' ? '—' : format(row.original.patrolAt, 'HH:mm')}
+        {row.original.result === 'INCOMPLETE' ? '-' : format(row.original.patrolAt, 'HH:mm')}
       </span>
     ),
   },

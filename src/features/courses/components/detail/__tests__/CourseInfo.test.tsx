@@ -62,13 +62,13 @@ describe('CourseInfo', () => {
     clearSite()
     render(<CourseInfo course={course()} onRequestToggle={vi.fn()} />)
 
-    expect(screen.getByText('사업장').parentElement?.textContent).toContain('—')
+    expect(screen.getByText('사업장').parentElement?.textContent).toContain('-')
   })
 
   it('🔴 설명이 비어 있는 것은 정상이다 — 코스는 memo 를 실제로 비울 수 있다 (규칙 6)', () => {
     render(<CourseInfo course={course({ memo: null })} onRequestToggle={vi.fn()} />)
 
-    expect(screen.getByText('설명').parentElement?.textContent).toContain('—')
+    expect(screen.getByText('설명').parentElement?.textContent).toContain('-')
     // "준비 중"(기능 없음)과 섞지 않는다 — 027 placeholder 규약
     expect(screen.queryByText('준비 중')).not.toBeInTheDocument()
   })

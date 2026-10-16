@@ -120,7 +120,7 @@ const CourseInfo = ({ course, onRequestToggle, onEdit, isSaving }: CourseInfoPro
         {/* 🔴 **코스명 행을 두지 않는다** — 페이지 제목이 이미 코스명이다. 같은 값이 한
             화면에 두 번 있으면 사용자는 둘이 다른 값인지 확인하려 눈을 왕복한다(설명도
             같은 이유로 제목 아래에서 뺐다). 수정 모달에는 당연히 들어간다 */}
-        <AppDetailRow variant="fixed" label="사업장" value={siteName ?? '—'} />
+        <AppDetailRow variant="fixed" label="사업장" value={siteName ?? '-'} />
         <AppDetailRow
           variant="fixed"
           label="설명"
@@ -129,7 +129,7 @@ const CourseInfo = ({ course, onRequestToggle, onEdit, isSaving }: CourseInfoPro
               course.memo
             ) : (
               // 🔴 "준비 중" 이 아니다 — 비울 수 있는 값이고 비어 있는 것이 정상이다
-              <span className="text-muted-foreground">—</span>
+              <span className="text-muted-foreground">-</span>
             )
           }
         />

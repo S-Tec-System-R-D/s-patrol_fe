@@ -27,7 +27,7 @@ export const toSeconds = (value: string | null | undefined): number | null => {
  * `2시간 17분` 이 빠르게 읽힌다. 1분 미만은 `1분 미만`(`0분` 은 오류처럼 보인다).
  */
 export const formatDuration = (seconds: number | null): string => {
-  if (seconds === null) return '—'
+  if (seconds === null) return '-'
   if (seconds < 60) return '1분 미만'
 
   const totalMinutes = Math.round(seconds / 60)

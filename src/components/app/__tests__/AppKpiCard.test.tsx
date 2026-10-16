@@ -49,7 +49,7 @@ describe('AppKpiCard — 바', () => {
   })
 
   it('🔴 ratio 가 null 이면 바가 없다 — 0% 바는 "0점" 으로 읽힌다', () => {
-    render(<AppKpiCard icon={ActivityIcon} label="지점 인증률" value="—" bar={null} />)
+    render(<AppKpiCard icon={ActivityIcon} label="지점 인증률" value="-" bar={null} />)
 
     expect(bar()).toBeNull()
   })

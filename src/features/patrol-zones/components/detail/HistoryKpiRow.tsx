@@ -113,7 +113,7 @@ const HistoryKpiRow = ({ detail, checks, intervals, average }: HistoryKpiRowProp
         icon={TimerIcon}
         label="구간 평균 간격"
         /* 🔴 간격을 만들 수 없으면 `—` 다 — `0분` 은 "0분 만에 돌았다" 로 읽힌다 */
-        value={intervals.averageSeconds === null ? '—' : formatDuration(intervals.averageSeconds)}
+        value={intervals.averageSeconds === null ? '-' : formatDuration(intervals.averageSeconds)}
         compactValue
         bar={
           intervals.averageSeconds === null ||

@@ -108,7 +108,7 @@ describe('formatRate', () => {
   })
 
   it('🔴 null 은 — 다. 0% 와 구분한다', () => {
-    expect(formatRate(null)).toBe('—')
+    expect(formatRate(null)).toBe('-')
     expect(formatRate(0)).toBe('0.0%')
   })
 })

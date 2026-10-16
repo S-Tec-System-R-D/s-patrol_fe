@@ -115,7 +115,7 @@ const CoursePatrolLog = ({ rows, totalCount, isPending }: CoursePatrolLogProps) 
                 <td className="py-2 pr-3">
                   {/* 🔴 빈 배열이 실존한다 — 아바타·이름을 항상 그릴 수 없다 */}
                   {row.userList.length === 0 ? (
-                    <span className="text-muted-foreground">—</span>
+                    <span className="text-muted-foreground">-</span>
                   ) : (
                     row.userList.map((user) => user.userName).join(', ')
                   )}
@@ -136,7 +136,7 @@ const CoursePatrolLog = ({ rows, totalCount, isPending }: CoursePatrolLogProps) 
                   {row.overtimeYn ? (
                     <AppBadge variant="warning">초과</AppBadge>
                   ) : (
-                    <span className="text-muted-foreground">—</span>
+                    <span className="text-muted-foreground">-</span>
                   )}
                 </td>
               </tr>

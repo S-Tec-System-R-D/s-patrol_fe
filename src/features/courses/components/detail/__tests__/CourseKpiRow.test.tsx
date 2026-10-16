@@ -54,7 +54,7 @@ describe('CourseKpiRow — 🔴 빈 상태를 0 으로 적지 않는다', () => 
       />
     )
 
-    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(2)
     expect(screen.queryByText('0분')).not.toBeInTheDocument()
     expect(screen.queryByText('0.0%')).not.toBeInTheDocument()
   })
@@ -63,7 +63,7 @@ describe('CourseKpiRow — 🔴 빈 상태를 0 으로 적지 않는다', () => 
     render(<CourseKpiRow stats={stats()} uncheckedCount={undefined} />)
 
     expect(screen.getByText('미인증 지점')).toBeInTheDocument()
-    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('-').length).toBeGreaterThan(0)
   })
 })
 

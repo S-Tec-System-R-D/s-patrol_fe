@@ -54,7 +54,7 @@ describe('CoursePatrolLog — 🔴 실측 예외', () => {
 
     // 이름 자리가 비는 것이 정상이다. 깨지거나 "undefined" 가 나오면 안 된다
     expect(screen.queryByText('undefined')).not.toBeInTheDocument()
-    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('-').length).toBeGreaterThan(0)
   })
 
   it('🔴 "완료" 인데 인증 0/3 인 행을 그대로 보여준다 — 상태와 인증은 독립이다', () => {
