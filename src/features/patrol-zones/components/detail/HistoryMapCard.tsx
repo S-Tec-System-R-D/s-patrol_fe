@@ -61,8 +61,8 @@ const authLabel = (authMethod: number | null): string | null =>
   authMethod === AUTH_METHOD.QR ? 'QR' : authMethod === AUTH_METHOD.NFC ? 'NFC' : null
 
 /**
- * 핀 라벨 한 줄. 🔴 **인증이 찍힌 행만 시각·수단이 붙는다** — `historyPins` 가 OQ-15 규칙을
- * 이미 적용해 `checkedAt`·`authMethod` 를 `null` 로 비워 보낸다(인증 내역 표와 같은 규칙).
+ * 핀 라벨 한 줄. ✅ **`checkedAt`·`authMethod` 가 있으면 붙는다**(OQ-15 해소 2026-10-19).
+ * 둘은 **따로 움직인다** — 미완료 행은 시각만 있고 수단은 `null` 이다(실측 0/45).
  */
 const pinLabel = (pin: HistoryPin): string => {
   const parts = [

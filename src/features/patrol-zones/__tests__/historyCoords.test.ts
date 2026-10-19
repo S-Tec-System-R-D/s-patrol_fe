@@ -239,12 +239,22 @@ describe('historyPins — 라벨 (OQ-15)', () => {
     expect(pins[0]).toMatchObject({ checkedAt: '2026-05-01T10:06:00', authMethod: 9 })
   })
 
-  it('🔴 미완료 행의 checkDt 는 올리지 않는다 — 인증한 것처럼 보인다', () => {
-    // 45건이 값을 갖는데 코스 endDt 와 같은 것이 12건·다른 것이 33건이라 의미가 미확정이다
+  /**
+   * ✅ **OQ-15 해소(2026-10-19)** — 규칙이 뒤집혔다. `checkDt` 는 지점 인증 시간이다.
+   * 🔴 **시각과 수단은 따로 움직인다** — 미완료 45건은 `authMethod` 가 **0/45** 라
+   * 시각만 남는다(실측).
+   */
+  it('✅ 미완료 행도 시각은 올린다 — 수단만 null 로 남는다 (OQ-15 해소)', () => {
     const { pins } = historyPins(
       [row({ status: 3, checkDt: '2026-05-01T10:06:00', authMethod: null })],
       [coursePoint()]
     )
+
+    expect(pins[0]).toMatchObject({ checkedAt: '2026-05-01T10:06:00', authMethod: null })
+  })
+
+  it('checkDt 가 null 이면 시각도 null 이다', () => {
+    const { pins } = historyPins([row({ status: 3, checkDt: null })], [coursePoint()])
 
     expect(pins[0]).toMatchObject({ checkedAt: null, authMethod: null })
   })

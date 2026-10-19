@@ -22,9 +22,10 @@ import type {
  * 행이 하나이므로 **메타는 패널 머리에 한 번만** 적는다 — 메모마다 반복하면 같은 값이
  * 여러 번 찍히고, 메모별로 다른 값인 것처럼 읽힌다.
  *
- * 🔴 **시각은 인증이 찍힌 행만 보여준다**(OQ-15). 미완료 행의 `checkDt` 는 코스 `endDt` 와
- * 같은 것이 12건·다른 것이 33건이라 **의미가 확정되지 않았다** — 메모 옆에 그대로 적으면
- * **그 시각에 메모를 썼다**는 거짓이 된다. 인증 내역 표(T513)와 같은 규칙이다.
+ * ✅ **시각은 `checkDt` 가 있으면 보여준다**(OQ-15 해소 2026-10-19). `checkDt` 는 **지점
+ * 인증 시간**이고(사용자 DB 확인), 겹치던 시각은 테스트 환경 탓이었다. 인증 내역 표와 같은
+ * 규칙이다. ⚠️ **"그 시각에 메모를 썼다" 는 뜻이 아니다** — 메모에는 작성 시각이 없고,
+ * 이 줄은 **그 지점을 인증한 시각**이다.
  *
  * 🔴 **"처리 상태"(시설팀 접수 등) 칸을 만들지 않는다** — 목업에는 있었지만 **서버에
  * 필드가 없다**(A1). 빈 칸을 두면 "아직 접수 안 됨" 으로 읽힌다.
@@ -50,8 +51,8 @@ interface CheckDetailMemoProps {
 }
 
 const CheckDetailMemo = ({ row }: CheckDetailMemoProps) => {
-  /* 🔴 **인증이 찍힌 행만** 시각을 올린다(OQ-15 — 표와 같은 규칙) */
-  const authenticated = row.authMethod !== null && row.checkDt !== null
+  /* ✅ **`checkDt` 가 있으면 올린다**(OQ-15 해소 — 표와 같은 규칙) */
+  const checkedAt = row.checkDt
 
   return (
     <div className="flex flex-col gap-3 bg-muted/40 px-4 py-3">
@@ -59,7 +60,7 @@ const CheckDetailMemo = ({ row }: CheckDetailMemoProps) => {
       <p className="text-caption text-muted-foreground">
         {/* 값 없음은 하이픈이다(`design-system.md` §4-5A) */}
         {row.userName ?? '-'}
-        {authenticated && ` · ${formatTime(row.checkDt as string)}`}
+        {checkedAt !== null && ` · ${formatTime(checkedAt)}`}
       </p>
 
       <ul className="flex flex-col gap-3">

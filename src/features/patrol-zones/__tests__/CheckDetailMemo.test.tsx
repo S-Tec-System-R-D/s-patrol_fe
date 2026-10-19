@@ -76,17 +76,26 @@ describe('CheckDetailMemo — 본문과 메타', () => {
   })
 
   /**
-   * 🔴 OQ-15 — 미완료 행의 `checkDt` 는 코스 `endDt` 와 같은 것이 12건·다른 것이 33건이라
-   * **의미가 확정되지 않았다.** 메모 옆에 적으면 "그 시각에 메모를 썼다" 는 거짓이 된다.
+   * ✅ **OQ-15 해소(2026-10-19)** — `checkDt` 는 **지점 인증 시간**이다(사용자 DB 확인).
+   * 전에는 "인증이 찍힌 행만 시각을 적는다" 를 단정했는데 **그 규칙이 뒤집혔다**: 겹치던
+   * 시각은 테스트 환경 탓이었다(태그가 한 책상에 모여 있어 연달아 찍힌다).
+   * ⚠️ 미완료 행은 `authMethod` 가 `null` 이라 **수단만 빠지고 시각은 남는다**.
    */
-  it('🔴 인증이 찍히지 않은 행은 시각을 적지 않는다 (OQ-15)', () => {
-    const unchecked = row({
+  it('✅ 미완료 행도 checkDt 가 있으면 시각을 적는다 (OQ-15 해소)', () => {
+    const incomplete = row({
       status: 3,
       authMethod: null,
       checkDt: '2026-05-01T10:06:00',
       memos: [memo()],
     })
-    render(<CheckDetailMemo row={unchecked} />)
+    render(<CheckDetailMemo row={incomplete} />)
+
+    expect(screen.getByText(/10:06/)).toBeInTheDocument()
+  })
+
+  it('checkDt 가 null 이면 시각이 없다 — 아예 가지 않은 행이다', () => {
+    const absent = row({ status: 3, authMethod: null, checkDt: null, memos: [memo()] })
+    render(<CheckDetailMemo row={absent} />)
 
     expect(screen.queryByText(/10:06/)).not.toBeInTheDocument()
   })

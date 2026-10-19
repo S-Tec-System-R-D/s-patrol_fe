@@ -112,9 +112,9 @@ export interface HistoryPin {
    */
   source: 'point' | 'check'
   /**
-   * 라벨에 쓸 인증 시각. 🔴 **인증이 실제로 찍힌 행만** 값을 갖는다(OQ-15) —
-   * 미완료 행의 `checkDt` 는 코스 `endDt` 와 같은 것이 12건·다른 것이 33건이라 **의미가
-   * 확정되지 않았다.** 그대로 보여주면 **인증한 것처럼 보인다.**
+   * 라벨에 쓸 **지점 인증 시각**. ✅ **`checkDt` 가 있으면 값을 갖는다**(OQ-15 해소
+   * 2026-10-19 — 사용자 DB 확인). 전에는 인증이 찍힌 행만 올렸는데, 겹치던 시각은
+   * **테스트 환경 탓**이었다(태그가 한 책상에 모여 있어 연달아 찍힌다).
    */
   checkedAt: string | null
   /** 라벨에 쓸 인증수단. 인증이 찍히지 않은 행은 `null` */
@@ -138,7 +138,7 @@ export interface HistoryCoords {
 const pinKind = (row: CheckDetailRow): HistoryPinKind => {
   if (row.status === POINT_HISTORY_STATUS.COMPLETED) return 'checked'
   // 🔴 `checkDt` 가 미완료 2종을 가른다 — 값이 있으면 **방문 흔적**이다(실측 45/124).
-  //    ⚠️ 그 값을 **인증 시각으로 읽지는 않는다**(OQ-15) — 여기서는 유무만 쓴다
+  //    ✅ 그 값은 **지점 인증 시각**이다(OQ-15 해소) — 여기서는 종류를 가르는 데만 쓴다
   if (row.status === POINT_HISTORY_STATUS.INCOMPLETE && row.checkDt !== null) return 'incomplete'
   return 'norecord'
 }
@@ -183,8 +183,8 @@ export const historyPins = (
       return
     }
 
-    /* 🔴 **인증이 찍힌 행만** 시각·수단을 라벨에 올린다(OQ-15 — 표와 같은 규칙) */
-    const authenticated = row.authMethod !== null && row.checkDt !== null
+    /* ✅ **시각은 `checkDt` 가 있으면 올린다**(OQ-15 해소 — 표와 같은 규칙).
+       ⚠️ **수단은 따로다** — 미완료 45건은 `authMethod` 가 0/45 라 시각만 남는다 */
 
     pins.push({
       order: row.orderNo,
@@ -194,8 +194,8 @@ export const historyPins = (
       // 좌표 출처가 아니라 **상태**로 정한다(OQ-16)
       kind: pinKind(row),
       source: point === null ? 'check' : 'point',
-      checkedAt: authenticated ? row.checkDt : null,
-      authMethod: authenticated ? row.authMethod : null,
+      checkedAt: row.checkDt,
+      authMethod: row.authMethod,
     })
   })
 

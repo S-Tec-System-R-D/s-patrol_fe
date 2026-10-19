@@ -21,9 +21,11 @@ import CheckDetailMemo from './CheckDetailMemo'
  * 둘을 한 뱃지로 묶으면 **"안 간 것" 과 "갔는데 인증 실패" 가 구분되지 않는다** — 관리자가
  * 해야 할 일이 다르다(전자는 순찰 누락, 후자는 태그·단말 문제일 수 있다).
  *
- * 🔴 **미완료 행의 `checkDt` 를 보여주지 않는다**(OQ-15). 코스 `endDt` 와 같은 것이 12건,
- * 다른 것이 33건이라 **의미가 확정되지 않았다** — "인증 시각" 칸에 그대로 쓰면 **인증한
- * 것처럼** 보인다. 백엔드 회신 뒤에 표기를 정한다.
+ * ✅ **미완료 행도 인증시각을 보여준다**(OQ-15 해소 2026-10-19). `checkDt` 는 **지점 인증
+ * 시간**이고(사용자 DB 확인), 코스 `endDt` 와 겹치던 것은 **테스트 환경 탓**이었다 —
+ * 모바일 개발자 책상에 태그가 전부 모여 있어 몇 초 안에 연달아 찍힌다.
+ * ⚠️ 그 행들은 `authMethod` 가 **0/45** 라 **인증수단 칸만 `-`** 로 남는다 — 시각이 "갔다"
+ * 를 말하고 수단이 "인증이 안 끝났다" 를 말한다(미완료 2종 구분과 같은 결).
  *
  * 🔴 **위치 컬럼을 만들지 않는다** — 층·위치 필드가 **서버 어디에도 없다**(목업에는 있다).
  *
@@ -108,8 +110,8 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
             const result = pointCheckBadge(row.status, row.checkDt, row.memos.length > 0)
             const overtime = overtimeBadge(row.overtimeYn)
             const gap = gaps.get(row.detailSeq) ?? null
-            /* 🔴 **인증이 찍힌 행만 시각을 보여준다**(OQ-15) */
-            const authenticated = row.authMethod !== null && row.checkDt !== null
+            /* ✅ **`checkDt` 가 있으면 보여준다**(OQ-15 해소) — 수단이 없어도 시각은 사실이다 */
+            const checkedAt = row.checkDt
             const hasMemo = row.memos.length > 0
             const isOpen = expanded.has(row.detailSeq)
 
@@ -159,7 +161,7 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                     )}
                   </td>
                   <td className="px-3 py-3 whitespace-nowrap tabular-nums text-muted-foreground">
-                    {authenticated ? formatTime(row.checkDt as string) : '-'}
+                    {checkedAt === null ? '-' : formatTime(checkedAt)}
                   </td>
                   {/* 🔴 **`whitespace-nowrap` 이다.** `formatDuration` 이 `1시간 20분` 처럼 **공백이
                       있는 값**을 만들고 `<th>` 가 `w-20`(80px) 이라, 브라우저가 그 공백에서 줄을
