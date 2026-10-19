@@ -72,6 +72,46 @@ const PatrolZoneDetailPage = () => {
     </nav>
   )
 
+  /**
+   * 🔴🔴 **주소가 잘못된 경우를 로딩보다 먼저 분기한다**(`spec 037` Phase 4 에서 발견).
+   *
+   * `historySeq` 가 `null` 이면 쿼리가 `enabled: false` 라 **영원히 `isPending` 이다** —
+   * 아래 로딩 분기에 걸려 **스켈레톤이 끝까지 남는다.** 사용자는 "느리다" 고 읽고 기다리는데
+   * **요청은 애초에 나가지 않았다.** 조회 실패보다 나쁜 상태다(끝이 없다).
+   *
+   * 🔴 **036 만의 실수였다** — `spec 023`(`ZoneDetailPage`)·`spec 027`(`PointDetailPage`)은
+   * `detail.isPending && seq !== null` 로 **이미 막아 뒀는데** 036 이 그 가드를 빼먹었다.
+   * 037 이 같은 화면을 만들며 테스트로 잡았다.
+   *
+   * ⚠️ `enabled: false` 와 로딩이 같은 `isPending` 으로 오는 것은 react-query 규약이라
+   * **호출부가 "안 보낸 것" 과 "기다리는 것" 을 구분해야 한다.**
+   */
+  if (historySeq === null) {
+    return (
+      <div className="flex flex-col gap-4 p-8">
+        {crumb}
+        <div className="rounded-lg border border-border bg-card">
+          <AppEmpty
+            icon={TriangleAlertIcon}
+            title="순찰 상세를 불러오지 못했습니다"
+            /* 027 과 같은 문구 — 원인이 주소라는 것과 할 일을 함께 말한다 */
+            description="주소가 올바르지 않습니다. 목록에서 다시 선택해주세요."
+          />
+          {/* 🔴 **"다시 시도" 를 주지 않는다** — 같은 주소로 또 실패한다(할 수 있는 일이 아니다) */}
+          <div className="flex justify-center pb-6">
+            <Link
+              to={paths.service.patrolZones}
+              className="flex w-fit items-center gap-1.5 text-caption text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeftIcon size={14} />
+              순찰이력 목록으로
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (detail.isPending) {
     return (
       <div className="flex flex-col gap-4 p-8">

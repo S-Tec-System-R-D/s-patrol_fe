@@ -21,7 +21,7 @@ import { makeAccessToken } from '@/test/jwt'
 const CHECK_DETAILS_PATH = '/api/v1/History/W/sign/GetCourseHistoryCheckDetails'
 const HISTORY_DETAIL_PATH = '/api/v1/History/W/sign/GetCourseHistoryDetail'
 
-const renderPage = (historySeq: number) => {
+const renderPage = (historySeq: number | string) => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
@@ -144,6 +144,28 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
     expect(await screen.findByText('순찰 상세를 불러오지 못했습니다')).toBeInTheDocument()
     expect(screen.getByText('순찰이력 목록으로')).toBeInTheDocument()
     expect(screen.queryByText(/삭제/)).not.toBeInTheDocument()
+  })
+
+  /**
+   * 🔴 **`spec 037` Phase 4 에서 발견한 결함**이다. 036 은 `historySeq` 가 숫자가 아닐 때를
+   * 막지 않아 **로딩 스켈레톤이 끝까지 남았다** — 쿼리가 `enabled: false` 라 영원히
+   * `isPending` 이고, 사용자는 "느리다" 고 읽고 기다리는데 요청은 나가지도 않았다.
+   * `spec 023`·`spec 027` 은 `&& seq !== null` 로 이미 막아 둔 자리였다.
+   */
+  it('🔴 historySeq 가 숫자가 아니면 로딩이 아니라 주소 오류를 보여준다', async () => {
+    const calls: string[] = []
+    server.events.on('request:start', ({ request }) => {
+      if (new URL(request.url).pathname === HISTORY_DETAIL_PATH) calls.push(request.url)
+    })
+    renderPage('abc')
+
+    expect(await screen.findByText('순찰 상세를 불러오지 못했습니다')).toBeInTheDocument()
+    expect(screen.getByText('주소가 올바르지 않습니다. 목록에서 다시 선택해주세요.')).toBeInTheDocument()
+    // 🔴 "다시 시도" 를 주지 않는다 — 같은 주소로 또 실패한다
+    expect(screen.queryByRole('button', { name: '다시 시도' })).not.toBeInTheDocument()
+    expect(screen.getByText('순찰이력 목록으로')).toBeInTheDocument()
+    expect(calls).toHaveLength(0)
+    server.events.removeAllListeners()
   })
 
   it('🔴 순서는 orderNo 를 그대로 쓴다 — 배열 위치로 다시 매기지 않는다', async () => {
