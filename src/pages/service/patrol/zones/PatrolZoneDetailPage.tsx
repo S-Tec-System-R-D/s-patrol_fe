@@ -12,8 +12,11 @@ import {
 } from '@/features/course-history/hooks/useCourseHistoryDetail'
 import { useCourseAverage } from '@/features/course-history/hooks/useCourseAverage'
 import { checkIntervals } from '@/features/course-history/lib/checkIntervals'
+import { historyPins } from '@/features/patrol-zones/lib/historyCoords'
 import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
+import { useCourseDetail } from '@/features/courses/hooks/useCourseDetail'
 import CheckDetailTable from '@/features/patrol-zones/components/detail/CheckDetailTable'
+import HistoryMapCard from '@/features/patrol-zones/components/detail/HistoryMapCard'
 import HistoryInfoCard from '@/features/patrol-zones/components/detail/HistoryInfoCard'
 import HistoryKpiRow from '@/features/patrol-zones/components/detail/HistoryKpiRow'
 import { getSiteSeq } from '@/lib/auth/site'
@@ -46,8 +49,18 @@ const PatrolZoneDetailPage = () => {
   const checkDetails = useCourseHistoryCheckDetails(historySeq)
   const average = useCourseAverage(siteSeq, detail.data?.courseSeq ?? null)
 
+  /* 🔴 **지도의 뒤인증 핸 좌표는 여기서 부른다**(T497 판단). 훅 안에서 부르면
+     `course-history → courses` **역방향 의존**이 생긴다 — 페이지는 양쪽을 import 해도 정상이다.
+     ⚠️ **“현재 편성” 이다**(회차 시점이 아니다) — 그래서 `historyPins` 가 `pointSeq` 로 조인한다.
+     ✅ `courseKeys.detail` 로 추사하므로 코스 관리 상세를 이미 봤다면 **요구이 늘지 않는다** */
+  const course = useCourseDetail(detail.data?.courseSeq ?? null)
+
   const checks = useMemo(() => checkDetails.data ?? [], [checkDetails.data])
   const intervals = useMemo(() => checkIntervals(checks), [checks])
+  const coords = useMemo(
+    () => historyPins(checks, course.data?.points ?? []),
+    [checks, course.data?.points]
+  )
 
   const crumb = (
     <nav className="flex items-center gap-1 text-caption text-muted-foreground">
@@ -169,6 +182,12 @@ const PatrolZoneDetailPage = () => {
               <CheckDetailTable rows={checks} />
             )}
           </div>
+
+          {/* 🔴 **지도는 항목이 생길 때만 보여준다**(T519 기준: 좌표 0개 → 바표시).
+              번 회색 바박스는 화면을 차지하고 아무런 판단에도 안 쓰이다 — 지점 목록은 위 표가 이미 말한다 */}
+          {coords.pins.length > 0 && (
+            <HistoryMapCard pins={coords.pins} missing={coords.missing} />
+          )}
         </section>
 
         <section className="lg:col-span-1">

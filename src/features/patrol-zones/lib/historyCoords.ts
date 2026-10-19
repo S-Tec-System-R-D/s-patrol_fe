@@ -50,12 +50,33 @@ import { POINT_HISTORY_STATUS, type CheckDetailRow } from '@/features/course-his
  * 덕분에 "빠진 지점도 번호를 차지한다"(T518)가 **자동으로 성립한다** — 좌표 없는 행은 핀이
  * 안 생기고, 남은 핀은 자기 `orderNo` 를 그대로 갖는다.
  *
- * ## 🔴 핀 색은 `status` 가 정한다 — 좌표 출처와 **독립이다**
+ * ## 🔴 핀은 3종이다 — `status` 가 정하고 좌표 출처와 **독립이다**
  *
- * `status 4 완료` 인데 `authMethod`·좌표·순찰자가 **전부 `null` 인 행이 3건** 실재한다
- * (OQ-16, `historySeq 13` 의 `detailSeq 24·25·26`). 좌표 출처로 색을 정하면 이 행들이
- * **등록 좌표 폴백 → 회색 → "미인증"** 으로 읽힌다. 완료인데 그렇게 보이면 거짓이다.
- * 그래서 `checked`(색)와 `source`(출처)를 **따로 둔다.**
+ * 사용자 결정 2026-10-19. 관리자가 **해야 할 일이 세 가지로 갈린다**:
+ *
+ * | `kind` | 조건 | 뜻 | 시맨틱 | 형태 |
+ * |---|---|---|---|---|
+ * | `checked` | `status 4` | 인증이 찍혔다 | `success` | 채움 |
+ * | `incomplete` | `status 3` + `checkDt` 있음 | **갔는데 인증이 안 됐다** | `warning` | 채움 |
+ * | `norecord` | 나머지 | 아무 기록이 없다 | `muted` | **빈 원** |
+ *
+ * 🔴 **`미완료` 를 한 종으로 묶지 않는다** — 실측 124건이 **79 / 45** 로 갈린다. 앞은 아예
+ * 가지 않은 것이고 뒤는 순찰자·시각이 남았는데 인증만 안 된 것이다. 전자는 **순찰 누락**,
+ * 후자는 **태그·단말 문제**일 수 있다 — 한 색으로 묶으면 관리자가 둘을 구분할 수 없다.
+ *
+ * 🔴 **빨강(`danger`)을 쓰지 않는다.** 표의 결과 뱃지가 미완료 2종에 `danger` 를 쓰지만
+ * 지도는 다르다 — ① `status 0 대기중`·`1 진행중` 이 `norecord` 로 들어오는데(진행 중인 회차)
+ * **아직 안 간 지점을 빨갛게 칠하면 없는 문제를 만든다** ② 심각도 판정은 **표가 한다**(뱃지
+ * 최대 3개 병기). 지도의 일은 "어디서 무슨 일이 있었나" 지 "누가 잘못했나" 가 아니다.
+ * 023 의 "인증률에 색을 입히지 않는다" 와 같은 자리다.
+ *
+ * 🔴 **색만으로 전하지 않는다**(034 선례). `norecord` 는 **빈 원**이라 색각과 무관하게
+ * 갈리고, 호출부가 `aria-label`·툴팁에 라벨을 적는다. 채움 여부가 곧 "기록이 있나" 다.
+ *
+ * ⚠️ **`kind` 는 좌표 출처(`source`)와 독립이다.** `status 4 완료` 인데 `authMethod`·좌표·
+ * 순찰자가 **전부 `null` 인 행이 3건** 실재한다(OQ-16, `historySeq 13` 의 `detailSeq 24·25·26`).
+ * 출처로 색을 정하면 이 행들이 **등록 좌표 폴백 → 회색 → "미인증"** 으로 읽힌다 — 완료인데
+ * 그렇게 보이면 거짓이다.
  *
  * ## 재사용
  *
@@ -64,6 +85,12 @@ import { POINT_HISTORY_STATUS, type CheckDetailRow } from '@/features/course-his
  * 화면에도 똑같이 걸린다. 복제하면 한쪽만 고쳐진다.
  */
 
+/**
+ * 핀 3종. 🔴 **표의 결과 뱃지(7종)를 그대로 옮기지 않는다** — 지도에서 갈려야 하는 것은
+ * "기록이 어떤 종류로 남았나" 세 가지다. 라벨·심각도는 표가 말한다.
+ */
+export type HistoryPinKind = 'checked' | 'incomplete' | 'norecord'
+
 /** 지도에 찍을 핀 하나 */
 export interface HistoryPin {
   /** 🔴 **`orderNo` 다** — 인증 내역 표의 "순서" 컬럼과 같은 번호여야 한다 */
@@ -71,11 +98,8 @@ export interface HistoryPin {
   name: string
   lat: number
   lng: number
-  /**
-   * 🔴 **핀 색 기준.** `status 4 완료` 만 참이다 — 좌표 출처와 **무관하다**(OQ-16).
-   * 거짓이면 회색 핀.
-   */
-  checked: boolean
+  /** 🔴 **핀 색·형태 기준.** 좌표 출처와 **무관하다**(OQ-16) */
+  kind: HistoryPinKind
   /** 이 좌표가 어디서 왔는지. 🔴 `'point'` 는 **인증 위치가 아니라 지점 등록 위치**다 */
   source: 'check' | 'point'
   /**
@@ -109,6 +133,14 @@ export interface HistoryCoords {
  * @param coursePoints `GetCourseDetail.points[]` — 등록 좌표 폴백용. 아직 안 왔으면 `[]`
  *   를 넘긴다(그 경우 인증 좌표가 있는 핀만 나온다)
  */
+const pinKind = (row: CheckDetailRow): HistoryPinKind => {
+  if (row.status === POINT_HISTORY_STATUS.COMPLETED) return 'checked'
+  // 🔴 `checkDt` 가 미완료 2종을 가른다 — 값이 있으면 **방문 흔적**이다(실측 45/124).
+  //    ⚠️ 그 값을 **인증 시각으로 읽지는 않는다**(OQ-15) — 여기서는 유무만 쓴다
+  if (row.status === POINT_HISTORY_STATUS.INCOMPLETE && row.checkDt !== null) return 'incomplete'
+  return 'norecord'
+}
+
 export const historyPins = (
   rows: CheckDetailRow[],
   coursePoints: CourseDetailPoint[]
@@ -149,8 +181,8 @@ export const historyPins = (
       name: row.pointName,
       lat: coord.lat,
       lng: coord.lng,
-      // 좌표 출처가 아니라 **상태**로 색을 정한다(OQ-16)
-      checked: row.status === POINT_HISTORY_STATUS.COMPLETED,
+      // 좌표 출처가 아니라 **상태**로 정한다(OQ-16)
+      kind: pinKind(row),
       source: checkCoord === null ? 'point' : 'check',
       checkedAt: authenticated ? row.checkDt : null,
       authMethod: authenticated ? row.authMethod : null,

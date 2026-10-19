@@ -8,8 +8,9 @@ import { historyPins } from '../lib/historyCoords'
 /**
  * 순찰이력 지도 좌표 병합 (`spec 036` T516·T519).
  *
- * 🔴 **이 테스트가 두 결정을 고정한다**: 조인 키는 `pointSeq`(`orderNo` 아님) · 핀 색은
- * `status`(좌표 출처 아님). 둘 다 틀리면 **에러 없이 그럴듯한 지도**가 나온다.
+ * 🔴 **이 테스트가 세 결정을 고정한다**: 조인 키는 `pointSeq`(`orderNo` 아님) · 핀 번호는
+ * `orderNo`(배열 위치 아님) · 핀 종류는 `status`(좌표 출처 아님). 셋 다 틀리면 **에러 없이
+ * 그럴듯한 지도**가 나온다.
  */
 
 /** 기본은 **미인증 행**이다 — 실측상 그게 주경로다(166행 중 132행) */
@@ -60,7 +61,7 @@ describe('historyPins — 좌표 출처', () => {
     const { pins, missing } = historyPins([row()], [coursePoint()])
 
     expect(missing).toBe(0)
-    expect(pins[0]).toMatchObject({ lat: 37.49, lng: 127.07, source: 'point', checked: false })
+    expect(pins[0]).toMatchObject({ lat: 37.49, lng: 127.07, source: 'point', kind: 'norecord' })
   })
 
   it('🔴 둘 다 없으면 제외하고 missing 으로 센다', () => {
@@ -168,24 +169,50 @@ describe('historyPins — 🔴 핀 번호는 orderNo 다', () => {
   })
 })
 
-describe('historyPins — 🔴 핀 색은 status 가 정한다 (OQ-16)', () => {
-  it('완료(4)인데 좌표가 null 인 행은 등록 좌표를 쓰면서도 **인증 핀으로 남는다**', () => {
+describe('historyPins — 🔴 핀 3종 (사용자 결정 2026-10-19)', () => {
+  it('완료(4) → checked', () => {
+    const { pins } = historyPins(
+      [row({ status: 4, checkDt: '2026-05-01T10:06:00', authMethod: 9, gpsLat: 37.5, gpsLng: 127.1 })],
+      []
+    )
+
+    expect(pins[0].kind).toBe('checked')
+  })
+
+  it('🔴 미완료(3) + checkDt 있음 → incomplete — **갔는데 인증이 안 됐다**', () => {
+    // 실측 124건이 79 / 45 로 갈린다. 관리자가 할 일이 다르다(순찰 누락 vs 태그·단말 문제)
+    const { pins } = historyPins(
+      [row({ status: 3, checkDt: '2026-05-01T10:06:00' })],
+      [coursePoint()]
+    )
+
+    expect(pins[0].kind).toBe('incomplete')
+  })
+
+  it('🔴 미완료(3) + checkDt 없음 → norecord — 아예 가지 않았다', () => {
+    const { pins } = historyPins([row({ status: 3, checkDt: null })], [coursePoint()])
+
+    expect(pins[0].kind).toBe('norecord')
+  })
+
+  it('🔴 대기중(0)·진행중(1)·순찰제외(2)도 norecord 다 — 빨갛게 칠하지 않는다', () => {
+    // 진행 중인 회차에서 아직 안 간 지점을 danger 로 칠하면 **없는 문제를 만든다**
+    const statuses = [0, 1, 2]
+    statuses.forEach((status) => {
+      const { pins } = historyPins([row({ status })], [coursePoint()])
+      expect(pins[0].kind).toBe('norecord')
+    })
+  })
+
+  it('🔴 kind 는 좌표 출처와 독립이다 (OQ-16)', () => {
     // historySeq 13 의 detailSeq 24·25·26 — 완료인데 authMethod·좌표·순찰자가 전부 null
     const { pins } = historyPins(
       [row({ status: 4, checkDt: '2026-07-16T10:15:14' })],
       [coursePoint()]
     )
 
-    // 좌표는 폴백했지만 색은 완료다 — 회색이면 "미인증" 으로 읽혀 거짓이 된다
-    expect(pins[0]).toMatchObject({ source: 'point', checked: true })
-  })
-
-  it('대기중(0)·진행중(1)·미완료(3)는 회색이다', () => {
-    const statuses = [0, 1, 3]
-    statuses.forEach((status) => {
-      const { pins } = historyPins([row({ status })], [coursePoint()])
-      expect(pins[0].checked).toBe(false)
-    })
+    // 좌표는 폴백했지만 종류는 완료다 — 회색이면 "미인증" 으로 읽혀 거짓이 된다
+    expect(pins[0]).toMatchObject({ source: 'point', kind: 'checked' })
   })
 })
 
