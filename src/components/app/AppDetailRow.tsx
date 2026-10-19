@@ -27,19 +27,22 @@ interface AppDetailRowProps {
 
 const AppDetailRow = ({ label, value, variant = 'between' }: AppDetailRowProps) => {
   if (variant === 'fixed') {
+    /* ⚠️ **`last:border-0`** (사용자 결정 2026-10-19) — 마지막 행은 선을 그리지 않는다.
+       코스·지점 상세 모두 **마지막 행이 컨테이너의 마지막 자식**이라(뒤에 아무것도 없다)
+       선이 받칠 것 없이 떠 있었다. `between` 과 같은 규칙이 됐다 */
     return (
-      <div className="flex items-start gap-4 border-b py-2">
+      <div className="flex items-start gap-4 border-b py-2 last:border-0">
         <span className="w-24 shrink-0 text-muted-foreground">{label}</span>
         <span className="min-w-0 flex-1 break-words">{value}</span>
       </div>
     )
   }
 
-  /* 🔴 **`border-b` 를 둔다**(사용자 결정 2026-10-19). `fixed` 에는 처음부터 있었고
-     `between` 에만 없어서 **border 유무가 variant 마다 갈려 있었다** — 배치가 다른 것은
-     폭 때문에 근거가 있지만(위 표), 구분선 유무는 근거가 없는 차이였다.
-     ⚠️ **`last:border-0`** — 카드 안의 마지막 행 밑에 선이 남으면 카드 테두리와 겹쳐 보인다.
-     ⚠️ 이력(8행)·근무자(5행)·공지(2행) **세 화면이 함께 바뀐다**. 이력만 예외로 두면
+  /* 🔴 **`border-b` 를 둔다**(사용자 결정 2026-10-19). 전에는 `fixed` 에만 있어서
+     **구분선 유무가 variant 마다 갈려 있었다** — 배치가 다른 것은 폭 때문에 근거가
+     있지만(위 표), 구분선 유무는 근거가 없는 차이였다. 이제 **두 variant 가 같은 규칙**이다:
+     행 사이에 선, **마지막 행은 선 없음**(`last:border-0`).
+     ⚠️ 이력(8행)·근무자(5행)·공지(2행) 세 화면이 함께 바뀐다. 이력만 예외로 두면
      variant 나 prop 이 또 늘어난다(A6). */
   return (
     <div className="flex items-center justify-between gap-4 border-b py-1.5 text-sm last:border-0">
