@@ -46,7 +46,22 @@ interface AppTableProps<TData> {
   renderCard?: (data: TData) => React.ReactNode
   /** 페이지당 행 수. 기본 10. controlled `pagination` 미지정 시에만 사용. */
   pageSize?: number
-  /** true면 내장 페이지네이션 footer를 숨긴다 (화면이 AppPagination으로 직접 대체할 때). 기본 false. */
+  /**
+   * true면 내장 페이지네이션 footer를 숨긴다 (화면이 `AppPagination` 으로 직접 대체할 때).
+   * 기본 false.
+   *
+   * 🔴🔴 **이 값은 "페이징의 주인이 화면" 이라는 선언이다**(2026-10-19 교정). 그래서
+   * `manualPagination: true` 를 함께 건다 — **클라이언트 페이징을 끈다.**
+   *
+   * ⚠️ **전에는 footer 만 숨겼다.** 그러면 화면이 서버에서 20·50건을 받아 와도 `AppTable` 이
+   * **기본 `pageSize = 10` 으로 잘라** 10행만 그렸고, footer 는 숨겨져 있어 **나머지로 갈
+   * 수단도 없었다.** `AppPagination` 은 `1–20 / 전체 48개 항목` 이라고 적는데 표에는 10행만
+   * 있는 상태다 — **숫자와 화면이 어긋나 있었다.**
+   * 🔴 **3개 화면이 그 상태였다**: 코스 순찰이력 목록 · 지점 목록 · 코스 목록.
+   * (나머지 4곳은 `pagination` 을 함께 넘겨 `pageSize` 가 실려 우연히 정상이었다.)
+   * 🔴 **고치는 자리를 화면이 아니라 여기로 잡았다** — 화면마다 `pageSize` 를 넘기게 하면
+   * 다음 화면이 또 빠뜨린다. 데이터가 이미 페이징돼 왔다면 **자르지 않는 것이 맞다.**
+   */
   hidePagination?: boolean
   /** controlled pagination. 미지정 시 uncontrolled(내장 상태) 동작. */
   pagination?: PaginationState
@@ -87,6 +102,9 @@ const AppTable = <TData,>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    /* 🔴 **화면이 페이징의 주인이면 클라이언트 페이징을 끈다**(`hidePagination` 주석 참조).
+       데이터가 이미 서버에서 잘려 왔으므로 또 자르면 **받은 것보다 적게 보인다** */
+    ...(hidePagination && { manualPagination: true }),
     ...(!isPaginationControlled && { initialState: { pagination: { pageSize } } }),
   })
 

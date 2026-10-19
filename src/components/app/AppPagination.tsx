@@ -2,6 +2,8 @@ import { cn } from '@/lib/utils'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import AppSelect from '@/components/app/AppSelect'
 
+import { pageItems } from './AppPagination.pageItems'
+
 interface AppPaginationProps {
   /** 0-based 현재 페이지 인덱스 */
   pageIndex: number
@@ -13,8 +15,13 @@ interface AppPaginationProps {
 }
 
 /**
- * 리디자인 페이지네이션 — 페이지당 행 수 선택 + 현재 범위 표시 + 이전/다음(페이지 번호 버튼 없음).
+ * 리디자인 페이지네이션 — 페이지당 행 수 선택 + 현재 범위 표시 + **페이지 번호** + 이전/다음.
  * 테이블 라이브러리 비의존 — 상태는 소비 측이 들고 콜백으로만 반영한다.
+ *
+ * 🔴 **번호 버튼을 넣었다**(사용자 요청 2026-10-19). 리디자인 초안은 화살표만 뒀는데,
+ * 48건·3페이지에서 **몇 페이지가 있는지, 지금 몇 번째인지** 화살표만으로는 알 수 없었다.
+ * 범위 표시(`21–40 / 전체 48개 항목`)가 그것을 대신한다고 봤지만 **현재 위치만 말하고
+ * 전체 페이지 수는 말하지 않는다.**
  */
 const AppPagination = ({
   pageIndex,
@@ -28,6 +35,8 @@ const AppPagination = ({
   const end = Math.min((pageIndex + 1) * pageSize, total)
   const canPrev = pageIndex > 0
   const canNext = end < total
+  // 🔴 `pageSize` 가 0 이면 나눗셈이 `Infinity` 가 된다 — 방어한다
+  const totalPages = pageSize > 0 ? Math.ceil(total / pageSize) : 0
 
   return (
     <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -59,6 +68,32 @@ const AppPagination = ({
           >
             <ChevronLeftIcon size={14} />
           </button>
+
+          {/* 🔴 현재 페이지는 **`aria-current="page"`** 다 — 색만으로 전하지 않는다 */}
+          {pageItems(pageIndex + 1, totalPages).map((item, i) =>
+            item === '…' ? (
+              <span key={`gap-${i}`} aria-hidden className="px-1">
+                …
+              </span>
+            ) : (
+              <button
+                key={item}
+                type="button"
+                aria-label={`${item}페이지`}
+                aria-current={item === pageIndex + 1 ? 'page' : undefined}
+                onClick={() => onPageChange(item - 1)}
+                className={cn(
+                  'grid size-7 place-items-center rounded-md border tabular-nums transition-colors',
+                  item === pageIndex + 1
+                    ? 'border-primary bg-primary text-primary-foreground font-medium'
+                    : 'border-border hover:bg-muted'
+                )}
+              >
+                {item}
+              </button>
+            )
+          )}
+
           <button
             type="button"
             aria-label="다음 페이지"
