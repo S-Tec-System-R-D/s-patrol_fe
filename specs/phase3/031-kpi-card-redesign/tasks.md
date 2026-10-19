@@ -16,36 +16,36 @@
 > **독립 테스트 기준**: 단위 테스트만으로 ① 바·보조줄·단위가 **선택**이고 ② 값이 `null`
 > 이면 `—` 이며 ③ **바가 없으면 0% 바도 그리지 않는** 것이 확인된다.
 
-- [ ] T456 [US2] `AppKpiCard` 재작성 — 라벨 좌상단 / **라운드 사각 아이콘 우상단** / 큰 숫자 + 작은 단위 / (선택) 바 / (선택) 보조 한 줄 in src/components/app/AppKpiCard.tsx
+- [x] T456 [US2] `AppKpiCard` 재작성 — 라벨 좌상단 / **라운드 사각 아이콘 우상단** / 큰 숫자 + 작은 단위 / (선택) 바 / (선택) 보조 한 줄 in src/components/app/AppKpiCard.tsx
       - 🔴 **색을 줄인다**: 아이콘 배경 **중립 기본**, `tone` 은 경고가 필요한 칸에만
       - 🔴 **바는 `ratio?: number | null` 을 받을 때만** 그린다. `null` 이면 **그리지 않는다**(0% 바는 "0점" 으로 읽힌다)
       - 숫자가 아닌 값(`10.13 09:07`)은 **글자 크기를 한 단계 낮춘다** — 날짜가 숫자 자리에 오면 줄바꿈된다
       - 라벨 2줄까지 허용하되 **카드 높이를 맞춘다**(4칸이 들쭉날쭉하면 그 자체가 지저분하다)
-- [ ] T457 [US2] 단위 테스트 — 선택 요소 3종 · `—` 처리 · 바 미표시 · 라벨 2줄 in src/components/app/\_\_tests\_\_/AppKpiCard.test.tsx
+- [x] T457 [US2] 단위 테스트 — 선택 요소 3종 · `—` 처리 · 바 미표시 · 라벨 2줄 in src/components/app/\_\_tests\_\_/AppKpiCard.test.tsx
 
 ## Phase 2: 화면 3곳 적용
 
 > **독립 테스트 기준**: 세 화면이 **같은 컴포넌트**를 쓰고, 각 화면의 기존 테스트가
 > 그대로 통과한다(숫자·문구는 바뀌지 않는다 — **모양만** 바뀐다).
 
-- [ ] T458 [US1] 코스 4칸 — 🔴 **인증률에만 바**(`checkedSum`/`pointSum`), 보조 줄 `전체 인증 13 / 21건` in src/features/courses/components/detail/CourseKpiRow.tsx
+- [x] T458 [US1] 코스 4칸 — 🔴 **인증률에만 바**(`checkedSum`/`pointSum`), 보조 줄 `전체 인증 13 / 21건` in src/features/courses/components/detail/CourseKpiRow.tsx
       - 🔴 **인증률에 색을 입히지 않는다**(023 결정 유지 — `순찰제외` 때문에 분모를 확신할 수 없다). **바는 그리되 중립색**
       - 미인증 지점만 `warning` 유지 — **서버가 직접 센 값**이라 색을 입힐 근거가 있는 쪽이다
-- [ ] T459 [US1] 지점 3칸을 공용으로 — **`PointStats` 삭제**, 현 hint 문구를 **보조 줄로 흡수** in src/features/points/components/detail/PointStats.tsx · src/pages/service/points/PointDetailPage.tsx
-- [ ] T460 [P] [US1] 배치 3칸 — 공용 변경에 따른 **회귀 확인** + 보조 줄 추가 여부 판단 in src/features/deployments/components/DeploymentKpiRow.tsx
+- [x] T459 [US1] 지점 3칸을 공용으로 — **`PointStats` 삭제**, 현 hint 문구를 **보조 줄로 흡수** in src/features/points/components/detail/PointStats.tsx · src/pages/service/points/PointDetailPage.tsx
+- [x] T460 [P] [US1] 배치 3칸 — 공용 변경에 따른 **회귀 확인** + 보조 줄 추가 여부 판단 in src/features/deployments/components/DeploymentKpiRow.tsx
       - ⚠️ 보조 줄은 **사실만**(`진행 중인 배치만 셈` 등). 없으면 **비워 둔다** — 채우려고 지어내지 않는다(A1)
 
 ## Phase 3: Polish
 
-- [ ] T461 [P] 화면별 KPI 테스트 갱신 — 코스(기존 `CourseKpiRow.test.tsx`) · 지점(신규) in 각 `__tests__`
-- [ ] T462 🔴 **서버 요청 수 무변화 확인** — 세 화면 모두. 증감 뱃지를 만들지 않았으므로 **늘 이유가 없다**(DoD #8)
-- [ ] T463 `npm run verify` + `npm run test` **병렬 실행**, 813 → 증가 확인
-- [ ] T464 브라우저 확인 3화면 — 코스 상세 · 지점 상세 · 배치관리
-- [ ] T465 캡쳐 — `zones--상세` · `points--상세` · `deployments--대시보드`.
+- [x] T461 [P] 화면별 KPI 테스트 갱신 — 코스(기존 `CourseKpiRow.test.tsx`) · 지점(신규) in 각 `__tests__`
+- [x] T462 🔴 **서버 요청 수 무변화 확인** — 세 화면 모두. 증감 뱃지를 만들지 않았으므로 **늘 이유가 없다**(DoD #8)
+- [x] T463 `npm run verify` + `npm run test` **병렬 실행**, 813 → 증가 확인
+- [x] T464 브라우저 확인 3화면 — 코스 상세 · 지점 상세 · 배치관리
+- [x] T465 캡쳐 — `zones--상세` · `points--상세` · `deployments--대시보드`.
       🔴 **`CAPTURE_OUT` 으로 먼저 찍어 비교**하고 **바뀐 것만** 덮는다(나머지 11장은 노이즈)
-- [ ] T466 문서 — `components.md` `AppKpiCard` 항목 갱신(선택 요소·바 규칙) ·
+- [x] T466 문서 — `components.md` `AppKpiCard` 항목 갱신(선택 요소·바 규칙) ·
       `design-system.md` 에 **KPI 카드 어휘** 한 줄(034 가 참조한다) · `screens.md` 3행 · `roadmap.md`
-- [ ] T467 DoD 11개 대조표 + `## 다음 spec으로 이월` 블록 — 🔴 **034 가 따라갈 어휘를 명시**한다 in specs/phase3/031-kpi-card-redesign/tasks.md
+- [x] T467 DoD 11개 대조표 + `## 다음 spec으로 이월` 블록 — 🔴 **034 가 따라갈 어휘를 명시**한다 in specs/phase3/031-kpi-card-redesign/tasks.md
 
 ---
 

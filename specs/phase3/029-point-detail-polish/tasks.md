@@ -18,17 +18,17 @@
 > 🔴 **지금 `pointSchema` 는 추가·수정 공용이고 `authenticationMethod` 가 required 다.**
 > 수정 폼에서 인증수단을 빼면 그 스키마를 그대로 쓸 수 없다 — **먼저 쪼갠다.**
 
-- [ ] T408 NFC TAG ID 규칙(14자리 HEX)을 **단일 출처**로 분리 — 패턴·메시지 export in src/features/points/form/schema.ts
-- [ ] T409 [P] **전환 모달용** 스키마(`authSwitchSchema` — `nfcTagId` 하나) in src/features/points/form/schema.ts
-- [ ] T410 [P] **수정 폼용** 스키마(`editPointSchema` — 인증수단 없음, `nfcTagId` 는 NFC 지점일 때만 검증) in src/features/points/form/schema.ts
+- [x] T408 NFC TAG ID 규칙(14자리 HEX)을 **단일 출처**로 분리 — 패턴·메시지 export in src/features/points/form/schema.ts
+- [x] T409 [P] **전환 모달용** 스키마(`authSwitchSchema` — `nfcTagId` 하나) in src/features/points/form/schema.ts
+- [x] T410 [P] **수정 폼용** 스키마(`editPointSchema` — 인증수단 없음, `nfcTagId` 는 NFC 지점일 때만 검증) in src/features/points/form/schema.ts
 
 ## Phase 2: Foundational — 전환 경로 + MSW 실측 반영 (US2 선행 blocking)
 
 > **독립 테스트 기준**: 훅을 직접 호출해 ① QR→NFC 가 `nfcTagId` 와 **함께** 나가고
 > ② TAG ID 없는 NFC 요청이 **MSW 에서 400** 으로 돌아오는 것이 확인된다.
 
-- [ ] T411 인증수단 전환 mutation 훅 — `UpdatePoint` 호출 + `detail`·`lists` 무효화, **옵티미스틱 아님** in src/features/points/hooks/useChangeAuthMethod.ts
-- [ ] T412 🔴 **MSW 를 실측에 맞춘다** in src/mocks/handlers/points.ts
+- [x] T411 인증수단 전환 mutation 훅 — `UpdatePoint` 호출 + `detail`·`lists` 무효화, **옵티미스틱 아님** in src/features/points/hooks/useChangeAuthMethod.ts
+- [x] T412 🔴 **MSW 를 실측에 맞춘다** in src/mocks/handlers/points.ts
       - `authMethod: 10` 인데 `nfcTagId` 없으면 **400 + `"NFC 값을 입력해주세요."`**
       - `nfcTagId: null`·`''` 는 **무시**(B-15) · 전환해도 반대쪽 값(`qrCode`/`nfcTagId`)은 **남는다**
       - `reissueQrYn: true` 를 받아도 **`qrCode` 를 바꾸지 않는다**(B-37)
@@ -39,52 +39,52 @@
 > **독립 테스트 기준**: 헤더에 `삭제` 만 있고, 기본정보 카드의 아이콘으로 수정 모달이
 > 열리며, 그 모달에 **인증수단 선택이 없다**.
 
-- [ ] T413 [US1] 수정 버튼을 **기본정보 카드**로 — 헤더에는 삭제만 in src/pages/service/points/PointDetailPage.tsx
-- [ ] T414 [US1] 기본정보 카드에 수정 아이콘(`SquarePen`) 수용 — 코스 `CourseInfo` 와 같은 조립 in src/features/points/components/detail/PointDetail.tsx
-- [ ] T415 [US1] 🔴 수정 폼에서 **인증수단 선택 제거** + `authMethod` **미전송**(`UpdatePoint` 는 진짜 부분 갱신) in src/features/points/form/EditPointForm.tsx
-- [ ] T416 [US1] TAG ID 필드는 **NFC 지점일 때만** 노출 — 폼 값이 아니라 **`point.authMethod`** 로 판단한다 in src/features/points/form/EditPointForm.tsx
-- [ ] T417 [P] [US1] `AuthMethodSelector` 소비처 확인 — **추가 폼에만** 남는지 in src/features/points/form/fields/AuthMethodSelector.tsx
+- [x] T413 [US1] 수정 버튼을 **기본정보 카드**로 — 헤더에는 삭제만 in src/pages/service/points/PointDetailPage.tsx
+- [x] T414 [US1] 기본정보 카드에 수정 아이콘(`SquarePen`) 수용 — 코스 `CourseInfo` 와 같은 조립 in src/features/points/components/detail/PointDetail.tsx
+- [x] T415 [US1] 🔴 수정 폼에서 **인증수단 선택 제거** + `authMethod` **미전송**(`UpdatePoint` 는 진짜 부분 갱신) in src/features/points/form/EditPointForm.tsx
+- [x] T416 [US1] TAG ID 필드는 **NFC 지점일 때만** 노출 — 폼 값이 아니라 **`point.authMethod`** 로 판단한다 in src/features/points/form/EditPointForm.tsx
+- [x] T417 [P] [US1] `AuthMethodSelector` 소비처 확인 — **추가 폼에만** 남는지 in src/features/points/form/fields/AuthMethodSelector.tsx
 
 ## Phase 4: US2 — 인증수단 스위치 (🔴 이 spec 의 핵심)
 
 > **독립 테스트 기준**: ① NFC→QR 은 확인 모달 한 번으로 바뀐다 ② QR→NFC 는 **TAG ID 를
 > 받아야만** 저장된다 ③ 실패하면 모달이 **닫히지 않고** 스위치가 **제자리에 있다**.
 
-- [ ] T418 [US2] 자격증명 카드에 **QR|NFC 2칸 스위치** — 현재 값 선택 상태(목업 `authopt`) in src/features/points/components/detail/PointCredentialSwitch.tsx
-- [ ] T419 [US2] **NFC→QR** 확인 모달 → `authMethod: 9` 전송 in src/features/points/components/detail/PointCredentialSwitch.tsx
-- [ ] T420 [US2] 🔴 **QR→NFC** TAG ID 입력 모달(`authSwitchSchema`) → `authMethod: 10` + `nfcTagId` **함께** 전송 in src/features/points/components/detail/AuthMethodChangeDialog.tsx
-- [ ] T421 [US2] 🔴 **비옵티미스틱** — 응답 전까지 스위치가 이전 값에 머문다 + 저장 중 잠금 in src/features/points/components/detail/PointCredentialSwitch.tsx
-- [ ] T422 [US2] 실패 시 **모달 유지** + 서버 문구 그대로(전역 토스트, B-17 의 예외라 사유를 말해 준다) in src/features/points/components/detail/AuthMethodChangeDialog.tsx
-- [ ] T423 [US2] 전환 성공 → 자격증명 카드가 **반대쪽으로 교체**된다(현재 수단 것만 그린다) in src/features/points/components/detail/PointDetail.tsx
+- [x] T418 [US2] 자격증명 카드에 **QR|NFC 2칸 스위치** — 현재 값 선택 상태(목업 `authopt`) in src/features/points/components/detail/PointCredentialSwitch.tsx
+- [x] T419 [US2] **NFC→QR** 확인 모달 → `authMethod: 9` 전송 in src/features/points/components/detail/PointCredentialSwitch.tsx
+- [x] T420 [US2] 🔴 **QR→NFC** TAG ID 입력 모달(`authSwitchSchema`) → `authMethod: 10` + `nfcTagId` **함께** 전송 in src/features/points/components/detail/AuthMethodChangeDialog.tsx
+- [x] T421 [US2] 🔴 **비옵티미스틱** — 응답 전까지 스위치가 이전 값에 머문다 + 저장 중 잠금 in src/features/points/components/detail/PointCredentialSwitch.tsx
+- [x] T422 [US2] 실패 시 **모달 유지** + 서버 문구 그대로(전역 토스트, B-17 의 예외라 사유를 말해 준다) in src/features/points/components/detail/AuthMethodChangeDialog.tsx
+- [x] T423 [US2] 전환 성공 → 자격증명 카드가 **반대쪽으로 교체**된다(현재 수단 것만 그린다) in src/features/points/components/detail/PointDetail.tsx
 
 ## Phase 5: US3 — QR 실물
 
 > **독립 테스트 기준**: QR 지점에서 `qrCode` 문자열이 **이미지로** 보이고, 식별자가 함께
 > 뜨며, **재발행 버튼이 없다**.
 
-- [ ] T424 [US3] `qrcode` 계열 패키지 도입 + `components.md` 컨벤션 등재 in package.json · docs/components.md
-- [ ] T425 [US3] 🔴 QR 카드 — **서버 `qrCode` 문자열 그대로** 인코딩(우리가 조합하지 않는다) + 식별자 표기 in src/features/points/components/detail/PointCredentialCard.tsx
-- [ ] T426 [US3] `qrCode` 가 `null` 인 경우 — "준비 중" 이 아니라 **이상 상태** 문구(생성 시 서버가 발급한다) in src/features/points/components/detail/PointCredentialCard.tsx
-- [ ] T427 [US3] 🔴 **재발행·다운로드·인쇄 버튼을 만들지 않는다** — B-37(재발행 무동작)·범위 결정 사유를 주석으로 in src/features/points/components/detail/PointCredentialCard.tsx
-- [ ] T428 [US3] NFC 카드 — TAG ID 표시 유지, 🔴 **QR 지점에는 남아 있어도 보여주지 않는다** in src/features/points/components/detail/PointCredentialCard.tsx
+- [x] T424 [US3] `qrcode` 계열 패키지 도입 + `components.md` 컨벤션 등재 in package.json · docs/components.md
+- [x] T425 [US3] 🔴 QR 카드 — **서버 `qrCode` 문자열 그대로** 인코딩(우리가 조합하지 않는다) + 식별자 표기 in src/features/points/components/detail/PointCredentialCard.tsx
+- [x] T426 [US3] `qrCode` 가 `null` 인 경우 — "준비 중" 이 아니라 **이상 상태** 문구(생성 시 서버가 발급한다) in src/features/points/components/detail/PointCredentialCard.tsx
+- [x] T427 [US3] 🔴 **재발행·다운로드·인쇄 버튼을 만들지 않는다** — B-37(재발행 무동작)·범위 결정 사유를 주석으로 in src/features/points/components/detail/PointCredentialCard.tsx
+- [x] T428 [US3] NFC 카드 — TAG ID 표시 유지, 🔴 **QR 지점에는 남아 있어도 보여주지 않는다** in src/features/points/components/detail/PointCredentialCard.tsx
 
 ## Phase 6: 변경 이력 제거 + 레이아웃
 
-- [ ] T429 변경 이력 `PendingSection` **제거**(OQ-027-E 종결) in src/pages/service/points/PointDetailPage.tsx
-- [ ] T430 [P] `PendingBlock` 잔여 소비처 확인 — 기본정보의 `PendingValue` 4개는 **남긴다**(서버에 필드가 없을 뿐 설계에는 있다) in src/features/points/components/detail/PendingBlock.tsx
-- [ ] T431 2열 비율 재조정 — 우측이 자격증명 카드 하나가 되고 QR 카드가 커진다 in src/pages/service/points/PointDetailPage.tsx
+- [x] T429 변경 이력 `PendingSection` **제거**(OQ-027-E 종결) in src/pages/service/points/PointDetailPage.tsx
+- [x] T430 [P] `PendingBlock` 잔여 소비처 확인 — 기본정보의 `PendingValue` 4개는 **남긴다**(서버에 필드가 없을 뿐 설계에는 있다) in src/features/points/components/detail/PendingBlock.tsx
+- [x] T431 2열 비율 재조정 — 우측이 자격증명 카드 하나가 되고 QR 카드가 커진다 in src/pages/service/points/PointDetailPage.tsx
 
 ## Phase 7: Polish
 
-- [ ] T432 [P] 스키마 단위 테스트 — 14자리 HEX 가 세 소비처에서 같은 메시지 in src/features/points/form/\_\_tests\_\_/schema.test.ts
-- [ ] T433 [P] 전환 테스트 — 2방향 · TAG ID 검증 · **실패 시 모달 유지** · 비옵티미스틱 in src/features/points/components/detail/\_\_tests\_\_/PointCredentialSwitch.test.tsx
-- [ ] T434 [P] 수정 폼 테스트 — 인증수단 선택이 **없다** · `authMethod` 미전송 · TAG ID 노출 조건 in src/features/points/form/\_\_tests\_\_/EditPointForm.test.tsx
-- [ ] T435 [P] QR 카드 테스트 — 이미지 렌더 · `null` 이상 상태 · **재발행 버튼 없음** in src/features/points/components/detail/\_\_tests\_\_/PointDetail.test.tsx
-- [ ] T436 `npm run verify` + `npm run test` **병렬 실행**, 756 → 증가 확인
-- [ ] T437 브라우저 확인(MSW) — DoD #12 의 4항목
-- [ ] T438 캡쳐 `points--상세.png` 재촬영 + `docs/ui-current/README.md` 갱신
-- [ ] T439 문서 동기화 — `screens.md` §1-3(지점 상세·추가/수정 행) · `patterns.md` §10-B(전환 비대칭을 사례로) · `roadmap.md` §7-1·§12
-- [ ] T440 DoD 14개 대조표 + `## 다음 spec으로 이월` 블록 in specs/phase3/029-point-detail-polish/tasks.md
+- [x] T432 [P] 스키마 단위 테스트 — 14자리 HEX 가 세 소비처에서 같은 메시지 in src/features/points/form/\_\_tests\_\_/schema.test.ts
+- [x] T433 [P] 전환 테스트 — 2방향 · TAG ID 검증 · **실패 시 모달 유지** · 비옵티미스틱 in src/features/points/components/detail/\_\_tests\_\_/PointCredentialSwitch.test.tsx
+- [x] T434 [P] 수정 폼 테스트 — 인증수단 선택이 **없다** · `authMethod` 미전송 · TAG ID 노출 조건 in src/features/points/form/\_\_tests\_\_/EditPointForm.test.tsx
+- [x] T435 [P] QR 카드 테스트 — 이미지 렌더 · `null` 이상 상태 · **재발행 버튼 없음** in src/features/points/components/detail/\_\_tests\_\_/PointDetail.test.tsx
+- [x] T436 `npm run verify` + `npm run test` **병렬 실행**, 756 → 증가 확인
+- [x] T437 브라우저 확인(MSW) — DoD #12 의 4항목
+- [x] T438 캡쳐 `points--상세.png` 재촬영 + `docs/ui-current/README.md` 갱신
+- [x] T439 문서 동기화 — `screens.md` §1-3(지점 상세·추가/수정 행) · `patterns.md` §10-B(전환 비대칭을 사례로) · `roadmap.md` §7-1·§12
+- [x] T440 DoD 14개 대조표 + `## 다음 spec으로 이월` 블록 in specs/phase3/029-point-detail-polish/tasks.md
 
 ---
 

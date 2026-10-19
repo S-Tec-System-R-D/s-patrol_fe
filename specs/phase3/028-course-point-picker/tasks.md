@@ -18,11 +18,11 @@
 > 🔴 **로직을 컴포넌트에서 빼내는 이유는 023 과 같다** — 모달 안에 두면 렌더 없이는
 > 테스트할 수 없고, 순번·선택 유지는 **눈으로 보기 어려운 종류의 버그**다.
 
-- [ ] T380 [P] 후보 필터링 순수 함수 `filterCandidates(all, assignedPointSeqs, method, keyword)` in src/features/courses/lib/pointCandidates.ts
-- [ ] T381 [P] 필터 칩 건수 `candidateCounts(assignable)` → `{ all, qr, nfc }` in src/features/courses/lib/pointCandidates.ts
-- [ ] T382 [P] 검색어 하이라이트 분할 `splitByKeyword(text, keyword)` → `{ text, hit }[]` in src/features/courses/lib/pointCandidates.ts
-- [ ] T383 [P] 선택 토글 `toggleSelection(selected, point)` — **순서 보존**(추가는 끝에, 해제는 제거) in src/features/courses/lib/pointCandidates.ts
-- [ ] T384 [P] 순번 계산 `orderNoOf(assignedCount, index)` — 기존 편성 수 + 선택 순서 in src/features/courses/lib/pointCandidates.ts
+- [x] T380 [P] 후보 필터링 순수 함수 `filterCandidates(all, assignedPointSeqs, method, keyword)` in src/features/courses/lib/pointCandidates.ts
+- [x] T381 [P] 필터 칩 건수 `candidateCounts(assignable)` → `{ all, qr, nfc }` in src/features/courses/lib/pointCandidates.ts
+- [x] T382 [P] 검색어 하이라이트 분할 `splitByKeyword(text, keyword)` → `{ text, hit }[]` in src/features/courses/lib/pointCandidates.ts
+- [x] T383 [P] 선택 토글 `toggleSelection(selected, point)` — **순서 보존**(추가는 끝에, 해제는 제거) in src/features/courses/lib/pointCandidates.ts
+- [x] T384 [P] 순번 계산 `orderNoOf(assignedCount, index)` — 기존 편성 수 + 선택 순서 in src/features/courses/lib/pointCandidates.ts
 
 ## Phase 2: 모달 상태 구조 전환 (US1 선행 blocking)
 
@@ -32,9 +32,9 @@
 > — 즉 **후보 응답 순서**로 나간다. 사용자가 3번→1번 순으로 골라도 1번이 먼저 들어간다.
 > 순번 표시(T384)가 거짓말이 되지 않으려면 **이것부터** 고친다.
 
-- [ ] T385 [US1] 선택 상태를 `number[]` → **선택 순서 배열**로 교체 in src/features/courses/components/detail/AddCoursePointDialog.tsx
-- [ ] T386 [US1] `onAdd` 가 **선택 순서대로** 넘기도록 수정(`all.filter` 제거) in src/features/courses/components/detail/AddCoursePointDialog.tsx
-- [ ] T387 [US1] 호출부 영향 확인 — 초안 끝 append + `orderNo` 1..N 재부여가 그대로인지 in src/features/courses/components/detail/CoursePointEditor.tsx
+- [x] T385 [US1] 선택 상태를 `number[]` → **선택 순서 배열**로 교체 in src/features/courses/components/detail/AddCoursePointDialog.tsx
+- [x] T386 [US1] `onAdd` 가 **선택 순서대로** 넘기도록 수정(`all.filter` 제거) in src/features/courses/components/detail/AddCoursePointDialog.tsx
+- [x] T387 [US1] 호출부 영향 확인 — 초안 끝 append + `orderNo` 1..N 재부여가 그대로인지 in src/features/courses/components/detail/CoursePointEditor.tsx
 
 ## Phase 3: US1 — 모달 UI 재구성
 
@@ -42,35 +42,35 @@
 > 조합되고 ③ 고른 것이 하단에 순서대로 쌓이고 ④ 행 우측 순번이 `기존+순서` 로 뜨고
 > ⑤ 필터를 바꿔도 선택이 유지된다.
 
-- [ ] T388 [US1] 필터 칩 3종(`전체`/`QR`/`NFC`) + 건수 표시 in src/features/courses/components/detail/AddCoursePointDialog.tsx
-- [ ] T389 [US1] 검색 + 칩 **조합** 적용(T380 연결), 결과 건수 라벨 in src/features/courses/components/detail/AddCoursePointDialog.tsx
-- [ ] T390 [US1] 후보 행 재구성 — 체크박스 · 지점명(**하이라이트**) · 인증수단 뱃지 · **우측 순번** in src/features/courses/components/detail/AddCoursePointDialog.tsx
-- [ ] T391 [US1] 하단 **선택 목록** — 선택 순서대로 칩, 개별 해제 · `모두 해제` in src/features/courses/components/detail/AddCoursePointDialog.tsx
-- [ ] T392 [US1] 🔴 필터 변경으로 목록에서 사라져도 **선택 유지**(선택 상태를 목록에서 파생시키지 않는다) in src/features/courses/components/detail/AddCoursePointDialog.tsx
-- [ ] T393 [US1] 0건 분기를 **4종**으로 확장(지점 없음 / 전부 편성됨 / 검색 0건 / **필터 0건** + 초기화 수단) in src/features/courses/components/detail/AddCoursePointDialog.tsx
-- [ ] T394 [US1] 닫기·취소 시 검색어·**필터 칩**·선택 전부 초기화 in src/features/courses/components/detail/AddCoursePointDialog.tsx
-- [ ] T395 [US1] 모달 헤더·설명 문구 정리(목업 기준, 코스명 노출 여부 포함) in src/features/courses/components/detail/AddCoursePointDialog.tsx
+- [x] T388 [US1] 필터 칩 3종(`전체`/`QR`/`NFC`) + 건수 표시 in src/features/courses/components/detail/AddCoursePointDialog.tsx
+- [x] T389 [US1] 검색 + 칩 **조합** 적용(T380 연결), 결과 건수 라벨 in src/features/courses/components/detail/AddCoursePointDialog.tsx
+- [x] T390 [US1] 후보 행 재구성 — 체크박스 · 지점명(**하이라이트**) · 인증수단 뱃지 · **우측 순번** in src/features/courses/components/detail/AddCoursePointDialog.tsx
+- [x] T391 [US1] 하단 **선택 목록** — 선택 순서대로 칩, 개별 해제 · `모두 해제` in src/features/courses/components/detail/AddCoursePointDialog.tsx
+- [x] T392 [US1] 🔴 필터 변경으로 목록에서 사라져도 **선택 유지**(선택 상태를 목록에서 파생시키지 않는다) in src/features/courses/components/detail/AddCoursePointDialog.tsx
+- [x] T393 [US1] 0건 분기를 **4종**으로 확장(지점 없음 / 전부 편성됨 / 검색 0건 / **필터 0건** + 초기화 수단) in src/features/courses/components/detail/AddCoursePointDialog.tsx
+- [x] T394 [US1] 닫기·취소 시 검색어·**필터 칩**·선택 전부 초기화 in src/features/courses/components/detail/AddCoursePointDialog.tsx
+- [x] T395 [US1] 모달 헤더·설명 문구 정리(목업 기준, 코스명 노출 여부 포함) in src/features/courses/components/detail/AddCoursePointDialog.tsx
 
 ## Phase 4: US2 — 틀린 근거 정정 (실측 2026-10-13)
 
 > **독립 테스트 기준**: 코드를 읽는 사람이 **후보에 미사용이 섞인다** 고 믿을 수 있는
 > 문장이 저장소에 하나도 남지 않는다(`grep` 으로 확인).
 
-- [ ] T396 [P] [US2] "미사용이 섞였는지 알 수 없다" → **서버가 제외한다**(실측일 명시) in src/features/courses/api/getClassificationPoint.ts
-- [ ] T397 [P] [US2] 같은 정정 — `ClassificationPoint` 타입 주석 in src/features/courses/types/course.ts
-- [ ] T398 [P] [US2] 같은 정정 + 중복 편성 규칙 주석 유지 in src/features/courses/components/detail/AddCoursePointDialog.tsx
-- [ ] T399 [P] [US2] 🔴 B-29 근거 교체 — "서버에 수단이 없다" → **코스에서 바꿀 값이 아니다** + `points[].useYn` 은 **항상 `true`**(실측) in src/features/courses/components/detail/CoursePointList.tsx
-- [ ] T400 [P] [US2] 같은 정정 — `CoursePointDraft.useYn` 주석 in src/features/courses/lib/coursePointOrder.ts
-- [ ] T401 [US2] `api-spec.md` 갱신 — **B-29 철회·대체**(응답 값이 지점 실제 값을 안 따라온다, 우선순위 낮음) + `GetClassificationPoint` 항목에 **미사용 지점 제외** 실측 기록 in docs/api-spec.md
+- [x] T396 [P] [US2] "미사용이 섞였는지 알 수 없다" → **서버가 제외한다**(실측일 명시) in src/features/courses/api/getClassificationPoint.ts
+- [x] T397 [P] [US2] 같은 정정 — `ClassificationPoint` 타입 주석 in src/features/courses/types/course.ts
+- [x] T398 [P] [US2] 같은 정정 + 중복 편성 규칙 주석 유지 in src/features/courses/components/detail/AddCoursePointDialog.tsx
+- [x] T399 [P] [US2] 🔴 B-29 근거 교체 — "서버에 수단이 없다" → **코스에서 바꿀 값이 아니다** + `points[].useYn` 은 **항상 `true`**(실측) in src/features/courses/components/detail/CoursePointList.tsx
+- [x] T400 [P] [US2] 같은 정정 — `CoursePointDraft.useYn` 주석 in src/features/courses/lib/coursePointOrder.ts
+- [x] T401 [US2] `api-spec.md` 갱신 — **B-29 철회·대체**(응답 값이 지점 실제 값을 안 따라온다, 우선순위 낮음) + `GetClassificationPoint` 항목에 **미사용 지점 제외** 실측 기록 in docs/api-spec.md
 
 ## Phase 5: Polish
 
-- [ ] T402 [P] 순수 함수 단위 테스트 5종(필터·건수·하이라이트·선택 순서·순번) in src/features/courses/lib/\_\_tests\_\_/pointCandidates.test.ts
-- [ ] T403 [P] 모달 컴포넌트 테스트 — 칩·조합 검색·선택 유지·순번·0건 4종 in src/features/courses/components/detail/\_\_tests\_\_/AddCoursePointDialog.test.tsx
-- [ ] T404 `npm run verify` + `npm run test` **병렬 실행**(CLAUDE.md A4), 734 → 증가 확인
+- [x] T402 [P] 순수 함수 단위 테스트 5종(필터·건수·하이라이트·선택 순서·순번) in src/features/courses/lib/\_\_tests\_\_/pointCandidates.test.ts
+- [x] T403 [P] 모달 컴포넌트 테스트 — 칩·조합 검색·선택 유지·순번·0건 4종 in src/features/courses/components/detail/\_\_tests\_\_/AddCoursePointDialog.test.tsx
+- [x] T404 `npm run verify` + `npm run test` **병렬 실행**(CLAUDE.md A4), 734 → 증가 확인
 - [ ] T405 브라우저 확인(MSW) — DoD #12 의 4항목 + 담은 뒤 **저장까지** 한 번 통과
-- [ ] T406 문서 동기화 — `screens.md` §1-3 "코스 내 지점 편성" 행에 모달 구성 반영 / `roadmap.md` §7-1·§12 에 028 행 추가
-- [ ] T407 DoD 12개 대조표 작성 + `## 다음 spec으로 이월` 블록 in specs/phase3/028-course-point-picker/tasks.md
+- [x] T406 문서 동기화 — `screens.md` §1-3 "코스 내 지점 편성" 행에 모달 구성 반영 / `roadmap.md` §7-1·§12 에 028 행 추가
+- [x] T407 DoD 12개 대조표 작성 + `## 다음 spec으로 이월` 블록 in specs/phase3/028-course-point-picker/tasks.md
 
 ---
 

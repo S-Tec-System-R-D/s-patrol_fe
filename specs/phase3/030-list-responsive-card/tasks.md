@@ -17,12 +17,12 @@
 > **독립 테스트 기준**: 카드 prop 을 **주지 않은** 테이블은 DOM 이 그대로이고, 준 테이블만
 > 카드가 함께 렌더된다. 둘 다 **같은 `rowModel`** 을 본다.
 
-- [ ] T441 [US2] `AppTable` 에 **opt-in 카드 모드** — `renderCard?: (row: TData) => ReactNode` in src/components/AppTable.tsx
+- [x] T441 [US2] `AppTable` 에 **opt-in 카드 모드** — `renderCard?: (row: TData) => ReactNode` in src/components/AppTable.tsx
       - 🔴 행은 **`table.getRowModel()`** 에서 가져온다(정렬·페이지 공유)
       - 🔴 `onRowClick` · `rowClassName` 을 **같은 함수로** 적용한다 — 두 벌로 갈리면 한쪽만 고쳐진다
       - 🔴 분기는 **CSS**(`hidden xl:block` / `xl:hidden`). JS 폭 측정은 쓰지 않는다
       - 0건 문구(`데이터가 없습니다`)는 카드 쪽에도 **한 번만** 보이게 한다
-- [ ] T442 [US2] 카드 모드 단위 테스트 in src/components/\_\_tests\_\_/AppTable.test.tsx
+- [x] T442 [US2] 카드 모드 단위 테스트 in src/components/\_\_tests\_\_/AppTable.test.tsx
       - prop 없으면 **카드가 없다**(기존 소비처 보호) / 주면 테이블·카드 **둘 다** DOM 에 있다
       - 정렬·페이지가 **양쪽에 같이** 반영된다 · 카드 클릭이 `onRowClick` 을 부른다
 - [x] T443 [P] [US2] 🔴 **비대상 소비처 무변화 확인** — `DeploymentHistoryTabs`(배치 이력, 2곳) ·
@@ -35,25 +35,25 @@
 > **독립 테스트 기준**: 각 화면에서 카드가 렌더되고, **제목과 상태 뱃지**가 보이며 클릭이
 > 상세로 간다. `xl` 이상에서는 기존 테이블이 그대로다.
 
-- [ ] T444 [US1] `/zones` 카드 — 코스명 + 사용·교대 뱃지 / 지점 수 · 총 소요시간 / 최근 순찰 in src/features/courses/components/CourseCard.tsx
-- [ ] T445 [P] [US1] `/points` 카드 — 지점명 + 사용·인증수단 뱃지 / 소속 코스 · 최근 순찰 in src/features/points/components/PointCard.tsx
-- [ ] T446 [P] [US1] `/patrol/zones` 카드 — 코스명 + 결과 뱃지 / 시작~종료 일시 in src/features/patrol-zones/components/ZoneHistoryCard.tsx
-- [ ] T447 [P] [US1] `/patrol/points` 카드 — 지점명 + 결과·인증 뱃지 / 코스 · 일시 · 순찰자 / 기록 건수 in src/features/patrol-points/components/PointHistoryCard.tsx
-- [ ] T448 [US1] 4개 페이지에 `renderCard` 연결 in src/pages/service/{zones,points,patrol/zones,patrol/points}/*.tsx
+- [x] T444 [US1] `/zones` 카드 — 코스명 + 사용·교대 뱃지 / 지점 수 · 총 소요시간 / 최근 순찰 in src/features/courses/components/CourseCard.tsx
+- [x] T445 [P] [US1] `/points` 카드 — 지점명 + 사용·인증수단 뱃지 / 소속 코스 · 최근 순찰 in src/features/points/components/PointCard.tsx
+- [x] T446 [P] [US1] `/patrol/zones` 카드 — 코스명 + 결과 뱃지 / 시작~종료 일시 in src/features/patrol-zones/components/ZoneHistoryCard.tsx
+- [x] T447 [P] [US1] `/patrol/points` 카드 — 지점명 + 결과·인증 뱃지 / 코스 · 일시 · 순찰자 / 기록 건수 in src/features/patrol-points/components/PointHistoryCard.tsx
+- [x] T448 [US1] 4개 페이지에 `renderCard` 연결 in src/pages/service/{zones,points,patrol/zones,patrol/points}/*.tsx
 
 ## Phase 3: Polish
 
-- [ ] T449 🔴 **공용 카드 셸 승격 판단** — 4벌이 같은 뼈대를 쓰는지 보고 **뽑을지 말지 결정한다.**
+- [x] T449 🔴 **공용 카드 셸 승격 판단** — 4벌이 같은 뼈대를 쓰는지 보고 **뽑을지 말지 결정한다.**
       ⚠️ **뽑지 않는 것도 결론이다**(023 DoD #17 선례 — 머리 구성이 제각각이면 prop 6개짜리
       추상화가 된다). 판단 근거를 `tasks.md` 에 남긴다
-- [ ] T450 [P] 화면별 카드 테스트 — 각 1건 이상(제목·뱃지·클릭) in 각 feature `__tests__`
-- [ ] T451 `npm run verify` + `npm run test` **병렬 실행**, 790 → 증가 확인
-- [ ] T452 🔴 **캡쳐로 PC 폭 무변화 확인** — `CAPTURE_OUT` 으로 먼저 찍어 **4화면이 그대로인지**
+- [x] T450 [P] 화면별 카드 테스트 — 각 1건 이상(제목·뱃지·클릭) in 각 feature `__tests__`
+- [x] T451 `npm run verify` + `npm run test` **병렬 실행**, 790 → 증가 확인
+- [x] T452 🔴 **캡쳐로 PC 폭 무변화 확인** — `CAPTURE_OUT` 으로 먼저 찍어 **4화면이 그대로인지**
       비교한다. 같으면 **덮지 않는다**(좁은 폭 캡쳐는 남기지 않는다 — OQ-030-B 종결)
-- [ ] T453 브라우저 확인 — 창을 좁혀 4화면 전환 · 카드 클릭 · 페이지 이동 · 미사용 톤다운
-- [ ] T454 문서 — `patterns.md` **반응형 목록 규약 신설**(프로젝트 첫 사례) · `components.md`
+- [x] T453 브라우저 확인 — 창을 좁혀 4화면 전환 · 카드 클릭 · 페이지 이동 · 미사용 톤다운
+- [x] T454 문서 — `patterns.md` **반응형 목록 규약 신설**(프로젝트 첫 사례) · `components.md`
       `AppTable` 항목 · `screens.md` 4행 · `roadmap.md` §7-1·§12
-- [ ] T455 DoD 10개 대조표 + `## 다음 spec으로 이월` 블록 in specs/phase3/030-list-responsive-card/tasks.md
+- [x] T455 DoD 10개 대조표 + `## 다음 spec으로 이월` 블록 in specs/phase3/030-list-responsive-card/tasks.md
 
 ---
 

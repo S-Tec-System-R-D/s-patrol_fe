@@ -17,36 +17,36 @@
 > 🔴 **왜 먼저인가**: 지도를 먼저 붙이면 "안 보이는 이유" 가 좌표 때문인지 타일 때문인지
 > 키 때문인지 **구분할 수 없다**.
 
-- [ ] T476 좌표 정제 순수 함수 — `usableCoords(points)` → `{ marked: [...], missing: number }` in src/features/courses/lib/courseCoords.ts
+- [x] T476 좌표 정제 순수 함수 — `usableCoords(points)` → `{ marked: [...], missing: number }` in src/features/courses/lib/courseCoords.ts
       - 🔴 **범위 검사**(-90~90 / -180~180)를 여기서 한다(B-33). 서버에 `gpsLat: 123` 이 실재한다
       - 🔴 **순번은 배열 위치**다(`orderNo` 아님 — 서버가 중복 `orderNo` 를 그대로 저장한다)
       - `null` 과 범위 밖을 **같이** `missing` 으로 센다
-- [ ] T477 [P] 단위 테스트 — `null`·범위 밖·전부 없음·하나만 있음 in src/features/courses/lib/\_\_tests\_\_/courseCoords.test.ts
+- [x] T477 [P] 단위 테스트 — `null`·범위 밖·전부 없음·하나만 있음 in src/features/courses/lib/\_\_tests\_\_/courseCoords.test.ts
 
 ## Phase 2: 지도 카드
 
 > **독립 테스트 기준**: 키가 없으면 **안내만** 뜨고, 좌표 0개면 **지도를 그리지 않는다**.
 > 키가 있으면 마커 N개와 경로선이 그려진다.
 
-- [ ] T478 `leaflet` + `@types/leaflet` 도입, `components.md` 에 컨벤션 등재 in package.json · docs/components.md
+- [x] T478 `leaflet` + `@types/leaflet` 도입, `components.md` 에 컨벤션 등재 in package.json · docs/components.md
       - 🔴 **`react-leaflet` 을 쓰지 않는다**(spec §3) — 쓰는 API 가 넷뿐이고 React 19 호환을 또 떠안는다
-- [ ] T479 지도 카드 — V-World 래스터 타일 + 마커(순번) + 경로선(점선) + `fitBounds` in src/features/courses/components/detail/CourseMapCard.tsx
+- [x] T479 지도 카드 — V-World 래스터 타일 + 마커(순번) + 경로선(점선) + `fitBounds` in src/features/courses/components/detail/CourseMapCard.tsx
       - 🔴 **`useEffect` 정리에서 `map.remove()`** 를 부른다. 안 하면 라우트를 오가며 **지도 인스턴스가 쌓인다**
       - 🔴 **키·좌표 0개·1개·타일 실패** 네 경로를 모두 그린다(spec §4)
-- [ ] T480 [P] `VITE_VWORLD_KEY` 를 `.env.example` 에 추가 + 도메인 등록 안내 주석 in .env.example
-- [ ] T481 코스 상세에 연결 — 좌측 열, **다이어그램 카드는 그대로 둔다**(DoD #7) in src/pages/service/zones/ZoneDetailPage.tsx
-- [ ] T482 [P] 카드 테스트 — 키 없음 · 좌표 0개 · 좌표 N개(마커 수) in src/features/courses/components/detail/\_\_tests\_\_/CourseMapCard.test.tsx
+- [x] T480 [P] `VITE_VWORLD_KEY` 를 `.env.example` 에 추가 + 도메인 등록 안내 주석 in .env.example
+- [x] T481 코스 상세에 연결 — 좌측 열, **다이어그램 카드는 그대로 둔다**(DoD #7) in src/pages/service/zones/ZoneDetailPage.tsx
+- [x] T482 [P] 카드 테스트 — 키 없음 · 좌표 0개 · 좌표 N개(마커 수) in src/features/courses/components/detail/\_\_tests\_\_/CourseMapCard.test.tsx
       ⚠️ jsdom 에는 지도 렌더가 없다 — **분기와 문구**를 걸고, 실제 타일은 브라우저 확인에서 본다
 
 ## Phase 3: Polish
 
-- [ ] T483 `npm run verify` + `npm run test`, 865 → 증가
-- [ ] T484 브라우저 확인 — 좌표 **전부 있는** 코스 · **일부 없는** 코스 · **하나도 없는** 코스.
+- [x] T483 `npm run verify` + `npm run test`, 865 → 증가
+- [x] T484 브라우저 확인 — 좌표 **전부 있는** 코스 · **일부 없는** 코스 · **하나도 없는** 코스.
       🔴 **OQ-032-A**(지도와 다이어그램의 자리)를 여기서 정한다
-- [ ] T485 🔴 캡쳐 — `CAPTURE_OUT` 으로 **두 번 찍어 비교**한다. 외부 타일이 매번 달라지면
+- [x] T485 🔴 캡쳐 — `CAPTURE_OUT` 으로 **두 번 찍어 비교**한다. 외부 타일이 매번 달라지면
       baseline 이 못 쓰게 되므로(**OQ-032-B**), 흔들리면 **캡쳐에서 지도를 가리는 장치**를 둔다
-- [ ] T486 문서 — `screens.md` 코스 상세 행 · `roadmap.md` §7-1·§12 · `components.md`(지도 컨벤션)
-- [ ] T487 DoD 11개 대조표 + `## 다음 spec으로 이월`
+- [x] T486 문서 — `screens.md` 코스 상세 행 · `roadmap.md` §7-1·§12 · `components.md`(지도 컨벤션)
+- [x] T487 DoD 11개 대조표 + `## 다음 spec으로 이월`
 
 ---
 

@@ -14,19 +14,19 @@
 > **독립 테스트 기준**: 카드에 **타일·이름·뱃지·지표 줄·꺾쇠**가 있고 **"최근 순찰" 이
 > 없다.** 테이블 컬럼에는 최근 순찰이 **그대로 있다**.
 
-- [ ] T468 코스 카드 — 타일(`RouteIcon`) + 이름/뱃지 + `지점 N개 │ N분` + 꺾쇠, **최근 순찰 제거** in src/features/courses/components/CourseCard.tsx
-- [ ] T469 지점 카드 — 🔴 **타일이 인증수단으로 갈린다**(QR `QrCodeIcon` / NFC `NfcIcon` / 미실측 **중립**) + 뱃지 유지 + `소속 코스 N개` + 꺾쇠, **최근 순찰 제거** in src/features/points/components/PointCard.tsx
-- [ ] T470 [P] 카드 테스트 갱신 — 타일 분기 · 뱃지 유지 · **최근 순찰 없음** in 각 `__tests__`
+- [x] T468 코스 카드 — 타일(`RouteIcon`) + 이름/뱃지 + `지점 N개 │ N분` + 꺾쇠, **최근 순찰 제거** in src/features/courses/components/CourseCard.tsx
+- [x] T469 지점 카드 — 🔴 **타일이 인증수단으로 갈린다**(QR `QrCodeIcon` / NFC `NfcIcon` / 미실측 **중립**) + 뱃지 유지 + `소속 코스 N개` + 꺾쇠, **최근 순찰 제거** in src/features/points/components/PointCard.tsx
+- [x] T470 [P] 카드 테스트 갱신 — 타일 분기 · 뱃지 유지 · **최근 순찰 없음** in 각 `__tests__`
 
 ## Phase 2: Polish
 
-- [ ] T471 `npm run verify` + `npm run test`, 857 → 유지/증가
-- [ ] T472 브라우저 확인 — 좁은 폭에서 코스·지점 카드
-- [ ] T473 🔴 **캡쳐로 `xl` 무변화 확인** — `CAPTURE_OUT` 으로 먼저 찍어 비교. **카드는 PC 폭
+- [x] T471 `npm run verify` + `npm run test`, 857 → 유지/증가
+- [x] T472 브라우저 확인 — 좁은 폭에서 코스·지점 카드
+- [x] T473 🔴 **캡쳐로 `xl` 무변화 확인** — `CAPTURE_OUT` 으로 먼저 찍어 비교. **카드는 PC 폭
       캡쳐에 안 잡히므로**, 여기서 기대하는 결과는 **"전부 ±0%"** 다(바뀌면 그게 사고다)
-- [ ] T474 문서 — `screens.md` 2행 · `roadmap.md` §7-1·§12. ⚠️ `patterns.md` §14 는
+- [x] T474 문서 — `screens.md` 2행 · `roadmap.md` §7-1·§12. ⚠️ `patterns.md` §14 는
       **고칠 것이 있는지만 확인**(규약은 그대로고 모양만 바뀐다)
-- [ ] T475 DoD 9개 대조표 + `## 다음 spec으로 이월`
+- [x] T475 DoD 9개 대조표 + `## 다음 spec으로 이월`
 
 ---
 
