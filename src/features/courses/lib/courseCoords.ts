@@ -34,8 +34,14 @@ export interface CourseCoords {
   missing: number
 }
 
-/** 위도 -90~90 · 경도 -180~180. `null`·`NaN`·무한대는 전부 탈락 */
-const isValidCoord = (lat: number | null, lng: number | null): lat is number =>
+/**
+ * 위도 -90~90 · 경도 -180~180. `null`·`NaN`·무한대는 전부 탈락.
+ *
+ * 🔴 **export 한다 — 범위 검사는 한 곳이어야 한다**(`spec 036` T516). 순찰이력 지도
+ * (`patrol-zones/lib/historyCoords.ts`)도 같은 검사를 쓴다. B-33 은 **지점 좌표 자체의
+ * 결함**이라 지점 좌표를 읽는 모든 화면에 똑같이 걸린다 — 복제하면 한쪽만 고쳐진다.
+ */
+export const isValidCoord = (lat: number | null, lng: number | null): lat is number =>
   lat !== null &&
   lng !== null &&
   Number.isFinite(lat) &&

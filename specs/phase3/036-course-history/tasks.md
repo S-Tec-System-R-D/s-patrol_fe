@@ -81,13 +81,18 @@
 
 ## Phase 5: US3 — 상세 지도
 
+> ◩ **T516·T519 완료(2026-10-19)** — 좌표 병합 + 단위 테스트 19건. `verify` 0 errors /
+> `test` **933 → 950**(+17, 90 files). 🔴 **계획 2건을 정정했다**: 조인 키 `orderNo` → **`pointSeq`**
+> (사용자 결정) · 핀 번호는 **`orderNo` 유지**(032 의 배열 위치를 따르지 않는다 — 같은 페이지의
+> 인증 내역 표가 `orderNo` 를 쓴다). 남은 것은 T517·T518(지도 카드).
+
 > **독립 테스트 기준**: 인증 핀 + **미인증 회색 핀**이 함께 찍히고, 좌표 0개면 지도가
 > 비표시되며, 범위 밖 좌표가 제외된다. 🔴 **타일 키 없이도 나머지 화면이 멀쩡하다**.
 
-- [ ] T516 [US3] 🔴 좌표 병합 in src/features/patrol-zones/lib/historyCoords.ts — `CheckDetails`(인증 위치) + `GetCourseDetail.points[]`(지점 등록 좌표)를 `orderNo` 로 합친다. **인증 행은 인증 좌표, 미인증 행은 등록 좌표**. 🔴 **`features/courses/lib/courseCoords.ts` 의 범위 검사를 재사용한다**(B-33: `gpsLat: 123` 이 실재) — **새 유틸을 만들지 않는다**
+- [x] T516 [US3] 🔴 좌표 병합 in src/features/patrol-zones/lib/historyCoords.ts — `CheckDetails`(인증 위치) + `GetCourseDetail.points[]`(지점 등록 좌표)를 🔴 **`pointSeq` 로 합친다**(사용자 결정 2026-10-19 — 계획의 `orderNo` 를 정정했다: ① 서버가 `orderNo` 를 정규화하지 않아 둘 다 `1` 로 저장될 수 있고 ② `GetCourseDetail` 은 **현재 편성**이라 순찰 뒤 재배치되면 `orderNo 3` 이 다른 지점이 된다. 등록 좌표는 **원시 지점에 붙어 있으니** 지점의 정체로 찾는다. 틀린 조인은 **에러 없이 그럴듯한 핀**을 찍는다). **인증 행은 인증 좌표, 미인증 행은 등록 좌표**. 🔴 **핀 번호는 `orderNo` 다**(배열 위치가 아니다) — 같은 페이지의 인증 내역 표(T513)가 `orderNo` 를 순서 컬럼에 쓰므로 다시 매기면 **표의 3번과 지도의 3번이 달라진다**. 032 가 배열 위치를 쓴 것은 그 화면에 나란한 번호가 없었기 때문이다. 🔴 **핀 색은 `status` 가 정한다 — 좌표 출처와 독립**(OQ-16: 완료인데 좌표 null 인 행 3건이 실재해, 출처로 색을 정하면 **완료가 회색 "미인증" 으로** 읽힌다). 🔴 **`features/courses/lib/courseCoords.ts` 의 범위 검사를 재사용한다**(B-33: `gpsLat: 123` 이 실재) — **새 유틸을 만들지 않는다**
 - [ ] T517 [US3] 지도 카드 in src/features/patrol-zones/components/detail/HistoryMapCard.tsx — 🔴 **`CourseMapCard`(032)를 먼저 읽고 재사용 가능한지 판단한다.** 다른 점은 ① 핀이 **2종**(인증/미인증) ② 라벨에 **시각·인증수단** ③ 경로가 **실제 인증 순서**. 공용화가 prop 5개를 넘기면 **쪼개지 않고 복제**한다(030 T449·023 DoD #17 선례 — 갈라질 셸은 뽑지 않는다)
 - [ ] T518 [US3] [P] 좌표 없음 안내 in src/features/patrol-zones/components/detail/HistoryMapCard.tsx — "좌표 없음 N개" 명시(032 선례). 🔴 **빠진 지점도 번호를 차지한다** — 3번이 비었다고 4번이 3번이 되면 **같은 지점을 화면마다 다른 번호**로 부른다
-- [ ] T519 [US3] [P] vitest in src/features/patrol-zones/\_\_tests\_\_/historyCoords.test.ts — 미인증 행이 **등록 좌표로 채워지는 것** · 둘 다 없으면 제외 · 범위 밖 제외 · 좌표 0개 → 지도 비표시
+- [x] T519 [US3] [P] vitest in src/features/patrol-zones/\_\_tests\_\_/historyCoords.test.ts — 미인증 행이 **등록 좌표로 채워지는 것** · 둘 다 없으면 제외 · 범위 밖 제외 · 좌표 0개 → 지도 비표시
 
 ## Phase 6: US4 — 메모·사진
 
