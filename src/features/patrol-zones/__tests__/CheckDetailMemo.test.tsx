@@ -163,17 +163,20 @@ describe('CheckDetailMemo — 🔴 사진 폴백 (B-40)', () => {
 })
 
 describe('CheckDetailTable — 펼침 (T520)', () => {
-  it('🔴 메모 0건 행에는 펼침 버튼이 없다', () => {
+  it('🔴 메모 0건 행에는 토글이 걸리지 않는다', () => {
     render(<CheckDetailTable rows={[row({ memos: [] })]} />)
 
-    expect(screen.queryByRole('button', { name: /기록/ })).not.toBeInTheDocument()
+    // 헤더 행에도 `기록` 컬럼명이 있어 `/기록/` 만으로는 그쪽이 잡힌다 — 라벨 전체를 건다
+    expect(screen.queryByRole('row', { name: /기록 펼치기/ })).not.toBeInTheDocument()
+    // 🔴 토글이 아닌 행에는 `aria-expanded` 가 아예 없어야 한다
+    expect(document.querySelector('tbody tr[aria-expanded]')).toBeNull()
   })
 
-  it('메모가 있으면 펼침 버튼이 있고, 접힌 상태로 시작한다', () => {
+  it('메모가 있으면 행이 토글이 되고, 접힌 상태로 시작한다', () => {
     render(<CheckDetailTable rows={[row({ memos: [memo()] })]} />)
 
-    const button = screen.getByRole('button', { name: '정문 기록 펼치기' })
-    expect(button).toHaveAttribute('aria-expanded', 'false')
+    const toggleRow = screen.getByRole('row', { name: /정문 기록 펼치기/ })
+    expect(toggleRow).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByText('조명 고장')).not.toBeInTheDocument()
   })
 
@@ -181,10 +184,10 @@ describe('CheckDetailTable — 펼침 (T520)', () => {
     const user = userEvent.setup()
     render(<CheckDetailTable rows={[row({ memos: [memo()] })]} />)
 
-    await user.click(screen.getByRole('button', { name: '정문 기록 펼치기' }))
+    await user.click(screen.getByRole('row', { name: /정문 기록 펼치기/ }))
     expect(screen.getByText('조명 고장')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: '정문 기록 접기' }))
+    await user.click(screen.getByRole('row', { name: /정문 기록 접기/ }))
     expect(screen.queryByText('조명 고장')).not.toBeInTheDocument()
   })
 
@@ -206,22 +209,22 @@ describe('CheckDetailTable — 펼침 (T520)', () => {
     ]
     render(<CheckDetailTable rows={rows} />)
 
-    await user.click(screen.getByRole('button', { name: '정문 기록 펼치기' }))
-    await user.click(screen.getByRole('button', { name: '주차장 기록 펼치기' }))
+    await user.click(screen.getByRole('row', { name: /정문 기록 펼치기/ }))
+    await user.click(screen.getByRole('row', { name: /주차장 기록 펼치기/ }))
 
     expect(screen.getByText('조명 고장')).toBeInTheDocument()
     expect(screen.getByText('누수')).toBeInTheDocument()
   })
 
   /** 🔴 행이 여러 개라 이름이 겹치면 스크린리더에서 구분이 안 된다(030 선례) */
-  it('🔴 펼침 버튼의 접근성 이름에 지점명이 들어간다', () => {
+  it('🔴 토글 행의 접근성 이름에 지점명이 들어간다', () => {
     const rows = [
       row({ detailSeq: 1, orderNo: 1, pointName: '정문', memos: [memo()] }),
       row({ detailSeq: 2, orderNo: 2, pointName: '주차장', memos: [memo({ memoSeq: 2 })] }),
     ]
     render(<CheckDetailTable rows={rows} />)
 
-    expect(screen.getByRole('button', { name: '정문 기록 펼치기' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '주차장 기록 펼치기' })).toBeInTheDocument()
+    expect(screen.getByRole('row', { name: /정문 기록 펼치기/ })).toBeInTheDocument()
+    expect(screen.getByRole('row', { name: /주차장 기록 펼치기/ })).toBeInTheDocument()
   })
 })

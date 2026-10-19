@@ -138,17 +138,21 @@ const PatrolZoneDetailPage = () => {
         }
       />
 
-      <HistoryKpiRow
-        detail={data}
-        checks={checks}
-        intervals={intervals}
-        average={average.data}
-      />
+      <HistoryKpiRow detail={data} checks={checks} intervals={intervals} average={average.data} />
 
-      {/* 🔴 **2열 골격**(목업 `02`) — 좌: 인증 내역(+ Phase 5 지도) / 우: 순찰 정보.
-          좁은 폭에서는 한 줄로 쌓인다 */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      {/* 🔴 **2열 골격**(목업 `02`) — 좌: 지도 + 인증 내역 / 우: 순찰 정보.
+          좁은 폭에서는 한 줄로 쌓인다.
+          🔴 **`items-start` 다**(사용자 확인 2026-10-19) — 기본값 `stretch` 면 우측 순찰 정보
+          카드가 **좌측 컬럼 높이만큼 늘어나** 아래에 큰 여백이 생긴다. 카드 높이는 내용이 정한다 */}
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         <section className="flex flex-col gap-4 lg:col-span-2">
+          {/* 🔴 **지도가 인증 내역보다 위다**(사용자 결정 2026-10-19 — 순서를 바꿨다).
+              지도는 "어느 지점이 비었나" 를 한눈에 주고, 표는 그 다음 단계인 행별 확인이다.
+              표를 먼저 두면 메모를 펼칠수록 지도가 아래로 밀려 **처음 보는 그림이 안 보인다**.
+              🔴 **항목이 생길 때만 보여준다**(T519 기준: 좌표 0개 → 비표시) — 빈 회색 박스는
+              화면만 차지하고 아무 판단에도 안 쓰인다. 지점 목록은 아래 표가 이미 말한다 */}
+          {coords.pins.length > 0 && <HistoryMapCard pins={coords.pins} missing={coords.missing} />}
+
           <div className="rounded-lg border border-border bg-card">
             <div className="flex items-center justify-between border-b px-4 py-3">
               <h3 className="text-body font-semibold">지점 인증 내역</h3>
@@ -182,12 +186,6 @@ const PatrolZoneDetailPage = () => {
               <CheckDetailTable rows={checks} />
             )}
           </div>
-
-          {/* 🔴 **지도는 항목이 생길 때만 보여준다**(T519 기준: 좌표 0개 → 바표시).
-              번 회색 바박스는 화면을 차지하고 아무런 판단에도 안 쓰이다 — 지점 목록은 위 표가 이미 말한다 */}
-          {coords.pins.length > 0 && (
-            <HistoryMapCard pins={coords.pins} missing={coords.missing} />
-          )}
         </section>
 
         <section className="lg:col-span-1">

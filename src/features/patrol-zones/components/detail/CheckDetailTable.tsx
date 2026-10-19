@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react'
-import { MessageSquareTextIcon } from 'lucide-react'
+import { ChevronDownIcon, MessageSquareTextIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import { cardBadge as COMPACT_BADGE } from '@/components/app/AppBadge.variants'
@@ -84,13 +84,13 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
       <table className="w-full text-sm">
         <thead className="border-b bg-muted">
           <tr className="text-left text-xs font-medium text-muted-foreground">
-            <th className="px-3 py-2 w-12">순서</th>
-            <th className="px-3 py-2">순찰지점</th>
-            <th className="px-3 py-2 w-20">인증수단</th>
-            <th className="px-3 py-2 w-20">인증시각</th>
-            <th className="px-3 py-2 w-20">구간</th>
-            <th className="px-3 py-2 w-28">결과</th>
-            <th className="px-3 py-2 w-16">기록</th>
+            <th className="px-3 py-2.5 w-12">순서</th>
+            <th className="px-3 py-2.5">순찰지점</th>
+            <th className="px-3 py-2.5 w-20">인증수단</th>
+            <th className="px-3 py-2.5 w-20">인증시각</th>
+            <th className="px-3 py-2.5 w-20">구간</th>
+            <th className="px-3 py-2.5 w-28">결과</th>
+            <th className="px-3 py-2.5 w-16">기록</th>
           </tr>
         </thead>
         <tbody>
@@ -105,10 +105,36 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
 
             return (
               <Fragment key={row.detailSeq}>
-                <tr className="border-b last:border-0">
-                  <td className="px-3 py-2 tabular-nums text-muted-foreground">{row.orderNo}</td>
-                  <td className="px-3 py-2 font-medium">{row.pointName}</td>
-                  <td className="px-3 py-2">
+                {/* 🔴 **행 전체가 토글이다**(사용자 결정 2026-10-19 — 아이콘 클릭에서 바꿨다).
+                    아이콘만 누를 수 있으면 **과녁이 16px** 이라 조준해야 하고, 행을 눌렀는데
+                    아무 일도 안 일어나면 "고장" 으로 읽힌다.
+                    🔴 **`<tr>` 에 `aria-expanded` 를 둔다** — ARIA 의 `row` 롤이 지원하는
+                    속성이라 표 의미를 깨지 않는다. 안쪽에 `button` 을 중첩하면 **같은 토글이
+                    두 개**가 되고 클릭이 겹친다(`stopPropagation` 을 들고 다녀야 한다).
+                    🔴 **키보드로도 열려야 한다** — `tabIndex` + Enter/Space. `<tr onClick>` 만
+                    두면 마우스 전용이 된다.
+                    ⚠️ **메모 0건 행은 아무것도 걸지 않는다** — 포커스도 안 가고 커서도 안 바뀐다.
+                    눌릴 것처럼 보이는데 안 눌리는 것이 안 눌리게 보이는 것보다 나쁘다 */}
+                <tr
+                  className={`border-b last:border-0 ${
+                    hasMemo ? 'cursor-pointer hover:bg-muted/50' : ''
+                  }`}
+                  {...(hasMemo && {
+                    tabIndex: 0,
+                    'aria-expanded': isOpen,
+                    'aria-label': `${row.pointName} 기록 ${isOpen ? '접기' : '펼치기'}`,
+                    onClick: () => toggle(row.detailSeq),
+                    onKeyDown: (event: React.KeyboardEvent<HTMLTableRowElement>) => {
+                      if (event.key !== 'Enter' && event.key !== ' ') return
+                      // Space 는 페이지를 스크롤한다 — 토글로 쓰는 동안은 막는다
+                      event.preventDefault()
+                      toggle(row.detailSeq)
+                    },
+                  })}
+                >
+                  <td className="px-3 py-2.5 tabular-nums text-muted-foreground">{row.orderNo}</td>
+                  <td className="px-3 py-2.5 font-medium">{row.pointName}</td>
+                  <td className="px-3 py-2.5">
                     {/* 🔴 미인증·미완료 행은 `authMethod` 가 `null` 이다 — 빈 칸이 아니라 `—` */}
                     {row.authMethod === AUTH_METHOD.QR ? (
                       <AppBadge variant="point" className={COMPACT_BADGE}>
@@ -122,13 +148,13 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                       <span className="text-muted-foreground">-</span>
                     )}
                   </td>
-                  <td className="px-3 py-2 tabular-nums text-muted-foreground">
+                  <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
                     {authenticated ? formatTime(row.checkDt as string) : '-'}
                   </td>
-                  <td className="px-3 py-2 tabular-nums text-muted-foreground">
+                  <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
                     {gap === null ? '-' : `+${formatDuration(gap)}`}
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2.5">
                     <div className="flex flex-wrap items-center gap-1">
                       <AppBadge variant={result.variant} className={COMPACT_BADGE}>
                         {result.label}
@@ -141,22 +167,24 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                       )}
                     </div>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2.5">
                     {hasMemo ? (
-                      /* 🔴 **버튼이다** — 전에는 아이콘만 있어 "기록이 있다" 는 사실만 알려주고
-                       내용을 볼 수단이 없었다(023 이 사유를 못 쓴 자리). 🔴 접근성 이름에
-                       **지점명을 넣는다** — 행마다 같은 이름이면 스크린리더에서 구분이 안 된다 */
-                      <button
-                        type="button"
-                        onClick={() => toggle(row.detailSeq)}
-                        aria-expanded={isOpen}
-                        aria-label={`${row.pointName} 기록 ${isOpen ? '접기' : '펼치기'}`}
-                        className="cursor-pointer rounded-sm p-0.5 text-warning-foreground hover:bg-muted"
-                      >
+                      /* 🔴 **표시 전용이다 — 버튼이 아니다.** 행 전체가 토글이므로 안쪽에
+                         버튼을 두면 같은 일을 하는 과녁이 두 개가 된다(위 `<tr>` 주석).
+                         🔴 **꺾쇠가 열림/닫힘을 말한다** — 메시지 아이콘만으로는 "기록이 있다"
+                         까지만 전달되고 **눌러서 펼칠 수 있다는 사실이 안 보인다** */
+                      <div className="flex items-center gap-1 text-warning-foreground">
                         <MessageSquareTextIcon size={16} aria-hidden />
-                      </button>
+                        <ChevronDownIcon
+                          size={14}
+                          aria-hidden
+                          className={`text-muted-foreground transition-transform ${
+                            isOpen ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </div>
                     ) : (
-                      /* 메모 0건 행에는 **펼침 버튼을 두지 않는다** — 눌러도 빈 패널이다 */
+                      /* 메모 0건 행에는 **펼침 표시를 두지 않는다** — 펼칠 것이 없다 */
                       <span className="text-muted-foreground">-</span>
                     )}
                   </td>
