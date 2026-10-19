@@ -1,3 +1,4 @@
+import { Fragment, useState } from 'react'
 import { MessageSquareTextIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
@@ -7,6 +8,8 @@ import { checkGaps } from '@/features/course-history/lib/checkIntervals'
 import { formatDuration } from '@/features/course-history/lib/elapsed'
 import { pointCheckBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
 import { AUTH_METHOD, type CheckDetailRow } from '@/features/course-history/types'
+
+import CheckDetailMemo from './CheckDetailMemo'
 
 /**
  * 지점 인증 내역 (`spec 036` T513).
@@ -29,6 +32,14 @@ import { AUTH_METHOD, type CheckDetailRow } from '@/features/course-history/type
  * 쓰던 `cardBadge` 와 같은 치수다(`AppBadge.variants.ts`). 한 행에 뱃지가 **최대 3개**
  * (인증수단 + 결과 + 시간초과)라 기본 크기로는 결과 칸이 줄바꿈된다.
  *
+ * 🔴 **메모 행을 펼친다**(T520 — 코드베이스 **첫 펼침 UI**다. `aria-expanded` 선례 0건).
+ * 펼침 패널은 **같은 `<tbody>` 안의 다음 `<tr>`** 이다 — 표 밖에 두면 행과의 연결이
+ * 끊기고(스크롤·정렬에서 어긋난다) `colSpan` 으로 폭을 맞출 수도 없다.
+ * 🔴 **여러 행을 동시에 펼칠 수 있다**(아코디언이 아니다). 하나만 열리게 하면 두 지점의
+ * 메모를 **나란히 비교할 수 없고**, "닫으려 하지 않았는데 닫혔다" 가 된다.
+ * 🔴 **펼침 버튼의 접근성 이름에 지점명을 넣는다** — 행이 여러 개라 `기록 보기` 만으로는
+ * 스크린리더에서 **전부 같은 이름**이 된다(030 의 카드 접근성 사고와 같은 종류).
+ *
  * 🔴 **순번은 `orderNo` 를 그대로 쓴다.** 서버가 중복을 저장하지만(032) 그건 **편성의
  * 사실**이고, 배열 위치로 바꿔 매기면 **같은 지점을 화면마다 다른 번호**로 부른다.
  */
@@ -41,6 +52,9 @@ interface CheckDetailTableProps {
 }
 
 const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
+  /** 펼친 행의 `detailSeq`. 🔴 **복수**다 — 두 지점의 메모를 나란히 볼 수 있어야 한다 */
+  const [expanded, setExpanded] = useState<Set<number>>(new Set())
+
   if (rows.length === 0) {
     /* 🔴 이력은 있는데 인증 행이 0건인 경우가 **실재한다**(완료인데 `checkedCount: 0`) —
        장애가 아니라 사실이므로 실패 문구를 쓰지 않는다 */
@@ -55,6 +69,15 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
 
   const gaps = checkGaps(rows)
   const ordered = [...rows].sort((a, b) => a.orderNo - b.orderNo)
+
+  const toggle = (detailSeq: number) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      // 🔴 `Set` 을 새로 만든다 — 제자리에서 고치면 참조가 같아 리렌더가 안 된다
+      if (next.has(detailSeq)) next.delete(detailSeq)
+      else next.add(detailSeq)
+      return next
+    })
 
   return (
     <div className="overflow-x-auto">
@@ -77,56 +100,77 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
             const gap = gaps.get(row.detailSeq) ?? null
             /* 🔴 **인증이 찍힌 행만 시각을 보여준다**(OQ-15) */
             const authenticated = row.authMethod !== null && row.checkDt !== null
+            const hasMemo = row.memos.length > 0
+            const isOpen = expanded.has(row.detailSeq)
 
             return (
-              <tr key={row.detailSeq} className="border-b last:border-0">
-                <td className="px-3 py-2 tabular-nums text-muted-foreground">{row.orderNo}</td>
-                <td className="px-3 py-2 font-medium">{row.pointName}</td>
-                <td className="px-3 py-2">
-                  {/* 🔴 미인증·미완료 행은 `authMethod` 가 `null` 이다 — 빈 칸이 아니라 `—` */}
-                  {row.authMethod === AUTH_METHOD.QR ? (
-                    <AppBadge variant="point" className={COMPACT_BADGE}>
-                      QR
-                    </AppBadge>
-                  ) : row.authMethod === AUTH_METHOD.NFC ? (
-                    <AppBadge variant="success" className={COMPACT_BADGE}>
-                      NFC
-                    </AppBadge>
-                  ) : (
-                    <span className="text-muted-foreground">-</span>
-                  )}
-                </td>
-                <td className="px-3 py-2 tabular-nums text-muted-foreground">
-                  {authenticated ? formatTime(row.checkDt as string) : '-'}
-                </td>
-                <td className="px-3 py-2 tabular-nums text-muted-foreground">
-                  {gap === null ? '-' : `+${formatDuration(gap)}`}
-                </td>
-                <td className="px-3 py-2">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <AppBadge variant={result.variant} className={COMPACT_BADGE}>
-                      {result.label}
-                    </AppBadge>
-                    {/* 🔴 결과와 **독립 축**이라 병기한다(목록과 같은 규칙) */}
-                    {overtime && (
-                      <AppBadge variant={overtime.variant} className={COMPACT_BADGE}>
-                        {overtime.label}
+              <Fragment key={row.detailSeq}>
+                <tr className="border-b last:border-0">
+                  <td className="px-3 py-2 tabular-nums text-muted-foreground">{row.orderNo}</td>
+                  <td className="px-3 py-2 font-medium">{row.pointName}</td>
+                  <td className="px-3 py-2">
+                    {/* 🔴 미인증·미완료 행은 `authMethod` 가 `null` 이다 — 빈 칸이 아니라 `—` */}
+                    {row.authMethod === AUTH_METHOD.QR ? (
+                      <AppBadge variant="point" className={COMPACT_BADGE}>
+                        QR
                       </AppBadge>
+                    ) : row.authMethod === AUTH_METHOD.NFC ? (
+                      <AppBadge variant="success" className={COMPACT_BADGE}>
+                        NFC
+                      </AppBadge>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
                     )}
-                  </div>
-                </td>
-                <td className="px-3 py-2">
-                  {row.memos.length > 0 ? (
-                    <MessageSquareTextIcon
-                      size={16}
-                      className="text-warning-foreground"
-                      aria-label="기록 있음"
-                    />
-                  ) : (
-                    <span className="text-muted-foreground">-</span>
-                  )}
-                </td>
-              </tr>
+                  </td>
+                  <td className="px-3 py-2 tabular-nums text-muted-foreground">
+                    {authenticated ? formatTime(row.checkDt as string) : '-'}
+                  </td>
+                  <td className="px-3 py-2 tabular-nums text-muted-foreground">
+                    {gap === null ? '-' : `+${formatDuration(gap)}`}
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="flex flex-wrap items-center gap-1">
+                      <AppBadge variant={result.variant} className={COMPACT_BADGE}>
+                        {result.label}
+                      </AppBadge>
+                      {/* 🔴 결과와 **독립 축**이라 병기한다(목록과 같은 규칙) */}
+                      {overtime && (
+                        <AppBadge variant={overtime.variant} className={COMPACT_BADGE}>
+                          {overtime.label}
+                        </AppBadge>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">
+                    {hasMemo ? (
+                      /* 🔴 **버튼이다** — 전에는 아이콘만 있어 "기록이 있다" 는 사실만 알려주고
+                       내용을 볼 수단이 없었다(023 이 사유를 못 쓴 자리). 🔴 접근성 이름에
+                       **지점명을 넣는다** — 행마다 같은 이름이면 스크린리더에서 구분이 안 된다 */
+                      <button
+                        type="button"
+                        onClick={() => toggle(row.detailSeq)}
+                        aria-expanded={isOpen}
+                        aria-label={`${row.pointName} 기록 ${isOpen ? '접기' : '펼치기'}`}
+                        className="cursor-pointer rounded-sm p-0.5 text-warning-foreground hover:bg-muted"
+                      >
+                        <MessageSquareTextIcon size={16} aria-hidden />
+                      </button>
+                    ) : (
+                      /* 메모 0건 행에는 **펼침 버튼을 두지 않는다** — 눌러도 빈 패널이다 */
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </td>
+                </tr>
+
+                {/* 🔴 패널은 **같은 `<tbody>` 의 다음 `<tr>`** 이다. `colSpan` 은 헤더 7칸과 맞춘다 */}
+                {isOpen && (
+                  <tr className="border-b last:border-0">
+                    <td colSpan={7} className="p-0">
+                      <CheckDetailMemo row={row} />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             )
           })}
         </tbody>

@@ -141,12 +141,37 @@
 
 ## Phase 6: US4 — 메모·사진
 
-> **독립 테스트 기준**: 메모 있는 행을 펼치면 본문이 보이고, **사진 URL 이 404 여도**
-> 레이아웃과 메모 텍스트가 멀쩡하다.
+> ✅ **Phase 6 완료(2026-10-19)** — 메모 펼침 + 사진 폴백. `verify` 0 errors /
+> `test` **965 → 982**(+17, 92 files). **`spec 023` C단이 남긴 자리를 채웠다.**
+>
+> 🔴 **코드베이스 첫 사례가 둘이다** — `aria-expanded`·`Collapsible`·`<img onError>`
+> 선례가 **0건**이었다. 정한 규칙:
+> ① 펼침 패널은 **같은 `<tbody>` 의 다음 `<tr>`**(`colSpan={7}`) — 표 밖에 두면 행과의
+>    연결이 끊기고 폭을 맞출 수 없다
+> ② 🔴 **아코디언이 아니다** — 여러 행을 동시에 펼친다. 하나만 열리게 하면 두 지점 메모를
+>    **나란히 비교할 수 없고** "닫으려 하지 않았는데 닫혔다" 가 된다
+> ③ 🔴 펼침 버튼 접근성 이름에 **지점명**을 넣는다(`정문 기록 펼치기`) — 행마다 같은
+>    이름이면 스크린리더에서 구분이 안 된다(030 카드 접근성 사고와 같은 종류)
+> ⚠️ `patterns.md` 등재는 **T527**(Phase 7 문서 동기화)에서 한다.
+>
+> 🔴 **메타는 패널 머리에 한 번만** — 메모에 작성자·시각이 **없다**(실측: `{memoSeq, memo,
+> attaches}` 3필드가 전부). 행의 `userName`·`checkDt` 로 대체하는데, 메모마다 반복하면 같은
+> 값이 여러 번 찍혀 **메모별로 다른 값인 것처럼** 읽힌다.
+> 🔴 **시각은 인증이 찍힌 행만**(OQ-15) — 미완료 행의 `checkDt` 를 메모 옆에 적으면
+> **"그 시각에 메모를 썼다"** 는 거짓이 된다(인증 내역 표와 같은 규칙).
+> 🔴 **"처리 상태" 칸을 만들지 않았다** — 목업에 있었지만 서버에 필드가 없다(A1).
+> 빈 칸을 두면 "아직 접수 안 됨" 으로 읽힌다.
+>
+> 🔴🔴 **사진 폴백(B-40)**: 실패 상태를 **첨부마다** 들고 있다 — 패널 단위로 묶으면 한 장이
+> 404 일 때 **나머지 멀쩡한 사진까지 가린다**(회신 후 일부만 복구되는 경우가 실재할 수 있다).
+> 404·mixed content(`http` 스킴, OQ-13)·네트워크 실패를 **한 분기로 모았다**(사용자가 할 수
+> 있는 일이 같다). 파일명은 `title` 에 둬서 **어느 파일이 실패했는지** 백엔드에 전달할 수 있다.
+> ✅ **"준비 중" 류 문구를 쓰지 않았다** — 고쳐지면 `onError` 가 안 불려 폴백이 저절로
+> 사라진다. "준비 중" 이면 그때 거짓이 된다.
 
-- [ ] T520 [US4] 메모 펼침 패널 in src/features/patrol-zones/components/detail/CheckDetailMemo.tsx — `memos[].memo` 본문. 🔴 **작성자·시각은 메모에 없다** — **행의 `userName`·`checkDt`** 로 대체한다(실측 확정: `memos` = `{memoSeq, memo, attaches}` 3필드가 전부). 🔴 **"처리 상태"(시설팀 접수 등) 칸을 만들지 않는다** — 필드가 없다. **`spec 023` C단이 남긴 자리를 여기서 채운다**
-- [ ] T521 [US4] 🔴 사진 썸네일 + onError 폴백 in src/features/patrol-zones/components/detail/CheckDetailMemo.tsx — **B-40: 첨부 URL 이 404 다**(실측: 순찰 2건·공지 1건 전부, 토큰 무관). "이미지를 불러올 수 없습니다" 를 표시한다. ⚠️ **폴백 없이 두면** 깨진 이미지만 뜨고 **원인을 화면에서 알 수 없다**. ⚠️ `attaches` 는 **nullable**(빈 배열이 아니라 `null`)
-- [ ] T522 [US4] [P] vitest in src/features/patrol-zones/\_\_tests\_\_/CheckDetailMemo.test.tsx — `attaches: null` · 이미지 onError → 폴백 문구 · 메모 0건 행은 펼침 버튼이 없음
+- [x] T520 [US4] 메모 펼침 패널 in src/features/patrol-zones/components/detail/CheckDetailMemo.tsx — `memos[].memo` 본문. 🔴 **작성자·시각은 메모에 없다** — **행의 `userName`·`checkDt`** 로 대체한다(실측 확정: `memos` = `{memoSeq, memo, attaches}` 3필드가 전부). 🔴 **"처리 상태"(시설팀 접수 등) 칸을 만들지 않는다** — 필드가 없다. **`spec 023` C단이 남긴 자리를 여기서 채운다**
+- [x] T521 [US4] 🔴 사진 썸네일 + onError 폴백 in src/features/patrol-zones/components/detail/CheckDetailMemo.tsx — **B-40: 첨부 URL 이 404 다**(실측: 순찰 2건·공지 1건 전부, 토큰 무관). "이미지를 불러올 수 없습니다" 를 표시한다. ⚠️ **폴백 없이 두면** 깨진 이미지만 뜨고 **원인을 화면에서 알 수 없다**. ⚠️ `attaches` 는 **nullable**(빈 배열이 아니라 `null`)
+- [x] T522 [US4] [P] vitest in src/features/patrol-zones/\_\_tests\_\_/CheckDetailMemo.test.tsx — `attaches: null` · 이미지 onError → 폴백 문구 · 메모 0건 행은 펼침 버튼이 없음
 
 ## Phase 7: Polish
 
