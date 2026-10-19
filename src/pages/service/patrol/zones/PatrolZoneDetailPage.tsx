@@ -151,7 +151,33 @@ const PatrolZoneDetailPage = () => {
               표를 먼저 두면 메모를 펼칠수록 지도가 아래로 밀려 **처음 보는 그림이 안 보인다**.
               🔴 **항목이 생길 때만 보여준다**(T519 기준: 좌표 0개 → 비표시) — 빈 회색 박스는
               화면만 차지하고 아무 판단에도 안 쓰인다. 지점 목록은 아래 표가 이미 말한다 */}
-          {coords.pins.length > 0 && <HistoryMapCard pins={coords.pins} missing={coords.missing} />}
+          {course.isPending ? (
+            /* 🔴 **조회 중에는 지도를 그리지 않는다**(T523). 그리면 등록 좌표가 아직 없어
+               **인증 좌표가 있는 핀만** 찍히고, 응답이 도착하는 순간 나머지 핀이 튀어나와
+               **코스 모양이 눈앞에서 바뀐다**. 실측상 인증 좌표를 가진 행은 20% 뿐이라
+               그 사이 화면은 "거의 빈 코스" 로 보인다 — 사실과 다르다 */
+            <div className="h-[380px] animate-pulse rounded-lg bg-muted" />
+          ) : course.isError ? (
+            /* 🔴 **조용히 넘어가면 지도가 거짓말을 한다.** 코스 조회가 실패하면 등록 좌표를
+               못 구해 `missing` 이 커지는데, 화면은 그것을 **"지점에 좌표가 등록되지 않았다"**
+               로 적는다(`HistoryMapCard` 의 문구). 원인이 전혀 다르므로 분기한다 */
+            <div className="rounded-lg border border-border bg-card">
+              <AppEmpty
+                icon={TriangleAlertIcon}
+                title="코스 좌표를 불러오지 못했습니다"
+                description={course.error?.message}
+              />
+              <div className="flex justify-center pb-6">
+                <AppButton variant="sub" onClick={() => void course.refetch()}>
+                  다시 시도
+                </AppButton>
+              </div>
+            </div>
+          ) : (
+            coords.pins.length > 0 && (
+              <HistoryMapCard pins={coords.pins} missing={coords.missing} />
+            )
+          )}
 
           <div className="rounded-lg border border-border bg-card">
             <div className="flex items-center justify-between border-b px-4 py-3">

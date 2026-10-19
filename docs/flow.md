@@ -99,6 +99,7 @@ flowchart TB
         Patrol --> PZ["/patrol/zones<br/>코스 이력"]
         Patrol --> PP["/patrol/points<br/>지점 이력"]
         PZ <-->|탭| PP
+        PZ --> PZD["/patrol/zones/:historySeq<br/>코스 순찰 상세"]
 
         ZP --> Z["/zones<br/>순찰코스 목록"]
         ZP --> P["/points<br/>순찰지점 목록"]
@@ -141,7 +142,7 @@ flowchart LR
     PD -- "QR 다운로드" --> Dl[["QR 파일 다운로드"]]
     PD -- "삭제" --> Conf2[(확인<br/>모달)]
 
-    PZ["/patrol/zones<br/>코스 이력"] -- 행 클릭 --> PZD[코스 이력 상세<br/>우측 패널·타임라인]
+    PZ["/patrol/zones<br/>코스 이력"] -- 행 클릭 --> PZD["/patrol/zones/:historySeq<br/>코스 순찰 상세"]
     PZ -- "Export" --> Exp[["Excel / PDF 다운로드"]]
 
     PP["/patrol/points<br/>지점 이력"] -- 행 클릭 --> PPD[(지점 기록 상세<br/>모달)]
