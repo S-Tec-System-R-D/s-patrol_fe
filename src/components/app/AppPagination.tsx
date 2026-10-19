@@ -18,6 +18,10 @@ interface AppPaginationProps {
  * 리디자인 페이지네이션 — 페이지당 행 수 선택 + 현재 범위 표시 + **페이지 번호** + 이전/다음.
  * 테이블 라이브러리 비의존 — 상태는 소비 측이 들고 콜백으로만 반영한다.
  *
+ * 🔴 **미선택 버튼·화살표에 `bg-card` 를 준다**(사용자 요청 2026-10-19). 배경 없이 두면
+ * 페이지 배경과 같은 색이라 **테두리만 떠 있는 것처럼** 보였다. ⚠️ 리터럴 `bg-white` 가
+ * 아니라 **`bg-card` 다** — 다크 모드에서 흰 버튼이 남으면 안 된다(`index.css` 의 `.dark`).
+ *
  * 🔴 **번호 버튼을 넣었다**(사용자 요청 2026-10-19). 리디자인 초안은 화살표만 뒀는데,
  * 48건·3페이지에서 **몇 페이지가 있는지, 지금 몇 번째인지** 화살표만으로는 알 수 없었다.
  * 범위 표시(`21–40 / 전체 48개 항목`)가 그것을 대신한다고 봤지만 **현재 위치만 말하고
@@ -62,7 +66,7 @@ const AppPagination = ({
             onClick={() => onPageChange(pageIndex - 1)}
             disabled={!canPrev}
             className={cn(
-              'grid size-7 place-items-center rounded-md border border-border transition-colors hover:bg-muted',
+              'grid size-7 place-items-center rounded-md border border-border bg-card transition-colors hover:bg-muted',
               'disabled:pointer-events-none disabled:opacity-50'
             )}
           >
@@ -86,7 +90,7 @@ const AppPagination = ({
                   'grid size-7 place-items-center rounded-md border tabular-nums transition-colors',
                   item === pageIndex + 1
                     ? 'border-primary bg-primary text-primary-foreground font-medium'
-                    : 'border-border hover:bg-muted'
+                    : 'border-border bg-card hover:bg-muted'
                 )}
               >
                 {item}
@@ -100,7 +104,7 @@ const AppPagination = ({
             onClick={() => onPageChange(pageIndex + 1)}
             disabled={!canNext}
             className={cn(
-              'grid size-7 place-items-center rounded-md border border-border transition-colors hover:bg-muted',
+              'grid size-7 place-items-center rounded-md border border-border bg-card transition-colors hover:bg-muted',
               'disabled:pointer-events-none disabled:opacity-50'
             )}
           >
