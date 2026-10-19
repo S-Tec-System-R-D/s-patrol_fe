@@ -269,14 +269,17 @@ describe('LoginPage — 사업장 선택 (US1, US2)', () => {
     server.resetHandlers()
   })
 
-  /** `api-spec.md` §5-2 실측 구조 — 루트 아래 `children`, 필드명이 루트와 다르다 */
+  /**
+   * `api-spec.md` §5-2 실측 구조 — 루트 아래 `children`, 필드명이 루트와 다르다.
+   * 🔴 **선택지 수 = 1(루트) + children.length** 다(2026-10-19 설계 정정).
+   */
   const siteSelectOk = (children: { childSiteSeq: number; childSiteName: string }[]) =>
     http.get(USER_SITE_SELECT_PATH, () =>
       HttpResponse.json({
         message: '요청을 정상 처리하였습니다.',
         data: {
           siteSeq: 6,
-          siteName: '강동지사',
+          siteName: '테스트 사업장2',
           children: children.map((child) => ({ ...child, parentSeq: 6 })),
         },
         code: 200,
@@ -284,19 +287,19 @@ describe('LoginPage — 사업장 선택 (US1, US2)', () => {
     )
 
   const TWO_SITES = [
-    { childSiteSeq: 7, childSiteName: '강동 테크노타워' },
-    { childSiteSeq: 8, childSiteName: '강동 그랜드타워' },
+    { childSiteSeq: 7, childSiteName: '테스트 사업장2-1' },
+    { childSiteSeq: 8, childSiteName: '테스트 사업장2-2' },
   ]
 
-  it('사업장이 2개면 선택 단계로 전환된다 — 아직 홈으로 가지 않는다', async () => {
+  it('🔴 루트 + children 2개 = 3개면 선택 단계로 전환된다 — 아직 홈으로 가지 않는다', async () => {
     server.use(http.post(LOGIN_PATH, () => loginOk(201)), siteSelectOk(TWO_SITES))
 
     renderLogin()
     await fillAndSubmit()
 
     await waitFor(() => expect(screen.getByText('사업장 선택')).toBeInTheDocument())
-    expect(screen.getByRole('button', { name: '강동 테크노타워' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '강동 그랜드타워' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '테스트 사업장2-1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '테스트 사업장2-2' })).toBeInTheDocument()
     expect(screen.queryByText('SERVICE_HOME')).not.toBeInTheDocument()
   })
 
@@ -307,11 +310,11 @@ describe('LoginPage — 사업장 선택 (US1, US2)', () => {
     await fillAndSubmit()
 
     const user = userEvent.setup()
-    await user.click(await screen.findByRole('button', { name: '강동 그랜드타워' }))
+    await user.click(await screen.findByRole('button', { name: '테스트 사업장2-2' }))
 
     await waitFor(() => expect(screen.getByText('SERVICE_HOME')).toBeInTheDocument())
     expect(getSiteSeq()).toBe(8)
-    expect(getSiteName()).toBe('강동 그랜드타워')
+    expect(getSiteName()).toBe('테스트 사업장2-2')
   })
 
   /**
@@ -319,30 +322,33 @@ describe('LoginPage — 사업장 선택 (US1, US2)', () => {
    * 저장 없이 이동하면 siteSeq 없이 홈에 들어가고, 그 조회는 403이 아니라
    * `200` + 빈 목록으로 돌아와(api-spec.md:211) 조용히 틀린 화면이 된다.
    */
-  it('사업장이 1개면 선택 화면 없이 자동 진입하고, 저장은 그대로 한다', async () => {
-    server.use(
-      http.post(LOGIN_PATH, () => loginOk(201)),
-      siteSelectOk([{ childSiteSeq: 7, childSiteName: '강동 테크노타워' }])
-    )
+  it('🔴 루트만 1개면 선택 화면 없이 자동 진입하고, 저장은 그대로 한다', async () => {
+    // 🔴 `children: []` 가 곧 **1개(루트)** 다 — 루트가 선택지에 들어온 뒤의 모양이다.
+    //    전에는 children 1건이 "1개" 였다(2026-10-19 설계 정정)
+    server.use(http.post(LOGIN_PATH, () => loginOk(201)), siteSelectOk([]))
 
     renderLogin()
     await fillAndSubmit()
 
     await waitFor(() => expect(screen.getByText('SERVICE_HOME')).toBeInTheDocument())
     expect(screen.queryByText('사업장 선택')).not.toBeInTheDocument()
-    expect(getSiteSeq()).toBe(7)
-    expect(getSiteName()).toBe('강동 테크노타워')
+    expect(getSiteSeq()).toBe(6)
+    expect(getSiteName()).toBe('테스트 사업장2')
   })
 
-  /** 루트는 선택 대상이 아니다(api-spec.md §2-2). children 밖의 siteSeq가 새면 안 된다 */
-  it('루트 사업장(siteSeq 6)은 선택지에 나타나지 않는다', async () => {
+  /**
+   * 🔴🔴 **뒤집힌 단정**(사용자 결정 2026-10-19). 전에는 "루트는 선택지에 나타나지 않는다"
+   * 였다. 실측이 그 전제를 부정했다 — 루트 `테스트 사업장2`(6) 에 코스이력 **48건**이 있고
+   * children(7·8)은 **전부 0건**이다. 루트를 빼면 현장관리자가 실데이터에 닿지 못한다.
+   */
+  it('🔴 루트 사업장(siteSeq 6)도 선택지에 나타난다', async () => {
     server.use(http.post(LOGIN_PATH, () => loginOk(201)), siteSelectOk(TWO_SITES))
 
     renderLogin()
     await fillAndSubmit()
 
     await waitFor(() => expect(screen.getByText('사업장 선택')).toBeInTheDocument())
-    expect(screen.queryByRole('button', { name: '강동지사' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '테스트 사업장2' })).toBeInTheDocument()
   })
 
   /** 본사는 선택 단계가 없다 — siteSeq 소비처가 0개이고 응답 형태도 미실측(Phase 5) */
@@ -381,13 +387,19 @@ describe('LoginPage — 사업장 확보 실패 (US3)', () => {
     expect(screen.queryByText('사업장 선택')).not.toBeInTheDocument()
   }
 
-  it('소속 사업장이 0개면 안내하고 토큰을 남기지 않는다', async () => {
+  /**
+   * 🔴 **"0개" 의 의미가 바뀌었다**(2026-10-19). 루트가 선택지에 포함되면서 정상 응답은
+   * **최소 1개**가 보장된다 — `children: []` 는 이제 **자동 진입**이다. 여기서 거는 것은
+   * **비정상 응답 방어선**이다: `data` 가 `null` 이면 고를 것이 하나도 없다.
+   * ⚠️ 분기를 지우지 않은 이유는 지우면 이 경우가 **빈 화면**으로 끝나기 때문이다.
+   */
+  it('응답에서 고를 사업장을 하나도 못 찾으면 안내하고 토큰을 남기지 않는다', async () => {
     server.use(
       http.post(LOGIN_PATH, () => loginOk(201)),
       http.get(USER_SITE_SELECT_PATH, () =>
         HttpResponse.json({
           message: '요청을 정상 처리하였습니다.',
-          data: { siteSeq: 6, siteName: '강동지사', children: [] },
+          data: null,
           code: 200,
         })
       )

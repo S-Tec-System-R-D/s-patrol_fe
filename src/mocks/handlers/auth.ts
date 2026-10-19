@@ -61,30 +61,44 @@ const DEV_ACCOUNTS: Record<string, { code: number; jwtRole: string; userName: st
  */
 
 /**
- * 사번별 접근 가능 사업장(`UserSiteSelect`의 `children`).
+ * 사번별 `UserSiteSelect` 의 `children`.
  *
- * 응답 구조는 `api-spec.md` §5-2 실측 그대로다 — 루트(`siteSeq 6`)는 선택 대상이 아니고
- * `children`의 필드명이 루트와 다르다(`childSiteSeq`).
+ * 🔴 **이름을 실측값으로 맞췄다**(2026-10-19). 전에는 `강동 테크노타워`·`강동 그랜드타워`
+ * 였는데 실서버에는 **그런 사업장이 없다** — 루트 `테스트 사업장2`(6) 아래 `2-1`(7)·
+ * `2-2`(8) 이다(`UserSiteSelect` 실측). 목업 이름이 실데이터처럼 생겨서 **mock 화면을
+ * 실데이터로 착각하는 일이 실제로 일어났다**(2026-10-19). 이름만 봐도 갈리게 둔다.
+ * ⚠️ 실서버의 "강동" 은 **지사(그룹) 이름**이고 사업장명이 아니다(`AdminSiteSelect` 실측).
+ *
+ * 🔴 **루트도 선택지다**(`siteOptions.ts` — 2026-10-19). 그래서 선택지 수는
+ * **1(루트) + children.length** 다. 아래 `555555` 가 `children: []` 로도 **0개가 아니라
+ * 1개(자동 진입)** 가 되는 이유다.
  */
 const DEV_SITES: Record<string, { childSiteSeq: number; childSiteName: string; parentSeq: number }[]> =
   {
+    // 루트 + 2 = **3개** → 선택 화면
     '333333': [
-      { childSiteSeq: 7, childSiteName: '강동 테크노타워', parentSeq: 6 },
-      { childSiteSeq: 8, childSiteName: '강동 그랜드타워', parentSeq: 6 },
+      { childSiteSeq: 7, childSiteName: '테스트 사업장2-1', parentSeq: 6 },
+      { childSiteSeq: 8, childSiteName: '테스트 사업장2-2', parentSeq: 6 },
     ],
-    '444444': [{ childSiteSeq: 7, childSiteName: '강동 테크노타워', parentSeq: 6 }],
+    // 루트 + 1 = **2개** → 선택 화면
+    '444444': [{ childSiteSeq: 7, childSiteName: '테스트 사업장2-1', parentSeq: 6 }],
+    // 루트만 = **1개** → 자동 진입. 🔴 전에는 "0개(진입 불가)" 계정이었다
     '555555': [],
   }
 
 /**
- * 사번을 알 수 없을 때의 기본값 — **1개(자동 진입)**.
+ * 사번을 알 수 없을 때의 기본값 — **`children` 0개 = 루트만 = 1개(자동 진입)**.
  *
- * 🔴 폴백이 "1개"인 이유: 테스트 다수가 `server.use`로 로그인 응답만 덮고 accessToken에
- * JWT가 아닌 문자열(`'new-access'`)을 쓴다. 그러면 아래 핸들러가 사번을 디코딩할 수 없다.
- * 폴백이 2개 이상이면 그 테스트들이 전부 선택 단계에서 멈춰, "code가 착지점을 정한다"는
- * 원래 의도(020)가 사업장 선택 테스트로 변질된다. 1개면 자동 진입이라 의도가 보존된다.
+ * 🔴 폴백이 "1개"여야 하는 이유: 테스트 다수가 `server.use`로 로그인 응답만 덮고
+ * accessToken에 JWT가 아닌 문자열(`'new-access'`)을 쓴다. 그러면 아래 핸들러가 사번을
+ * 디코딩할 수 없다. 폴백이 2개 이상이면 그 테스트들이 전부 선택 단계에서 멈춰, "code가
+ * 착지점을 정한다"는 원래 의도(020)가 사업장 선택 테스트로 변질된다.
+ *
+ * ⚠️ **루트가 선택지에 들어오면서 빈 배열이 곧 "1개"가 됐다**(2026-10-19). 전에는 여기에
+ * children 1건을 넣어야 1개였다 — 그대로 뒀다면 폴백이 **2개**가 되어 무관한 테스트들이
+ * 선택 화면에서 멈췄을 것이다.
  */
-const FALLBACK_SITES = [{ childSiteSeq: 7, childSiteName: '강동 테크노타워', parentSeq: 6 }]
+const FALLBACK_SITES: { childSiteSeq: number; childSiteName: string; parentSeq: number }[] = []
 
 const USER_SITE_SELECT_PATH = '/api/v1/Login/W/sign/UserSiteSelect'
 
@@ -131,7 +145,7 @@ export const authHandlers = [
 
     return HttpResponse.json({
       message: '요청을 정상 처리하였습니다.',
-      data: { siteSeq: 6, siteName: '강동지사', children },
+      data: { siteSeq: 6, siteName: '테스트 사업장2', children },
       code: 200,
     })
   }),
