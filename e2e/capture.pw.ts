@@ -111,10 +111,26 @@ const selectFirstRow = async (page: Page) => {
 test('순찰이력 — 코스 이력', async ({ page }) => {
   await open(page, '/patrol/zones')
   await shoot(page, '현장/patrol-zones--목록')
+})
 
-  // 이 화면은 초기 selectedPatrol이 null이라 상세 패널이 비어 있다 → 행 선택 후 1장 더
-  await selectFirstRow(page)
-  await shoot(page, '현장/patrol-zones--상세선택')
+/**
+ * 🔴 **`spec 036` 에서 이름과 성격이 바뀌었다.** 전에는 행을 누르면 **우측 패널**이 열려
+ * `patrol-zones--상세선택` 으로 찍었다(036 이전 마스터-디테일). 지금은 **별도 라우트**
+ * (`/patrol/zones/:historySeq`)로 이동하므로 **독립 화면 1장**이고 이름도 `--상세` 다.
+ *
+ * 🔴 **URL 로 직접 들어간다.** 행 클릭에 의존하면 목록 정렬·필터 기본값이 바뀔 때마다
+ * **다른 회차**가 찍혀 baseline 이 흔들린다. `historySeq 103` 은 MSW 시드다
+ * (`mocks/handlers/history.ts` — 101~104).
+ *
+ * ⚠️ **지도가 외부 타일을 받는다**(`.env.capture` 가 `VITE_MAP_TILE_URL` 을 덮지 않아
+ * `.env.local` 의 V-World 가 적용된다). 032 가 두 번 찍어 **0.06%** 차이를 확인했고
+ * 기존 노이즈(±1%)보다 작다 — 그래서 `networkidle` + 여유 대기로 충분하다.
+ */
+test('순찰이력 — 코스 순찰 상세', async ({ page }) => {
+  await open(page, '/patrol/zones/103')
+  // 요청 4개(상세·인증 내역·코스 평균·코스 상세) + 타일이 안착할 여유
+  await page.waitForTimeout(900)
+  await shoot(page, '현장/patrol-zones--상세')
 })
 
 test('순찰이력 — 지점 이력', async ({ page }) => {
