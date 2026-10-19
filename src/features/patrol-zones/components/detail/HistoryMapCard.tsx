@@ -68,8 +68,9 @@ const pinLabel = (pin: HistoryPin): string => {
   const parts = [
     pin.checkedAt === null ? null : formatTime(pin.checkedAt),
     authLabel(pin.authMethod),
-    /* 🔴 등록 좌표 폴백은 **그 사실을 적는다** — 인증 위치로 오해하면 "여기서 인증했다" 가 된다 */
-    pin.source === 'point' ? '지점 등록 위치' : null,
+    /* 🔴 **폴백한 핀만 그 사실을 적는다.** 기본은 지점 등록 좌표(= 지점이 있는 자리)이고,
+       `'check'` 는 등록 좌표가 없어 **인증한 위치**로 대신 찍은 것이다 — 지점 자리가 아니다 */
+    pin.source === 'check' ? '인증 위치(지점 좌표 없음)' : null,
   ].filter((part): part is string => part !== null)
 
   const head = `${pin.order}. ${pin.name} — ${PIN_STYLE[pin.kind].label}`
@@ -101,16 +102,17 @@ const HistoryMapCard = ({ pins, missing }: HistoryMapCardProps) => {
       attribution: TILE_ATTRIBUTION ?? '',
     }).addTo(map)
 
-    /* 🔴🔴 **경로선은 인증된 핀만 잇는다 — 그것이 실제로 일어난 동선이다.** 미인증·기록
-       없음 핀을 끼워 넣으면 **가지 않은 곳을 지나간 선**이 된다. 032 는 편성 순서를 그려도
-       됐지만(편성은 계획이다) 이력은 사실을 그린다 */
-    const checkedLatLngs = pins
-      .filter((pin) => pin.kind === 'checked')
-      .map((pin) => [pin.lat, pin.lng] as [number, number])
+    /* 🔴🔴 **경로선은 전체 핀을 편성 순서로 잇는다 — 이 선이 "코스 구성" 이다.**
+       사용자 결정 2026-10-19: 이 지도는 **실제로 이동한 경로를 재는 화면이 아니다.**
+       처음엔 인증된 핀만 이었는데(실제 동선), 그러면 1·2·4 만 인증한 코스에서 **3번을
+       건너뛴 선**이 그려져 "코스가 저렇게 생겼나" 로 읽힌다 — 구성을 보려는 목적과 반대다.
+       🔴 색은 032 와 같은 `point` 다 — 두 지도에서 **점선 파랑 = 코스 편성 순서**로 어휘를
+       맞춘다. 결과는 **핀 색이 말하고** 선은 배치만 말한다(031: 색이 경쟁하면 안 된다) */
+    const latLngs = pins.map((pin) => [pin.lat, pin.lng] as [number, number])
 
-    if (checkedLatLngs.length > 1) {
-      L.polyline(checkedLatLngs, {
-        color: 'var(--color-success)',
+    if (latLngs.length > 1) {
+      L.polyline(latLngs, {
+        color: 'var(--color-point)',
         weight: 3,
         opacity: 0.8,
         // 🔴 점선이다 — 좌표가 빠진 지점이 있으면 그 구간을 건너뛴 직선이라 실제와 다르다
@@ -137,11 +139,10 @@ const HistoryMapCard = ({ pins, missing }: HistoryMapCardProps) => {
         .bindTooltip(label, { direction: 'top', offset: [0, -12] })
     })
 
-    const allLatLngs = pins.map((pin) => [pin.lat, pin.lng] as [number, number])
-    if (allLatLngs.length === 1) {
-      map.setView(allLatLngs[0], SINGLE_PIN_ZOOM)
+    if (latLngs.length === 1) {
+      map.setView(latLngs[0], SINGLE_PIN_ZOOM)
     } else {
-      map.fitBounds(L.latLngBounds(allLatLngs), { padding: [32, 32] })
+      map.fitBounds(L.latLngBounds(latLngs), { padding: [32, 32] })
     }
 
     // 🔴 **정리한다.** 없으면 라우트를 오갈 때마다 인스턴스가 쌓이고 리스너가 샌다
@@ -204,7 +205,9 @@ const Legend = () => (
 const Shell = ({ missing = 0, children }: { missing?: number; children: React.ReactNode }) => (
   <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <span className="text-panel-title font-semibold">인증 위치</span>
+      {/* 🔴 제목이 목적을 말한다 — **구성 + 현황**이다. "순찰 동선"(032)도 "인증 위치"도
+          아니다: 앞은 코스 관리의 편성도고, 뒤는 "근무자가 어디서 눌렀나" 로 읽힌다 */}
+      <span className="text-panel-title font-semibold">코스 구성 · 인증 현황</span>
       {missing > 0 && (
         /* 🔴 **"좌표 없음 N개" 를 명시한다.** 조용히 빼면 핀이 빠진 지도가 되고 어느 지점이
            빠졌는지 알 수 없다(032 선례). 🔴 **남은 핀의 번호는 그대로다** — 3번이 비었다고

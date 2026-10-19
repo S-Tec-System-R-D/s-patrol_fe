@@ -21,7 +21,7 @@ const pin = (order: number, kind: HistoryPinKind, over: Partial<HistoryPin> = {}
   lat: 37.4936 + order * 0.0002,
   lng: 127.0779 + order * 0.0002,
   kind,
-  source: kind === 'checked' ? 'check' : 'point',
+  source: 'point',
   checkedAt: kind === 'checked' ? '2026-05-01T10:06:00' : null,
   authMethod: kind === 'checked' ? 9 : null,
   ...over,
@@ -31,7 +31,7 @@ describe('HistoryMapCard — 빠진 좌표 알리기', () => {
   it('🔴 좌표를 구하지 못한 지점 수를 머리에 적는다', () => {
     render(<HistoryMapCard pins={[pin(1, 'checked'), pin(2, 'norecord')]} missing={2} />)
 
-    expect(screen.getByText('인증 위치')).toBeInTheDocument()
+    expect(screen.getByText('코스 구성 · 인증 현황')).toBeInTheDocument()
     expect(screen.getByText('좌표 없음 2개')).toBeInTheDocument()
   })
 

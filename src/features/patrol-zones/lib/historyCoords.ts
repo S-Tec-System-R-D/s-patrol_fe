@@ -8,21 +8,27 @@ import { POINT_HISTORY_STATUS, type CheckDetailRow } from '@/features/course-his
  * 🔴 **지도보다 먼저 만든다**(032 Phase 1 선례). 지도를 먼저 붙이면 "핀이 안 보이는 이유"
  * 가 좌표인지 타일 키인지 **데이터가 안 온 것인지** 구분할 수 없다.
  *
- * ## 좌표가 두 군데서 온다
+ * ## 🔴 이 지도가 보여주는 것 — **코스 구성 + 인증 현황**
  *
- * 원시 지점(지점관리)이 자기 경·위도를 갖고, 코스는 그 지점들을 편성한 것이다. 근무자가
- * 순찰 중 인증하면 **인증한 위치**가 순찰이력에 따로 쌓인다 — 원시 좌표를 **덮지 않는다.**
- * 그래서 회차가 끝나면 쓸 수 있는 좌표가 두 벌이다.
+ * 사용자 결정 2026-10-19. **"실제로 이동한 경로" 를 재는 화면이 아니다.** 보고 싶은 것은
+ * *"이 코스가 이렇게 구성돼 있고, 1·2·4 는 인증했고 3 은 미인증이구나"* 하나다.
+ *
+ * 그래서 좌표의 우선순위가 **등록 좌표 → 인증 좌표** 다(처음엔 반대로 만들었다가 뒤집었다):
  *
  * | 행 | 좌표 출처 | `source` |
  * |---|---|---|
- * | 인증 좌표 있음 | `CheckDetailRow.gpsLat/gpsLng` — **인증 시점 위치** | `'check'` |
- * | 인증 좌표 없음 | `CourseDetailPoint.gpsLat/gpsLng` — **지점 등록 좌표** | `'point'` |
- * | 둘 다 없거나 범위 밖 | — (핀을 만들지 않고 `missing` 으로 센다) | — |
+ * | 지점에 등록 좌표가 있다 | `CourseDetailPoint.gpsLat/gpsLng` — **지점이 있는 자리** | `'point'` |
+ * | 등록 좌표가 없거나 범위 밖 | `CheckDetailRow.gpsLat/gpsLng` — **인증한 위치** | `'check'` |
+ * | 둘 다 없음 | — (핀을 만들지 않고 `missing` 으로 센다) | — |
  *
- * 🔴 **실측상 대부분이 등록 좌표 폴백이다.** 166행 전수에서 인증 좌표를 가진 행은 **34행
- * (20%)** 뿐이다 — `status 3 미완료`(124건)는 좌표가 **전부 `null`** 이고 `0`·`1` 도 그렇다
- * (`api-spec.md` §4). 폴백이 예외가 아니라 **주경로**다.
+ * 🔴 **인증 좌표를 먼저 쓰면 코스 모양이 틀어진다.** 인증 좌표는 근무자가 **인증 버튼을
+ * 누른 위치**라 지점에서 몇 m 어긋나 있다. 1번만 인증 위치에 서고 2·3번은 등록 위치에
+ * 서면 **같은 코스가 회차마다 다른 모양**으로 보인다 — 구성을 보려는 화면에서 그건 잡음이다.
+ * 지점은 고정된 자리에 있고, 지도는 그 자리들의 배치를 보여준다.
+ *
+ * ⚠️ 인증 좌표는 **버리지 않고 폴백으로 남긴다** — 등록 좌표가 없는 지점이 실재하므로
+ * (실측 코스 7개에서 15/18) 그 경우에도 핀을 잃지 않는다. 그때는 `source: 'check'` 라
+ * 호출부가 **"인증 위치" 임을 라벨에 적는다**(지점 자리가 아니라는 뜻이다).
  *
  * ## 🔴 조인 키는 `pointSeq` 다 (`orderNo` 가 아니다)
  *
@@ -67,7 +73,7 @@ import { POINT_HISTORY_STATUS, type CheckDetailRow } from '@/features/course-his
  * 🔴 **빨강(`danger`)을 쓰지 않는다.** 표의 결과 뱃지가 미완료 2종에 `danger` 를 쓰지만
  * 지도는 다르다 — ① `status 0 대기중`·`1 진행중` 이 `norecord` 로 들어오는데(진행 중인 회차)
  * **아직 안 간 지점을 빨갛게 칠하면 없는 문제를 만든다** ② 심각도 판정은 **표가 한다**(뱃지
- * 최대 3개 병기). 지도의 일은 "어디서 무슨 일이 있었나" 지 "누가 잘못했나" 가 아니다.
+ * 최대 3개 병기). 지도의 일은 "어디가 비었나" 지 "누가 잘못했나" 가 아니다.
  * 023 의 "인증률에 색을 입히지 않는다" 와 같은 자리다.
  *
  * 🔴 **색만으로 전하지 않는다**(034 선례). `norecord` 는 **빈 원**이라 색각과 무관하게
@@ -75,8 +81,8 @@ import { POINT_HISTORY_STATUS, type CheckDetailRow } from '@/features/course-his
  *
  * ⚠️ **`kind` 는 좌표 출처(`source`)와 독립이다.** `status 4 완료` 인데 `authMethod`·좌표·
  * 순찰자가 **전부 `null` 인 행이 3건** 실재한다(OQ-16, `historySeq 13` 의 `detailSeq 24·25·26`).
- * 출처로 색을 정하면 이 행들이 **등록 좌표 폴백 → 회색 → "미인증"** 으로 읽힌다 — 완료인데
- * 그렇게 보이면 거짓이다.
+ * 출처로 색을 정하면 이 행들이 **폴백 → 회색 → "미인증"** 으로 읽힌다 — 완료인데 그렇게
+ * 보이면 거짓이다.
  *
  * ## 재사용
  *
@@ -100,8 +106,11 @@ export interface HistoryPin {
   lng: number
   /** 🔴 **핀 색·형태 기준.** 좌표 출처와 **무관하다**(OQ-16) */
   kind: HistoryPinKind
-  /** 이 좌표가 어디서 왔는지. 🔴 `'point'` 는 **인증 위치가 아니라 지점 등록 위치**다 */
-  source: 'check' | 'point'
+  /**
+   * 이 좌표가 어디서 왔는지. 🔴 **`'check'` 는 지점 자리가 아니라 인증한 위치**다 —
+   * 등록 좌표가 없어 폴백한 경우이므로 호출부가 라벨에 그 사실을 적는다.
+   */
+  source: 'point' | 'check'
   /**
    * 라벨에 쓸 인증 시각. 🔴 **인증이 실제로 찍힌 행만** 값을 갖는다(OQ-15) —
    * 미완료 행의 `checkDt` 는 코스 `endDt` 와 같은 것이 12건·다른 것이 33건이라 **의미가
@@ -113,7 +122,7 @@ export interface HistoryPin {
 }
 
 export interface HistoryCoords {
-  /** 지도에 찍을 핀. **`orderNo` 순서** (인증 내역 표와 같은 정렬) */
+  /** 지도에 찍을 핀. **`orderNo` 순서** (인증 내역 표와 같은 정렬 = 코스 편성 순서) */
   pins: HistoryPin[]
   /**
    * 좌표를 구하지 못해 뺀 지점 수. 🔴 0 이 아니면 **화면이 그 사실을 적는다** —
@@ -126,13 +135,6 @@ export interface HistoryCoords {
   missing: number
 }
 
-/**
- * 인증 내역 + 코스 편성 → 지도 핀.
- *
- * @param rows `GetCourseHistoryCheckDetails` — **이미 받아 둔 응답**이다
- * @param coursePoints `GetCourseDetail.points[]` — 등록 좌표 폴백용. 아직 안 왔으면 `[]`
- *   를 넘긴다(그 경우 인증 좌표가 있는 핀만 나온다)
- */
 const pinKind = (row: CheckDetailRow): HistoryPinKind => {
   if (row.status === POINT_HISTORY_STATUS.COMPLETED) return 'checked'
   // 🔴 `checkDt` 가 미완료 2종을 가른다 — 값이 있으면 **방문 흔적**이다(실측 45/124).
@@ -141,6 +143,13 @@ const pinKind = (row: CheckDetailRow): HistoryPinKind => {
   return 'norecord'
 }
 
+/**
+ * 인증 내역 + 코스 편성 → 지도 핀.
+ *
+ * @param rows `GetCourseHistoryCheckDetails` — **이미 받아 둔 응답**이다
+ * @param coursePoints `GetCourseDetail.points[]` — **등록 좌표의 출처**. 아직 안 왔으면 `[]`
+ *   를 넘긴다(그 경우 인증 좌표가 있는 핀만 나와 **코스 모양이 불완전하다**)
+ */
 export const historyPins = (
   rows: CheckDetailRow[],
   coursePoints: CourseDetailPoint[]
@@ -154,19 +163,20 @@ export const historyPins = (
     registered.set(point.pointSeq, { lat: point.gpsLat, lng: point.gpsLng as number })
   })
 
-  // 인증 내역 표(T513)와 **같은 정렬**이어야 번호가 맞는다
+  // 인증 내역 표(T513)와 **같은 정렬**이어야 번호가 맞는다. 이 순서가 곧 **코스 편성 순서**다
   const ordered = [...rows].sort((a, b) => a.orderNo - b.orderNo)
 
   const pins: HistoryPin[] = []
   let missing = 0
 
   ordered.forEach((row) => {
-    // 🔴 **인증 좌표가 범위 밖이면 등록 좌표로 내려간다**(B-33) — 버리지 않는다.
-    //    지점이 어디인지는 여전히 알 수 있고, 그걸 아는 것이 지도의 값어치다
-    const checkCoord = isValidCoord(row.gpsLat, row.gpsLng)
+    /* 🔴 **등록 좌표가 1순위다** — 지점이 있는 자리가 코스의 모양이다(사용자 결정).
+       인증 좌표는 등록 좌표가 없을 때만 쓰는 폴백이다 */
+    const point = registered.get(row.pointSeq) ?? null
+    const check = isValidCoord(row.gpsLat, row.gpsLng)
       ? { lat: row.gpsLat, lng: row.gpsLng as number }
       : null
-    const coord = checkCoord ?? registered.get(row.pointSeq) ?? null
+    const coord = point ?? check
 
     if (coord === null) {
       missing += 1
@@ -183,7 +193,7 @@ export const historyPins = (
       lng: coord.lng,
       // 좌표 출처가 아니라 **상태**로 정한다(OQ-16)
       kind: pinKind(row),
-      source: checkCoord === null ? 'point' : 'check',
+      source: point === null ? 'check' : 'point',
       checkedAt: authenticated ? row.checkDt : null,
       authMethod: authenticated ? row.authMethod : null,
     })

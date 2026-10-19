@@ -44,24 +44,34 @@ const coursePoint = (over: Partial<CourseDetailPoint> = {}): CourseDetailPoint =
   ...over,
 })
 
-describe('historyPins — 좌표 출처', () => {
-  it('인증 좌표가 있으면 그것을 쓴다(source: check)', () => {
+describe('historyPins — 좌표 출처 (🔴 등록 좌표가 1순위)', () => {
+  it('🔴 등록 좌표를 먼저 쓴다 — 인증한 지점이어도 **지점 자리**에 찍는다', () => {
+    // 이 지도는 "코스가 이렇게 구성돼 있고 어디가 인증됐나" 를 보여준다(사용자 결정).
+    // 인증 좌표는 근무자가 버튼을 누른 위치라 지점에서 어긋나 있다 — 쓰면 코스 모양이 틀어진다
     const { pins, missing } = historyPins(
       [row({ status: 4, checkDt: '2026-05-01T10:06:00', authMethod: 9, gpsLat: 37.5, gpsLng: 127.1 })],
       [coursePoint()]
     )
 
     expect(missing).toBe(0)
-    expect(pins).toHaveLength(1)
-    expect(pins[0]).toMatchObject({ lat: 37.5, lng: 127.1, source: 'check' })
+    expect(pins[0]).toMatchObject({ lat: 37.49, lng: 127.07, source: 'point' })
   })
 
-  it('🔴 미인증 행은 **등록 좌표로 채워진다**(source: point)', () => {
-    // 인증하지 않으면 인증 좌표를 서버에 저장하지 않는다 — 원시 지점 좌표를 쓴다
-    const { pins, missing } = historyPins([row()], [coursePoint()])
+  it('🔴 미인증 행도 같은 등록 좌표에 찍힌다 — 색만 다르다', () => {
+    const { pins } = historyPins([row()], [coursePoint()])
+
+    expect(pins[0]).toMatchObject({ lat: 37.49, lng: 127.07, source: 'point', kind: 'norecord' })
+  })
+
+  it('등록 좌표가 없으면 인증 좌표로 폴백한다 — 핀을 잃지 않는다', () => {
+    const { pins, missing } = historyPins(
+      [row({ status: 4, checkDt: '2026-05-01T10:06:00', authMethod: 9, gpsLat: 37.5, gpsLng: 127.1 })],
+      [coursePoint({ gpsLat: null, gpsLng: null })]
+    )
 
     expect(missing).toBe(0)
-    expect(pins[0]).toMatchObject({ lat: 37.49, lng: 127.07, source: 'point', kind: 'norecord' })
+    // 🔴 source 가 'check' 다 — 호출부가 "지점 자리가 아니다" 를 라벨에 적는다
+    expect(pins[0]).toMatchObject({ lat: 37.5, lng: 127.1, source: 'check' })
   })
 
   it('🔴 둘 다 없으면 제외하고 missing 으로 센다', () => {
@@ -71,15 +81,15 @@ describe('historyPins — 좌표 출처', () => {
     expect(missing).toBe(1)
   })
 
-  it('🔴 현재 편성에서 빠진 지점도 missing 이다', () => {
-    // 회차는 과거고 GetCourseDetail 은 현재 편성이다 — 그 뒤 빠진 지점은 좌표를 구할 길이 없다
+  it('🔴 현재 편성에서 빠진 지점은 등록 좌표를 구할 수 없다', () => {
+    // 회차는 과거고 GetCourseDetail 은 현재 편성이다 — 그 뒤 빠진 지점은 좌표가 없다
     const { pins, missing } = historyPins([row({ pointSeq: 99 })], [coursePoint({ pointSeq: 11 })])
 
     expect(pins).toHaveLength(0)
     expect(missing).toBe(1)
   })
 
-  it('편성이 아직 안 왔으면(빈 배열) 인증 좌표가 있는 핀만 나온다', () => {
+  it('🔴 편성이 아직 안 왔으면 코스 모양이 불완전하다 — 인증 좌표 핀만 나온다', () => {
     const rows = [row({ gpsLat: 37.5, gpsLng: 127.1 }), row({ detailSeq: 2, orderNo: 2 })]
     const { pins, missing } = historyPins(rows, [])
 
@@ -102,11 +112,14 @@ describe('historyPins — 범위 검사 (B-33)', () => {
     expect(missing).toBe(1)
   })
 
-  it('🔴 인증 좌표가 범위 밖이면 **등록 좌표로 내려간다** — 버리지 않는다', () => {
-    // 지점이 어디인지는 여전히 알 수 있다. 그걸 아는 것이 지도의 값어치다
-    const { pins } = historyPins([row({ gpsLat: 123, gpsLng: 127.1 })], [coursePoint()])
+  it('🔴 등록 좌표가 범위 밖이면 **인증 좌표로 내려간다** — 버리지 않는다', () => {
+    // 지점이 어디인지는 대략이라도 알 수 있다. 그걸 아는 것이 지도의 값어치다
+    const { pins } = historyPins(
+      [row({ status: 4, checkDt: '2026-05-01T10:06:00', authMethod: 9, gpsLat: 37.5, gpsLng: 127.1 })],
+      [coursePoint({ gpsLat: 123, gpsLng: 57.22 })]
+    )
 
-    expect(pins[0]).toMatchObject({ lat: 37.49, lng: 127.07, source: 'point' })
+    expect(pins[0]).toMatchObject({ lat: 37.5, lng: 127.1, source: 'check' })
   })
 
   it('NaN·무한대·경계값을 가른다', () => {
