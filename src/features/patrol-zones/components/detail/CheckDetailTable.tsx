@@ -40,6 +40,16 @@ import CheckDetailMemo from './CheckDetailMemo'
  * 🔴 **펼침 버튼의 접근성 이름에 지점명을 넣는다** — 행이 여러 개라 `기록 보기` 만으로는
  * 스크린리더에서 **전부 같은 이름**이 된다(030 의 카드 접근성 사고와 같은 종류).
  *
+ * 🔴 **치수는 공용 `AppTable` 에 맞춘다**(사용자 확인 2026-10-19 — 글자가 행에 비해 컸다).
+ * 이 표는 `AppTable` 이 아니라 **손으로 짠 `<table>`** 이라 치수가 따로 흘렀다:
+ * 본문 `text-sm`(14px, **Tailwind 기본값**)에 `py-2.5` 로, 공용 표(`text-body` 12.5px ·
+ * `py-3`)보다 **글자는 크고 패딩은 좁았다**. → `text-body` + `py-3` 으로 되돌렸다.
+ * 🔴 **`text-sm` 을 쓰면 안 된다** — 프로젝트는 자체 글자 토큰 체계(`--text-panel-title`
+ * 14.5 / `--text-body` 12.5 / `--text-caption` 12 / `--text-label` 10.5)를 쓰고, `text-sm`
+ * 은 그 밖이다. 임의로 줄이면 **다섯 번째 크기**가 생긴다.
+ * ✅ 덤으로 034 의 걱정이 풀렸다 — "조밀한 표에서 지점명과 뱃지가 서로 다툰다" 가 뱃지를
+ * `10.5px` 로 줄인 이유였는데, 본문이 14 → 12.5 가 되어 차이가 3.5px → **2px** 로 좁혀졌다.
+ *
  * 🔴 **순번은 `orderNo` 를 그대로 쓴다.** 서버가 중복을 저장하지만(032) 그건 **편성의
  * 사실**이고, 배열 위치로 바꿔 매기면 **같은 지점을 화면마다 다른 번호**로 부른다.
  */
@@ -81,16 +91,16 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-body">
         <thead className="border-b bg-muted">
           <tr className="text-left text-xs font-medium text-muted-foreground">
-            <th className="px-3 py-2.5 w-12">순서</th>
-            <th className="px-3 py-2.5">순찰지점</th>
-            <th className="px-3 py-2.5 w-20">인증수단</th>
-            <th className="px-3 py-2.5 w-20">인증시각</th>
-            <th className="px-3 py-2.5 w-20">구간</th>
-            <th className="px-3 py-2.5 w-28">결과</th>
-            <th className="px-3 py-2.5 w-16">기록</th>
+            <th className="px-3 py-3 w-12">순서</th>
+            <th className="px-3 py-3">순찰지점</th>
+            <th className="px-3 py-3 w-20">인증수단</th>
+            <th className="px-3 py-3 w-20">인증시각</th>
+            <th className="px-3 py-3 w-20">구간</th>
+            <th className="px-3 py-3 w-28">결과</th>
+            <th className="px-3 py-3 w-16">기록</th>
           </tr>
         </thead>
         <tbody>
@@ -132,9 +142,9 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                     },
                   })}
                 >
-                  <td className="px-3 py-2.5 tabular-nums text-muted-foreground">{row.orderNo}</td>
-                  <td className="px-3 py-2.5 font-medium">{row.pointName}</td>
-                  <td className="px-3 py-2.5">
+                  <td className="px-3 py-3 tabular-nums text-muted-foreground">{row.orderNo}</td>
+                  <td className="px-3 py-3 font-medium">{row.pointName}</td>
+                  <td className="px-3 py-3">
                     {/* 🔴 미인증·미완료 행은 `authMethod` 가 `null` 이다 — 빈 칸이 아니라 `—` */}
                     {row.authMethod === AUTH_METHOD.QR ? (
                       <AppBadge variant="point" className={COMPACT_BADGE}>
@@ -148,17 +158,17 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                       <span className="text-muted-foreground">-</span>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap tabular-nums text-muted-foreground">
+                  <td className="px-3 py-3 whitespace-nowrap tabular-nums text-muted-foreground">
                     {authenticated ? formatTime(row.checkDt as string) : '-'}
                   </td>
                   {/* 🔴 **`whitespace-nowrap` 이다.** `formatDuration` 이 `1시간 20분` 처럼 **공백이
                       있는 값**을 만들고 `<th>` 가 `w-20`(80px) 이라, 브라우저가 그 공백에서 줄을
                       끊었다(사용자 확인 2026-10-19). 폭을 늘려 맞추면 값 길이를 추측하는 셈이다 —
                       끊지 말라고 하면 컬럼이 **필요한 만큼** 늘어난다 */}
-                  <td className="px-3 py-2.5 whitespace-nowrap tabular-nums text-muted-foreground">
+                  <td className="px-3 py-3 whitespace-nowrap tabular-nums text-muted-foreground">
                     {gap === null ? '-' : `+${formatDuration(gap)}`}
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td className="px-3 py-3">
                     <div className="flex flex-wrap items-center gap-1">
                       <AppBadge variant={result.variant} className={COMPACT_BADGE}>
                         {result.label}
@@ -171,7 +181,7 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                       )}
                     </div>
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td className="px-3 py-3">
                     {hasMemo ? (
                       /* 🔴 **표시 전용이다 — 버튼이 아니다.** 행 전체가 토글이므로 안쪽에
                          버튼을 두면 같은 일을 하는 과녁이 두 개가 된다(위 `<tr>` 주석).
