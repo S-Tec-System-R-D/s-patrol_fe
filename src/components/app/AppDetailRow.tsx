@@ -35,8 +35,14 @@ const AppDetailRow = ({ label, value, variant = 'between' }: AppDetailRowProps) 
     )
   }
 
+  /* 🔴 **`border-b` 를 둔다**(사용자 결정 2026-10-19). `fixed` 에는 처음부터 있었고
+     `between` 에만 없어서 **border 유무가 variant 마다 갈려 있었다** — 배치가 다른 것은
+     폭 때문에 근거가 있지만(위 표), 구분선 유무는 근거가 없는 차이였다.
+     ⚠️ **`last:border-0`** — 카드 안의 마지막 행 밑에 선이 남으면 카드 테두리와 겹쳐 보인다.
+     ⚠️ 이력(8행)·근무자(5행)·공지(2행) **세 화면이 함께 바뀐다**. 이력만 예외로 두면
+     variant 나 prop 이 또 늘어난다(A6). */
   return (
-    <div className="flex items-center justify-between gap-4 py-1.5 text-sm">
+    <div className="flex items-center justify-between gap-4 border-b py-1.5 text-sm last:border-0">
       <span className="text-body text-muted-foreground">{label}</span>
       <span className="text-body font-bold text-foreground tabular-nums">{value}</span>
     </div>

@@ -148,10 +148,14 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                       <span className="text-muted-foreground">-</span>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
+                  <td className="px-3 py-2.5 whitespace-nowrap tabular-nums text-muted-foreground">
                     {authenticated ? formatTime(row.checkDt as string) : '-'}
                   </td>
-                  <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
+                  {/* 🔴 **`whitespace-nowrap` 이다.** `formatDuration` 이 `1시간 20분` 처럼 **공백이
+                      있는 값**을 만들고 `<th>` 가 `w-20`(80px) 이라, 브라우저가 그 공백에서 줄을
+                      끊었다(사용자 확인 2026-10-19). 폭을 늘려 맞추면 값 길이를 추측하는 셈이다 —
+                      끊지 말라고 하면 컬럼이 **필요한 만큼** 늘어난다 */}
+                  <td className="px-3 py-2.5 whitespace-nowrap tabular-nums text-muted-foreground">
                     {gap === null ? '-' : `+${formatDuration(gap)}`}
                   </td>
                   <td className="px-3 py-2.5">
