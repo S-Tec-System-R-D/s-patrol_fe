@@ -348,6 +348,18 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /**
+     * 🔴 **이 줄이 빠져 있어서 캡쳐 baseline 이 스스로 흔들렸다**(원인 규명 2026-10-20).
+     *
+     * `animation-duration: 0.01ms` 만으로는 **무한 반복이 멈추지 않는다** — `AppEmpty` 의
+     * `bounce-anim` 은 `infinite` 라 0.01ms 짜리 주기를 계속 돌고, 캡쳐가 **그중 아무 프레임**
+     * 이나 잡는다. 그래서 손대지 않은 화면(`공통/404`·`users--목록`)이 찍을 때마다 **1.02%**
+     * 씩 달랐고, 두 화면의 diff 영역이 **116×134 로 똑같았다**(= 같은 컴포넌트, `spec 037`).
+     *
+     * 반복을 1회로 끊으면 애니메이션이 **100% 지점(`translateY(0)`)에서 끝나 고정**된다.
+     * 표준 reduced-motion 리셋에 원래 함께 들어가는 줄인데 프로젝트에서 누락돼 있었다.
+     */
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

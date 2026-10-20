@@ -30,9 +30,25 @@ const MS_ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/r
 
 const base64url = (value: string) => Buffer.from(value, 'utf8').toString('base64url')
 
+/**
+ * 🔴🔴 **캡쳐 시점의 "지금" 을 고정한다** (2026-10-20 — `spec 037` 이월 해소).
+ *
+ * MSW 시드가 **`daysAgo` 기준**이라 날짜 문구가 **찍는 날마다 바뀐다.** `spec 037` 의 전수
+ * 비교에서 손대지 않은 화면 5장이 0.05~0.19% 씩 달랐고(`patrol-zones--상세` ·
+ * `points--목록/상세` 등), 그래서 **"나머지는 안 바뀌었다" 를 픽셀 0% 로 확인할 수 없었다** —
+ * 매번 diff 를 열어 원인을 눈으로 가려야 했다.
+ *
+ * 🔴 **값은 리터럴이다 — `new Date()` 를 쓰면 고정한 의미가 없다.**
+ * 🔴 **토큰 시각도 같은 상수에서 만든다.** 페이지 시계만 멈추고 토큰은 실제 시각으로
+ * 만들면, 세월이 흘렀을 때 `nbf` 가 **페이지의 현재보다 미래**가 된다 — 지금은 클라이언트가
+ * `exp`·`nbf` 를 검사하지 않아 괜찮지만, 검사가 붙는 순간 **캡쳐가 전부 로그인 화면**이 되고
+ * 원인을 찾기 어렵다(020 에서 같은 모양의 사고가 났다).
+ */
+const CAPTURE_NOW = new Date('2026-10-20T09:00:00+09:00')
+
 /** 캡쳐용 accessToken. 서명은 의미 없다 — 클라이언트는 payload만 읽는다. */
 const makeAccessToken = (jwtRole: string) => {
-  const now = Math.floor(Date.now() / 1000)
+  const now = Math.floor(CAPTURE_NOW.getTime() / 1000)
   const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
   const payload = base64url(
     JSON.stringify({
@@ -72,7 +88,20 @@ const AUTH_SEED = {
   'auth.siteName': '강동 테크노타워',
 }
 
-test.beforeEach(async ({ context }) => {
+test.beforeEach(async ({ context, page }) => {
+  /**
+   * 🔴 **타이머가 아니라 시각만 고정한다**(`setFixedTime`, `install` 이 아니다).
+   *
+   * `clock.install()` 은 `setTimeout`·`requestAnimationFrame` 까지 가져가 **직접 감아야**
+   * 하는데, 이 캡쳐는 react-query 재시도 · MSW 응답 지연 · 트랜지션 안착을 전부 **실제
+   * 시간으로 기다린다**(`waitForTimeout`). 타이머를 멈추면 그 대기들이 영영 끝나지 않는다.
+   * `setFixedTime` 은 `Date.now()`·`new Date()` 만 바꾼다 — 시드가 날짜를 계산하는 바로 그
+   * 자리다.
+   *
+   * ⚠️ **`goto` 보다 먼저여야 한다** — 시드는 모듈 로드 시점에 날짜를 만든다.
+   */
+  await page.clock.setFixedTime(CAPTURE_NOW)
+
   await context.addInitScript((seed: Record<string, string>) => {
     for (const [key, value] of Object.entries(seed)) {
       localStorage.setItem(key, value)

@@ -500,6 +500,26 @@ UI 텍스트(라벨, 확인 문구, 빈 상태, 에러)의 한국어 일관성 �
 
 ---
 
+### D12. 목록 필터 트리거의 미선택 톤 (2026-10-20)
+
+- **결정**: 목록 필터로 쓰는 컨트롤은 **미선택이면 연한 회색**(`text-muted-foreground`),
+  **선택되면 포인트 트리오**(`border-point` + `bg-point-bg` + `text-point-foreground`)다.
+  아이콘은 **16px · `opacity-60`** 으로 통일한다.
+- **사유**:
+  - 같은 필터 바에서 **기간만 연하고 코스·결과는 진한 먹**이라 무게가 달라 보였다
+    (사용자 지적). 원인은 색 설정이 아니라 **값의 유무**다 — 셀렉트는 미선택일 때도
+    `전체` 라는 **값을 들고 있어** shadcn 의 `data-placeholder:text-muted-foreground` 가
+    **영원히 걸리지 않는다**. 선택과 미선택이 같은 색이 된다.
+  - 🔴 **`data-[active=false]` 로 건다.** `active` 가 `false`(필터인데 안 걸림)인 경우와
+    `undefined`(애초에 필터가 아님 — **폼 안의 셀렉트**)를 가르기 위해서다. 폼은 값이
+    없을 때 placeholder 가 이미 연하게 처리한다.
+  - 아이콘 치수는 `AppDatePicker`(16 · 60%)가 먼저였고 `AppSelect`(14 · 불투명)가
+    어긋나 있었다 — **먼저 있던 쪽에 맞췄다.**
+- **적용**: `AppSelect`. `AppDatePicker`·`AppFilterButton` 은 이미 같은 규칙이었다.
+- **사용 화면**: `/patrol/zones` · `/patrol/points` · `/points` 등 목록 필터 전부.
+
+---
+
 ## 6. Open Questions
 
 미언급은 미정으로 본다.
