@@ -7,7 +7,7 @@ import type { NoticeSummary } from '../types/notice'
 const NoticeListItem = ({ notice }: { notice: NoticeSummary }) => {
   return (
     <Link
-      to={paths.service.noticeDetail(notice.id)}
+      to={paths.service.noticeDetail(Number(notice.id))}
       className="flex items-start gap-4 px-4 py-3 transition-colors hover:bg-muted/40"
     >
       <div className="flex min-w-0 flex-1 flex-col items-start gap-2">

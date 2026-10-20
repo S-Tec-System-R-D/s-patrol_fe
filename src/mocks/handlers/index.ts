@@ -1,6 +1,7 @@
 import { authHandlers } from './auth'
 import { courseHandlers } from './courses'
 import { historyHandlers } from './history'
+import { noticeHandlers } from './notices'
 import { pointHandlers } from './points'
 
 /**
@@ -21,4 +22,5 @@ export const handlers = [
   ...pointHandlers,
   ...courseHandlers,
   ...historyHandlers,
+  ...noticeHandlers,
 ]

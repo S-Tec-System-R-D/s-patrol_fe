@@ -6,7 +6,7 @@ import { ArrowLeftIcon, MegaphoneIcon } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 
 const NoticeDetailPage = () => {
-  const { id } = useParams<{ id: string }>()
+  const { noticeSeq: id } = useParams<{ noticeSeq: string }>()
   const notice = notices.find((item) => item.id === id)
 
   return (

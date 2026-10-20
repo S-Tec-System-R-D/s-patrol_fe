@@ -7,7 +7,7 @@ const renderAt = (id: string) =>
   render(
     <MemoryRouter initialEntries={[`/notice/${id}`]}>
       <Routes>
-        <Route path="/notice/:id" element={<NoticeDetailPage />} />
+        <Route path="/notice/:noticeSeq" element={<NoticeDetailPage />} />
       </Routes>
     </MemoryRouter>
   )
