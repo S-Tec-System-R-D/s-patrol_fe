@@ -3,12 +3,8 @@ import { http, HttpResponse } from 'msw'
 import { points as legacyPoints } from '@/features/points/mock/pointData'
 import { toAuthMethodCode } from '@/features/points/lib/authMethod'
 import { coursesOfPoint } from './courses'
-import type {
-  PointDetail,
-  PointHistoryRow,
-  PointRow,
-  UpdatePointRequest,
-} from '@/features/points/types'
+import type { PointHistoryRow } from '@/features/course-history/types'
+import type { PointDetail, PointRow, UpdatePointRequest } from '@/features/points/types'
 
 /**
  * MSW 순찰지점 핸들러 (`spec 022`).
@@ -215,6 +211,7 @@ const UPDATE_POINT_PATH = '/api/v1/Point/W/sign/UpdatePoint'
 const DELETE_POINT_PATH = '/api/v1/Point/W/sign/DeletePoint'
 /** 🔴 `Point/*` 가 아니라 `History/*` 다 — 지점 상세에서 쓰지만 소유 도메인은 이력이다 */
 const GET_POINT_HISTORY_PATH = '/api/v1/History/W/sign/GetPointHistory'
+const GET_POINT_HISTORY_DETAIL_PATH = '/api/v1/History/W/sign/GetPointHistoryDetail'
 
 /**
  * 지점별 순찰이력 생성 — **결정적**(랜덤 금지). 테스트가 흔들리면 안 된다.
@@ -491,11 +488,29 @@ export const pointHandlers = [
     const siteSeq = Number(query.get('siteSeq'))
     const courseSeq = query.get('courseSeq')
     const status = query.get('status')
+    // 🔴 `spec 037` T547 — 지점 순찰이력 **목록 화면**이 쓰는 필터 2종을 더했다
+    const authMethod = query.get('authMethod')
+    const userName = query.get('userName')?.trim() ?? ''
     const pageNumber = Number(query.get('pageNumber') ?? 1)
     const pageSize = Number(query.get('pageSize') ?? 20)
 
     if (pageNumber < 1) {
       return businessError('페이지 번호는 1 이상이어야 합니다.')
+    }
+
+    /**
+     * 🔴 **`pageSize` 상한 100 을 여기에도 건다**(`spec 037` T547).
+     *
+     * 🔴 **지점 목록 핸들러에는 있었는데 여기엔 없었다.** 그래서 `usePointHistory` 가 200 을
+     * 보내던 결함이 **dev 에서 끝까지 멀쩡해 보였다** — 실서버에서는 400 이었고 화면에는
+     * "순찰 기록이 없습니다" 가 떴다(031 에서 발견·교정). mock 이 서버보다 관대하면 그만큼
+     * 결함이 숨는다.
+     */
+    if (!Number.isFinite(pageSize) || pageSize < 1 || pageSize > 100) {
+      return HttpResponse.json(
+        { message: '페이지 사이즈는 1~100 사이여야 합니다.', data: null, code: 400 },
+        { status: 400 }
+      )
     }
 
     /**
@@ -517,6 +532,10 @@ export const pointHandlers = [
       .filter((row) => (courseSeq === null ? true : row.courseSeq === Number(courseSeq)))
       // ⚠️ **지점 사전**이다(`3` 미완료 / `4` 완료). 코스 사전(`2` 미완료)과 뜻이 다르다
       .filter((row) => (status === null ? true : row.status === Number(status)))
+      .filter((row) => (authMethod === null ? true : row.authMethod === Number(authMethod)))
+      // 🔴 **부분 일치**다 — 서버가 `userName` 을 부분 문자열로 받는다(현장 계정은 순찰자
+      //    목록 API 가 403 이라 드롭다운을 만들 수 없어 텍스트 검색으로 간다)
+      .filter((row) => (userName === '' ? true : row.userName.includes(userName)))
       .filter((row) => {
         const day = row.checkDt.slice(0, 10)
         if (from && day < from) return false
@@ -533,6 +552,74 @@ export const pointHandlers = [
       pageSize,
       totalCount: filtered.length,
       totalPages: Math.ceil(filtered.length / pageSize),
+    })
+  }),
+
+  /**
+   * 지점 인증 1건 상세 (`spec 037` Phase 4).
+   *
+   * 🔴 **목록과 같은 시드에서 만든다**(`buildHistory`). 상세를 따로 선언하면 목록에서
+   * 고른 행과 상세가 어긋나 **"다른 데이터가 열린다"** 는 버그가 mock 에서 재현되지 않는다.
+   *
+   * 🔴 **응답이 목록과 어긋나는 세 자리를 그대로 재현한다**(실측):
+   * - `overtimeYn` — **소문자 t**(목록은 `overTimeYn`, B-4)
+   * - `authMethodName` — 인증 없으면 **`'Unknown'`**(목록은 `''`, B-6)
+   * - `memoList`/`attachList`/`attachPath` — 코스 쪽과 **이름이 다르다**(B-35)
+   * ⚠️ **`pauseTime` 은 문자열이다** — 숫자인 것은 **코스** 상세뿐이다(B-5).
+   * 🔴 mock 이 서버보다 관대하면 그만큼 결함이 숨는다 — 어댑터가 실제로 필요한지는
+   * 이름을 똑같이 어긋나게 둬야 드러난다.
+   *
+   * 🔴 **첨부 URL 은 실 서버와 같은 모양이고 똑같이 404 다**(B-40) — `onError` 폴백이
+   * dev 에서도 그려져야 한다.
+   */
+  http.get(GET_POINT_HISTORY_DETAIL_PATH, ({ request }) => {
+    const detailSeq = Number(new URL(request.url).searchParams.get('detailSeq'))
+
+    const row = store.flatMap(buildHistory).find((item) => item.detailSeq === detailSeq)
+    if (row === undefined) {
+      // 없는 ID 는 비즈니스 오류다(래퍼) — 404 가 아니다(실측 규칙, `api-spec.md` §5-1-B)
+      return businessError('해당 인증 기록을 찾을 수 없습니다.')
+    }
+
+    const hasAuth = row.authMethod !== null
+    return ok({
+      detailSeq: row.detailSeq,
+      pointSeq: row.pointSeq,
+      pointName: row.pointName,
+      // 🔴 소문자 t — 목록은 대문자 T 다
+      overtimeYn: row.overTimeYn,
+      hasMemo: row.hasMemo,
+      status: row.status,
+      statusName: row.statusName,
+      // ⚠️ 인증 시점 좌표 — 실측 보유율이 낮다(미완료 행은 전부 null)
+      gpsLat: row.status === 4 ? 37.4936 : null,
+      gpsLng: row.status === 4 ? 127.0286 : null,
+      courseSeq: row.courseSeq,
+      courseName: row.courseName,
+      userSeq: row.userSeq,
+      userName: row.userName,
+      pauseTime: row.pauseTime,
+      checkDt: row.checkDt,
+      authMethod: row.authMethod,
+      // 🔴 인증이 없으면 `'Unknown'` — 화면이 이것을 걸러야 한다
+      authMethodName: hasAuth ? row.authMethodName : 'Unknown',
+      memoList: row.hasMemo
+        ? [
+            {
+              memoSeq: 50 + (row.detailSeq % 10),
+              memo: '3층 계단 비상등 점멸 이상. 야간 시인성 저하로 시설팀 보고 필요.',
+              attachList: [
+                {
+                  attachSeq: 46,
+                  // 🔴 코스는 `imagePath` — 이름만 다르고 값은 같은 절대 URL 이다(B-35)
+                  attachPath:
+                    'http://123.2.156.148:5231/UploadedFiles/patrols/202610/5c2e9908843d4cb1af3cda16bd8152ac.jpg',
+                  fileName: '1000000282.jpg',
+                },
+              ],
+            },
+          ]
+        : [],
     })
   }),
 ]

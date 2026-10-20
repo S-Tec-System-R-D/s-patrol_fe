@@ -32,3 +32,17 @@ export const recentRange = (today: Date = new Date(), days: number = HISTORY_DAY
   fromDt: format(subDays(today, days - 1), DATE_FORMAT),
   toDt: format(today, DATE_FORMAT),
 })
+
+/**
+ * `Date` → `yyyy-MM-dd` 쿼리 값 (`spec 037` T544 에서 승격).
+ *
+ * 🔴 **타임존 없이 로컬 날짜로 찍는다.** `toISOString()` 을 쓰면 UTC 로 밀려 **한국 시간
+ * 오전 9시 이전이 전날**이 된다 — 서버는 날짜만 받으므로(`api-spec.md` §1) 하루가 통째로
+ * 어긋난다.
+ *
+ * 🔴 **036 이 `PatrolZonesPage` 안에 두고 있던 것을 올렸다.** 037 이 **두 번째 소비처**고
+ * 두 화면이 글자까지 같다 — 사본을 만들면 한쪽만 고쳐진다(`lib/listQuery.ts` 머리말이
+ * `ALL_VALUE` 를 올릴 때 쓴 것과 같은 기준). ⚠️ `date-fns` `format` 을 쓰지 않는 이유는
+ * 없다 — 승격하면서 같은 모듈의 `DATE_FORMAT` 을 쓰도록 통일했다.
+ */
+export const toDateQuery = (date: Date): string => format(date, DATE_FORMAT)

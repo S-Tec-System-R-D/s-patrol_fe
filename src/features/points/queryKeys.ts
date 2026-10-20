@@ -1,4 +1,5 @@
-import type { PointHistoryParams, PointListParams } from './types'
+import type { PointHistoryParams } from '@/features/course-history/types'
+import type { PointListParams } from './types'
 
 /**
  * 순찰지점 react-query 키 SSOT.

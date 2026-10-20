@@ -1,4 +1,4 @@
-import type { CourseHistoryParams } from './types'
+import type { CourseHistoryParams, PointHistoryParams } from './types'
 
 /**
  * 순찰이력 react-query 키.
@@ -71,4 +71,39 @@ export const courseHistoryKeys = {
   /** 미인증 건수 — 같은 이유로 루트를 분리한다 (`spec 023` B·C단) */
   uncheckedCount: (siteSeq: number, courseSeq: number, range: { fromDt: string; toDt: string }) =>
     ['course-unchecked-count', siteSeq, { courseSeq, ...range }] as const,
+}
+
+/**
+ * 지점 순찰이력 키 (`spec 037` T532).
+ *
+ * 🔴 **`courseHistoryKeys` 와 루트를 분리한다.** 같은 `History/*` 도메인이지만 **응답이
+ * 다르고 무효화 단위도 다르다** — 한 접두사에 묶으면 코스 목록을 다시 받을 때 지점 목록도
+ * 함께 버려진다.
+ *
+ * 규약은 `courseHistoryKeys` 와 같다(`data-model.md` §8): 루트 문자열 1개 · **`siteSeq`
+ * 포함** · 필터는 객체 1개로 마지막.
+ */
+export const pointHistoryKeys = {
+  /** 목록 쿼리 전체의 접두사. ⚠️ 상세는 루트가 달라 **여기에 걸리지 않는다** */
+  lists: ['point-history-list'] as const,
+
+  /**
+   * 목록 쿼리 키. `PointHistoryParams` 를 통째로 받아 **`siteSeq` 누락을 타입으로 막는다.**
+   *
+   * 🔴 `siteSeq` 가 키에 없으면 사업장을 전환했을 때 같은 키에 다른 사업장 데이터가 캐시돼
+   * **이전 사업장 이력이 그대로 보인다** — `siteSeq` 는 URL 에 노출하지 않으므로(`spec 021`
+   * DoD #13) 키가 유일한 구분자다.
+   *
+   * ⚠️ 지점 상세(027)가 쓰는 `pointSeq` 조회도 **같은 엔드포인트**다 — `params` 에
+   * `pointSeq` 가 들어가 키가 갈리므로 두 화면의 캐시가 섞이지 않는다.
+   */
+  list: (params: PointHistoryParams) => ['point-history-list', params.siteSeq, params] as const,
+
+  /**
+   * 인증 1건 상세 키.
+   *
+   * 🔴 **스코프가 `detailSeq` 라 `siteSeq` 가 필요 없다** — 인증 1건은 전역 유일하다
+   * (코스 쪽 `detail(historySeq)` 와 같은 판단).
+   */
+  detail: (detailSeq: number) => ['point-history-detail', detailSeq] as const,
 }

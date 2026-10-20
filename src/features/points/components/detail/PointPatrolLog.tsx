@@ -7,7 +7,7 @@ import { paths } from '@/router/paths'
 
 import type { PatrolSummary } from '../../lib/patrolSummary'
 import PatrolBarChart from './PatrolBarChart'
-import type { PointHistoryRow } from '../../types'
+import type { PointHistoryRow } from '@/features/course-history/types'
 
 /**
  * 순찰 인증 기록 (`spec 027` Phase 3).

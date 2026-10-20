@@ -55,15 +55,22 @@ export interface CourseHistoryQuery {
   size?: string
 }
 
-/** 비었거나 "전체" 면 `undefined` — 키 자체를 보내지 않는다 */
-const omitIfAll = (value?: string): string | undefined => {
+/**
+ * 비었거나 "전체" 면 `undefined` — 키 자체를 보내지 않는다.
+ *
+ * 🔴 **`spec 037` 이 쓰도록 export 한다**(지점이력 파라미터 변환). 같은 폴더의 이웃
+ * 파일이고 036 이 **037 이 쓸 기반으로** 세운 것이다 — 사본을 하나 더 만들면 "빈 값은
+ * 키를 뺀다" 규약이 두 곳에서 갈린다. ⚠️ `lib/listQuery.ts` 로는 올리지 않는다(그쪽
+ * 머리말대로 **변환 함수는 올리지 않는다**).
+ */
+export const omitIfAll = (value?: string): string | undefined => {
   const trimmed = value?.trim() ?? ''
   if (trimmed === '' || trimmed === ALL_VALUE) return undefined
   return trimmed
 }
 
-/** 정수로 읽히지 않으면 `undefined` (필터 미적용) */
-const parseIntegerFilter = (value?: string): number | undefined => {
+/** 정수로 읽히지 않으면 `undefined` (필터 미적용). `omitIfAll` 과 같은 이유로 export */
+export const parseIntegerFilter = (value?: string): number | undefined => {
   const raw = omitIfAll(value)
   if (raw === undefined) return undefined
   const parsed = Number(raw)

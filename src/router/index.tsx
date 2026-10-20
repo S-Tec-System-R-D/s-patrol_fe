@@ -10,6 +10,7 @@ import PointDetailPage from '@/pages/service/points/PointDetailPage'
 import ZonesPage from '@/pages/service/zones/ZonesPage'
 import ZoneDetailPage from '@/pages/service/zones/ZoneDetailPage'
 import PatrolZonesPage from '@/pages/service/patrol/zones/PatrolZonesPage'
+import PatrolPointDetailPage from '@/pages/service/patrol/points/PatrolPointDetailPage'
 import PatrolZoneDetailPage from '@/pages/service/patrol/zones/PatrolZoneDetailPage'
 import PatrolPointsPage from '@/pages/service/patrol/points/PatrolPointsPage'
 import UsersPage from '@/pages/service/users/UsersPage'
@@ -68,6 +69,13 @@ export const router = createBrowserRouter([
           {
             path: pathPatterns.patrolZoneDetail,
             element: <PatrolZoneDetailPage />,
+            errorElement: <PageErrorFallback />,
+          },
+          // 🔴 지점 인증 상세는 `/patrol/points/:detailSeq` — 지점 관리 상세
+          //    (`/points/:pointSeq`)와 키가 다르다(인증 1건 vs 지점)
+          {
+            path: pathPatterns.patrolPointDetail,
+            element: <PatrolPointDetailPage />,
             errorElement: <PageErrorFallback />,
           },
           // 코스/지점 관리 — 두 페이지가 각자 CourseTabs를 렌더링 (별도 레이아웃 wrapper 없음, patrol과 동일 패턴)

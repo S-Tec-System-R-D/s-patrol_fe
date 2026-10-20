@@ -23,6 +23,14 @@ const courseDetail = (courseSeq: number) => `/zones/${courseSeq}`
  * 어떻게 돌았는지"(순찰이력)다. 같은 코스가 회차마다 다른 결과를 갖는다.
  */
 const patrolZoneDetail = (historySeq: number) => `/patrol/zones/${historySeq}`
+/**
+ * 지점 **인증 1건** 상세 (`spec 037`).
+ *
+ * 🔴 **`pointDetail` 과 다른 것이다.** 앞에 `/patrol` 이 붙고 키가 **`detailSeq`(인증 1건)**
+ * 다 — `/points/:pointSeq` 는 "그 지점 자체"(지점 관리), 이쪽은 "그 지점을 언제 어떻게
+ * 인증했는지"다. 같은 지점이 하루에 여러 번 찍히고 **회차마다 결과가 다르다.**
+ */
+const patrolPointDetail = (detailSeq: number) => `/patrol/points/${detailSeq}`
 
 export const paths = {
   // 공개 영역
@@ -39,6 +47,7 @@ export const paths = {
     patrolZones: '/patrol/zones',
     patrolZoneDetail: patrolZoneDetail,
     patrolPoints: '/patrol/points',
+    patrolPointDetail: patrolPointDetail,
     zones: '/zones',
     courseDetail: courseDetail,
     points: '/points',
@@ -68,6 +77,7 @@ export const pathPatterns = {
   pointDetail: '/points/:pointSeq',
   courseDetail: '/zones/:courseSeq',
   patrolZoneDetail: '/patrol/zones/:historySeq',
+  patrolPointDetail: '/patrol/points/:detailSeq',
 } as const
 
 /**

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { SUMMARY_DAYS, summarizePatrolHistory, summaryFromDate, summaryToDate, toPatrolTicks, formatSinceLabel } from '../patrolSummary'
-import type { PointHistoryRow } from '../../types'
+import type { PointHistoryRow } from '@/features/course-history/types'
 
 /**
  * 🔴 **전용 집계 API 가 없어 클라이언트가 센다**(`spec 027` Phase 3). 그래서 경계를

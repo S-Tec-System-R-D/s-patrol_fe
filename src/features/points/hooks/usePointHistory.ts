@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { fetchPointHistory } from '../api/pointHistory'
+import { fetchPointHistory } from '@/features/course-history/api/getPointHistory'
+import type { PointHistoryParams } from '@/features/course-history/types'
 import { pointKeys } from '../queryKeys'
-import type { PointHistoryParams } from '../types'
 
 /**
  * 지점 순찰이력 조회 (`spec 027` Phase 3).

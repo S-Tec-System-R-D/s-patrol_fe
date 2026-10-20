@@ -1,6 +1,6 @@
 import { differenceInCalendarDays, format, isValid, parseISO, subDays } from 'date-fns'
 
-import type { PointHistoryRow } from '../types'
+import type { PointHistoryRow } from '@/features/course-history/types'
 
 /**
  * 지점 순찰 인증 기록 집계 (`spec 027` Phase 3).

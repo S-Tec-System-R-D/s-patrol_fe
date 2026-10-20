@@ -1,5 +1,7 @@
+import type { PointHistoryMemo } from './checkDetail'
+
 /**
- * 순찰이력 응답 타입 — `docs/api-spec.md` §5-2 (15·17·19번 블록).
+ * 순찰이력 응답 타입 — `docs/api-spec.md` §5-2 (15·17·19·20번 블록).
  *
  * 🔴 **`features/courses` 에 둔다**(코스 상세 B단). 소비처가 코스 상세 하나뿐이고,
  * `spec 025`(코스이력 전용 페이지)가 착수하면 **그쪽이 주인이 된다** — 그때
@@ -169,14 +171,84 @@ export interface CourseHistoryParams {
   pageSize: number
 }
 
+/**
+ * `GetPointHistory` 쿼리 파라미터 — **목록 화면과 지점 상세가 같은 것을 쓴다**(`spec 037` T529).
+ *
+ * 🔴 **`siteSeq` 만 필수고 나머지는 전부 옵셔널이다.** 소비처가 두 종류이기 때문이다:
+ * - 지점 상세(027)·지점 인증 상세(037)는 **`pointSeq` 로 좁혀** 그 지점만 본다
+ * - 지점 순찰이력 목록(037)은 **`pointSeq` 없이** 사업장 전체를 보고 필터로 좁힌다
+ *
+ * 🔴 **`pointSeq` 를 필수로 두면 목록이 못 쓴다.** 통합 전 `features/points/types/history.ts`
+ * 가 그렇게 좁혀 둬서(027 전용) 037 이 **같은 응답에 두 번째 타입을 만들 참이었다** —
+ * 036 이 `PointResult` 에서 막 해소한 3중 분기와 같은 종류다.
+ */
 export interface PointHistoryParams {
   siteSeq: number
   courseSeq?: number
   pointSeq?: number
-  /** 지점 상태 필터 — `POINT_HISTORY_STATUS` */
+  /** 지점 상태 필터 — `POINT_HISTORY_STATUS`. ⚠️ 목록에 실재하는 값은 `3`·`4` 뿐이다 */
   status?: number
+  /** 인증수단 필터 — `AUTH_METHOD`(9 QR / 10 NFC) */
+  authMethod?: number
+  /** 🔴 `yyyy-MM-dd`. **그 날을 포함한다**(실측). from > to 면 에러 없이 0건 */
   fromDt?: string
   toDt?: string
+  /** 순찰자명 부분 검색. 🔴 드롭다운이 아니라 **텍스트**다 — 현장 계정은 `UserList` 가 403 */
+  userName?: string
+  /** 코스명 부분 검색. ⚠️ 037 은 쓰지 않는다(코스는 셀렉트) — 실측 파라미터라 선언만 둔다 */
+  courseName?: string
   pageNumber: number
   pageSize: number
+}
+
+/**
+ * `GET /api/v1/History/W/sign/GetPointHistoryDetail?detailSeq=` → `PointHistoryDetail`
+ * (`api-spec.md` §5-2 20번, `spec 037` T530)
+ *
+ * 🔴 **목록과 어긋나는 것이 둘이다** — 같은 값인데 이름·null 표현이 다르다:
+ * | | 목록(`PointHistoryRow`) | 상세(여기) |
+ * |---|---|---|
+ * | 시간초과 | `overTimeYn`(대문자 T) | **`overtimeYn`**(소문자) |
+ * | 인증수단명 null | `''` | **`'Unknown'`** |
+ *
+ * ⚠️ **`pauseTime` 은 양쪽 다 `'HH:mm:ss'` 문자열이다**(실측, `api-spec.md` §5-2 20번).
+ * 🔴 **B-5(목록 문자열 ↔ 상세 숫자)는 코스 쪽 이야기다** — `CourseHistoryDetail` 만
+ * `number` 다. 지점 상세까지 숫자로 적어 두면 **분을 초로 읽는 코드**가 들어간다.
+ *
+ * 어댑터를 만들지 않고 **각자 실측대로 선언**한다(`CLAUDE.md` B4 — `CourseHistoryDetail`
+ * 과 같은 판단). 어댑터로 이름을 맞추면 어느 응답을 보고 있는지 호출부에서 사라진다.
+ *
+ * 🔴 **`'Unknown'` 을 화면에 그대로 내보내지 않는다.** 영문이 섞이고 "알 수 없는 인증수단"
+ * 처럼 읽히는데, 실제로는 **인증이 없었다**는 뜻이다 → 빈 칸으로 그린다.
+ *
+ * 🔴 **`historySeq` 가 없다.** `courseSeq` 만 있어서 "그 회차 안에서의 위치"(직전 지점 간격 ·
+ * 코스 내 순서 · 타임라인 · 코스 상세 링크)를 **만들 수 없다** — `spec 037` US4 가 백엔드
+ * 회신 대기 중인 이유다.
+ */
+export interface PointHistoryDetail {
+  detailSeq: number
+  pointSeq: number
+  pointName: string
+  /** 🔴 상세는 소문자 t — 목록은 `overTimeYn`(B-4) */
+  overtimeYn: boolean
+  hasMemo: boolean
+  /** 지점 사전(`POINT_HISTORY_STATUS`) */
+  status: number
+  statusName: string
+  /** 🔴 **인증 시점 좌표**다. 미인증 행은 `null` — 지점 등록 좌표와 다른 값이다 */
+  gpsLat: number | null
+  gpsLng: number | null
+  courseSeq: number
+  courseName: string
+  userSeq: number
+  userName: string
+  /** `'HH:mm:ss'` — ⚠️ 목록과 **같은 타입**이다(코스 상세만 number 다, B-5) */
+  pauseTime: string
+  /** ✅ **지점 인증 시간**이다(사용자 DB 확인 2026-10-19, OQ-15 해소) */
+  checkDt: string
+  authMethod: number | null
+  /** 🔴 null 일 때 **`'Unknown'`** — 목록은 `''` 다. 화면에는 내보내지 않는다 */
+  authMethodName: string
+  /** 🔴 코스 쪽 `memos` 와 **구조가 다르다**(B-35) — 어댑터가 흡수한다 */
+  memoList: PointHistoryMemo[]
 }

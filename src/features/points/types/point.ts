@@ -9,16 +9,15 @@
  * 그 파일이 이 타입을 쓴다. 지우려면 mock 데이터 전체를 들어내야 하는데, 그건 `dev` 모드를
  * 없애는 일이다.
  *
- * 남은 **외부** 참조는 **1곳**뿐이다(2026-10-13 실측):
- *   - `features/patrol-points/types/PatrolPoint.ts:1` (`PointAuthenticationMethod`)
+ * ✅ **외부 참조가 0곳이 됐다 (2026-10-19, `spec 037` T538).** 마지막 1곳이던
+ * `features/patrol-points/types/PatrolPoint.ts` 를 **삭제**했다 — 예고대로 `/patrol/*` 가
+ * 서버 API 로 전환되며 mock 타입이 통째로 사라진 것이다(037 이 024·025 를 대체했다).
+ * 🔴 **복제하지 않아서 지울 것도 없었다** — 2026-10-13 에 "지금 복제하면 024 에서 다시
+ * 지울 코드를 더하는 셈" 이라며 사유 기록을 택한 판단이 그대로 맞았다.
+ * `spec 022` OQ-022-H · `spec 023` DoD #15 **종결.**
  *
- * 이 1곳도 **지금 끊지 않는다.** 끊는 방법은 `'QR' | 'NFC'` 를 `patrol-points` 에 복제하는
- * 것인데, `/patrol/*` 화면은 **`spec 024`·`025` 가 서버 API 로 전환하면서 mock 타입이 통째로
- * 사라질** 자리다(023이 `features/zone` 을 지운 것과 같은 경로). 지금 복제하면 024에서 다시
- * 지울 코드를 **더하는** 셈이다(A3).
- *
- * ✅ **사용자 결정(2026-10-13): 그대로 둔다.** 한 줄 복제로 DoD #15 를 형식상 충족시킬 수
- * 있었지만, 024 에서 되돌릴 작업이라 **사유 기록**을 택했다. `spec 022` OQ-022-H 종결.
+ * ⚠️ `PointAuthenticationMethod` 자체는 **남는다** — 아래 `PointType` 블록(MSW dev 데이터)과
+ * 지점 폼 2곳(`AuthMethodSelector`·`AuthMethodDisplay`)이 쓰는 **살아 있는 타입**이다.
  *
  * ✅ `features/zone/form/AddPointForm.tsx` 는 **023 Phase 2 에서 삭제됐다**(mock 셸 제거).
  * ✅ `features/zone/types/point.ts` 는 **023 Phase 3 에서 삭제됐다**(T357).
