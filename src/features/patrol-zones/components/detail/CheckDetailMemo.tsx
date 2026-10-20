@@ -141,8 +141,11 @@ const MemoAttaches = ({ memo }: { memo: CheckDetailMemoData }) => {
  *
  * 실패 상태를 **첨부마다** 들고 있어야 한다 — 패널 단위로 묶으면 한 장이 404 일 때
  * 나머지 멀쩡한 사진까지 폴백으로 가린다(회신 후 일부만 복구되는 경우가 실재할 수 있다).
+ *
+ * 🔴 **export 한다**(`spec 026` 공지 이미지 카드) — 폴백 썸네일을 두 벌로 만들면 B-40 회신
+ * 때 한쪽만 고쳐진다(037 이월 ⑤ 가 예고한 형태: 컴포넌트만 꺼내고 배치는 소비처가 정한다).
  */
-const MemoAttach = ({ attach }: { attach: CheckDetailAttach }) => {
+export const MemoAttach = ({ attach }: { attach: CheckDetailAttach }) => {
   const [failed, setFailed] = useState(false)
 
   return (

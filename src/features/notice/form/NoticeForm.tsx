@@ -3,11 +3,12 @@ import AppCheckbox from '@/components/app/AppCheckbox'
 import AppInput from '@/components/app/AppInput'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import type { Notice } from '../types/notice'
+import type { NoticeDetail } from '../types/notice'
 import { noticeFormSchema, type NoticeFormData } from './schema'
 
 interface NoticeFormProps {
-  notice?: Notice
+  /** 수정 시 기본값. 🔴 서버 상세(`NoticeDetail`)의 이름을 그대로 받는다(`spec 026` T587) */
+  notice?: Pick<NoticeDetail, 'title' | 'description'>
 }
 
 const NoticeForm = ({ notice }: NoticeFormProps) => {
@@ -19,8 +20,10 @@ const NoticeForm = ({ notice }: NoticeFormProps) => {
     resolver: zodResolver(noticeFormSchema),
     defaultValues: {
       title: notice?.title ?? '',
-      content: notice?.content ?? '',
-      sendAppPush: notice?.appPushSent ?? true,
+      // ⚠️ 스키마 필드명 `content` 는 그대로 둔다 — 요청 DTO 는 변경계 전환 spec 에서 swagger 기준으로 맞춘다
+      content: notice?.description ?? '',
+      // 🔴 항상 켠 채로 연다 — 지난 발송 여부는 조회 응답에 없다(작성 시점 옵션)
+      sendAppPush: true,
     },
   })
 

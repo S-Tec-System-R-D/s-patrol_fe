@@ -53,20 +53,27 @@
 > **독립 테스트 기준**: MSW 200 에서 `/notice/:noticeSeq` 가 본문·기본정보를 그리고, 이미지·
 > 첨부가 없으면 그 카드가 **없다**. `/notice/abc` 는 요청 없이 즉시 오류 화면이다.
 
-- [ ] T581 [US2] 본문 카드 in src/features/notice/components/detail/NoticeBodyCard.tsx — `description` `whitespace-pre-line`
-- [ ] T582 [US2] [P] 이미지 카드 in src/features/notice/components/detail/NoticeImageCard.tsx — `imageList` 썸네일 + 🔴 **onError 폴백**(`patterns.md` §15, B-40). 0장이면 렌더하지 않는다(호출부가 아니라 카드가 `null` 반환 — 037 `PointLocationMapCard` 와 같은 규약)
-- [ ] T583 [US2] [P] 기본정보 카드 in src/features/notice/components/detail/NoticeInfoCard.tsx — `AppDetailCard`+`AppDetailRow`: 작성자 · 작성일시(`yyyy-MM-dd HH:mm`) · 고정 여부 · 첨부(이미지 n · 파일 m)
-- [ ] T584 [US2] [P] 첨부파일 카드 in src/features/notice/components/detail/NoticeFileCard.tsx — `fileList` 파일명 + 확장자, `attachPath` 새 탭 링크. 0건이면 렌더하지 않는다. ⚠️ 링크는 B-40 으로 지금은 404 — 폴백 대상이 아니다(다운로드는 브라우저가 처리)
-- [ ] T585 [US2] 🔴 **상세 페이지 재작성** in src/pages/service/notice/NoticeDetailPage.tsx — 037 골격: 브레드크럼(`공지사항 > 공지 상세`) → 머리 줄(제목 + `고정` 뱃지 + 수정 `AppDialog`·삭제 `AppAlertDialog`) → `lg:grid-cols-3 items-start` (좌 2/3: 본문 → 이미지 / 우 1/3: 기본정보 → 첨부파일). 분기 4종: 🔴 **주소 오류를 로딩보다 먼저**(037 T557 결함) → 로딩 → 조회 실패(다시 시도 + 목록으로) → 정상
-- [ ] T586 [US2] [P] 화면 테스트 in src/pages/service/notice/__tests__/NoticeDetailPage.test.tsx — 🔴 기존 테스트 **대체**(mock id 문자열 기준이라 성립하지 않는다). 정상 렌더 · 이미지/파일 없을 때 카드 없음 · 이미지 onError 폴백 · `/notice/abc` 즉시 오류 · 조회 실패 분기
+- [x] T581 [US2] 본문 카드 in src/features/notice/components/detail/NoticeBodyCard.tsx — `description` `whitespace-pre-line`
+- [x] T582 [US2] [P] 이미지 카드 in src/features/notice/components/detail/NoticeImageCard.tsx — ✅ **036 `MemoAttach` 를 export 해 그대로 썼다**(src/features/patrol-zones/components/detail/CheckDetailMemo.tsx — 037 이월 ⑤ 가 예고한 형태, 폴백 썸네일 복제 0건). `imageList` 썸네일 + 🔴 **onError 폴백**(`patterns.md` §15, B-40). 0장이면 렌더하지 않는다(호출부가 아니라 카드가 `null` 반환 — 037 `PointLocationMapCard` 와 같은 규약)
+- [x] ~~T583~~ [US2] [P] 기본정보 카드 in src/features/notice/components/detail/NoticeInfoCard.tsx — `AppDetailCard`+`AppDetailRow`: 작성자 · 작성일시(`yyyy-MM-dd HH:mm`) · 고정 여부 · 첨부(이미지 n · 파일 m)
+- [x] T584 [US2] [P] 첨부파일 카드 in src/features/notice/components/detail/NoticeFileCard.tsx — `fileList` 파일명 + 확장자, `attachPath` 새 탭 링크. 0건이면 렌더하지 않는다. ⚠️ 링크는 B-40 으로 지금은 404 — 폴백 대상이 아니다(다운로드는 브라우저가 처리)
+- [x] T585 [US2] 🔴 **상세 페이지 재작성** in src/pages/service/notice/NoticeDetailPage.tsx — 037 골격: 브레드크럼(`공지사항 > 공지 상세`) → 머리 줄(제목 + `고정` 뱃지 + 수정 `AppDialog`·삭제 `AppAlertDialog`) → `lg:grid-cols-3 items-start` (좌 2/3: 본문 → 이미지 / 우 1/3: 기본정보 → 첨부파일). 분기 4종: 🔴 **주소 오류를 로딩보다 먼저**(037 T557 결함) → 로딩 → 조회 실패(다시 시도 + 목록으로) → 정상. ⚠️ **수정도 헤더에 뒀다** — 029 의 "값을 보여주는 카드에 수단" 규칙과 다르지만, 공지의 수정 대상은 제목(헤더)·본문(카드)에 걸쳐 어느 한 카드에 속하지 않는다. 🔴 **T589 의 `NoticeDetailView.tsx` 삭제를 여기서 앞당겼다** — 폼 입력 타입(T587)이 바뀌면 컴파일이 안 되고, 이 페이지 교체로 소비처가 0건이 됐다
+- [x] T586 [US2] [P] 화면 테스트 in src/pages/service/notice/__tests__/NoticeDetailPage.test.tsx — 🔴 기존 테스트 **대체**(mock id 문자열 기준이라 성립하지 않는다). 정상 렌더 · 이미지/파일 없을 때 카드 없음 · 이미지 onError 폴백 · `/notice/abc` 즉시 오류 · 조회 실패 분기
+
+### Phase 4 사용자 수정 (2026-10-20)
+
+- [x] T586a [US2] 제목 옆 `고정` 뱃지 → **핀 아이콘** in src/pages/service/notice/NoticeDetailPage.tsx — 목록의 핀 열과 같은 표식
+- [x] T586b [US2] 본문만 `text-sm`(14px) + `leading-relaxed` in src/features/notice/components/detail/NoticeBodyCard.tsx — 공용 `text-body`(12.5px)는 표·메타 밀도라 긴 글에 작았다
+- [x] T586c [US2] 🔴 **기본정보 카드 제거**(T583 철회) in src/pages/service/notice/NoticeDetailPage.tsx — 4행 중 고정은 핀이, 첨부 수는 이미지·첨부파일 카드 제목이 이미 말해 **작성자·작성일시만 남았다** → `AppPageHeader` 부제 한 줄(`이현장 · 2026-05-28 10:30`). 배치는 **좌 2/3 본문 / 우 1/3 이미지 → 첨부파일**(본문 전체 폭은 넓은 화면에서 줄이 너무 길다). `NoticeInfoCard.tsx` 삭제
+- [x] T586d [US2] 🔴 **2열 폐기 → 한 열, 내용 카드 하나** in src/features/notice/components/detail/NoticeContentCard.tsx · src/pages/service/notice/NoticeDetailPage.tsx — 2열은 기본정보 카드 때문에 있었고, 그것이 부제로 가자 우측에 **첨부파일만** 남았다(이미지·파일 없는 공지가 대부분이라 거의 늘 빈다). 본문 → (구분선) 이미지 → (구분선) 첨부파일, 영역은 **있을 때만**. `NoticeBodyCard`·`NoticeImageCard`·`NoticeFileCard` 를 합쳐 삭제(T581·T582·T584 대체)
 
 ## Phase 5: US3 — 작성·수정·삭제 (mock 유지, 입력 타입만)
 
 > **독립 테스트 기준**: 수정 모달이 `NoticeDetail` 의 제목·본문을 기본값으로 채우고, 작성
 > 모달은 빈 값 + 앱 푸시 체크 기본 on 이다.
 
-- [ ] T587 [US3] 폼 입력 타입 전환 in src/features/notice/form/NoticeForm.tsx — prop 을 `notice?: Pick<NoticeDetail, 'title' | 'description'>` 로. `sendAppPush` 기본값은 **항상 `true`**(구 `appPushSent` 는 서버에 없다). 🔴 **스키마 필드명(`content`)은 바꾸지 않는다** — 요청 DTO 는 변경계 전환 spec 에서 swagger 기준으로 맞춘다(지금 바꾸면 그때 또 바꾼다). 제출은 콘솔 스텁 유지
-- [ ] T588 [US3] [P] 폼 테스트 갱신 in src/features/notice/form/__tests__/NoticeForm.test.tsx — 기본값 출처만 바뀐다. 🔴 검증 규칙 테스트는 **고치지 않고 통과해야** 한다
+- [x] T587 [US3] 폼 입력 타입 전환 in src/features/notice/form/NoticeForm.tsx — prop 을 `notice?: Pick<NoticeDetail, 'title' | 'description'>` 로. `sendAppPush` 기본값은 **항상 `true`**(구 `appPushSent` 는 서버에 없다). 🔴 **스키마 필드명(`content`)은 바꾸지 않는다** — 요청 DTO 는 변경계 전환 spec 에서 swagger 기준으로 맞춘다(지금 바꾸면 그때 또 바꾼다). 제출은 콘솔 스텁 유지
+- [x] T588 [US3] [P] 폼 테스트 갱신 in src/features/notice/form/__tests__/NoticeForm.test.tsx — 기본값 출처만 바뀐다. 🔴 검증 규칙 테스트는 **고치지 않고 통과해야** 한다
 
 ## Phase 6: Polish
 
