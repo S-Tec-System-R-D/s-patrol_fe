@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { MapPinOffIcon } from 'lucide-react'
+import { CrosshairIcon } from 'lucide-react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -120,8 +120,10 @@ const PointLocationMapCard = ({ detail }: PointLocationMapCardProps) => {
         {/* 🔴 제목이 **무엇의 좌표인지** 말한다 — "지점 위치" 라고 쓰면 지점이 등록된 자리로
             읽히는데, 이 값은 **인증을 찍은 위치**다 */}
         <span className="text-panel-title font-semibold">인증 위치</span>
+        {/* 🔴 아이콘을 **`MapPinOff` 에서 바꿨다**(캡쳐에서 발견 2026-10-20) — 그건 "위치
+            없음" 을 뜻하는 아이콘이라, 좌표가 **있어서 그린 지도** 옆에 붙으니 뜻이 반대였다 */}
         <span className="inline-flex items-center gap-1 text-caption text-muted-foreground">
-          <MapPinOffIcon size={13} aria-hidden />
+          <CrosshairIcon size={13} aria-hidden />
           인증 시점 좌표
         </span>
       </div>

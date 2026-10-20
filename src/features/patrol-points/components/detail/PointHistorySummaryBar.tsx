@@ -69,8 +69,22 @@ const PointHistorySummaryBar = ({ detail }: PointHistorySummaryBarProps) => {
     { label: '순찰자', value: detail.userName || '순찰자 미지정' },
     {
       label: '인증시각',
-      // ✅ **미완료 행에도 적는다** — `checkDt` 는 지점 인증 시간이다(OQ-15 해소)
-      value: <span className="tabular-nums">{detail.checkDt.replace('T', ' ')}</span>,
+      /**
+       * ✅ **미완료 행에도 적는다** — `checkDt` 는 지점 인증 시간이다(OQ-15 해소).
+       *
+       * 🔴 **날짜와 시각을 두 줄로 나눈다**(캡쳐에서 발견 2026-10-20). 한 줄로 두면
+       * 스트립 칸 폭에서 `2026-10-14 09:25:...` 로 **말줄임돼 초가 잘렸다** — 하필
+       * **가장 정밀한 값**이 날아간다.
+       * 🔴 **초를 버리지 않는 이유**: 테스트 환경에서 태그가 한 책상에 모여 있어 **같은
+       * 분에 연달아 찍힌다**(OQ-15 실측) — 초가 두 인증을 가르는 유일한 값일 수 있다.
+       * ⚠️ 목록 컬럼도 날짜/시각 2줄이라 **어휘가 같다**.
+       */
+      value: (
+        <span className="flex flex-col tabular-nums leading-tight">
+          <span>{detail.checkDt.slice(0, 10)}</span>
+          <span>{detail.checkDt.slice(11, 19)}</span>
+        </span>
+      ),
     },
     {
       label: '인증수단',

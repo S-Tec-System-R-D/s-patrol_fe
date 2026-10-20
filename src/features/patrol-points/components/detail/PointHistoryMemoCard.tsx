@@ -52,11 +52,10 @@ const PointHistoryMemoCard = ({ detail }: PointHistoryMemoCardProps) => {
        */
       badge={
         hasMemo ? (
-          /* 🔴 **글자가 아니라 pill 이다**(2026-10-20 조정) — 회색 패널을 걷어내고 나니
-             제목 아래로 `건수`(회색 글자)와 `작성자 · 시각`(회색 글자)이 **같은 톤으로
-             두 줄 쌓여** 어느 쪽이 무엇인지 흐려졌다. 건수는 **숫자 정보**라 pill 로 띄워
-             메타 줄과 역할을 가른다 */
-          <span className="w-fit rounded-full bg-muted px-2 py-0.5 text-caption text-muted-foreground">
+          /* 🔴 **pill 을 걷어냈다**(사용자 요청 2026-10-20) — 자리를 **제목 줄 오른쪽**으로
+             옮기자 pill 이 필요 없어졌다. 아래 메타와 섞여 보이던 것이 문제였는데, 그건
+             **같은 줄에 쌓여 있었기 때문**이지 모양 탓이 아니었다. 이제 **설명 톤**이다 */
+          <span className="shrink-0 text-caption font-normal text-muted-foreground">
             메모 {memoCount}건{photoCount > 0 ? ` · 사진 ${photoCount}장` : ''}
           </span>
         ) : undefined

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { ImageOffIcon } from 'lucide-react'
 
+import AppBadge from '@/components/app/AppBadge'
+
 import type {
   CheckDetailAttach,
   CheckDetailMemo as CheckDetailMemoData,
@@ -77,12 +79,25 @@ const CheckDetailMemo = ({ row, surface = 'panel' }: CheckDetailMemoProps) => {
             'flex flex-col gap-3'
       }
     >
-      {/* 🔴 메타는 **패널 머리에 한 번만** — 메모마다 반복하면 메모별로 다른 값처럼 읽힌다 */}
-      <p className="text-caption text-muted-foreground">
-        {/* 값 없음은 하이픈이다(`design-system.md` §4-5A) */}
-        {row.userName ?? '-'}
-        {checkedAt !== null && ` · ${formatTime(checkedAt)}`}
-      </p>
+      {/**
+       * 🔴 메타는 **패널 머리에 한 번만** — 메모마다 반복하면 메모별로 다른 값처럼 읽힌다.
+       *
+       * 🔴 **뱃지로 띄운다**(사용자 요청 2026-10-20). 회색 글자 한 줄이면 **메모 본문과 같은
+       * 무게**로 흘러가 "누가·언제" 가 본문의 첫 줄처럼 읽혔다 — 뱃지는 그것이 **본문이 아니라
+       * 꼬리표**임을 모양으로 말한다.
+       * ⚠️ **두 surface 모두 바꾼다** — 같은 뜻을 화면마다 다른 모양으로 두면 036·037 중
+       * 한쪽만 고쳐진다. 🔴 코스 상세의 캡쳐는 **영향이 없다**(메모 행은 접힌 상태로 찍힌다).
+       *
+       * ⚠️ **"그 시각에 메모를 썼다" 는 뜻이 아니다** — 메모에는 작성 시각이 없고, 이 값은
+       * **그 지점을 인증한 시각**(`checkDt`)이다.
+       */}
+      <span className="w-fit">
+        <AppBadge variant="muted">
+          {/* 값 없음은 하이픈이다(`design-system.md` §4-5A) */}
+          {row.userName ?? '-'}
+          {checkedAt !== null && ` · ${formatTime(checkedAt)}`}
+        </AppBadge>
+      </span>
 
       {/**
        * 🔴 **메모는 배열이다 — 건마다 경계를 준다**(2026-10-20).

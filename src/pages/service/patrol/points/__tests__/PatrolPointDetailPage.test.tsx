@@ -106,7 +106,10 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     expect(inSummary().getByText('정문 입구')).toBeInTheDocument()
     expect(inSummary().getByText('A동 순찰코스')).toBeInTheDocument()
     expect(inSummary().getByText('김근무')).toBeInTheDocument()
-    expect(inSummary().getByText('2026-05-01 09:07:00')).toBeInTheDocument()
+    // 🔴 **날짜와 시각이 두 줄이다** — 한 줄이면 칸 폭에서 말줄임돼 **초가 잘린다**
+    //    (캡쳐에서 발견 2026-10-20). 초는 같은 분에 연달아 찍힌 인증을 가르는 값이다
+    expect(inSummary().getByText('2026-05-01')).toBeInTheDocument()
+    expect(inSummary().getByText('09:07:00')).toBeInTheDocument()
     // 🔴 `인증수단 · 구간` 을 한 칸에 합치지 않는다 — 구간은 의미 미확정이라(OQ-037-A)
     //    인증수단 옆에 붙이면 그 부속처럼 읽힌다
     expect(inSummary().getByText('인증수단')).toBeInTheDocument()
@@ -186,7 +189,10 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     renderPage()
 
     await screen.findByRole('group', { name: '인증 요약' })
-    expect(inSummary().getByText('2026-05-01 09:07:00')).toBeInTheDocument()
+    // 🔴 **날짜와 시각이 두 줄이다** — 한 줄이면 칸 폭에서 말줄임돼 **초가 잘린다**
+    //    (캡쳐에서 발견 2026-10-20). 초는 같은 분에 연달아 찍힌 인증을 가르는 값이다
+    expect(inSummary().getByText('2026-05-01')).toBeInTheDocument()
+    expect(inSummary().getByText('09:07:00')).toBeInTheDocument()
   })
 
   it('🔴 시간초과는 결과와 나란히 병기한다 — 상세는 소문자 t 다(B-4)', async () => {
