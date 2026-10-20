@@ -139,6 +139,27 @@ test('순찰이력 — 지점 이력', async ({ page }) => {
 })
 
 /**
+ * 🔴 **`spec 037` 에서 신설됐다.** 전에는 기록건수 뱃지 → **모달**이라 독립 화면이 아니었고
+ * (`PatrolRecordDialog`), 037 이 **별도 라우트**(`/patrol/points/:detailSeq`)로 바꿨다.
+ *
+ * 🔴 **URL 로 직접 들어간다**(코스 상세와 같은 이유) — 행 클릭에 의존하면 목록 정렬·필터
+ * 기본값이 바뀔 때마다 **다른 인증**이 찍혀 baseline 이 흔들린다.
+ *
+ * 🔴 **`detailSeq 1060` 은 "메모가 있고 완료인" 시드다**(`handlers/points.ts` `buildHistory`:
+ * `pointSeq 1` · `ago 6` → `hasMemo: true` · `status 4`). 그래서 한 장에 **순찰 기록(메모+
+ * 사진 폴백) · 인증 위치 지도 · 최근 인증 목록**이 함께 들어간다 — 메모 없는 인증을 찍으면
+ * 카드 둘이 빈 상태가 돼 **무엇이 바뀌었는지 보이지 않는다.**
+ *
+ * ⚠️ **사진은 404 폴백으로 찍힌다**(B-40) — 회신 후 baseline 이 바뀐다.
+ */
+test('순찰이력 — 지점 인증 상세', async ({ page }) => {
+  await open(page, '/patrol/points/1060')
+  // 요청 2개(상세·최근 14일) + 지도 타일이 안착할 여유
+  await page.waitForTimeout(900)
+  await shoot(page, '현장/patrol-points--상세')
+})
+
+/**
  * 🔴 **`spec 023` 에서 1장 → 2장이 됐다.** 좌/우 마스터-디테일이 **목록 페이지 + 상세
  * 페이지**로 분리돼(지점과 같은 구조) 한 화면에 담기지 않는다. baseline 파일명도 바뀐다
  * (`zones--목록+다이어그램` → `zones--목록` · `zones--상세`).
