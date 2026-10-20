@@ -12,6 +12,8 @@
 const adminLocationDetail = (id: string) => `/admin/locations/${id}`
 /** 🔴 `noticeSeq` 는 number 다(`spec 026` — mock 시절 `id: string` 에서 서버 키로 전환) */
 const noticeDetail = (noticeSeq: number) => `/notice/${noticeSeq}`
+/** 🔴 `userSeq` 도 number 다(`spec 038` — 근무자 상세 신설) */
+const userDetail = (userSeq: number) => `/users/${userSeq}`
 /** 🔴 `pointSeq` 는 number 다(`CLAUDE.md` B4 "ID는 number") */
 const pointDetail = (pointSeq: number) => `/points/${pointSeq}`
 /** 🔴 `courseSeq` 도 number 다 — `pointDetail` 과 같은 모양으로 둔다(새 관례를 만들지 않는다) */
@@ -54,6 +56,7 @@ export const paths = {
     points: '/points',
     pointDetail: pointDetail,
     users: '/users',
+    userDetail: userDetail,
     deployments: '/deployments',
     notice: '/notice',
     noticeDetail: noticeDetail,
@@ -75,6 +78,7 @@ export const paths = {
 export const pathPatterns = {
   adminLocationDetail: '/admin/locations/:id',
   noticeDetail: '/notice/:noticeSeq',
+  userDetail: '/users/:userSeq',
   pointDetail: '/points/:pointSeq',
   courseDetail: '/zones/:courseSeq',
   patrolZoneDetail: '/patrol/zones/:historySeq',

@@ -27,10 +27,10 @@
 > **독립 테스트 기준**: MSW 에서 목록·상세 핸들러가 **각각 1번만** 선언되어 있고, `siteId`·`searchKey`·
 > `codeSeq`·`workYn`·페이징을 받아 걸러 준다. 🔴 `siteSeq` 로 보내면 **걸리지 않는다**(서버 이름을 지킨다).
 
-- [ ] T603 훅 2종 in src/features/workers/hooks/useUserList.ts · src/features/workers/hooks/useUserDetail.ts — 026 `useNoticeList`·`useNoticeDetail` 과 같은 모양(`null` 이면 `enabled: false`)
-- [ ] T604 MSW 핸들러 신설 in src/mocks/handlers/users.ts · src/mocks/handlers/index.ts — 시드는 `workerData.ts` 를 **서버 형태로 옮긴다**. 🔴 **관리자 행(codeSeq 6) · 근무 종료 행 · 파견 행(originSiteSeq 有)** 이 모두 있게. `searchKey` 는 **이름 부분일치**(OQ-038-A 가정, T619 에서 교정). 없는 `userId` 는 400 + 래퍼(가정)
-- [ ] T605 [P] 훅·핸들러 테스트 in src/features/workers/hooks/__tests__/useUser.test.tsx — 필터 3종·페이징·`null` 미요청 · 상세·없는 ID 오류 (026 T574a 와 같은 게이트 증명)
-- [ ] T606 라우트 신설 in src/router/paths.ts · src/router/index.tsx — `userDetail(userSeq: number)` + `pathPatterns.userDetail = '/users/:userSeq'`. 상세 페이지는 T614 에서 만든다 — 그 전까지 라우트 등록은 **T614 와 함께**(빈 페이지를 노출하지 않는다)
+- [x] T603 훅 2종 in src/features/workers/hooks/useUserList.ts · src/features/workers/hooks/useUserDetail.ts — 026 `useNoticeList`·`useNoticeDetail` 과 같은 모양(`null` 이면 `enabled: false`)
+- [x] T604 MSW 핸들러 신설 in src/mocks/handlers/users.ts · src/mocks/handlers/index.ts — 시드는 `workerData.ts` 를 **서버 형태로 옮긴다**. 🔴 **관리자 행(codeSeq 6) · 근무 종료 행 · 파견 행(originSiteSeq 有)** 이 모두 있게. `searchKey` 는 **이름 부분일치**(OQ-038-A 가정, T619 에서 교정). 없는 `userId` 는 400 + 래퍼(가정)
+- [x] T605 [P] 훅·핸들러 테스트 in src/features/workers/hooks/__tests__/useUser.test.tsx — 필터 3종·페이징·`null` 미요청 · 상세·없는 ID 오류 (026 T574a 와 같은 게이트 증명)
+- [x] T606 라우트 신설 — ✅ **`paths.ts` 만 했다**(2026-10-21, 함수 + 패턴). `router/index.tsx` 등록은 **T614 에서**(037 T550 선례) — in src/router/paths.ts · src/router/index.tsx — `userDetail(userSeq: number)` + `pathPatterns.userDetail = '/users/:userSeq'`. 상세 페이지는 T614 에서 만든다 — 그 전까지 라우트 등록은 **T614 와 함께**(빈 페이지를 노출하지 않는다)
 
 ## Phase 3: US1 — 목록 테이블화 + 서버 타입 전환
 

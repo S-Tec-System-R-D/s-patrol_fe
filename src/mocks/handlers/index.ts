@@ -3,6 +3,7 @@ import { courseHandlers } from './courses'
 import { historyHandlers } from './history'
 import { noticeHandlers } from './notices'
 import { pointHandlers } from './points'
+import { userHandlers } from './users'
 
 /**
  * MSW 핸들러 묶음 SSOT.
@@ -23,4 +24,5 @@ export const handlers = [
   ...courseHandlers,
   ...historyHandlers,
   ...noticeHandlers,
+  ...userHandlers,
 ]
