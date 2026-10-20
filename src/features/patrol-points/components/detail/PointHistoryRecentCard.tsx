@@ -135,10 +135,21 @@ const PointHistoryRecentCard = ({ detail, siteSeq }: PointHistoryRecentCardProps
                   return (
                     <li
                       key={row.detailSeq}
-                      /* 🔴 **지금 보고 있는 행을 강조한다** — 없으면 날짜로 맞춰 봐야 한다.
-                         ⚠️ 색이 아니라 **배경 + 왼쪽 선**이다(색만으로 구분하지 않는다) */
-                      className={`flex items-center gap-3 border-border/50 py-2.5 text-body not-last:border-b ${
-                        isCurrent ? 'border-l-2 border-l-point bg-point-bg/40 pl-2' : ''
+                      /**
+                       * 🔴 **모든 행에 왼쪽 바를 주고 현재 행만 포인트색이다**
+                       * (사용자 결정 2026-10-20).
+                       *
+                       * 전에는 현재 행에만 바를 그려서 **바가 "강조" 그 자체**였다 — 행마다
+                       * 들쭉날쭉한 왼쪽 선이 리스트의 리듬을 깼다. 이제 바는 **리스트 공통
+                       * 장식**이고, 구분은 **색과 배경**이 한다.
+                       *
+                       * 🔴 **색만으로 구분하지 않는다** — 현재 행은 `point` 바 + 배경 +
+                       * `aria-current` **셋이 함께** 움직인다(`design-system.md` §3).
+                       * ⚠️ 바를 전 행에 **같은 색**으로 주면 현재 행을 가릴 수단이 사라진다 —
+                       * 그래서 나머지는 `border` 톤이다.
+                       */
+                      className={`flex items-center gap-3 border-l-2 border-border/50 py-2.5 pl-2 text-body not-last:border-b ${
+                        isCurrent ? 'border-l-point bg-point-bg/40' : 'border-l-border'
                       }`}
                       aria-current={isCurrent ? 'true' : undefined}
                     >

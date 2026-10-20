@@ -14,6 +14,10 @@ import { toCheckDetailRow } from '@/features/patrol-points/lib/pointHistoryMemo'
  * 들어 있다: 메타를 패널 머리에 한 번만 · 첨부마다 따로 실패 상태(B-40 폴백) ·
  * `whitespace-pre-line` · "처리 상태" 칸을 만들지 않기.
  *
+ * 🔴 **회색 패널을 쓰지 않는다**(`surface="plain"`, 사용자 지적 2026-10-20) — 036 의 회색
+ * 바탕은 **표 행을 펼친 패널**이라는 경계였다. 전용 카드 안에서는 **카드 속 카드**가 되고,
+ * 지점 인증은 메모가 **대개 1건**이라 경계를 만들 이유도 없다.
+ *
  * 🔴 **코스 상세와 달리 "펼침" 이 아니다.** 코스 상세는 **인증 내역 표의 한 행**을 펼쳐
  * 메모를 보여 주지만(여러 지점 중 하나), 이 화면은 **그 인증 1건 전용 페이지**다 — 접어
  * 둘 이유가 없다. 같은 컴포넌트를 **카드 본문에 그대로** 놓는다.
@@ -31,12 +35,35 @@ interface PointHistoryMemoCardProps {
 }
 
 const PointHistoryMemoCard = ({ detail }: PointHistoryMemoCardProps) => {
-  const hasMemo = detail.memoList.length > 0
+  const memoCount = detail.memoList.length
+  const hasMemo = memoCount > 0
+  const photoCount = detail.memoList.reduce((sum, memo) => sum + memo.attachList.length, 0)
 
   return (
-    <AppDetailCard title="순찰 기록">
+    <AppDetailCard
+      title="순찰 기록"
+      /**
+       * 🔴 **건수를 제목 옆에 적는다**(2026-10-20 — KPI 섹션을 제거하며 흡수했다).
+       *
+       * KPI 칸이 하던 유일한 고유 정보가 이 건수였다 — 나머지(결과·14일 집계)는 헤더 뱃지와
+       * 최근 인증 카드가 이미 같은 말을 하고 있었다. 🔴 **사진 건수를 숨기지 않는다**:
+       * URL 이 404 라 화면에 안 뜨지만(B-40) **건수는 사실**이고, 숨기면 "사진이 없다" 로
+       * 읽혀 **결함이 데이터 부재로** 보인다.
+       */
+      badge={
+        hasMemo ? (
+          /* 🔴 **글자가 아니라 pill 이다**(2026-10-20 조정) — 회색 패널을 걷어내고 나니
+             제목 아래로 `건수`(회색 글자)와 `작성자 · 시각`(회색 글자)이 **같은 톤으로
+             두 줄 쌓여** 어느 쪽이 무엇인지 흐려졌다. 건수는 **숫자 정보**라 pill 로 띄워
+             메타 줄과 역할을 가른다 */
+          <span className="w-fit rounded-full bg-muted px-2 py-0.5 text-caption text-muted-foreground">
+            메모 {memoCount}건{photoCount > 0 ? ` · 사진 ${photoCount}장` : ''}
+          </span>
+        ) : undefined
+      }
+    >
       {hasMemo ? (
-        <CheckDetailMemo row={toCheckDetailRow(detail)} />
+        <CheckDetailMemo row={toCheckDetailRow(detail)} surface="plain" />
       ) : (
         /* 🔴 **"기록이 없다" 와 "불러오지 못했다" 를 섞지 않는다** — 메모 없는 인증이
            정상이고 대부분이다. 조회 실패는 페이지 단위로 따로 그린다 */

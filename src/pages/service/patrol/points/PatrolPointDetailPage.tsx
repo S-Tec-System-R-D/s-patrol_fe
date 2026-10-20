@@ -1,23 +1,13 @@
-import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, ChevronRightIcon, MapPinIcon, TriangleAlertIcon } from 'lucide-react'
+import { ArrowLeftIcon, ChevronRightIcon, TriangleAlertIcon } from 'lucide-react'
 
-import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
 import AppEmpty from '@/components/app/AppEmpty'
-import AppPageHeader from '@/components/app/AppPageHeader'
 import { usePointHistoryDetail } from '@/features/course-history/hooks/usePointHistoryDetail'
-import { usePointHistory } from '@/features/points/hooks/usePointHistory'
-import {
-  summarizePatrolHistory,
-  summaryFromDate,
-  summaryToDate,
-} from '@/features/points/lib/patrolSummary'
-import { overtimeBadge, pointCheckBadge } from '@/features/course-history/lib/historyBadge'
-import PointHistoryInfoCard from '@/features/patrol-points/components/detail/PointHistoryInfoCard'
-import PointHistoryKpiRow from '@/features/patrol-points/components/detail/PointHistoryKpiRow'
 import PointHistoryMemoCard from '@/features/patrol-points/components/detail/PointHistoryMemoCard'
+import PointHistorySummaryBar from '@/features/patrol-points/components/detail/PointHistorySummaryBar'
 import PointHistoryRecentCard from '@/features/patrol-points/components/detail/PointHistoryRecentCard'
+import PointLocationMapCard from '@/features/patrol-points/components/detail/PointLocationMapCard'
 import { getSiteSeq } from '@/lib/auth/site'
 import { paths } from '@/router/paths'
 
@@ -49,31 +39,6 @@ const PatrolPointDetailPage = () => {
   const detail = usePointHistoryDetail(detailSeq)
   /* 🔴 최근 인증 조회는 `siteSeq` 가 필수다(상세 응답에는 없다) — `spec 021` 의 저장값이 유일한 출처 */
   const siteSeq = getSiteSeq()
-
-  /**
-   * 최근 14일 집계 — **KPI 와 최근 인증 카드가 같이 쓴다**.
-   *
-   * 🔴 **훅을 아래 early return 보다 먼저 부른다**(React 규칙). 그래서 `pointSeq` 는
-   * 상세 응답이 오기 전엔 `null` 이고, 그동안 조회는 **꺼져 있다**(`enabled`).
-   *
-   * 🔴 **`PointHistoryRecentCard` 도 같은 훅을 부르는데 요청은 1개다** — `pointKeys.history`
-   * 키가 같아 react-query 가 합친다. 🔴 **props 로 내려주지 않는 이유**: 카드에 `summary`·
-   * `rows`·`isPending`·`isError`·`refetch` 를 넘기면 계약이 5개가 되고(`spec 030` 의
-   * "prop 5개면 뽑지 않는다" 기준), 카드가 자기 실패 분기를 스스로 그릴 수 없게 된다.
-   *
-   * ✅ **027 지점 상세를 이미 봤다면 캐시를 그대로 쓴다**(같은 키).
-   */
-  const today = useMemo(() => new Date(), [])
-  const history = usePointHistory(
-    siteSeq,
-    detail.data?.pointSeq ?? null,
-    summaryFromDate(today),
-    summaryToDate(today)
-  )
-  const summary = useMemo(
-    () => summarizePatrolHistory(history.data?.items ?? [], today),
-    [history.data?.items, today]
-  )
 
   const crumb = (
     <nav className="flex items-center gap-1 text-caption text-muted-foreground">
@@ -165,35 +130,23 @@ const PatrolPointDetailPage = () => {
   }
 
   const data = detail.data
-  const result = pointCheckBadge(data.status, data.checkDt, data.hasMemo)
-  // 🔴 상세는 `overtimeYn`(**소문자 t**) 다 — 목록은 대문자 T(B-4)
-  const overtime = overtimeBadge(data.overtimeYn)
 
   return (
     <div className="flex flex-col gap-4 p-8">
       {crumb}
 
-      <AppPageHeader
-        icon={MapPinIcon}
-        /* 🔴 **제목에 날짜·시각을 넣는다** — 같은 지점의 인증이 여러 건이라 지점명만으로는
-           "어느 인증을 보고 있는지" 가 사라진다(036 이 회차 상세에서 한 것과 같다) */
-        title={`${data.pointName} · ${data.checkDt.replace('T', ' ').slice(0, 16)}`}
-        subtitle="이 인증 1건의 수행 내역입니다"
-        titleSuffix={
-          <div className="flex items-center gap-1">
-            <AppBadge variant={result.variant}>{result.label}</AppBadge>
-            {overtime && <AppBadge variant={overtime.variant}>{overtime.label}</AppBadge>}
-          </div>
-        }
-      />
+      {/* 🔴 **페이지 타이틀 줄이 없다**(사용자 요청 2026-10-20 + 목업 `제안1`).
+          지점명·인증시각·결과가 **아래 요약 스트립에 이미 있어** 제목이 같은 말을
+          반복했다 — 복귀는 브레드크럼이 맡는다. 설명 한 줄도 같은 이유로 뺐다
+          ("이 인증 1건의 수행 내역입니다" 는 화면을 보면 아는 것이다) */}
+      <PointHistorySummaryBar detail={data} />
 
-      {/* 🔴 **2열 골격**(목업 `04`) — 좌: 순찰 기록(메모·사진) / 우: 인증 정보.
+      {/* 🔴 **2열 골격**(목업 `제안1`) — 좌: 순찰 기록 → 최근 인증 / 우: **지도 전체**.
+          전에는 우측이 kv 카드 7행 + 220px 지도였는데, 값이 스트립으로 올라가면서
+          **지도가 우측을 통째로** 쓴다 — 220px 짜리는 "지도가 있다" 수준이라 주변
+          건물·도로가 안 보여 위치를 판단할 수 없었다.
           🔴 **`items-start` 다** — 기본값 `stretch` 면 우측 카드가 좌측 높이만큼 늘어나
           아래에 큰 여백이 생긴다(036 브라우저 확인 2026-10-19에서 고친 자리) */}
-      {/* 🔴 **KPI 2칸이다**(목업은 4칸) — 직전 지점 간격·코스 내 순서는 `historySeq` 가
-          없어 만들 수 없다(US4). 빈 칸을 두지 않는다 */}
-      <PointHistoryKpiRow detail={data} summary={summary} isPending={history.isPending} />
-
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         <section className="flex flex-col gap-4 lg:col-span-2">
           {/* 🔴 **순찰 기록(메모·사진)이 위다** — 이 인증 1건에 대해 사용자가 보러 온 것이
@@ -202,7 +155,9 @@ const PatrolPointDetailPage = () => {
           <PointHistoryRecentCard detail={data} siteSeq={siteSeq} />
         </section>
         <section>
-          <PointHistoryInfoCard detail={data} />
+          {/* ⚠️ **좌표가 없으면 카드 자체가 없다**(미완료 인증은 좌표가 구조적으로 null —
+              실측 45/45). 그때는 이 컬럼이 비고 좌측이 2/3 폭 그대로 남는다 */}
+          <PointLocationMapCard detail={data} />
         </section>
       </div>
     </div>
