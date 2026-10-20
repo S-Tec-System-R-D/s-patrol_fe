@@ -171,6 +171,74 @@ describe('CheckDetailMemo — 🔴 사진 폴백 (B-40)', () => {
   })
 })
 
+describe('CheckDetailTable — 기록 칸 건수 (2026-10-20)', () => {
+  /**
+   * 🔴 **아이콘이 아니라 건수다**(목업 `코스상세 - 지점인증내역 수정안`). 메시지 아이콘은
+   * "뭔가 있다" 까지만 말해서, 어느 행을 펼쳐 볼지 고를 수가 없었다.
+   *
+   * ⚠️ **목록(`ZoneColumn`)은 그대로 아이콘이다** — 거기는 응답에 `hasMemo` boolean 뿐이라
+   * 셀 수가 없다(세려면 행마다 `CheckDetails` 조회 = N+1). 같은 화면이 아니다.
+   */
+  it('사진과 메모 건수를 함께 적는다', () => {
+    const memos = [memo({ attaches: [attach({ attachSeq: 1 }), attach({ attachSeq: 2 })] })]
+    render(<CheckDetailTable rows={[row({ memos })]} />)
+
+    expect(screen.getByText(/사진 2 · 메모 1/)).toBeInTheDocument()
+  })
+
+  /** 🔴 **`사진 0` 을 적지 않는다** — 첨부 없는 메모가 흔하고, `0` 은 빈 값이지 사실이 아니다 */
+  it('🔴 사진이 없으면 메모 건수만 적는다', () => {
+    render(<CheckDetailTable rows={[row({ memos: [memo({ attaches: null })] })]} />)
+
+    expect(screen.getByText(/메모 1/)).toBeInTheDocument()
+    expect(screen.queryByText(/사진 0/)).not.toBeInTheDocument()
+  })
+
+  /** ⚠️ `attaches` 는 **nullable** 이다 — 섞여 와도 합이 깨지지 않아야 한다 */
+  it('메모가 여러 건이면 첨부를 합쳐 센다', () => {
+    const memos = [
+      memo({ memoSeq: 1, attaches: [attach({ attachSeq: 1 })] }),
+      memo({ memoSeq: 2, attaches: null }),
+    ]
+    render(<CheckDetailTable rows={[row({ memos })]} />)
+
+    expect(screen.getByText(/사진 1 · 메모 2/)).toBeInTheDocument()
+  })
+})
+
+describe('CheckDetailMemo — 사진 캡션 (2026-10-20)', () => {
+  /**
+   * 🔴 **파일명을 썸네일 아래 적는다** — 전에는 `alt`·`title` 에만 있어 **마우스를 올려야**
+   * 보였고, 사진이 여러 장이면 어느 것이 무엇인지 화면에서 구분이 안 됐다.
+   */
+  it('썸네일 아래에 파일명을 적는다', () => {
+    render(<CheckDetailMemo row={row({ memos: [memo({ attaches: [attach()] })] })} />)
+
+    expect(screen.getByText('abc.jpg')).toBeInTheDocument()
+  })
+
+  /**
+   * 🔴 **촬영 시각을 적지 않는다**(A1). 목업에는 `10:24` 가 있지만 **첨부에 시각 필드가
+   * 없다** — `attachSeq`·`imagePath`·`fileName`·`fileExt` 가 전부다.
+   */
+  it('🔴 캡션에 시각을 지어내지 않는다', () => {
+    render(<CheckDetailMemo row={row({ memos: [memo({ attaches: [attach()] })] })} />)
+
+    const caption = screen.getByText('abc.jpg')
+    expect(caption.textContent).toBe('abc.jpg')
+  })
+
+  /** 폴백으로 떨어져도 어느 파일이 실패했는지는 남아야 백엔드에 전달된다(B-40) */
+  it('폴백 상태에서도 파일명이 남는다', () => {
+    render(<CheckDetailMemo row={row({ memos: [memo({ attaches: [attach()] })] })} />)
+
+    fireEvent.error(screen.getByRole('img', { name: 'abc.jpg' }))
+
+    expect(screen.getByText('abc.jpg')).toBeInTheDocument()
+    expect(screen.getByText('이미지를 불러올 수 없습니다')).toBeInTheDocument()
+  })
+})
+
 describe('CheckDetailTable — 펼침 (T520)', () => {
   it('🔴 메모 0건 행에는 토글이 걸리지 않는다', () => {
     render(<CheckDetailTable rows={[row({ memos: [] })]} />)

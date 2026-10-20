@@ -50,35 +50,16 @@ const formatTime = (value: string): string => value.slice(11, 16)
 interface CheckDetailMemoProps {
   /** 🔴 **행을 그대로 받는다** — 메타(`userName`·`checkDt`·`authMethod`)가 행에 있고, 쪼개면 prop 이 5개가 된다 */
   row: CheckDetailRow
-  /**
-   * 바탕 — 🔴 **배치가 아니라 "어디에 얹히는가" 만 받는다**(`spec 037`, 사용자 지적 2026-10-20).
-   *
-   * - `panel`(기본) — **표 행을 펼친 패널**이다. 회색 바탕이 "이 행에 딸린 내용" 이라는
-   *   경계를 만든다. 코스 순찰 상세(036)가 쓴다.
-   * - `plain` — **이미 카드 안**이다. 지점 인증 상세(037)의 `순찰 기록` 카드가 쓴다 —
-   *   🔴 거기서 회색 박스를 두면 **카드 안의 카드**가 되고, 지점 인증은 메모가 대개 1건이라
-   *   경계를 만들 이유도 없다.
-   *
-   * ⚠️ **이 prop 하나만 받는다.** 메타 위치·글씨 크기까지 prop 으로 받기 시작하면 036 이
-   * 지도에서 경계한 "prop 7개" 가 된다 — 그 판단들(메타 한 번만 · 첨부별 폴백 ·
-   * `pre-line` · 처리상태 없음)은 **두 화면이 같아야 하는 것**이라 분기하지 않는다.
-   */
-  surface?: 'panel' | 'plain'
 }
 
-const CheckDetailMemo = ({ row, surface = 'panel' }: CheckDetailMemoProps) => {
+const CheckDetailMemo = ({ row }: CheckDetailMemoProps) => {
   /* ✅ **`checkDt` 가 있으면 올린다**(OQ-15 해소 — 표와 같은 규칙) */
   const checkedAt = row.checkDt
 
   return (
-    <div
-      className={
-        surface === 'panel'
-          ? 'flex flex-col gap-3 bg-muted/40 px-4 py-3'
-          : /* 🔴 바탕·가로 패딩을 **카드에 맡긴다**(`AppDetailCard` 가 `p-4` 를 준다) */
-            'flex flex-col gap-3'
-      }
-    >
+    /* 🔴 **바탕·가로 패딩을 바깥에 맡긴다** — 표의 펼침 칸(036)도 카드(037)도 자기 여백을
+       이미 갖고 있다. 여기서 또 주면 **박스 안의 박스**가 된다 */
+    <div className="flex flex-col gap-3">
       {/**
        * 🔴 메타는 **패널 머리에 한 번만** — 메모마다 반복하면 메모별로 다른 값처럼 읽힌다.
        *
@@ -105,30 +86,29 @@ const CheckDetailMemo = ({ row, surface = 'panel' }: CheckDetailMemoProps) => {
        * 실측은 **1건만 관측**됐지만(`memos`/`memoList` 모두) 구조가 배열이라 여러 건이 올 수
        * 있다. 간격(`gap`)만으로 가르면 **두 메모가 한 덩어리 글로 읽힌다.**
        *
-       * 🔴 **경계를 바탕이 말하느냐 바가 말하느냐** — 그래서 `surface` 로 갈린다:
-       * - `panel`(036 코스 상세) — 회색 바탕이 이미 "이 행의 기록" 을 묶는다. 메모 사이만
-       *   **윗선**으로 가른다. ⚠️ 첫 건에는 긋지 않는다(1건뿐일 때 선이 혼자 떠 보인다)
-       * - `plain`(037 지점 인증 상세) — 바탕이 없다. **왼쪽 포인트 바**가 기록 1건의 경계를
-       *   말한다(사용자 요청 2026-10-20 — "이 지점의 최근 인증" 과 같은 어휘).
+       * 🔴 **경계는 왼쪽 포인트 바가 말한다**(사용자 결정 2026-10-20 — 036 의 회색 패널을
+       * 걷어내고 037 의 모양으로 **합쳤다**). 전에는 `surface` prop 으로 두 모양이 갈렸는데,
+       * 036 이 같은 모양으로 오면서 **분기가 죽었다** — 쓰지 않는 갈래를 남기면 다음 사람이
+       * 어느 쪽이 기본인지 매번 따져야 한다(A6).
        *
-       * ⚠️ **같은 바인데 뜻이 다르다.** 최근 인증 목록에서 포인트 바는 **"지금 보고 있는
-       * 행"**(나머지는 `border` 톤)이고, 여기서는 **"기록 1건"** 이다 — 이 카드에는 고를
-       * 것이 없어 전부 같은 무게다. 한 화면 안에서 섞이지 않는 이유는 **카드가 다르기**
-       * 때문이다(선택이 있는 목록 vs 내용 그 자체).
+       * ⚠️ **같은 바인데 뜻이 다르다.** 최근 인증 목록(037)에서 포인트 바는 **"지금 보고 있는
+       * 행"** 이고, 여기서는 **"기록 1건"** 이다 — 한 화면 안에서 섞이지 않는 이유는 **카드가
+       * 다르기** 때문이다(선택이 있는 목록 vs 내용 그 자체).
        */}
       <ul className="flex flex-col gap-3">
         {row.memos.map((memo) => (
           <li
             key={memo.memoSeq}
-            className={
-              surface === 'panel'
-                ? 'flex flex-col gap-2 not-first:border-t not-first:border-border/60 not-first:pt-3'
-                : /* 🔴 **바 + 연한 포인트 배경**(사용자 요청 2026-10-20) — "이 지점의 최근 인증"
-                     의 현재 행과 **같은 조합**이다. ⚠️ 036 에서 걷어낸 **회색** 박스와 다른 것이다:
-                     그건 중립 바탕이라 "카드 속 카드" 로만 보였고, 이쪽은 포인트 톤이라 **기록이라는
-                     표시**로 읽힌다. 🔴 **오른쪽만 둥글린다** — 왼쪽은 바가 날을 세워야 경계가 선다 */
-                  'flex flex-col gap-2 rounded-r-sm border-l-2 border-l-point bg-point-bg/40 px-3 py-2.5'
-            }
+            /**
+             * 🔴 **바탕 없이 왼쪽 바만 둔다**(사용자 결정 2026-10-20).
+             *
+             * 전에는 연한 포인트 채움을 함께 썼는데, **색이 두 군데서 말하면 둘 다 약해진다**:
+             * 열린 행이 하늘색을 들고 본문 안의 기록도 하늘색이면 **경계가 번진다.** 색은
+             * **머리 행**이, 기록 1건의 경계는 **바**가 맡는다.
+             * ⚠️ **`whitespace-pre-line` 과 함께 봐야 한다** — 채움이 없을수록 들여쓰기가
+             * 유일한 경계라 왼쪽 패딩을 남긴다.
+             */
+            className="flex flex-col gap-2 border-l-2 border-l-point pl-3"
           >
             {/* 🔴 `whitespace-pre-line` — 줄바꿈이 들어온 메모를 한 줄로 뭉개지 않는다 */}
             <p className="whitespace-pre-line text-body text-foreground">{memo.memo}</p>
@@ -165,30 +145,42 @@ const MemoAttaches = ({ memo }: { memo: CheckDetailMemoData }) => {
 const MemoAttach = ({ attach }: { attach: CheckDetailAttach }) => {
   const [failed, setFailed] = useState(false)
 
-  if (failed) {
-    return (
-      <div
-        className="flex size-24 flex-col items-center justify-center gap-1 rounded-sm border border-dashed border-border bg-card px-1 text-center"
-        /* 🔴 파일명을 `title` 에 둔다 — 어느 파일이 실패했는지 알 수 있어야 백엔드에 전달된다 */
-        title={attach.fileName}
-      >
-        <ImageOffIcon size={18} strokeWidth={1.75} className="text-muted-foreground" aria-hidden />
-        <span className="text-[10px] leading-tight text-muted-foreground">
-          이미지를 불러올 수 없습니다
-        </span>
-      </div>
-    )
-  }
-
   return (
-    <img
-      src={attach.imagePath}
-      alt={attach.fileName}
-      loading="lazy"
-      className="size-24 rounded-sm border border-border object-cover"
-      // 🔴 404·mixed content·네트워크 실패를 한 분기로 모은다 — 사용자가 할 수 있는 일이 같다
-      onError={() => setFailed(true)}
-    />
+    /**
+     * 🔴 **파일명을 썸네일 아래 적는다**(목업 `코스상세 - 지점인증내역 수정안`, 2026-10-20).
+     * 전에는 `alt`·`title` 에만 있어 **마우스를 올려야 보였다** — 사진이 여러 장이면 어느
+     * 것이 무엇인지 화면에서 구분이 안 된다.
+     *
+     * ⚠️ **목업의 촬영 시각(`10:24`)은 적을 수 없다** — 첨부에 시각 필드가 없다
+     * (`attachSeq`·`imagePath`·`fileName`·`fileExt` 가 전부). 지어내지 않는다(A1).
+     */
+    <figure className="flex w-24 flex-col gap-1">
+      {failed ? (
+        <div
+          className="flex size-24 flex-col items-center justify-center gap-1 rounded-sm border border-dashed border-border bg-card px-1 text-center"
+          /* 🔴 파일명을 `title` 에도 둔다 — 캡션이 잘려도 어느 파일이 실패했는지 알 수 있어야
+             백엔드에 전달된다 */
+          title={attach.fileName}
+        >
+          <ImageOffIcon size={18} strokeWidth={1.75} className="text-muted-foreground" aria-hidden />
+          <span className="text-[10px] leading-tight text-muted-foreground">
+            이미지를 불러올 수 없습니다
+          </span>
+        </div>
+      ) : (
+        <img
+          src={attach.imagePath}
+          alt={attach.fileName}
+          loading="lazy"
+          className="size-24 rounded-sm border border-border object-cover"
+          // 🔴 404·mixed content·네트워크 실패를 한 분기로 모은다 — 사용자가 할 수 있는 일이 같다
+          onError={() => setFailed(true)}
+        />
+      )}
+      <figcaption className="truncate text-label text-muted-foreground" title={attach.fileName}>
+        {attach.fileName}
+      </figcaption>
+    </figure>
   )
 }
 

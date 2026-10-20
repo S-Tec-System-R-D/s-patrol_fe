@@ -98,8 +98,15 @@ interface AppKpiCardProps {
   /** 값 옆 작은 뱃지 — `78%`·`9시간 전`. 🔴 **사실만**(평가어 금지) */
   badge?: string
   /**
-   * 값 아래 **보조 한 줄** — "무엇을 센 값인지" 만 적는다(`최근 14일 기준`,
+   * **라벨 우측**의 보조 문구 — "무엇을 센 값인지" 만 적는다(`최근 14일 기준`,
    * `전체 인증 13 / 21건`). 🔴 `양호`·`개선 필요` 같은 **평가어를 쓰지 않는다**.
+   *
+   * 🔴 **값 아래가 아니라 제목 줄이다**(사용자 결정 2026-10-20). 아래에 두면 **hint 를
+   * 가진 칸만 한 줄 더 길어져** 나머지 칸의 바닥이 빈다 — 높이는 `h-full` 로 맞춰지므로
+   * 그 여백이 "허전함" 으로 읽힌다. 제목 줄은 어차피 라벨 뒤가 비어 있던 자리다.
+   *
+   * ⚠️ **짧게 쓴다**(칸 폭이 1/3~1/4 다). 길면 잘리고 `title` 로만 남는다 — 두 값을
+   * 나란히 보여줄 일이면 `hint` 가 아니라 `foot` 이다(`최단 … 최장` 과 같은 자리).
    */
   hint?: string
   /**
@@ -208,7 +215,15 @@ const AppKpiCard = ({
         </span>
         {/* 🔴 **라벨에는 색을 입히지 않는다**. 라벨이 색을 가지면 4칸이 다시 경쟁한다 —
             "무엇인지" 를 말하는 자리라 **굵기와 명도**로 세운다 */}
-        <p className="min-w-0 text-caption font-medium text-foreground/80">{label}</p>
+        <p className="min-w-0 shrink-0 text-caption font-medium text-foreground/80">{label}</p>
+        {/* 🔴 **보조 문구는 라벨 뒤에 붙는다**(사용자 결정 2026-10-20 — 값 아래에서 올렸다).
+            🔴 **라벨이 먼저 자리를 갖는다**(`shrink-0`) — 좁은 폭에서 둘이 같이 줄면
+            **"무엇인지" 가 먼저 잘린다.** 보조 문구는 잘려도 `title` 에 남는다 */}
+        {hint && (
+          <span className="ml-auto truncate text-label text-muted-foreground/80" title={hint}>
+            {hint}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -244,8 +259,6 @@ const AppKpiCard = ({
             {foot.right && <span className="shrink-0 truncate">{foot.right}</span>}
           </div>
         )}
-
-        {hint && <p className="text-label text-muted-foreground/80">{hint}</p>}
       </div>
     </div>
   )

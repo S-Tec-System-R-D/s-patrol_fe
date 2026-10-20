@@ -14,9 +14,11 @@ import { toCheckDetailRow } from '@/features/patrol-points/lib/pointHistoryMemo'
  * 들어 있다: 메타를 패널 머리에 한 번만 · 첨부마다 따로 실패 상태(B-40 폴백) ·
  * `whitespace-pre-line` · "처리 상태" 칸을 만들지 않기.
  *
- * 🔴 **회색 패널을 쓰지 않는다**(`surface="plain"`, 사용자 지적 2026-10-20) — 036 의 회색
- * 바탕은 **표 행을 펼친 패널**이라는 경계였다. 전용 카드 안에서는 **카드 속 카드**가 되고,
- * 지점 인증은 메모가 **대개 1건**이라 경계를 만들 이유도 없다.
+ * 🔴 **회색 패널을 쓰지 않는다**(사용자 지적 2026-10-20) — 036 의 회색 바탕은 **표 행을
+ * 펼친 패널**이라는 경계였다. 전용 카드 안에서는 **카드 속 카드**가 되고, 지점 인증은
+ * 메모가 **대개 1건**이라 경계를 만들 이유도 없다.
+ * ✅ **그 뒤 036 이 같은 모양으로 합쳐져 `surface` prop 이 사라졌다**(2026-10-20) — 두
+ * 화면이 같은 모양이면 갈래를 둘 이유가 없다.
  *
  * 🔴 **코스 상세와 달리 "펼침" 이 아니다.** 코스 상세는 **인증 내역 표의 한 행**을 펼쳐
  * 메모를 보여 주지만(여러 지점 중 하나), 이 화면은 **그 인증 1건 전용 페이지**다 — 접어
@@ -62,7 +64,7 @@ const PointHistoryMemoCard = ({ detail }: PointHistoryMemoCardProps) => {
       }
     >
       {hasMemo ? (
-        <CheckDetailMemo row={toCheckDetailRow(detail)} surface="plain" />
+        <CheckDetailMemo row={toCheckDetailRow(detail)} />
       ) : (
         /* 🔴 **"기록이 없다" 와 "불러오지 못했다" 를 섞지 않는다** — 메모 없는 인증이
            정상이고 대부분이다. 조회 실패는 페이지 단위로 따로 그린다 */

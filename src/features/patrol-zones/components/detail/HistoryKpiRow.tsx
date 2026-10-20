@@ -77,18 +77,24 @@ const HistoryKpiRow = ({ detail, checks, intervals, average }: HistoryKpiRowProp
          * ⚠️ `totalMin: 0` 인 코스가 실재해 **"기준 0분" 이라고 쓰지 않는다** — 설정이
          * 안 된 것과 0분은 다르다.
          */
-        hint={[
-          detail.totalMin > 0 ? `기준 ${detail.totalMin}분` : '기준 미설정',
-          average === undefined
-            ? null
-            : average.averageSeconds === null
-              ? '코스 평균 —'
-              : `코스 평균 ${formatDuration(average.averageSeconds)}${
-                  average.partial ? ' (최근 100회)' : ''
-                }`,
-        ]
-          .filter(Boolean)
-          .join(' · ')}
+        /**
+         * 🔴 **`hint` 가 아니라 `foot` 이다**(2026-10-20 — hint 가 제목 줄로 올라가면서 옮겼다).
+         * 기준과 평균은 **나란히 놓고 비교하는 두 값**이라 `최단 … 최장` 과 같은 자리가 맞다.
+         * 제목 줄에 넣으면 칸 폭(1/4)에서 **두 값이 통째로 잘린다.**
+         * ⚠️ 바가 없어도 `foot` 은 그려진다 — 여기서는 바를 만들 근거가 없다(기준이 0 인
+         * 코스가 실재해 비율을 만들 수 없다).
+         */
+        foot={{
+          left: detail.totalMin > 0 ? `기준 ${detail.totalMin}분` : '기준 미설정',
+          right:
+            average === undefined
+              ? undefined
+              : average.averageSeconds === null
+                ? '코스 평균 —'
+                : `코스 평균 ${formatDuration(average.averageSeconds)}${
+                    average.partial ? ' (최근 100회)' : ''
+                  }`,
+        }}
       />
 
       <AppKpiCard
@@ -137,10 +143,12 @@ const HistoryKpiRow = ({ detail, checks, intervals, average }: HistoryKpiRowProp
         }
         /* 🔴 **뺀 행 수를 밝힌다** — 조용히 빼면 8개 지점 코스의 평균이 2개로 계산됐는데도
            그냥 평균처럼 보인다 */
+        /* ⚠️ 제목 줄로 올라가 폭이 좁다 — 문구를 줄였다(`인증 시각이 없는 3개 제외` →
+           `시각 없음 3개 제외`). 뜻은 같고, 뺀 행이 있다는 사실이 핵심이다 */
         hint={
           intervals.skippedRows === 0
             ? `인증 ${intervals.intervalCount + 1}건 기준`
-            : `인증 시각이 없는 ${intervals.skippedRows}개 제외`
+            : `시각 없음 ${intervals.skippedRows}개 제외`
         }
       />
     </div>

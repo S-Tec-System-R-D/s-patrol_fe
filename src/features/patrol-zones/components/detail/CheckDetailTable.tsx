@@ -102,7 +102,9 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
             <th className="px-3 py-3 w-20">인증시각</th>
             <th className="px-3 py-3 w-20">구간</th>
             <th className="px-3 py-3 w-28">결과</th>
-            <th className="px-3 py-3 w-16">기록</th>
+            {/* 🔴 **건수를 적으므로 칸을 넓히고 오른쪽에 붙인다**(목업 수정안 2026-10-20) —
+                `사진 3 · 메모 1` + 꺾쇠가 16px 칸에 들어가지 않는다 */}
+            <th className="px-3 py-3 w-32 text-right">기록</th>
           </tr>
         </thead>
         <tbody>
@@ -114,6 +116,13 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
             const checkedAt = row.checkDt
             const hasMemo = row.memos.length > 0
             const isOpen = expanded.has(row.detailSeq)
+            /* 🔴 **건수는 이 응답 안에 이미 있다**(요청 0건) — 메모는 배열, 사진은 메모마다의
+               `attaches` 합이다. ⚠️ `attaches` 는 **nullable** 이라 `?? []` 가 필수다 */
+            const memoCount = row.memos.length
+            const photoCount = row.memos.reduce(
+              (sum, memo) => sum + (memo.attaches?.length ?? 0),
+              0
+            )
 
             return (
               <Fragment key={row.detailSeq}>
@@ -128,9 +137,12 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                     ⚠️ **메모 0건 행은 아무것도 걸지 않는다** — 포커스도 안 가고 커서도 안 바뀐다.
                     눌릴 것처럼 보이는데 안 눌리는 것이 안 눌리게 보이는 것보다 나쁘다 */}
                 <tr
+                  /* 🔴 **펼친 행에 색을 깐다**(목업 수정안 2026-10-20). 여러 행을 동시에 펼칠
+                     수 있어 패널만 보고는 **어느 행에 딸린 기록인지** 눈이 못 따라간다 —
+                     아래 패널과 같은 톤이라 둘이 한 덩어리로 읽힌다 */
                   className={`border-b last:border-0 ${
                     hasMemo ? 'cursor-pointer hover:bg-muted/50' : ''
-                  }`}
+                  } ${isOpen ? 'bg-point-bg' : ''}`}
                   {...(hasMemo && {
                     tabIndex: 0,
                     'aria-expanded': isOpen,
@@ -144,7 +156,27 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                     },
                   })}
                 >
-                  <td className="px-3 py-3 tabular-nums text-muted-foreground">{row.orderNo}</td>
+                  {/* 🔴 **순번을 칩으로 세운다**(목업 수정안 2026-10-20) — 맨 숫자는 인증시각·구간
+                      같은 **다른 숫자들과 같은 무게**로 흘러가 순서가 읽히지 않았다.
+                      ⚠️ 번호가 건너뛰어 보이는 것은 정상이다 — `orderNo` 는 **편성의 사실**이고
+                      서버가 중복·결번을 그대로 준다(032). 배열 위치로 다시 매기면 같은 지점을
+                      화면마다 다른 번호로 부른다 */}
+                  <td className="px-3 py-3">
+                    <span
+                      /* 🔴 **`leading-none` 이 빠지면 숫자가 위로 뜬다**(사용자 확인 2026-10-20).
+                         `text-label` 은 **글자 크기만 정하는 토큰**이라 줄높이는 `body` 의
+                         **1.4 를 그대로 물려받는다** — 10.5px 글자에 14.7px 짜리 줄상자가 생기고,
+                         `place-items-center` 는 **그 줄상자**를 가운데 두므로 숫자 자체는
+                         반쪽 여백만큼 올라간다. 칩처럼 **글자 하나를 가두는 자리**에서는 줄높이를
+                         글자에 맞춰야 중앙이 맞는다 */
+                      /* ⚠️ **칩은 열림 상태로 색을 바꾸지 않는다**(2026-10-20) — 열린 행이
+                         `bg-point-bg` 를 입는 순간 **같은 색 칩이 행에 묻힌다.** 열렸다는 것은
+                         행 전체 색과 꺾쇠가 이미 두 번 말하므로 칩까지 거들 필요가 없다 */
+                      className="grid size-6 place-items-center rounded-full bg-muted text-label font-medium leading-none tabular-nums text-muted-foreground"
+                    >
+                      {row.orderNo}
+                    </span>
+                  </td>
                   <td className="px-3 py-3 font-medium">{row.pointName}</td>
                   <td className="px-3 py-3">
                     {/* 🔴 미인증·미완료 행은 `authMethod` 가 `null` 이다 — 빈 칸이 아니라 `—` */}
@@ -183,14 +215,22 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                       )}
                     </div>
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-3 text-right">
                     {hasMemo ? (
                       /* 🔴 **표시 전용이다 — 버튼이 아니다.** 행 전체가 토글이므로 안쪽에
                          버튼을 두면 같은 일을 하는 과녁이 두 개가 된다(위 `<tr>` 주석).
-                         🔴 **꺾쇠가 열림/닫힘을 말한다** — 메시지 아이콘만으로는 "기록이 있다"
-                         까지만 전달되고 **눌러서 펼칠 수 있다는 사실이 안 보인다** */
-                      <div className="flex items-center gap-1 text-warning-foreground">
-                        <MessageSquareTextIcon size={16} aria-hidden />
+                         🔴 **꺾쇠가 열림/닫힘을 말한다** — 건수만으로는 "기록이 있다" 까지만
+                         전달되고 **눌러서 펼칠 수 있다는 사실이 안 보인다**.
+                         🔴 **아이콘 대신 건수다**(목업 수정안 2026-10-20) — 메시지 아이콘은
+                         "뭔가 있다" 까지만 말했다. 펼치기 전에 **얼마나 있는지**를 알면
+                         어느 행을 열지 고를 수 있다. ⚠️ 목록(`ZoneColumn`)은 **그대로 아이콘**이다
+                         — 거기는 응답에 `hasMemo` boolean 뿐이라 셀 수가 없다 */
+                      <div className="flex items-center justify-end gap-1 whitespace-nowrap text-warning-foreground">
+                        <span className="tabular-nums">
+                          {/* 사진이 없는 메모가 흔하다 — 0 을 적지 않는다("사진 0" 은 빈 값이다) */}
+                          {photoCount > 0 && `사진 ${photoCount} · `}
+                          메모 {memoCount}
+                        </span>
                         <ChevronDownIcon
                           size={14}
                           aria-hidden
@@ -208,8 +248,24 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
 
                 {/* 🔴 패널은 **같은 `<tbody>` 의 다음 `<tr>`** 이다. `colSpan` 은 헤더 7칸과 맞춘다 */}
                 {isOpen && (
+                  /* 🔴 **머리 행과 같은 톤을 깔아 한 덩어리로 묶는다**(목업 수정안 2026-10-20).
+                     전에는 `CheckDetailMemo` 가 **자기 회색 바탕**을 들고 있었는데, 그 회색이
+                     행과 다른 색이라 패널이 **표에서 떨어져** 보였다. 바탕은 여기가 깔고
+                     패널은 내용만 그린다(037 과 같은 모양으로 합쳤다).
+                     🔴 **가로 패딩은 순찰지점 칸에 맞춘다**(`px-3` 이 아니라 안쪽 들여쓰기) —
+                     기록이 **그 행에 딸린 것**임을 왼쪽 정렬이 말한다 */
                   <tr className="border-b last:border-0">
-                    <td colSpan={7} className="p-0">
+                    {/**
+                     * 🔴 **색은 머리 행이 혼자 든다 — 본문은 흰 바탕이다**(사용자 결정 2026-10-20).
+                     *
+                     * 처음에는 행과 본문에 **같은 톤**을 깔아 한 덩어리로 묶으려 했는데, 그러면
+                     * 색이 넓게 퍼져 **어디가 눌린 행인지**가 흐려지고 본문 글도 바탕 위에 뜬다.
+                     * 하늘색 머리 + 흰 본문이면 **열린 행 하나만 또렷하고** 내용은 읽기 쉽다.
+                     *
+                     * 🔴 **위 패딩이 있어야 한다**(사용자 확인 2026-10-20) — 없으면 작성자·시각
+                     * 뱃지가 **행 구분선에 붙어** 머리 행의 일부처럼 보인다.
+                     */}
+                    <td colSpan={7} className="bg-card px-4 pt-3 pb-4">
                       <CheckDetailMemo row={row} />
                     </td>
                   </tr>

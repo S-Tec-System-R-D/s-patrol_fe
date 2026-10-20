@@ -52,7 +52,10 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
   it('헤더·KPI·인증 내역·순찰 정보를 조립한다', async () => {
     renderPage(101)
 
-    expect(await screen.findByText(/A동 순찰코스 ·/)).toBeInTheDocument()
+    /* 🔴 **제목은 코스명뿐이다**(2026-10-20 — 시작 시각을 뺐다). 같은 값이 우측 `순찰 정보`
+       카드의 `시작 일시` 행에 이미 있다. 🔴 **`findByText` 가 아니라 역할로 찾는다** —
+       코스명은 그 카드의 `순찰 코스` 행에도 있어 텍스트로 찾으면 둘이 잡힌다 */
+    expect(await screen.findByRole('heading', { name: 'A동 순찰코스' })).toBeInTheDocument()
     // ⚠️ `지점 인증`·`소요시간` 은 **KPI 와 순찰 정보 양쪽에** 있다(목업 `02` 도 그렇다) —
     //    KPI 는 구성을 보여주고 정보 카드는 값을 적는다
     expect(screen.getAllByText('지점 인증').length).toBeGreaterThanOrEqual(2)
@@ -94,7 +97,7 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
   it('🔴 "기준 충족" 판정을 하지 않는다 — 값만 나란히 적는다', async () => {
     renderPage(101)
 
-    await screen.findByText(/A동 순찰코스 ·/)
+    await screen.findByRole('heading', { name: 'A동 순찰코스' })
     // totalMin 이 검증되지 않고(B-31) 어긋난 데이터가 전수 18건이다
     expect(screen.queryByText(/충족/)).not.toBeInTheDocument()
     expect(screen.queryByText(/초과 달성/)).not.toBeInTheDocument()

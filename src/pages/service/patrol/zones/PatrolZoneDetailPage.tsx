@@ -168,7 +168,10 @@ const PatrolZoneDetailPage = () => {
 
       <AppPageHeader
         icon={HistoryIcon}
-        title={`${data.courseName} · ${data.startDt.replace('T', ' ').slice(0, 16)}`}
+        /* 🔴 **시작 시각을 빼 둔다**(사용자 결정 2026-10-20). 같은 값이 우측 `순찰 정보`
+           카드의 **`시작 일시` 행에 이미 있다** — 제목에 붙이면 같은 화면에서 두 번 읽고,
+           코스명이 긴 경우 제목이 두 줄로 접힌다. 회차 식별은 그 카드가 맡는다 */
+        title={data.courseName}
         subtitle="이 회차의 순찰 수행 내역입니다"
         titleSuffix={
           <div className="flex items-center gap-1">
@@ -185,7 +188,19 @@ const PatrolZoneDetailPage = () => {
           🔴 **`items-start` 다**(사용자 확인 2026-10-19) — 기본값 `stretch` 면 우측 순찰 정보
           카드가 **좌측 컬럼 높이만큼 늘어나** 아래에 큰 여백이 생긴다. 카드 높이는 내용이 정한다 */}
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
-        <section className="flex flex-col gap-4 lg:col-span-2">
+        {/**
+         * 🔴 **좁은 폭에서는 순찰 정보가 먼저다**(사용자 제안 2026-10-20 — 동의).
+         *
+         * 넓은 폭에서는 두 컬럼이 **나란히 보여 순서가 없지만**, 접히는 순간 **읽는 순서**가
+         * 된다. 그때 지도·인증 내역이 먼저 오면 **"어느 회차를 보고 있는지" 가 맨 아래**로
+         * 밀린다 — 특히 제목에서 시작 시각을 뺀 뒤로 **회차를 식별하는 값(코스·순찰자·시작/
+         * 종료)이 순찰 정보 카드에만** 있다. 맥락 → 전체 그림(지도) → 행별 확인(표) 순이
+         * 좁은 폭에서 맞다.
+         *
+         * ⚠️ **DOM 순서가 아니라 `order` 로 바꾼다** — DOM 을 뒤집으면 넓은 폭에서 순찰
+         * 정보가 좌측 컬럼에 놓인다(`col-span-2` 가 먼저 와야 2칸을 먹는다).
+         */}
+        <section className="order-2 flex flex-col gap-4 lg:order-1 lg:col-span-2">
           {/* 🔴 **지도가 인증 내역보다 위다**(사용자 결정 2026-10-19 — 순서를 바꿨다).
               지도는 "어느 지점이 비었나" 를 한눈에 주고, 표는 그 다음 단계인 행별 확인이다.
               표를 먼저 두면 메모를 펼칠수록 지도가 아래로 밀려 **처음 보는 그림이 안 보인다**.
@@ -254,7 +269,7 @@ const PatrolZoneDetailPage = () => {
           </div>
         </section>
 
-        <section className="lg:col-span-1">
+        <section className="order-1 lg:order-2 lg:col-span-1">
           <HistoryInfoCard detail={data} checks={checks} />
         </section>
       </div>
