@@ -35,11 +35,18 @@
 > **독립 테스트 기준**: MSW 200 에서 서버 행이 테이블로 그려지고, 검색·기간·페이지가 URL 에
 > 실려 새로고침·뒤로가기에 보존된다. 필터 변경 시 첫 페이지로 돌아간다.
 
-- [ ] T576 [US1] 컬럼 정의 in src/features/notice/components/NoticeColumn.tsx — 4컬럼: 고정(`isPin` 핀 아이콘, 헤더는 `sr-only` 이름) · 제목(+ `attachCount > 0` 클립 아이콘) · 작성자 · 작성일(`yyyy-MM-dd`). 🔴 정렬 화살표 **없음**(서버 정렬 파라미터가 없다)
-- [ ] T577 [US1] [P] 카드 모드 in src/features/notice/components/NoticeCard.tsx — 034 타일 골격(`patterns.md` §14). 카드 안에 버튼 없음
-- [ ] T578 [US1] 🔴 **페이지 재작성** in src/pages/service/notice/NoticeListPage.tsx — `noticeData` import 삭제. `AppPageHeader`(+ "공지 작성" 모달 유지) → 필터 줄(검색 → `role="group"` 기간 + 초기화 → spacer) → `AppTable`(`hidePagination` + `renderCard`) → `AppPagination`(20/50/100). 검색은 로컬 draft + 디바운스(037 규약)
-- [ ] T579 [US1] 상태 분기 in src/pages/service/notice/NoticeListPage.tsx — 조회 실패(다시 시도) / 로딩 스켈레톤 / 0건(필터 있음 "조건에 맞는 공지가 없습니다" · 없음 "등록된 공지가 없습니다") / 목록
-- [ ] T580 [US1] [P] 화면 테스트 in src/pages/service/notice/__tests__/NoticeListPage.test.tsx — 서버 행 렌더 · 검색·기간 → 파라미터 · 필터 변경 시 `page` 제거 · 상태 분기 4종 · 행 클릭 → 상세 경로
+- [x] T576 [US1] 컬럼 정의 in src/features/notice/components/NoticeColumn.tsx — 4컬럼: 고정(`isPin` 핀 아이콘, 헤더는 `sr-only` 이름) · 제목(+ `attachCount > 0` 클립 아이콘) · 작성자 · 작성일(`yyyy-MM-dd`). 🔴 정렬 화살표 **없음**(서버 정렬 파라미터가 없다)
+- [x] T577 [US1] [P] 카드 모드 in src/features/notice/components/NoticeCard.tsx — 034 타일 골격(`patterns.md` §14). 카드 안에 버튼 없음
+- [x] T578 [US1] 🔴 **페이지 재작성** in src/pages/service/notice/NoticeListPage.tsx — `noticeData` import 삭제. `AppPageHeader`(+ "공지 작성" 모달 유지) → 필터 줄(검색 → `role="group"` 기간 + 초기화 → spacer) → `AppTable`(`hidePagination` + `renderCard`) → `AppPagination`(20/50/100). 검색은 로컬 draft + 디바운스(037 규약)
+- [x] T579 [US1] 상태 분기 in src/pages/service/notice/NoticeListPage.tsx — 조회 실패(다시 시도) / 로딩 스켈레톤 / 0건(필터 있음 "조건에 맞는 공지가 없습니다" · 없음 "등록된 공지가 없습니다") / 목록
+- [x] T580 [US1] [P] 화면 테스트 in src/pages/service/notice/__tests__/NoticeListPage.test.tsx — 서버 행 렌더 · 검색·기간 → 파라미터 · 필터 변경 시 `page` 제거 · 상태 분기 4종 · 행 클릭 → 상세 경로
+
+### Phase 3 사용자 수정 (2026-10-20)
+
+- [x] T580a [US1] 핀 열이 너무 넓다 in src/components/AppTable.tsx · src/features/notice/components/NoticeColumn.tsx — 자동 레이아웃이 남는 폭을 열마다 나눠 줘 아이콘 하나짜리 열이 넓어졌다. 🔴 **`AppTable` 에 opt-in `columnDef.meta.className`** 을 열었다(`<th>`·`<td>` 양쪽) — 주지 않은 열은 지금과 같다. 핀 열은 `w-px pr-0`
+- [x] T580b [US1] 고정 공지 **행 전체** 하이라이트 in src/pages/service/notice/NoticeListPage.tsx — `rowClassName` → `bg-point-bg/50`. 카드도 같은 함수를 탄다(030)
+- [x] T580c [US1] "공지 작성" 을 **필터 줄 끝**으로 in src/pages/service/notice/NoticeListPage.tsx — 헤더 액션에서 이동. `PointTopNav` 와 같은 모양(`xl` 미만 아이콘만 + `aria-label`)
+- ⚠️ T594 문서 동기화에 **`components.md` AppTable `meta.className`** 을 추가한다
 
 ## Phase 4: US2 — 공지 상세 2열 골격
 

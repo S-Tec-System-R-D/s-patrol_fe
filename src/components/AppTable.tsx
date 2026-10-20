@@ -8,6 +8,7 @@ import {
   type ColumnDef,
   type OnChangeFn,
   type PaginationState,
+  type RowData,
   type SortingState,
   type Table,
 } from '@tanstack/react-table'
@@ -20,6 +21,20 @@ import {
   ChevronRightIcon,
 } from 'lucide-react'
 import AppButton from '@/components/app/AppButton'
+
+/**
+ * 열 단위 추가 클래스 (`spec 026`). `<th>`·`<td>` 양쪽에 붙는다.
+ *
+ * 🔴 **opt-in 이다** — `meta` 를 주지 않은 열은 지금과 같다. 첫 소비처는 공지 목록의
+ * **아이콘 열**(`w-px` 로 내용 폭까지 줄인다) — 자동 레이아웃은 남는 폭을 열마다 나눠 줘서
+ * 아이콘 하나짜리 열도 넓어진다.
+ */
+declare module '@tanstack/react-table' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    className?: string
+  }
+}
 
 interface AppTableProps<TData> {
   data: TData[]
@@ -134,6 +149,7 @@ const AppTable = <TData,>({
                     className={`
                       text-left text-xs px-3 py-3 font-medium text-muted-foreground
                       ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-foreground' : ''}
+                      ${header.column.columnDef.meta?.className ?? ''}
                     `}
                   >
                     <div className="flex items-center gap-1">
@@ -156,7 +172,10 @@ const AppTable = <TData,>({
                   onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="text-body font-normal px-3 py-3">
+                    <td
+                      key={cell.id}
+                      className={`text-body font-normal px-3 py-3 ${cell.column.columnDef.meta?.className ?? ''}`}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
