@@ -243,7 +243,7 @@ test('공지사항', async ({ page }) => {
   await open(page, '/notice')
   await shoot(page, '현장/notice--목록')
 
-  // mock 공지 id '4' (src/features/notice/mocks)
+  // 시드 `noticeSeq 4` — 이미지 2 + 파일 2 (`src/mocks/handlers/notices.ts`). 이미지는 B-40 폴백으로 찍힌다
   await open(page, '/notice/4')
   await shoot(page, '현장/notice--상세')
 })

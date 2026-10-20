@@ -134,7 +134,7 @@ describe('NoticeListPage — 서버 목록', () => {
 
     const button = screen.getByRole('button', { name: '공지 작성' })
     expect(button.closest('header')).toBeNull()
-    expect(button.parentElement).toContainElement(screen.getByLabelText('제목 검색'))
+    expect(button.parentElement).toContainElement(screen.getByLabelText('제목·내용 검색'))
   })
 
   it('작성 모달을 연다', async () => {
@@ -211,7 +211,7 @@ describe('NoticeListPage — 필터가 서버로 나간다', () => {
     renderPage('/notice?page=2')
 
     await waitFor(() => expect(calls.length).toBeGreaterThan(0))
-    await user.type(screen.getByLabelText('제목 검색'), '교육')
+    await user.type(screen.getByLabelText('제목·내용 검색'), '교육')
 
     await waitFor(() => expect(url()).toContain('q=%EA%B5%90%EC%9C%A1'))
     expect(url()).not.toContain('page=2')
@@ -226,7 +226,7 @@ describe('NoticeListPage — 필터가 서버로 나간다', () => {
     await user.click(await screen.findByLabelText('필터 초기화'))
 
     await waitFor(() => expect(url()).toBe(''))
-    expect(screen.getByLabelText('제목 검색')).toHaveValue('')
+    expect(screen.getByLabelText('제목·내용 검색')).toHaveValue('')
   })
 
   it('🔴 siteSeq 는 URL 에 없다', async () => {

@@ -1,33 +1,9 @@
-export interface NoticeAttachment {
-  id: string
-  fileName: string
-}
-
-export interface NoticeSummary {
-  id: string
-  index: number
-  title: string
-  contentPreview: string
-  authorName: string
-  createdAt: string
-  readByMe: boolean
-  isNew: boolean
-  hasAttachment: boolean
-}
-
-export interface Notice extends NoticeSummary {
-  content: string
-  appPushSent: boolean
-  attachments: NoticeAttachment[]
-}
-
 /**
- * ── 서버 타입 (`spec 026` T568) ─────────────────────────────────────────────
+ * 공지사항 서버 타입 (`spec 026` T568).
  *
  * `api-spec.md` §23·24 **실측 그대로 전량** 선언한다(안 쓰는 필드도 둔다 — CLAUDE.md B4).
- *
- * ⚠️ 위의 구 타입 3종(`Notice`·`NoticeSummary`·`NoticeAttachment`)은 mock 시절 것이다.
- * 소비처를 옮긴 뒤 T589 에서 지운다 — 지금 지우면 화면 전환 전까지 빌드가 깨진다.
+ * mock 시절 타입(`Notice`·`NoticeSummary`·`NoticeAttachment` — 읽음·신규·앱 푸시 등 서버에
+ * 없는 필드를 갖고 있었다)은 T589 에서 지웠다.
  */
 
 /** `GET Notice/W/sign/GetNoticeList` 의 행 */
@@ -69,10 +45,10 @@ export interface NoticeAttach {
 /** `GetNoticeList` 요청 파라미터 (swagger) */
 export interface NoticeListParams {
   siteSeq: number
-  /** `yyyy-MM-dd`. ⚠️ 기준 필드(`createDt`?)는 미실측 — OQ-026-C */
+  /** `yyyy-MM-dd`. `createDt` 날짜 기준, **양 끝 포함**(실측 2026-10-20) */
   fromDt?: string
   toDt?: string
-  /** ⚠️ 검색 대상(제목/작성자/본문)은 미실측 — OQ-026-A */
+  /** **제목 + 본문** 부분일치. 🔴 작성자는 검색되지 않는다(실측 2026-10-20) */
   keyword?: string
   pageNumber: number
   pageSize: number

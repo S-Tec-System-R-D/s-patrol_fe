@@ -160,9 +160,11 @@ flowchart LR
     DReq -- "승인" --> DApp[(승인 확인<br/>모달)]
     DReq -- "거부" --> DRej[(거부 모달<br/>사유 입력 선택)]
 
-    Notice["/notice<br/>공지 목록"] -- 행 선택 --> NDet[공지 상세 패널]
-    NDet -- "공지 작성/수정" --> NForm[(공지 폼<br/>모달 + 앱푸시 체크박스)]
+    Notice["/notice<br/>공지 목록"] -- 행 클릭 --> NDet["/notice/:noticeSeq<br/>공지 상세 페이지"]
+    Notice -- "공지 작성" --> NForm[(공지 폼<br/>모달 + 앱푸시 체크박스)]
+    NDet -- "수정" --> NForm
     NDet -- "삭제" --> Conf4[(확인<br/>모달)]
+    Conf4 -- "확인" --> Notice
 ```
 
 **원칙**

@@ -36,10 +36,17 @@ const listOf = async (query: Parameters<typeof toNoticeListParams>[1]) => {
 }
 
 describe('useNoticeList', () => {
-  it('사업장 공지를 작성일 내림차순으로 받는다', async () => {
+  it('🔴 고정 공지가 먼저, 그 안에서 작성일 내림차순이다 (실측 2026-10-20)', async () => {
     const data = await listOf({})
     expect(data.totalCount).toBe(5)
-    expect(data.items.map((row) => row.noticeSeq)).toEqual([4, 3, 2, 1, 5])
+    expect(data.items.map((row) => row.noticeSeq)).toEqual([5, 4, 3, 2, 1])
+  })
+
+  it('🔴 키워드는 제목·본문을 거르고 작성자는 거르지 않는다 (실측 2026-10-20)', async () => {
+    // '외곽' 은 2번 **본문**에만 있다
+    expect((await listOf({ q: '외곽' })).items.map((row) => row.noticeSeq)).toEqual([2])
+    // '김관리' 는 2번 **작성자**다 — 걸리지 않는다
+    expect((await listOf({ q: '김관리' })).items).toEqual([])
   })
 
   it('키워드·기간·페이징이 서버 파라미터로 나가 걸러진다', async () => {
@@ -48,7 +55,7 @@ describe('useNoticeList', () => {
       (await listOf({ from: '2026-05-01', to: '2026-05-20' })).items.map((row) => row.noticeSeq)
     ).toEqual([3, 2])
     const page2 = await listOf({ page: '2', size: '2' })
-    expect(page2.items.map((row) => row.noticeSeq)).toEqual([2, 1])
+    expect(page2.items.map((row) => row.noticeSeq)).toEqual([3, 2])
     expect(page2.totalCount).toBe(5)
   })
 

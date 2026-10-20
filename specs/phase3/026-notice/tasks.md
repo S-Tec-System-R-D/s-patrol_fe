@@ -77,13 +77,13 @@
 
 ## Phase 6: Polish
 
-- [ ] T589 🔴 **삭제** in src/features/notice/components/NoticeList.tsx · src/features/notice/components/NoticeListItem.tsx · src/features/notice/components/NoticeDetailView.tsx · src/features/notice/mocks/noticeData.ts — 그리고 `types/notice.ts` 의 구 타입 3종. grep 으로 소비처 **0건** 확인 후
-- [ ] T590 OQ-026-A·B·C 실측 in docs/api-spec.md — `npm run dev:real` 에서 GET 만: 키워드가 제목/작성자/본문 중 무엇을 거르는지 · 고정 공지가 위로 오는지 · 기간이 `createDt` 기준인지. 결과로 placeholder·MSW 가정을 교정한다
-- [ ] T591 `npm run verify` 0 + `npm run test` green(1051 → 증가). 🔴 **병렬 실행**(`CLAUDE.md` A4)
-- [ ] T592 🔴 **사용자 브라우저 확인**(`npm run dev:real`) — 목록 검색·기간·페이지 · 상세 진입 · 이미지 폴백 · 작성/수정/삭제 모달 · 좁은 폭 카드
-- [ ] T593 `npm run capture` — `현장/notice--목록`·`notice--상세` 교체. 🔴 **나머지는 덮지 않는다**(바뀌었으면 원인을 눈으로 가린다)
-- [ ] T594 문서 동기화 — docs/screens.md(§1-5 행 · 015 결정 블록 · §4 라우트 · `:277` 목업 항목) · docs/patterns.md(§1 공지 예외 문구) · docs/flow.md(공지 흐름 "상세 패널" → 상세 페이지) · docs/data-model.md(§3-5 공지 타입 · 조회 엔드포인트 표) · docs/roadmap.md(026 행 · §12)
-- [ ] T595 DoD 20개 대조표 + `## 다음 spec으로 이월` in specs/phase3/026-notice/tasks.md — 변경계 전환(작성·수정·삭제·첨부 업로드·OQ-12) · OQ 잔여
+- [x] T589 🔴 **삭제** in src/features/notice/components/NoticeList.tsx · src/features/notice/components/NoticeListItem.tsx · src/features/notice/components/NoticeDetailView.tsx · src/features/notice/mocks/noticeData.ts — 그리고 `types/notice.ts` 의 구 타입 3종. grep 으로 소비처 **0건** 확인 후
+- [x] T590 OQ-026-A·B·C 실측 in docs/api-spec.md — ✅ **A: 제목 + 본문**(작성자 ✗ → placeholder `제목·내용 검색`) · **B: 고정 먼저**(필터를 걸어도) · **C: `createDt` 날짜, 양 끝 포함**. 상세 없는 ID 는 400 + 래퍼. MSW·타입 주석·테스트를 실측에 맞췄다(`api-spec.md` §23·24 실측 블록). ⚠️ 원래 경로 — `npm run dev:real` 에서 GET 만: 키워드가 제목/작성자/본문 중 무엇을 거르는지 · 고정 공지가 위로 오는지 · 기간이 `createDt` 기준인지. 결과로 placeholder·MSW 가정을 교정한다
+- [x] T591 `npm run verify` 0 + `npm run test` green(1051 → **1106**, 99 files). 🔴 **병렬 실행**(`CLAUDE.md` A4)
+- [~] T592 🔴 **사용자 브라우저 확인**(`npm run dev:real`) — 목록 검색·기간·페이지 · 상세 진입 · 이미지 폴백 · 작성/수정/삭제 모달 · 좁은 폭 카드 — ◩ **화면 확인은 Phase 3·4 진행 중에 이뤄졌고 설계 변경 7건(T580a~c·T586a~d)이 나왔다.** ⚠️ **실서버(`dev:real`) 화면 확인은 아직이다** — 실데이터는 사업장 6 에만 있어(7건) 현장관리자 `333333`(7·8 소속)으로는 볼 수 없다. 본사 계정으로 사업장 6 을 골라 확인한다
+- [x] T593 `npm run capture` — `현장/notice--목록`·`notice--상세` 교체. 🔴 **나머지는 덮지 않는다** — 전체를 별도 폴더에 찍어 **바이트 대조**: 10장 동일, 3장은 **지도 3화면**(타일 못 받는 환경 — 60f0c77 보류 결정 그대로). `e2e/capture.pw.ts` 의 시드 주석을 `noticeSeq 4` 로 교정
+- [x] T594 문서 동기화 — ✅ + `components.md`(AppTable 열 `meta.className`) · `ui-current/README.md`(2장 비고 + 변경 이력) · docs/screens.md(§1-5 행 · 015 결정 블록 · §4 라우트 · `:277` 목업 항목) · docs/patterns.md(§1 공지 예외 문구) · docs/flow.md(공지 흐름 "상세 패널" → 상세 페이지) · docs/data-model.md(§3-5 공지 타입 · 조회 엔드포인트 표) · docs/roadmap.md(026 행 · §12)
+- [x] T595 DoD 20개 대조표 + `## 다음 spec으로 이월` in specs/phase3/026-notice/tasks.md — 변경계 전환(작성·수정·삭제·첨부 업로드·OQ-12) · OQ 잔여
 
 ---
 
@@ -100,3 +100,63 @@
 - **T589 는 Phase 3~5 뒤** 🔴 삭제는 전환 후(037 T537·T549 와 같다)
 - **T590 은 T591 앞** — 실측으로 placeholder·MSW 가 바뀌면 테스트가 함께 바뀐다
 - Phase 3(US1)과 Phase 4(US2)는 T573~T575 이후 **독립 진행 가능**. Phase 6 은 모든 US 뒤
+
+---
+
+## DoD 대조표 (T595)
+
+| # | 조건 | 판정 | 증거 |
+|:-:|---|:-:|---|
+| 1 | `/notice` 가 `GetNoticeList` 로 `AppTable` — mock import 0건 | ✅ | `NoticeListPage.tsx` `useNoticeList` · `noticeData.ts` 삭제 |
+| 2 | 컬럼 4종 + 첨부 아이콘 | ✅ | `NoticeColumn.tsx` · 테스트 "고정 공지와 첨부 유무" |
+| 3 | 필터 줄 037 과 같은 배치 | ✅ | 검색 → `role="group"` 기간·초기화 → spacer → 작성(T580c) |
+| 4 | `q`·`from`·`to`·`page` URL ↔ 서버, 필터 변경 시 첫 페이지 | ✅ | 테스트 "URL 의 검색·기간·페이지가 서버 파라미터로" · "디바운스 뒤 … 첫 페이지" |
+| 5 | `siteSeq` 는 URL 에 없다 | ✅ | 테스트 "siteSeq 는 URL 에 없다" |
+| 6 | 상태 분기 4종 | ✅ | `NoticeListPage.test.tsx` "상태 분기" 4건 |
+| 7 | `xl` 미만 카드 | ✅ | `NoticeCard.tsx` + `renderCard` |
+| 8 | 행 클릭 → 상세 | ✅ | 테스트 "행을 클릭하면 공지 상세로" |
+| 9 | 상세가 `DetailNotice` 로 | ✅ | `useNoticeDetail` |
+| 10 | 브레드크럼 + 머리 줄 + **한 열 내용 카드** | ✅ | `NoticeDetailPage.tsx` · `NoticeContentCard.tsx` (초안 "2열" 에서 사용자 결정으로 변경 — spec §2-2 교정) |
+| 11 | 이미지·첨부 비면 영역 자체가 없다 | ✅ | 테스트 "이미지·파일이 없으면 그 영역 자체가 없다" |
+| 12 | 이미지 `onError` 폴백 | ✅ | 테스트 "이미지가 실패하면 첨부마다 폴백" · 캡쳐 `notice--상세` |
+| 13 | 주소 오류는 요청 없이 즉시 | ✅ | 테스트 "주소가 숫자가 아니면 요청 없이" (요청 0건 단언) |
+| 14 | 조회 실패 → 다시 시도 + 목록으로 | ✅ | 테스트 "조회 실패는 삭제되었다고 단정하지 않고" |
+| 15 | 작성·수정·삭제 흐름 유지 | ✅ | "작성 모달을 연다" · "수정 모달이 서버 값으로" · "삭제를 확인하면 목록으로" |
+| 16 | 구 타입·컴포넌트·`noticeData.ts` 삭제 | ✅ | T589 — grep 0건 |
+| 17 | `verify` + `test` green | ✅ | 0 errors · **1106 passed**(99 files) |
+| 18 | 브라우저 확인 + 캡쳐 | ◩ | 캡쳐 ✅(2장 교체 + 전체 바이트 대조). 화면 확인 ✅(설계 변경 7건). ⚠️ **실서버 화면 확인 미실시**(T592) |
+| 19 | 문서 동기화 | ✅ | T594 — 7개 문서 |
+| 20 | 이월 블록 | ✅ | 아래 |
+
+**판정: 20개 중 ✅ 19 · ◩ 1(#18).** #18 은 실서버 확인 한 단계만 남았다(데이터가 사업장 6 에만 있어
+본사 계정으로 봐야 한다).
+
+---
+
+## 다음 spec으로 이월
+
+### ① 🔴 변경계 전환 — 작성·수정·삭제 + 첨부
+
+026 은 **조회만** 서버로 옮겼다(사용자 결정 2026-10-20). 남은 것:
+- `AddNotice` · `UpsertNotice` · `DeleteNotice` — 🔴 **WF-1-0 실측부터**(`workflow-protocol.md` §1)
+- **첨부 업로드**(multipart) + **OQ-12**(요청 `attachList[]` ↔ 응답 `imageList`/`fileList` 분리 기준)
+- **앱 푸시 발송**(`sendAppPush`) — 요청 필드·동작 미실측
+- 폼 스키마 필드명 `content` → swagger 기준으로 맞춘다(026 은 일부러 두었다)
+- `isPin`(상단 고정) 을 작성 폼에서 고를 수 있는지 — 지금 폼에 없다
+- `data-model.md` §5-3 `CreateNoticeRequest`·`UpdateNoticeRequest` 를 swagger 로 교체
+
+### ② T592 실서버 화면 확인
+
+`npm run dev:real` + **본사 계정**으로 사업장 6 선택 → `/notice`(7건, 고정 1건) · `/notice/56`(이미지 1장 — 404 폴백).
+
+### ③ 회신되면 저절로 열리는 것
+
+- **B-40 첨부 404** — 이미지는 폴백이 사라지고 사진이 뜬다. 첨부파일 링크도 열린다
+- **B-8 목록 `description` 전문** — 화면은 쓰지 않으므로 영향 없음(페이로드만 준다)
+
+### ④ 남겨 둔 판단
+
+- **본문 폭 상한** — 한 열 카드라 넓은 화면에서 본문 한 줄이 길다. 다른 상세가 전부 전체 폭이라
+  두었다. 체감되면 본문에만 `max-w` 를 건다
+- **수정 버튼 위치** — 029 규칙("값을 보여주는 카드에 수단")과 달리 헤더에 있다. 내용 카드가 하나가
+  된 지금은 카드 머리로 옮길 수도 있다

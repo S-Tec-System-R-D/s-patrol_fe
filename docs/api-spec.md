@@ -1211,6 +1211,21 @@ interface NoticeAttach {
 // ⚠ UpsertNotice 요청은 attachList[] 하나인데 응답은 imageList/fileList 2개로 분리 : OQ-12
 ```
 
+#### 23·24 공지 목록 파라미터 동작 — 실측 2026-10-20 (`spec 026` T590)
+
+사업장 6(공지 7건, 7·8 은 0건) · 시스템관리자 계정.
+
+| 확인 | 결과 |
+|---|---|
+| `keyword` 대상 | 🔴 **제목 + 본문** 부분일치. **작성자(`userName`)는 검색되지 않는다** — 작성자명으로 0건 |
+| 정렬 | 🔴 **`isPin` 먼저**, 그 안에서 `createDt` 내림차순. 기간 필터를 걸어도 고정이 맨 위다 |
+| `fromDt`/`toDt` | `createDt` **날짜 기준, 양 끝 포함**(`toDt=07-20` 이 07-20 12:48 을 포함) |
+| `fromDt > toDt` | 에러 없이 `200` + 0건 — 이력과 같다(프론트 `orderRange` 가 순서를 보장) |
+| 상세 없는 ID | `400` + 래퍼 `{"message":"잘못된 요청입니다.","data":null,"code":400}` (에러 형태 A) |
+
+⚠️ **Git Bash `curl` 로 한글 `keyword` 를 보내면 인코딩이 깨져 전부 0건**이다 — 서버 문제가
+아니다. UTF-8 을 보장하는 클라이언트(Python `urllib.parse.urlencode` 등)로 재현한다.
+
 ---
 
 ## 6. 발견된 문제 / Open Questions

@@ -78,7 +78,9 @@ const NoticeListPage = () => {
    * 🔴 입력은 로컬 state, URL 은 디바운스 뒤에(027 규약). URL 이 밖에서 바뀌면(뒤로가기·
    * 초기화) 입력창을 맞춘다 — effect 가 아니라 **렌더 중 조정**이다.
    *
-   * ⚠️ placeholder 는 "제목 검색" — `keyword` 가 무엇을 거르는지 미실측(OQ-026-A, T590).
+   * 🔴 **"제목·내용 검색"** 이다 — 서버 `keyword` 는 제목 + 본문을 거르고 **작성자는 거르지
+   * 않는다**(실측 2026-10-20). 구 목록의 "제목 또는 작성자 검색" 을 그대로 두면 이름을 넣고
+   * 0건을 받는다(037 OQ-037-B 와 같은 종류).
    */
   const [keywordDraft, setKeywordDraft] = useState(params.q ?? '')
   const [lastKeyword, setLastKeyword] = useState(params.q)
@@ -113,8 +115,8 @@ const NoticeListPage = () => {
       <div className="flex items-center gap-2">
         <AppInput
           variant="search"
-          placeholder="제목 검색"
-          aria-label="제목 검색"
+          placeholder="제목·내용 검색"
+          aria-label="제목·내용 검색"
           className="w-[260px]"
           value={keywordDraft}
           onChange={(event) => {

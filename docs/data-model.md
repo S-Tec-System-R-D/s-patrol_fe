@@ -465,40 +465,39 @@ export interface PointHistoryRecord {
 
 ```ts
 // 공지사항 — /notice
-// 명세서 기준 필드: 제목 / 내용 / 첨부. UI에 모두 표시.
-// readByMe: 현재 사용자가 읽었는지.
-//   ※ 근무자가 WEB에 접속할 일이 없을 수 있어 읽음 처리 자체가 불필요할 가능성 있음.
-//     필드 유지하되 미확정 표시 (Open Questions 참조).
-export interface Notice {
-  id: string
+// 🔴 `spec 026` 에서 **서버 응답 그대로**로 교체했다(api-spec.md §23·24 실측 SSOT).
+//    코드: `src/features/notice/types/notice.ts`.
+// 🔴 mock 시절 설계 중 **서버에 없는 필드는 화면과 함께 지웠다**(CLAUDE.md B4):
+//    `readByMe`·`isNew`(읽음/신규 — 근무자 APP 개념) · `appPushSent`(작성 시점 옵션이라
+//    조회 응답에 없다) · `index`(# 번호) · `contentPreview` · 첨부 `sizeBytes`/`contentType`.
+export interface NoticeRow {          // GetNoticeList 행
+  noticeSeq: number
   title: string
-  content: string
-  attachments: NoticeAttachment[]  // 첨부 (명세서 기재)
-  authorId: string
-  authorName: string
-  createdAt: string
-  appPushSent: boolean             // 저장 시 앱 푸시 발송 체크 여부
-  readByMe: boolean
+  description: string                 // 🔴 목록인데 본문 전문(B-8). 화면에 쓰지 않는다
+  userSeq: number
+  userName: string
+  isPin: boolean                      // 서버가 고정을 맨 위로 정렬해 준다(실측)
+  createDt: string
+  attachCount: number
 }
 
-export interface NoticeAttachment {
-  id: string
-  fileName: string
-  url: string
-  sizeBytes?: number
-  contentType?: string             // 'image/png', 'application/pdf' 등
+export interface NoticeDetail {       // DetailNotice
+  noticeSeq: number
+  title: string
+  description: string
+  userSeq: number
+  userName: string
+  isPin: boolean
+  createDt: string
+  imageList: NoticeAttach[]           // ⚠ 이미지/파일이 두 배열로 분리(OQ-12)
+  fileList: NoticeAttach[]
 }
 
-export interface NoticeSummary {
-  id: string
-  index: number                    // 목업의 #
-  title: string
-  contentPreview: string           // 목록 1줄 미리보기 (015에서 리스트형 UI로 추가)
-  authorName: string
-  createdAt: string
-  readByMe: boolean
-  isNew: boolean
-  hasAttachment: boolean
+export interface NoticeAttach {
+  attachSeq: number
+  attachPath: string                  // 절대 URL — 지금 404(B-40)
+  attachName: string
+  attachExt: string                   // '.jpg'
 }
 
 // 사업장 헬스체크 설정
@@ -566,8 +565,8 @@ export interface Keyword {
 | 배치요청 대기 큐 | `GET /api/deployments?status=PENDING` | `ApiListResponse<DeploymentRequestSummary>` |
 | 배치요청 처리이력 | `GET /api/deployments?status=PROCESSED` | `ApiListResponse<DeploymentRequestSummary>` (APPROVED·REJECTED·CANCELLED 통합) |
 | 배치요청 상세 | `GET /api/deployments/:id` | `ApiDetailResponse<DeploymentRequest>` |
-| 공지 목록 | `GET /api/notices` | `ApiListResponse<NoticeSummary>` |
-| 공지 상세 | `GET /api/notices/:id` | `ApiDetailResponse<Notice>` |
+| 공지 목록 | `GET /api/v1/Notice/W/sign/GetNoticeList` (`siteSeq`·`fromDt`·`toDt`·`keyword`·페이징) | `ApiListResponse<NoticeRow>` — ✅ `spec 026` 전환 |
+| 공지 상세 | `GET /api/v1/Notice/W/sign/DetailNotice?noticeSeq=` | `ApiDetailResponse<NoticeDetail>` — ✅ `spec 026` 전환 |
 
 ### 4-2. 본사 (`/admin/*`)
 
@@ -778,6 +777,8 @@ export interface RemovePointFromCourseRequest {
   pointId: string
 }
 
+// ⚠ 아래 2종은 mock 시절 설계다 — 변경계 전환 spec 에서 swagger(`AddNotice`·`UpsertNotice`)
+//   기준으로 교체한다(026 은 조회만 전환했다). 폼 스키마 필드명 `content` 도 그때 함께 맞춘다.
 export interface CreateNoticeRequest {
   title: string
   content: string
@@ -874,8 +875,7 @@ DTO를 확정하기 전 백엔드·기획 확인 필요. 답변 받아 본문에
 - [ ] **그룹 트리 응답 형태**: 전체 트리를 한 번에(`GET /groups/tree`) vs 노드별 lazy 로딩
 - [ ] **사업장 다중 응답**: 사업장 목록 응답에 담당 관리자 요약을 포함할지(목록 행 vs 상세)
 - [ ] **NFC TAG ID**: `nfcTagId`가 지점 단위 고유여야 하는지(중복 허용? 사업장 내 유일?)
-- [ ] **공지 읽음 처리**: 필드는 유지하되 미확정.
-  - **이유**: 근무자가 WEB에 접속할 일이 없을 수 있어 읽음 처리 자체가 불필요할 가능성 있음. 이 경우 `readByMe` 제거 또는 사용 안 함.
+- [x] **공지 읽음 처리** — **해소(`spec 026`)**: 서버 응답에 읽음 필드가 없고 읽음은 근무자(APP) 개념이라 **`readByMe`·`isNew` 를 화면과 함께 제거**했다.
 - [ ] **Keyword 도메인**: 단순 문자열? 카테고리/활성? 다국어? 표현·자료 모양 모두 미정
 - [ ] **배치 요청 — 재요청 쿨다운**: 취소·거부 직후 즉시 재요청 가능한지, 대기 시간이 있는지
 - [ ] **배치 요청 — 승인 시 세션 처리**: 근무자 소속 사업장이 바뀔 때 APP에 강제 재로그인/토큰 갱신 필요 여부

@@ -418,6 +418,7 @@ import { zoneColumns } from '@/features/patrol-zones/components/ZoneColumn'
 | `onRowClick` | `(row: TData) => void` | 행 클릭 시 콜백 |
 | `rowClassName` | `(row: TData) => string` | 행 전체 강조(미사용 톤다운 등). **카드에도 같이 걸린다** |
 | **`renderCard`** | `(row: TData) => ReactNode` | 🔴 **`xl` 미만에서 그릴 카드**(`spec 030`). **주지 않으면 무변화** |
+| (컬럼) **`meta.className`** | `string` | 🔴 **열 단위 클래스** — `<th>`·`<td>` 양쪽에 붙는다(`spec 026`). 아이콘 하나짜리 열을 `w-px` 로 내용 폭까지 줄일 때 쓴다(자동 레이아웃은 남는 폭을 열마다 나눠 준다). **주지 않으면 무변화**. 첫 소비처: 공지 목록 핀 열 |
 
 **규칙**
 

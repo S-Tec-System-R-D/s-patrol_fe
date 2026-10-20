@@ -5,8 +5,8 @@ import type { NoticeAttach, NoticeDetail, NoticeRow } from '@/features/notice/ty
 /**
  * MSW 공지사항 핸들러 (`spec 026` T574).
  *
- * 시드는 구 `features/notice/mocks/noticeData.ts` 를 **서버 형태로 옮긴 것**이다(index.ts
- * 머리말 — 버리지 않는다). 구 파일은 화면 전환 뒤 T589 에서 지운다.
+ * 시드는 mock 시절 `features/notice/mocks/noticeData.ts` 를 **서버 형태로 옮긴 것**이다
+ * (index.ts 머리말 — 버리지 않는다). 원본은 화면 전환 뒤 T589 에서 지웠다.
  *
  * 🔴 **화면이 갈리는 경우를 전부 심는다**: 이미지+파일 / 파일만 / 첨부 없음 / 고정.
  * 정상 행만 두면 "카드가 없을 때" 분기가 dev·캡쳐에서 영영 안 보인다.
@@ -14,10 +14,10 @@ import type { NoticeAttach, NoticeDetail, NoticeRow } from '@/features/notice/ty
  * 🔴 **첨부 URL 은 열리지 않는 주소다** — 실서버도 지금 404 다(B-40). mock 이 이미지를
  * 띄워 주면 폴백이 dev 에서 한 번도 보이지 않는다.
  *
- * ⚠️ **가정 2개**(T590 에서 실측으로 교정한다):
- * - `keyword` 는 **제목 부분일치**(OQ-026-A)
- * - 기간은 **`createDt` 기준**(OQ-026-C)
- * - 정렬은 `createDt` 내림차순만 — 고정 공지를 **위로 올리지 않는다**(OQ-026-B, 서버 동작 미확인)
+ * ✅ **실측으로 맞췄다**(2026-10-20, T590 — `api-spec.md` §23):
+ * - `keyword` 는 **제목 + 본문** 부분일치. 🔴 **작성자는 아니다**(OQ-026-A)
+ * - 정렬은 **고정 먼저**, 그 안에서 `createDt` 내림차순 — 필터를 걸어도 같다(OQ-026-B)
+ * - 기간은 **`createDt` 날짜 기준, 양 끝 포함**. `from > to` 는 에러 없이 0건(OQ-026-C)
  */
 
 const GET_NOTICE_LIST_PATH = '/api/v1/Notice/W/sign/GetNoticeList'
@@ -154,9 +154,11 @@ export const noticeHandlers = [
     const keyword = query.get('keyword')
     const filtered = seeds
       .filter((item) => item.siteSeq === siteSeq)
-      .filter((item) => (keyword === null ? true : item.title.includes(keyword)))
+      .filter((item) =>
+        keyword === null ? true : item.title.includes(keyword) || item.description.includes(keyword)
+      )
       .filter((item) => inRange(item.createDt, query.get('fromDt'), query.get('toDt')))
-      .sort((a, b) => b.createDt.localeCompare(a.createDt))
+      .sort((a, b) => Number(b.isPin) - Number(a.isPin) || b.createDt.localeCompare(a.createDt))
       .map(toNoticeRow)
 
     const start = (pageNumber - 1) * pageSize
@@ -175,11 +177,10 @@ export const noticeHandlers = [
   http.get(GET_NOTICE_DETAIL_PATH, ({ request }) => {
     const noticeSeq = Number(new URL(request.url).searchParams.get('noticeSeq'))
     const found = seeds.find((item) => item.noticeSeq === noticeSeq)
-    // 🔴 없는 공지는 빈 데이터가 아니라 **비즈니스 오류**(에러 형태 A)로 둔다 — 이력 상세와
-    //    같은 가정이다. ⚠️ 공지의 실제 응답은 미실측(T590 에서 함께 본다)
+    // 🔴 없는 공지는 빈 데이터가 아니라 **비즈니스 오류**(에러 형태 A) — 실측 400 + 래퍼(T590)
     if (!found) {
       return HttpResponse.json(
-        { message: '해당 공지사항을 찾을 수 없습니다.', data: null, code: 400 },
+        { message: '잘못된 요청입니다.', data: null, code: 400 },
         { status: 400 }
       )
     }
