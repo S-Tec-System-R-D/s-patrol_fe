@@ -119,7 +119,11 @@
 | 1 | 완료 | `success` |
 | 2 | 미완료 | `danger` |
 
-**② 코스 상세의 지점 인증 결과 — 지점 사전 `0~4`**
+**② 지점 인증 결과 — 지점 사전 `0~4`** (코스 상세의 인증 내역 · **지점 이력 2화면 공용**)
+
+> ✅ **`spec 037` 이 같은 매핑을 그대로 쓴다**(2026-10-20) — 지점 순찰이력 목록
+> (`/patrol/points`)과 지점 인증 상세(`/patrol/points/:detailSeq`). 🔴 **같은 뜻을 두 벌로
+> 적지 않는다**: `pointCheckBadge` 하나가 세 화면의 라벨·색을 정한다.
 
 | 조건 | 라벨 | 시맨틱 |
 |---|---|---|
@@ -135,6 +139,13 @@
 일이 다르다(전자는 순찰 누락, 후자는 태그·단말 문제일 수 있다).
 🔴 **`완료`(4)는 메모 유무로 갈린다** — 서버 `status` 에 그 구분이 없다.
 ⚠️ **`순찰제외`(2)는 전 사업장 0건**이다 — 매핑은 두지만 실데이터로 확인할 수 없다(OQ-18).
+
+🔴 **지점 이력 화면에는 `3`·`4` 만 나타난다**(`GetPointHistory` 가 `checkDt` 있는 행만 준다).
+그래서 **결과 필터 선택지는 2종뿐이다** — `미완료`·`완료`(`spec 037`). 뱃지 5종을 그대로
+선택지로 두면 **고르면 0건이 돌아오는 필터**가 생기고, 그건 "데이터가 없다" 는 거짓 신호다:
+`이상없음`↔`순찰기록` 은 `hasMemo` **파생**이라 서버에 보낼 값이 없고, `시간초과` 는 독립
+축이며(아래 ③) `순찰제외` 는 0건이다. ⚠️ 필터 라벨의 `완료` 는 **`이상없음`+`순찰기록` 을
+함께 거르는 상위어**다 — 뱃지 문구를 그대로 쓰면 `순찰기록` 인 행이 빠진 것처럼 읽힌다.
 🔴 **코스 `2` 는 `미완료`, 지점 `2` 는 `순찰제외`** 다. 값이 겹치는데 뜻이 다르므로
 **공용 enum 으로 묶지 않는다**(B-7: 백엔드 확인 결과 의도된 것).
 
@@ -195,15 +206,15 @@
 | 14.5px / 700 | `text-panel-title` | 상세 패널 타이틀 | `AppDetailCard` title |
 | 14px / 700 | `text-section-title` | 섹션 타이틀 | 페이지 내 큰 섹션 헤딩(배치관리 등 — 향후) |
 | 13px / 400·600 | `text-tab` | 본문 규격 값(참고), 탭 라벨 | `PatrolHistoryTabs`(비활성 600, 활성 700) |
-| 12.5px | `text-body` | 테이블 셀·카드 kv 값·이름·필터 칩·버튼 라벨·타임라인 타이틀 | `AppDetailRow`, `AppFilterButton`, `PatrolTimeline` tl-title, `AppTable` td(010에서 해소), `PatrolRecordDialog` label/value |
-| 12px | `text-caption` | 페이지 설명·타임라인 노트·footer | `AppPageHeader` subtitle, `PatrolTimeline` tl-note |
-| 11.5px | `text-meta` | 보조 텍스트(시각 등) | `PatrolTimeline` tl-time |
+| 12.5px | `text-body` | 테이블 셀·카드 kv 값·이름·필터 칩·버튼 라벨 | `AppDetailRow`, `AppFilterButton`, `AppTable` td(010에서 해소), `AppKpiCard` 값. ⚠️ **`PatrolTimeline`(036)·`PatrolRecordDialog`(037) 은 삭제됐다** — 둘 다 mock 셸이었고 서버 전환 때 사라졌다 |
+| 12px | `text-caption` | 페이지 설명·보조 한 줄·footer | `AppPageHeader` subtitle, `AppKpiCard` hint, 카드 지표 줄(034) |
+| 11.5px | `text-meta` | 보조 텍스트(시각 등) | ⚠️ **소비처가 0곳이다** — 유일한 소비처였던 `PatrolTimeline` 이 036 에서 삭제됐다. 토큰은 남기되 새 소비처가 생길 때 다시 본다 |
 | 11px | `text-badge` | 뱃지·pill | `AppBadge` |
-| 10.5px uppercase | `text-label` | 테이블 헤더 라벨·섹션 라벨·플래그 라벨 | 섹션 `<h4>`(순찰 정보/타임라인), `PatrolTimeline` tl-flag, `AppTable` thead(이월 — §6 Open Q) |
+| 10.5px uppercase | `text-label` | 테이블 헤더 라벨·섹션 라벨 | 섹션 `<h4>`(순찰 정보·인증 내역·순찰 기록), `AppTable` thead(이월 — §6 Open Q) |
 
 - **헤딩 weight**: 표 참조(대부분 700). letter-spacing -0.01em.
 - **본문 weight 기준**: 400(기본) / 500(강조 라벨) / 600(헤더 셀·탭 비활성) / 700(아주 강조·탭 활성). 800 이상은 지양.
-- **적용 상태**: 순찰이력 전용 컴포넌트(`AppPageHeader`/`AppFilterButton`/`AppDetailCard`/`AppDetailRow`/`AppBadge`/섹션 라벨/`PatrolHistoryTabs`/`PatrolTimeline`)는 009에서, `AppTable` td는 010에서 시맨틱 토큰(`text-body`)까지 반영 완료. `AppTable` thead(10.5px 대상)·`AppButton`은 로그인·에러·미리디자인 zone/points 화면과 공유하므로 **미반영**(여전히 `text-xs`/`text-sm` 등) — 각 화면이 리디자인되는 Phase(3·5)에서 함께 토큰 전환 예정(§6 Open Q).
+- **적용 상태**: 순찰이력 전용 컴포넌트(`AppPageHeader`/`AppFilterButton`/`AppDetailCard`/`AppDetailRow`/`AppBadge`/섹션 라벨/`PatrolHistoryTabs`)는 009에서, `AppTable` td는 010에서 시맨틱 토큰(`text-body`)까지 반영 완료. `AppTable` thead(10.5px 대상)·`AppButton`은 로그인·에러·미리디자인 zone/points 화면과 공유하므로 **미반영**(여전히 `text-xs`/`text-sm` 등) — 각 화면이 리디자인되는 Phase(3·5)에서 함께 토큰 전환 예정(§6 Open Q).
 
 ### 1-3. 라디우스
 

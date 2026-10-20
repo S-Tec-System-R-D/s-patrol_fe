@@ -100,6 +100,7 @@ flowchart TB
         Patrol --> PP["/patrol/points<br/>지점 이력"]
         PZ <-->|탭| PP
         PZ --> PZD["/patrol/zones/:historySeq<br/>코스 순찰 상세"]
+        PP --> PPD["/patrol/points/:detailSeq<br/>지점 인증 상세"]
 
         ZP --> Z["/zones<br/>순찰코스 목록"]
         ZP --> P["/points<br/>순찰지점 목록"]
@@ -114,7 +115,8 @@ flowchart TB
 
 **탭 그룹**
 
-- `/patrol/zones` ↔ `/patrol/points` — 순찰이력 탭(`PatrolLayout`)
+- `/patrol/zones` ↔ `/patrol/points` — 순찰이력 탭(`PatrolHistoryTabs`. ⚠️ 구 `PatrolLayout` 은 `spec 009` 에서 폐기됐다)
+- `/patrol/points` → `/patrol/points/:detailSeq` — 행 클릭으로 **인증 1건** 진입(`spec 037`). 🔴 키가 `pointSeq` 가 아니라 **`detailSeq`** 다 — 같은 지점이 하루에 여러 번 찍히고 회차마다 결과가 다르다. 🔴 **기록 모달을 대체한다**(`PatrolRecordDialog` 삭제). 못 찾았을 때 안내 블록 **안에** `순찰이력 목록으로` 링크를 따로 두는 것도 023·027·036 과 같다
 - `/zones` ↔ `/points` — 구역·지점 탭(`CourseTabs`)
 - `/points` → `/points/:pointSeq` — 행 클릭으로 상세 진입(`spec 027`). 🔴 **상세가 라우트라 새로고침·딥링크·뒤로가기가 보존된다** — 027 전에는 선택이 `useState` 였다. 상세의 브레드크럼 첫 조각이 목록 복귀 링크를 겸한다
 - `/zones` → `/zones/:courseSeq` — **같은 구조**(`spec 023`). ⚠️ 코스 상세는 **못 찾았을 때 브레드크럼만으로 부족**했다 — 할 수 있는 일이 하나도 없는 화면에서는 브레드크럼이 빠져나갈 길로 읽히지 않아(브라우저 확인 2026-10-12) 안내 블록 **안에** `코스 목록으로` 링크를 따로 둔다
@@ -137,16 +139,16 @@ flowchart LR
     ZEdit -- "드래그·구간시간·제거" --> ZEdit
     ZEdit -- "저장" --> ZD
 
-    P["/points<br/>지점 목록"] -- 지점 선택 --> PD[지점 상세 패널]
+    P["/points<br/>지점 목록"] -- "행 클릭" --> PD["/points/:pointSeq<br/>지점 상세"]
     PD -- "지점 추가/수정" --> PForm[(지점 폼<br/>모달)]
     PD -- "QR 다운로드" --> Dl[["QR 파일 다운로드"]]
     PD -- "삭제" --> Conf2[(확인<br/>모달)]
 
     PZ["/patrol/zones<br/>코스 이력"] -- 행 클릭 --> PZD["/patrol/zones/:historySeq<br/>코스 순찰 상세"]
-    PZ -- "Export" --> Exp[["Excel / PDF 다운로드"]]
+    %% 🔴 Export 는 서버 엔드포인트가 없어 036·037 범위 밖이다 — 버튼도 두지 않았다
 
-    PP["/patrol/points<br/>지점 이력"] -- 행 클릭 --> PPD[(지점 기록 상세<br/>모달)]
-    PP -- "Export" --> Exp
+    PP["/patrol/points<br/>지점 이력"] -- 행 클릭 --> PPD["/patrol/points/:detailSeq<br/>지점 인증 상세"]
+    PPD -- "순찰코스" --> ZD
 
     Users["/users<br/>근무자 목록"] -- 행 선택 --> UD["근무자 상세 패널<br/>(배치 이력은 참고 표시)"]
     UD -- "근무자 추가" --> UForm[(근무자 폼<br/>모달)]
@@ -222,19 +224,27 @@ flowchart LR
     G --> E
 ```
 
-#### S3. 순찰이력 조회 → 상세 → Export
+#### S3. 순찰이력 조회 → 상세
+
+> 🔴 **Export 를 뺐다**(2026-10-20). Excel/PDF **엔드포인트가 서버에 없고**(swagger 전수)
+> 036·037 모두 범위 밖으로 뒀다 — 버튼도 두지 않았다. 생기면 두 화면 공용 액션으로 넣는다.
+> 🔴 **상세 둘 다 패널·모달이 아니라 페이지다**(036·037) — 선택이 `useState` 면 새로고침에
+> 날아가고, 목업의 상세 구성이 패널 분량이 아니었다.
 
 ```mermaid
 %%{init: {'theme':'dark'}}%%
 flowchart LR
-    A["/patrol/zones"] -- "필터: 기간/구역/결과" --> A
-    A -- 행 클릭 --> B[코스 이력 상세 패널<br/>타임라인]
-    A <-->|탭| C["/patrol/points"]
-    C -- "필터: 기간/코스/인증/순찰자/결과" --> C
-    C -- 행 클릭 --> D[(지점 기록 상세<br/>첨부사진)]
-    A -- "Export" --> E[["Excel / PDF"]]
-    C -- "Export" --> E
+    A["/patrol/zones<br/>코스 이력"] -- "필터: 기간/코스/결과 + 순찰자 검색" --> A
+    A -- 행 클릭 --> B["/patrol/zones/:historySeq<br/>코스 순찰 상세"]
+    A <-->|탭| C["/patrol/points<br/>지점 이력"]
+    C -- "필터: 기간/코스/인증수단/결과 + 순찰자 검색" --> C
+    C -- 행 클릭 --> D["/patrol/points/:detailSeq<br/>지점 인증 상세"]
+    D -- "순찰코스" --> Z["/zones/:courseSeq<br/>코스 관리 상세"]
 ```
+
+⚠️ **지점 인증 상세에서 "코스 순찰 상세" 로 갈 수 없다** — `PointHistoryDetail` 에
+`courseSeq` 만 있고 **`historySeq` 가 없어서**(`api-spec.md` §5-2 20번) 회차를 지목할 수
+없다. 그래서 링크는 **코스 관리 상세**로 간다. 회신되면 회차 링크가 열린다(`spec 037` US4).
 
 #### S4. 공지사항 작성 → APP 알림 트리거
 

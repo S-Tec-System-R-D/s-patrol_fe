@@ -1125,6 +1125,11 @@ interface PointHistoryRow {
 }
 
 // ── 20. GetPointHistoryDetail ───────────────────
+// 🔴🔴 **`historySeq`(회차)가 없다 — `courseSeq` 만 있다.** 그래서 "그 회차 안에서의 위치"를
+//    만들 수 없다: 직전 지점 간격 · 코스 내 순서 · 코스 내 위치 타임라인 · "코스 순찰 상세"
+//    링크가 **전부 막힌다**(`spec 037` US4, 백엔드 회신 대기). 받으면 `CheckDetails(historySeq)`
+//    **1회**로 네 개가 동시에 열린다.
+// ⚠️ `pauseTime` 은 **문자열**이다 — 숫자인 것은 코스 상세뿐이다(B-5 정정 2026-10-20).
 interface PointHistoryDetail {
   detailSeq: number
   pointSeq: number
@@ -1218,7 +1223,7 @@ interface NoticeAttach {
 | B-2 | **403/401이 빈 body** 반환 — 래퍼 미적용. 프론트에서 메시지 표시 불가 | 🔴 |
 | B-3 | 유효성 오류(400)·서버 오류(500)가 **ProblemDetails**로 빠져나감 — 래퍼 미적용 | 🔴 |
 | B-4 | 필드명 불일치: 목록 `pointName` ↔ 상세 `name` / `overtimeYn` ↔ `overTimeYn`(엔드포인트마다 뒤섞임) | 🟡 |
-| B-5 | 타입 불일치: `pauseTime` 이 목록은 `'HH:mm:ss'` 문자열, 상세는 `number` | 🟡 |
+| B-5 | 타입 불일치: `pauseTime` 이 목록은 `'HH:mm:ss'` 문자열, 상세는 `number`. 🔴 **코스 쪽만이다**(정정 2026-10-20) — `GetCourseHistoryDetail` 만 `number` 고 **`GetPointHistoryDetail` 은 목록과 같은 문자열**이다(§5-2 20번). `spec 037` 이 이 행을 읽고 지점 상세까지 숫자로 적었다가 교정했다 — **분을 초로 읽는 코드**가 들어갈 자리였다 | 🟡 |
 | B-6 | `authMethodName` null 표현이 `''` / `'Unknown'` 두 가지 | 🟡 |
 | B-7 | ✅ **해소(백엔드 전달 2026-10-12)** — **의도된 것이다.** 코스 상태(`0·1·2`)와 지점 상태(`0~4`)는 **서로 다른 사전**이고 겹친 값의 뜻이 다르다(`2` = 코스 `미완료` / 지점 **`순찰제외`**). 공용 enum 금지는 그대로 유효하고, 매핑 함수를 **코스/지점 단위로** 나눈다. ⚠️ `GetCourseHistoryDetail` 에 `statusName` 이 없는 것은 그대로다 | ✅ |
 | B-8 | `GetNoticeList` 가 본문 전문(`description`) 포함 — 목록 페이로드 과대 | 🟡 |
