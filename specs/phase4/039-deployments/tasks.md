@@ -14,11 +14,11 @@
 > **독립 테스트 기준**: 가정 타입이 `types/deployment.ts` **한 곳**에만 있고, 이력 파라미터 변환이 탭(`out`/`in`)을
 > `direction`(0/1)으로, 페이지를 1-based 로 내보낸다.
 
-- [ ] T627 🔴 **가정 계약 타입** in src/features/deployments/types/deployment.ts — `DeploymentRequestRow` · `DeploymentHistoryRow` · `DeploymentSummary` · 요청 파라미터 3종 · 승인/거부 요청 바디. 🔴 파일 머리에 **"가정 — 백엔드 구현 후 WF-1-0 으로 교정"** 과 요청서 링크를 박는다. ⚠️ 구 타입(`DeploymentRequestSummary`·`DeploymentHistoryItem`)은 **같은 파일에서 지우지 않는다** — 소비처를 옮긴 뒤 T650 에서
-- [ ] T628 [P] 이력 방향·파라미터 변환 in src/features/deployments/lib/deploymentParams.ts — `?historyTab`(`out`/`in`, 그 외 `out`) → `direction` 0/1 · `?historyPage` → `pageNumber`. 헬퍼(`parsePageNumber`·`clampPageSize`)는 `course-history` **재사용**
-- [ ] T629 [P] `deploymentKeys` in src/features/deployments/queryKeys.ts — `summary(siteSeq)` · `requests(params)` · `history(params)` + 무효화 접두사 `all(siteSeq)`. 🔴 승인·거부가 **셋을 한 번에** 무효화해야 하므로 공통 루트를 둔다(사이트 포함)
-- [ ] T630 [P] API 5종 in src/features/deployments/api/ — `getDeploymentSummary.ts` · `getDeploymentRequestList.ts` · `getDeploymentHistory.ts` · `approveDeploymentRequest.ts` · `rejectDeploymentRequest.ts`. 경로는 가정(`/api/v1/Deployment/W/sign/...`) — 🔴 **경로 상수는 각 파일 1곳**(바뀌면 그 줄만)
-- [ ] T631 [P] 파라미터 변환 테스트 in src/features/deployments/lib/__tests__/deploymentParams.test.ts
+- [x] T627 🔴 **가정 계약 타입** in src/features/deployments/types/deployment.ts — `DeploymentRequestRow` · `DeploymentHistoryRow` · `DeploymentSummary` · 요청 파라미터 3종 · 승인/거부 요청 바디. 🔴 파일 머리에 **"가정 — 백엔드 구현 후 WF-1-0 으로 교정"** 과 요청서 링크를 박는다. ⚠️ 구 타입(`DeploymentRequestSummary`·`DeploymentHistoryItem`)은 **같은 파일에서 지우지 않는다** — 소비처를 옮긴 뒤 T650 에서
+- [x] T628 [P] 이력 방향·파라미터 변환 in src/features/deployments/lib/deploymentParams.ts — `?historyTab`(`out`/`in`, 그 외 `out`) → `direction` 0/1 · `?historyPage` → `pageNumber`. 헬퍼(`parsePageNumber`·`clampPageSize`)는 `course-history` **재사용**
+- [x] T629 [P] `deploymentKeys` in src/features/deployments/queryKeys.ts — `summary(siteSeq)` · `requests(params)` · `history(params)` + 무효화 접두사 `all(siteSeq)`. 🔴 승인·거부가 **셋을 한 번에** 무효화해야 하므로 공통 루트를 둔다(사이트 포함)
+- [x] T630 [P] API 5종 in src/features/deployments/api/ — `getDeploymentSummary.ts` · `getDeploymentRequestList.ts` · `getDeploymentHistory.ts` · `approveDeploymentRequest.ts` · `rejectDeploymentRequest.ts`. 경로는 가정(`/api/v1/Deployment/W/sign/...`) — 🔴 **경로 상수는 각 파일 1곳**(바뀌면 그 줄만)
+- [x] T631 [P] 파라미터 변환 테스트 in src/features/deployments/lib/__tests__/deploymentParams.test.ts
 
 ## Phase 2: Foundational — 상태 보유 MSW · 조회 훅
 
