@@ -5,6 +5,346 @@
     "version": "v1"
   },
   "paths": {
+    "/api/v1/Assignment/W/sign/GetAssignmentList": {
+      "get": {
+        "tags": ["Assignment"],
+        "summary": "사업장에 들어온 배치요청 목록 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Assignment/W/sign/GetAssignmentReturnList": {
+      "get": {
+        "tags": ["Assignment"],
+        "summary": "사업장에 들어온 복귀요청 목록 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Assignment/W/sign/UserAssignment": {
+      "post": {
+        "tags": ["Assignment"],
+        "summary": "사업장 배치 등록",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_AssignmentDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_AssignmentDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_AssignmentDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_AssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Assignment/W/sign/UserAssignmentReturn": {
+      "post": {
+        "tags": ["Assignment"],
+        "summary": "사업장 복귀 등록",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_AssignmentReturnDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_AssignmentReturnDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_AssignmentReturnDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_AssignmentReturnDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Assignment/W/sign/AssignmentApprove": {
+      "put": {
+        "tags": ["Assignment"],
+        "summary": "배치 허락 & 거절",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_RequestAssignmentDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_RequestAssignmentDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_RequestAssignmentDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_RequestAssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Assignment/W/sign/AssignmentReturnApprove": {
+      "put": {
+        "tags": ["Assignment"],
+        "summary": "복귀 허락 & 거절 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_RequestAssignmentDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_RequestAssignmentDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_RequestAssignmentDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Assignment_Request_RequestAssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Assignment/W/sign/GetAssignmentHistory": {
+      "get": {
+        "tags": ["Assignment"],
+        "summary": "해당 사용자의 배치 이력 조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "userSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Assignment/W/sign/GetAssignmentInHistory": {
+      "get": {
+        "tags": ["Assignment"],
+        "summary": "해당 사업장 전입 이력 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "userName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Assignment/W/sign/GetAssignmentOutHistory": {
+      "get": {
+        "tags": ["Assignment"],
+        "summary": "해당 사업장 전출 이력 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "userName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Assignment/W/sign/GetAssignmentCount": {
+      "get": {
+        "tags": ["Assignment"],
+        "summary": "해당 사업장 배치 현황 건수 조회 (배치 나간 인원 / 배치 온 인원 / 대기중인 배치요청)",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/Course/W/sign/GetCourseList": {
       "get": {
         "tags": ["Course"],
@@ -1743,6 +2083,60 @@
         },
         "additionalProperties": false
       },
+      "StspPatrolWebService_Comm_Dto_v1_Assignment_Request_AssignmentDto": {
+        "type": "object",
+        "properties": {
+          "userSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fromSiteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "toSiteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Assignment_Request_AssignmentReturnDto": {
+        "type": "object",
+        "properties": {
+          "assignmentSeq": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Assignment_Request_RequestAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "assignmentSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "approved": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "StspPatrolWebService_Comm_Dto_v1_Course_Request_AddCourseDto": {
         "required": ["courseName", "siteSeq"],
         "type": "object",
@@ -2022,6 +2416,9 @@
     }
   ],
   "tags": [
+    {
+      "name": "Assignment"
+    },
     {
       "name": "Course"
     },

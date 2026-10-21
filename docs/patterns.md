@@ -671,7 +671,8 @@ AlertDialog: 바뀌는 결과를 문장으로 설명
 
 ## 17. multipart 요청 (파일 첨부) (2026-10-21, `spec 040`)
 
-> 구현: `features/notice/lib/formData.ts` · 첫 사용처: 공지 작성·수정(`spec 040`). 다음 후보: 근무자 사진.
+> 구현: `src/lib/formData.ts`(`toFormData` — `spec 041` 에서 공용으로 옮겼다) · 공지 전용 펼침은 `features/notice/lib/formData.ts`.
+> 사용처: 공지 작성·수정(`spec 040`) · 근무자 추가·수정(`spec 041` — 사진 없이 텍스트 필드만, `undefined` 는 생략)
 
 ### 규칙
 

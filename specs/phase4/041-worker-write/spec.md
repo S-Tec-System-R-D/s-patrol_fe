@@ -126,30 +126,30 @@ interface UpdateUserRequest {
 ## 5. 완료 조건 (DoD)
 
 **기반**
-- [ ] 1. 요청 타입이 swagger 이름 — 폼 스키마의 `initialPassword` 0건
-- [ ] 2. `toFormData` 가 `src/lib/` 에 있고 공지·근무자가 함께 쓴다
-- [ ] 3. `UserDetail` 에 `codeName` · `deviceType: string | null`
-- [ ] 4. MSW 쓰기 3종 + 상태 보유 + reset
+- [x] 1. 요청 타입이 swagger 이름 — 폼 스키마의 `initialPassword` 0건
+- [x] 2. `toFormData` 가 `src/lib/` 에 있고 공지·근무자가 함께 쓴다
+- [x] 3. `UserDetail` 에 `codeName` · `deviceType: string | null`
+- [x] 4. MSW 쓰기 3종 + 상태 보유 + reset
 
 **추가 (US1)**
-- [ ] 5. 추가 → 목록에 나온다 · `codeSeq: 7` · 연락처 숫자만 · 모달 닫힘 · 토스트
-- [ ] 6. 로그인과 같은 사번·비밀번호 규칙 · 사번 중복 시 모달 유지 · 연타 1회
+- [x] 5. 추가 → 목록에 나온다 · `codeSeq: 7` · 연락처 숫자만 · 모달 닫힘 · 토스트
+- [x] 6. 로그인과 같은 사번·비밀번호 규칙 · 사번 중복 시 모달 유지 · 연타 1회
 
 **정보 수정 (US2)**
-- [ ] 7. 이름·연락처만 보낸다(비밀번호 없음) · 상세·목록 갱신
+- [x] 7. 이름·연락처만 보낸다(비밀번호 없음) · 상세·목록 갱신
 
 **비밀번호 (US3)**
-- [ ] 8. 별도 버튼·모달 · `loginPw` 만 보낸다 · 확인 불일치 거부
+- [x] 8. 별도 버튼·모달 · `loginPw` 만 보낸다 · 확인 불일치 거부
 
 **삭제 (US4)**
-- [ ] 9. 확인 → 삭제 → 목록 이동 · 사라짐 · 본인 계정은 비활성
+- [x] 9. 확인 → 삭제 → 목록 이동 · 사라짐 · 본인 계정은 비활성
 
 **마무리**
-- [ ] 10. `npm run verify` + `npm run test` green
-- [ ] 11. 브라우저 확인(mock) + dev:real(만든 계정만 지운다)
-- [ ] 12. 캡쳐 — 추가 · 정보 수정 · 비밀번호 변경 모달
-- [ ] 13. 문서 — `data-model.md` · `screens.md` §1-4 · `roadmap.md`
-- [ ] 14. `## 다음 spec으로 이월`
+- [x] 10. `npm run verify` + `npm run test` green
+- [x] 11. 브라우저 확인(mock ✅ · dev:real ✅ — 사용자 직접 2026-10-21)
+- [-] 12. ~~캡쳐 — 추가 · 정보 수정 · 비밀번호 변경 모달~~ — **생략(사용자 결정 2026-10-21)**
+- [x] 13. 문서 — `data-model.md` · `screens.md` §1-4 · `roadmap.md`
+- [x] 14. `## 다음 spec으로 이월`
 
 ---
 

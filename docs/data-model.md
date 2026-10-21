@@ -722,15 +722,26 @@ export interface UpdateEmergencyContactRosterRequest {
 ### 5-3. 현장 — 근무자 / 지점 / 코스 / 공지
 
 ```ts
-// ⚠ 아래 2종은 mock 시절 설계다 — 변경계 spec 에서 swagger(`AddUser`·`UpdateUser`, multipart + 사진)로
-//   교체한다. 서버는 비밀번호도 `UpdateUser.loginPw` 로 받는다(OQ-038-C).
-export interface CreateWorkerRequest {
+// ✅ `spec 041` 에서 swagger 기준으로 교체했다(실측 — `api-spec.md` §5-1-B 근무자 3종).
+//   코드: `features/workers/types/user.ts`. 셋 다 multipart(`src/lib/formData.ts`), 성공 `data: true`(ID 미반환).
+//   사진(`image`·`isRemove`)은 범위 제외(사용자 결정 2026-10-21) — 보내지 않는다.
+export interface AddUserRequest {      // POST AddUser
+  siteSeq: number
+  codeSeq: number                      // 🔴 항상 7(근무자) — 빼면 500(B-44)
+  loginId: string                      // 사번 — 로그인과 같은 규칙(서버는 검사 안 함, B-45)
+  loginPw: string
   name: string
-  phone: string
-  locationId: string               // 소속 사업장
-  initialPassword: string
+  phone: string                        // 🔴 숫자만 — 서버는 보낸 그대로 저장(B-45)
 }
-export interface UpdateWorkerRequest extends Partial<Omit<CreateWorkerRequest, 'initialPassword'>> { id: string }
+// POST UpdateUser(🔴 PATCH 아님) — 부분 갱신. 화면은 둘로 나눠 쓴다:
+//   정보 수정 = name·phone / 비밀번호 변경 = loginPw (사용자 결정 — 다른 버튼, OQ-038-C 해소)
+export interface UpdateUserRequest {
+  userSeq: number
+  name?: string
+  phone?: string
+  loginPw?: string
+}
+// DELETE RemoveUser?userSeq= — 완전 삭제로 보인다(상세 404 · 사번 재사용 가능)
 
 // ---- 배치 요청 (WEB — 관리자 승인/거부) ----
 // 요청 생성/취소는 근무자 APP에서 수행. WEB은 승인/거부만 담당.
