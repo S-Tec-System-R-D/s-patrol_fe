@@ -42,3 +42,17 @@ if (!('ResizeObserver' in globalThis)) {
   }
   globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver
 }
+
+/**
+ * jsdom ↔ MSW multipart 공백 (040).
+ * jsdom 의 `FormData`·`File` 로 만든 본문은 MSW(undici `Request`)로 넘어가며 **파일 이름·내용이 사라진다**
+ * (`filename="blob"`, 내용 `undefined`). 핸들러가 첨부를 확장자로 나누지 못해 쓰기 테스트가 거짓으로 깨진다.
+ * 실제 브라우저에는 없는 환경 공백이라 **Node 기본 구현으로 바꿔 끼운다** — `FormData` 는 `node:` 모듈로
+ * 꺼낼 수 없어(앱 tsconfig 에 Node 타입도 없다) Node 의 `Response` 가 파싱한 결과에서 생성자를 얻는다.
+ */
+const MULTIPART_PROBE = '--b\r\nContent-Disposition: form-data; name="f"; filename="a"\r\n\r\nx\r\n--b--\r\n'
+const nodeForm = await new Response(MULTIPART_PROBE, {
+  headers: { 'Content-Type': 'multipart/form-data; boundary=b' },
+}).formData()
+globalThis.FormData = nodeForm.constructor as typeof FormData
+globalThis.File = (nodeForm.get('f') as File).constructor as typeof File

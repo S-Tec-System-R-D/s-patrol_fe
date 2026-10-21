@@ -1,0 +1,54 @@
+# 040-notice-write tasks
+
+> 입력: 같은 폴더 `spec.md`
+> 태스크 ID는 Phase 무관 일련 번호 — 039 가 **T659** 에서 끝났으므로 **T660** 부터.
+> `[P]` = 병렬 가능. `[US1]` = user story 소속.
+>
+> **WF-1-0 실측 완료**(2026-10-21) — `api-spec.md` §5-1-B "공지 3종". 실측으로 만든 공지는 전부 지웠다(사업장 7 목록 `[]`).
+
+---
+
+## Phase 1: 기반 — 요청 타입 · FormData 빌더 · API · MSW
+
+> **독립 테스트 기준**: 빌더가 `boolean` 을 `'true'/'false'` 로, 파일을 같은 키로 반복 append 하고, 수정 요청을
+> `attachList[i]`(삭제 먼저 · 추가는 항목당 1파일 + `isRemove=false`)로 펼친다. MSW 에서 작성·수정·삭제가 목록·상세를 바꾼다.
+
+- [x] T660 요청 타입 in src/features/notice/types/notice.ts — `AddNoticeRequest` · `UpsertNoticeRequest`(화면용 `removeAttachSeqs`·`newFiles`, spec §2-1)
+- [x] T661 🔴 **FormData 빌더** in src/features/notice/lib/formData.ts — `toFormData` · `toUpsertNoticeFormData`. `Content-Type` 수동 지정 금지
+- [x] T662 [P] 빌더 테스트 in src/features/notice/lib/__tests__/formData.test.ts
+- [x] T663 [P] API 3종 in src/features/notice/api/ — `addNotice.ts` · `upsertNotice.ts` · `deleteNotice.ts`(반환 `void`). 🔴 **계획 수정**: axios 기본 timeout 5초로는 업로드(~30MB)가 끊긴다 → 업로드 2종만 요청별 `timeout: 60s`. 통합 테스트 `api/__tests__/noticeWrite.test.ts`
+- [x] T664 🔴 **상태 보유 MSW** in src/mocks/handlers/notices.ts — 시드를 store 로 · 쓰기 3종(제목 없음 400 ProblemDetails · 없는 ID 400 래퍼 · 확장자로 image/file 분리) · `resetNoticeStore`. 🔴 **발견**: jsdom 의 `FormData`·`File` 은 MSW 로 넘어가며 파일 이름·내용이 사라진다 → `src/test/setup.ts` 에서 Node 기본 구현으로 교체(브라우저 무관 환경 공백). 핸들러는 `instanceof File` 대신 "문자열이 아니면 파일"
+
+## Phase 2: US1 — 작성
+
+> **독립 테스트 기준**: 작성하면 목록에 나오고(고정이면 맨 위) 모달이 닫힌다. 실패하면 모달·입력이 남는다. 허용 밖 확장자·30MB 이상은 선택 단계에서 막힌다.
+
+- [ ] T665 [US1] 폼 스키마 in src/features/notice/form/schema.ts — `content` → `description` · `sendAppPush` 제거 · `isPin` 추가 · 트림 필수
+- [ ] T666 [US1] 첨부 입력 in src/features/notice/form/NoticeAttachInput.tsx — 한 입력 · 이름·크기 목록 · 개별 제거 · 확장자/합계 30MB 검사
+- [ ] T667 [US1] 🔴 **작성 제출** in src/features/notice/form/NoticeForm.tsx — `useMutation(addNotice)` · 비옵티미스틱 · `lists` 무효화 · 성공해야 `onSuccess`(모달 닫힘) · `isPending` 비활성
+- [ ] T668 [US1] 목록 연결 in src/pages/service/notice/NoticeListPage.tsx — 작성 모달 open 제어 + 사업장 미선택 시 버튼 비활성
+- [ ] T669 [US1] [P] 테스트 in src/features/notice/form/__tests__/NoticeForm.test.tsx — 필수 · 고정 기본 해제 · 첨부 차단 · 성공/실패 · 연타
+
+## Phase 3: US2 — 수정
+
+> **독립 테스트 기준**: 기본값이 현재 값(`isPin` 포함)이고, 기존 첨부 삭제 표시/되돌리기 · 새 첨부가 한 요청으로 나가며 저장 후 상세가 갱신된다.
+
+- [ ] T670 [US2] 기존 첨부 목록 in src/features/notice/form/NoticeAttachInput.tsx — `imageList`+`fileList` 를 이름·확장자로 · 삭제 표시 토글(미리보기 없음, B-40)
+- [ ] T671 [US2] 🔴 **수정 제출** in src/features/notice/form/NoticeForm.tsx — `upsertNotice` · `lists`·`detail` 무효화
+- [ ] T672 [US2] 상세 연결 in src/pages/service/notice/NoticeDetailPage.tsx — 수정 모달 open 제어 · `notice` 전체 전달
+- [ ] T673 [US2] [P] 테스트 — 기본값 · 삭제 표시 → 요청 · 저장 후 상세 갱신(MSW 상태)
+
+## Phase 4: US3 — 삭제
+
+> **독립 테스트 기준**: 확인 → 삭제 → 목록 이동, 목록에서 사라진다. 이미 삭제된 공지는 토스트 + 재조회.
+
+- [ ] T674 [US3] 🔴 **삭제** in src/features/notice/hooks/useDeleteNotice.ts · src/pages/service/notice/NoticeDetailPage.tsx — `lists` 무효화 · `detail` 제거 · 성공 후 navigate · 처리 중 버튼 비활성
+- [ ] T675 [US3] [P] 테스트 in src/pages/service/notice/__tests__/ — 삭제 → 목록 이동 · 사라짐
+
+## Phase 5: 마무리
+
+- [ ] T676 `npm run verify` + `npm run test` (병렬)
+- [ ] T677 브라우저 확인(mock) + 🔴 **dev:real**(작성→수정→삭제 자기 정리 · 026 T592 함께)
+- [ ] T678 캡쳐 — 작성 모달 · 수정 모달(첨부 있음)
+- [ ] T679 문서 — `patterns.md` multipart 절 · `data-model.md` §5-3 · `screens.md` §1-5 · `roadmap.md`
+- [ ] T680 DoD 점검 + `## 다음 spec으로 이월`
