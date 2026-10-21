@@ -80,7 +80,7 @@
 - [x] T589 🔴 **삭제** in src/features/notice/components/NoticeList.tsx · src/features/notice/components/NoticeListItem.tsx · src/features/notice/components/NoticeDetailView.tsx · src/features/notice/mocks/noticeData.ts — 그리고 `types/notice.ts` 의 구 타입 3종. grep 으로 소비처 **0건** 확인 후
 - [x] T590 OQ-026-A·B·C 실측 in docs/api-spec.md — ✅ **A: 제목 + 본문**(작성자 ✗ → placeholder `제목·내용 검색`) · **B: 고정 먼저**(필터를 걸어도) · **C: `createDt` 날짜, 양 끝 포함**. 상세 없는 ID 는 400 + 래퍼. MSW·타입 주석·테스트를 실측에 맞췄다(`api-spec.md` §23·24 실측 블록). ⚠️ 원래 경로 — `npm run dev:real` 에서 GET 만: 키워드가 제목/작성자/본문 중 무엇을 거르는지 · 고정 공지가 위로 오는지 · 기간이 `createDt` 기준인지. 결과로 placeholder·MSW 가정을 교정한다
 - [x] T591 `npm run verify` 0 + `npm run test` green(1051 → **1106**, 99 files). 🔴 **병렬 실행**(`CLAUDE.md` A4)
-- [~] T592 🔴 **사용자 브라우저 확인**(`npm run dev:real`) — 목록 검색·기간·페이지 · 상세 진입 · 이미지 폴백 · 작성/수정/삭제 모달 · 좁은 폭 카드 — ◩ **화면 확인은 Phase 3·4 진행 중에 이뤄졌고 설계 변경 7건(T580a~c·T586a~d)이 나왔다.** ⚠️ **실서버(`dev:real`) 화면 확인은 아직이다** — 실데이터는 사업장 6 에만 있어(7건) 현장관리자 `333333`(7·8 소속)으로는 볼 수 없다. 본사 계정으로 사업장 6 을 골라 확인한다
+- [x] T592 🔴 **사용자 브라우저 확인**(`npm run dev:real`) — 목록 검색·기간·페이지 · 상세 진입 · 이미지 폴백 · 작성/수정/삭제 모달 · 좁은 폭 카드 — ◩ **화면 확인은 Phase 3·4 진행 중에 이뤄졌고 설계 변경 7건(T580a~c·T586a~d)이 나왔다.** ✅ **실서버(`dev:real`) 화면 확인 완료(사용자, 2026-10-21 — `spec 040` 이월 ① 과 함께)**. (당시 메모)  실데이터는 사업장 6 에만 있어(7건) 현장관리자 `333333`(7·8 소속)으로는 볼 수 없다. 본사 계정으로 사업장 6 을 골라 확인한다
 - [x] T593 `npm run capture` — `현장/notice--목록`·`notice--상세` 교체. 🔴 **나머지는 덮지 않는다** — 전체를 별도 폴더에 찍어 **바이트 대조**: 10장 동일, 3장은 **지도 3화면**(타일 못 받는 환경 — 60f0c77 보류 결정 그대로). `e2e/capture.pw.ts` 의 시드 주석을 `noticeSeq 4` 로 교정
 - [x] T594 문서 동기화 — ✅ + `components.md`(AppTable 열 `meta.className`) · `ui-current/README.md`(2장 비고 + 변경 이력) · docs/screens.md(§1-5 행 · 015 결정 블록 · §4 라우트 · `:277` 목업 항목) · docs/patterns.md(§1 공지 예외 문구) · docs/flow.md(공지 흐름 "상세 패널" → 상세 페이지) · docs/data-model.md(§3-5 공지 타입 · 조회 엔드포인트 표) · docs/roadmap.md(026 행 · §12)
 - [x] T595 DoD 20개 대조표 + `## 다음 spec으로 이월` in specs/phase3/026-notice/tasks.md — 변경계 전환(작성·수정·삭제·첨부 업로드·OQ-12) · OQ 잔여
@@ -124,7 +124,7 @@
 | 15 | 작성·수정·삭제 흐름 유지 | ✅ | "작성 모달을 연다" · "수정 모달이 서버 값으로" · "삭제를 확인하면 목록으로" |
 | 16 | 구 타입·컴포넌트·`noticeData.ts` 삭제 | ✅ | T589 — grep 0건 |
 | 17 | `verify` + `test` green | ✅ | 0 errors · **1106 passed**(99 files) |
-| 18 | 브라우저 확인 + 캡쳐 | ◩ | 캡쳐 ✅(2장 교체 + 전체 바이트 대조). 화면 확인 ✅(설계 변경 7건). ⚠️ **실서버 화면 확인 미실시**(T592) |
+| 18 | 브라우저 확인 + 캡쳐 | ✅ | 캡쳐 ✅(2장 교체 + 전체 바이트 대조). 화면 확인 ✅(설계 변경 7건). 실서버 화면 확인 ✅(2026-10-21, T592) |
 | 19 | 문서 동기화 | ✅ | T594 — 7개 문서 |
 | 20 | 이월 블록 | ✅ | 아래 |
 
@@ -145,7 +145,7 @@
 - `isPin`(상단 고정) 을 작성 폼에서 고를 수 있는지 — 지금 폼에 없다
 - `data-model.md` §5-3 `CreateNoticeRequest`·`UpdateNoticeRequest` 를 swagger 로 교체
 
-### ② T592 실서버 화면 확인
+### ② ~~T592 실서버 화면 확인~~ — ✅ 완료(사용자, 2026-10-21)
 
 `npm run dev:real` + **본사 계정**으로 사업장 6 선택 → `/notice`(7건, 고정 1건) · `/notice/56`(이미지 1장 — 404 폴백).
 

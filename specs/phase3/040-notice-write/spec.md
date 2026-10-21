@@ -151,7 +151,7 @@ interface UpsertNoticeRequest {
 
 **마무리**
 - [x] 11. `npm run verify` + `npm run test` green
-- [~] 12. 브라우저 확인(mock ✅ 사용자 직접 — 등록·수정·삭제) + **dev:real 확인**(⚠️ 미완 — 이월 ①)(작성→수정→삭제 자기 정리, 026 T592 함께)
+- [x] 12. 브라우저 확인(mock ✅ 사용자 직접 — 등록·수정·삭제) + **dev:real 확인** ✅(사용자, 2026-10-21)(작성→수정→삭제 자기 정리, 026 T592 함께)
 - [x] 13. 캡쳐 — 작성 모달 · 수정 모달(첨부 있음)
 - [x] 14. 문서 — `patterns.md` multipart 절 · `data-model.md` §5-3 · `screens.md` §1-5 · `roadmap.md`
 - [x] 15. `## 다음 spec으로 이월`
