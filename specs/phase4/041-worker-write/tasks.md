@@ -29,9 +29,9 @@
 
 ## Phase 3: US2 — 정보 수정
 
-- [ ] T690 [US2] 🔴 **수정 제출** in src/features/workers/form/EditWorkerForm.tsx — `name`·`phone` 만 · `lists`·`detail` 무효화 · 실패 시 `detail` 재조회
-- [ ] T691 [US2] 상세 연결 in src/pages/service/users/UserDetailPage.tsx — 수정 모달 open 제어
-- [ ] T692 [US2] [P] 테스트 — 본문(비밀번호 없음) · 저장 → 상세 갱신
+- [x] T690 [US2] 🔴 **수정 제출** in src/features/workers/form/EditWorkerForm.tsx — `name`·`phone` 만 · `lists`·`detail` 무효화 · 실패 시 `detail` 재조회
+- [x] T691 [US2] 상세 연결 in src/pages/service/users/UserDetailPage.tsx — 수정 모달 open 제어
+- [x] T692 [US2] [P] 테스트 — 본문(`userSeq`·`name`·`phone` 숫자만, 비밀번호 없음) · 없는 근무자 · 상세 저장 → 닫힘 → 갱신(`WorkerForm.test.tsx` 2건 · `UserDetailPage.test.tsx` 1건)
 
 ## Phase 4: US3·US4 — 비밀번호 변경 · 삭제
 

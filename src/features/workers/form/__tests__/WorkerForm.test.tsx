@@ -11,11 +11,13 @@ import { resetUserStore } from '@/mocks/handlers/users'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
 
+import { fetchUserDetail } from '../../api/getUserDetail'
 import { fetchUserList } from '../../api/getUserList'
 import AddWorkerForm from '../AddWorkerForm'
 import EditWorkerForm from '../EditWorkerForm'
 
 const ADD_USER_PATH = '/api/v1/User/W/sign/AddUser'
+const UPDATE_USER_PATH = '/api/v1/User/W/sign/UpdateUser'
 
 const renderWithQuery = (ui: ReactElement) => {
   const queryClient = new QueryClient({
@@ -140,7 +142,7 @@ describe('AddWorkerForm — 제출', () => {
 
 describe('EditWorkerForm', () => {
   // 🔴 기본값 출처가 서버 상세(`userName`·`phone`·`siteName`)로 바뀌었다(`spec 038` T617)
-  const user = { userName: '김민준', phone: '010-2345-6789', siteName: '강동 테크노타워' }
+  const user = { userSeq: 101, userName: '김민준', phone: '010-2345-6789', siteName: '강동 테크노타워' }
 
   it('기존 근무자 정보로 필드 프리필', () => {
     renderWithQuery(<EditWorkerForm user={user} />)
@@ -154,5 +156,37 @@ describe('EditWorkerForm', () => {
     renderWithQuery(<EditWorkerForm user={{ ...user, phone: '01023456789' }} />)
 
     expect(screen.getByDisplayValue('010-2345-6789')).toBeInTheDocument()
+  })
+
+  it('이름·연락처(숫자만)만 보내고 비밀번호는 보내지 않는다 — 성공하면 상세가 바뀐다', async () => {
+    const sent = recordMultipart(UPDATE_USER_PATH)
+    const onSuccess = vi.fn()
+    renderWithQuery(<EditWorkerForm user={user} onSuccess={onSuccess} />)
+    const ue = userEvent.setup()
+    const name = screen.getByDisplayValue('김민준')
+    await ue.clear(name)
+    await ue.type(name, '김민준2')
+    const phone = screen.getByDisplayValue('010-2345-6789')
+    await ue.clear(phone)
+    await ue.type(phone, '010-9999-8888')
+    await ue.click(screen.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1))
+    expect(sent).toEqual([
+      ['userSeq', '101'],
+      ['name', '김민준2'],
+      ['phone', '01099998888'],
+    ])
+    expect(await fetchUserDetail(101)).toMatchObject({ userName: '김민준2', phone: '01099998888' })
+  })
+
+  it('이미 지워진 근무자면 닫지 않는다', async () => {
+    const onSuccess = vi.fn()
+    renderWithQuery(<EditWorkerForm user={{ ...user, userSeq: 999 }} onSuccess={onSuccess} />)
+    const ue = userEvent.setup()
+    await ue.click(screen.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: '저장' })).toBeEnabled())
+    expect(onSuccess).not.toHaveBeenCalled()
   })
 })

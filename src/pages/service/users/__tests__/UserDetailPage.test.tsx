@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { setSite } from '@/lib/auth/site'
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
+import { resetUserStore } from '@/mocks/handlers/users'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
 import UserDetailPage from '../UserDetailPage'
@@ -44,6 +45,7 @@ const captureDetailCalls = () => {
 }
 
 beforeEach(() => {
+  resetUserStore()
   clearTokens()
   setAccessToken(makeAccessToken())
   setSite(7, '강동 테크노타워')
@@ -113,6 +115,21 @@ describe('UserDetailPage — 정상', () => {
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByDisplayValue('김민준')).toBeInTheDocument()
     expect(within(dialog).getByDisplayValue('010-2345-6789')).toBeInTheDocument()
+  })
+
+  it('정보 수정을 저장하면 모달이 닫히고 상세가 새 값으로 갱신된다 (spec 041 US2)', async () => {
+    const user = userEvent.setup()
+    renderAt('101')
+
+    await user.click(await screen.findByRole('button', { name: '수정' }))
+    const dialog = await screen.findByRole('dialog')
+    const name = within(dialog).getByDisplayValue('김민준')
+    await user.clear(name)
+    await user.type(name, '김민준2')
+    await user.click(within(dialog).getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(await screen.findByRole('heading', { name: '김민준2' })).toBeInTheDocument()
   })
 
   it('삭제를 확인하면 목록으로 돌아간다 (mock)', async () => {

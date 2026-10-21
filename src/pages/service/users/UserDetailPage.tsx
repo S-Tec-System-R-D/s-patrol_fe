@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeftIcon,
@@ -30,7 +31,8 @@ import { paths } from '@/router/paths'
  * 🔴 **현장관리자는 이 API 가 403 이다**(B-41) — 실서버에서는 "불러오지 못했습니다" 가 뜬다.
  * 🔴 조회 중과 "없음" 을 구분한다 — 단정하면 조회 중에 그것이 뜨는 순간 방금 지운 줄 안다(023).
  *
- * ⚠️ 비밀번호·수정·삭제는 **UI 만** 있고 저장은 mock 이다(변경계 전환은 별도 spec).
+ * 정보 수정은 모달 → `UpdateUser`(`spec 041` US2) — 성공해야 닫힌다.
+ * ⚠️ 비밀번호·삭제는 아직 mock 이다(`spec 041` Phase 4 에서 연결).
  */
 
 const Breadcrumb = () => (
@@ -62,6 +64,7 @@ const UserDetailPage = () => {
   const userSeq = Number.isInteger(parsed) && parsed > 0 ? parsed : null
 
   const detail = useUserDetail(userSeq)
+  const [editOpen, setEditOpen] = useState(false)
   /* 🔴 순찰 기록은 **선택한 사업장** 기준이다 — 상세의 `siteSeq` 는 소속지라(배치 온 사람은 다르다) 쓰지 않는다 */
   const siteSeq = getSiteSeq()
 
@@ -154,13 +157,15 @@ const UserDetailPage = () => {
           <AppDialog
             title="근무자 수정"
             description="근무자 정보를 수정할 수 있습니다."
+            open={editOpen}
+            onOpenChange={setEditOpen}
             trigger={
               <AppButton icon={SquarePenIcon} variant="sub" className="bg-card">
                 수정
               </AppButton>
             }
           >
-            <EditWorkerForm user={user} />
+            <EditWorkerForm user={user} onSuccess={() => setEditOpen(false)} />
           </AppDialog>
           <AppAlertDialog
             size="sm"
