@@ -26,7 +26,7 @@ export const useApproveDeployment = (siteSeq: number) => {
     mutationFn: (row: DeploymentRequestRow) =>
       approveDeploymentRequest({ requestSeq: row.requestSeq }),
     onSuccess: (_data, row) => {
-      notify.success(`${row.userName}님의 ${row.requestTypeName} 요청을 승인했습니다.`)
+      notify.success(`${row.userName}님의 배치 요청을 승인했습니다.`)
     },
     // 성공·실패 모두 서버 상태를 다시 받는다(①은 반영, ③은 정리)
     onSettled: () => queryClient.invalidateQueries({ queryKey: deploymentKeys.all(siteSeq) }),

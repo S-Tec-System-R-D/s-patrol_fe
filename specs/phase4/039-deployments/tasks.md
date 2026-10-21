@@ -99,6 +99,19 @@
 - **T650 은 Phase 3~5 뒤** — 삭제는 전환 후. 🔴 **T637 이 끝나기 전에는 store 를 지울 수 없다**(사이드바가 읽는다)
 - Phase 3·4·5 는 T634 이후 **서로 독립 진행 가능**. Phase 6 은 모든 US 뒤
 
+### 종료 후 후속 — 배치 로직 반영 (2026-10-21)
+
+- [x] T656 🔴 **배치 로직 반영**(사용자 정리) in types/deployment.ts · mocks/handlers/deployments.ts · DeploymentRequestColumns.tsx · DeploymentHistoryColumns.tsx · DeploymentBoard.tsx · DeploymentEndDateAction.tsx(신설) · hooks/useUpdateDeploymentEndDate.ts(신설) · api/updateDeploymentEndDate.ts(신설) · lib/deploymentPeriod.ts(신설) · lib/deploymentParams.ts · docs/api-request-deployment.md — 로직: ① 근무자가 앱에서 **사업장 · 시작일 · 종료일(선택) · 사유**로 요청 ② 목적지 현장관리자가 승인·거부 ③ 승인하면 이력에 ④ 종료일 미입력·조기 복귀 시 **관리자가 복귀일 지정**.
+  - 🔴 **"복귀 요청" 은 없다** — 014 목업의 배치/복귀 구분(`requestType`)과 "구분" 칸을 지웠다(사용자 지적: 그런 기능을 말한 적이 없다)
+  - 요청 표에 **배치 기간**(`시작 ~ 종료` / 종료 없으면 **`미정`** — `현재` 가 아니다)
+  - 승인 → 이력 기간 = 요청의 시작일·종료일
+  - 🔴 **상태 3종을 서버가 날짜로 계산한다고 가정**: 배치예정(시작 전) · 배치중 · 복귀완료(종료일이 **지나면** — 당일은 배치중). 종료일이 미래일 수 있게 되어 `endDt` 유무만으로는 판단할 수 없다. KPI 현재 인원은 **배치중만**. 상태 필터에 배치예정 추가(`?status=scheduled`)
+  - 🔴 **전입 이력의 복귀 전 행 오른쪽에 아이콘 버튼 → 달력 모달**(목적지 관리자 — 사용자 결정). 전출은 보기만. 시작일 전 날은 막는다. 미정이면 **이번 달로** 연다(시작월로 열면 오래 배치된 사람의 조기 복귀를 고르려 여러 번 넘겨야 한다)
+  - 요청서: 1번 시작일·종료일, 4·5번 상태 3종, 7번 배치중만 센다, **8번 복귀일 지정 API**
+  - MSW 시드: 최범수 = 종료일 있는 앞으로의 배치(승인 시 배치예정) · 배수진 = 종료일 미정. 테스트 +7 · 기존 3건 기대값 갱신(배치예정은 현재 인원이 아니라 승인 대상을 배수진으로)
+
+- [x] T657 탭 순서 **배치 요청 · 전입 이력 · 전출 이력** · 대기 건수 뱃지를 **사이드바와 같은 빨강**(`bg-danger` + 흰 글자) in src/features/deployments/components/DeploymentBoard.tsx — 사용자 요청. 전입이 먼저인 이유: 승인한 요청이 전입으로 이어지고 복귀일 지정도 전입에서 한다
+
 ---
 
 ## DoD 대조표 (T655)
@@ -133,6 +146,9 @@
 ## 다음 spec으로 이월
 
 ### ① 🔴 백엔드 구현 후 WF-1-0 — 가정 계약 교정
+
+⚠️ T656 이후 가정이 늘었다: 요청의 `startDt`·`endDt` · 이력 `status`(0 배치중 / 1 복귀완료 / 2 배치예정) +
+`statusName` 을 **서버가 날짜로 계산**하는지 · `UpdateDeploymentEndDate`(경로·바디·시작일 검증·복귀완료 거부).
 
 요청서(`docs/api-request-deployment.md`)대로 백엔드가 만들면 **실측해서 `types/deployment.ts` 와
 `mocks/handlers/deployments.ts` 만** 고친다. 확인할 것(전부 가정):

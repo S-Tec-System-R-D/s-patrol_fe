@@ -1,7 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table'
 
-import AppBadge from '@/components/app/AppBadge'
 import WorkerAvatar from '@/features/workers/components/WorkerAvatar'
+import { formatPeriod } from '../lib/deploymentPeriod'
 import type { DeploymentRequestRow } from '../types/deployment'
 import DeploymentRequestActions from './DeploymentRequestActions'
 import SiteRoute from './SiteRoute'
@@ -9,7 +9,10 @@ import SiteRoute from './SiteRoute'
 /**
  * 배치 요청 컬럼 (`spec 039` T649e — 카드형 → **표**, 사용자 결정 2026-10-21).
  *
- * 카드 행이 근무자 · 구분 · 경로 · 사유 · 요청일 · 액션으로 **이미 열 구조**가 됐다(사유 칸을 맞추려고
+ * 🔴 **구분(배치/복귀) 칸을 지웠다**(T656) — "복귀 요청" 은 없다(사용자 정리 2026-10-21). 대신 근무자가
+ * 입력한 **배치 기간**(시작 ~ 종료 · 없으면 `미정`)을 보인다 — 승인할지 판단하는 데 필요하다.
+ *
+ * 카드 행이 근무자 · 경로 · 사유 · 요청일 · 액션으로 **이미 열 구조**가 됐다(사유 칸을 맞추려고
  * 왼쪽 묶음 폭을 고정했던 것이 그 신호다). 아래 이력 표와 같은 모양 · 같은 경로 표기(`SiteRoute`)다.
  *
  * 처리할 일이라는 점은 **액션 칸**과 KPI(대기 · 주황)가 말한다.
@@ -36,14 +39,18 @@ export const deploymentRequestColumns = (siteSeq: number): ColumnDef<DeploymentR
       ),
     },
     {
-      accessorKey: 'requestTypeName',
-      header: '구분',
-      cell: ({ getValue }) => <AppBadge variant="point">{getValue<string>()}</AppBadge>,
-    },
-    {
       id: 'route',
       header: '배치 경로',
       cell: ({ row }) => <SiteRoute from={row.original.fromSiteName} to={row.original.toSiteName} />,
+    },
+    {
+      id: 'period',
+      header: '배치 기간',
+      cell: ({ row }) => (
+        <span className="tabular-nums whitespace-nowrap">
+          {formatPeriod(row.original.startDt, row.original.endDt)}
+        </span>
+      ),
     },
     {
       accessorKey: 'reason',

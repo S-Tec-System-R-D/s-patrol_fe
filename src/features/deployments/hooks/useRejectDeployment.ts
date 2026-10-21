@@ -19,7 +19,7 @@ export const useRejectDeployment = (siteSeq: number) => {
     mutationFn: ({ row, rejectReason }: { row: DeploymentRequestRow; rejectReason: string }) =>
       rejectDeploymentRequest({ requestSeq: row.requestSeq, rejectReason }),
     onSuccess: (_data, { row }) => {
-      notify.success(`${row.userName}님의 ${row.requestTypeName} 요청을 거부했습니다.`)
+      notify.success(`${row.userName}님의 배치 요청을 거부했습니다.`)
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: deploymentKeys.all(siteSeq) }),
   })

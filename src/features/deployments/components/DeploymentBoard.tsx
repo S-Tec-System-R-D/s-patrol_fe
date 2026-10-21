@@ -60,8 +60,9 @@ interface TabDef {
 
 const TABS: TabDef[] = [
   { key: 'requests', label: '배치 요청', icon: InboxIcon },
-  { key: 'out', label: '전출 이력', icon: SquareArrowRightExitIcon },
+  // 🔴 전입이 먼저다(사용자 요청 2026-10-21) — 승인한 요청은 **전입**으로 이어지고, 복귀일 지정도 전입에서 한다
   { key: 'in', label: '전입 이력', icon: SquareArrowRightEnterIcon },
+  { key: 'out', label: '전출 이력', icon: SquareArrowRightExitIcon },
 ]
 
 const EMPTY_TITLE: Record<DeploymentTab, string> = {
@@ -113,6 +114,11 @@ const DeploymentBoard = () => {
     [siteSeq]
   )
   const historyColumns = useMemo(() => deploymentHistoryColumns(), [])
+  /** 🔴 전입 이력에만 복귀일 지정 버튼(T656 — 목적지 관리자가 관리한다) */
+  const inHistoryColumns = useMemo(
+    () => (siteSeq === null ? deploymentHistoryColumns() : deploymentHistoryColumns({ siteSeq })),
+    [siteSeq]
+  )
 
   /**
    * 🔴 **마지막 요청을 처리해 현재 페이지가 비면 이전 페이지로**(spec §4) — 2페이지의 유일한 요청을
@@ -153,7 +159,9 @@ const DeploymentBoard = () => {
               {label}
               {/* 🔴 대기 건수 — 0 이거나 모르면 그리지 않는다(숫자를 지어내지 않는다) */}
               {!!pending && (
-                <span className="rounded-full bg-warning-bg px-1.5 text-label font-semibold text-warning-foreground">
+                /* 🔴 **사이드바 뱃지와 같은 빨강**(사용자 요청 2026-10-21) — 연한 주황은 탭 글자에 묻혔다.
+                   같은 숫자가 두 곳에서 같은 모양이어야 같은 것으로 읽힌다 */
+                <span className="min-w-[18px] rounded-full bg-danger px-1.5 text-center text-label font-semibold leading-[18px] text-white">
                   {pending}
                 </span>
               )}
@@ -230,7 +238,12 @@ const DeploymentBoard = () => {
           {tab === 'requests' ? (
             <AppTable key="requests" columns={requestColumns} data={requests.data?.items ?? []} hidePagination />
           ) : (
-            <AppTable key={tab} columns={historyColumns} data={history.data?.items ?? []} hidePagination />
+            <AppTable
+              key={tab}
+              columns={tab === 'in' ? inHistoryColumns : historyColumns}
+              data={history.data?.items ?? []}
+              hidePagination
+            />
           )}
           <AppPagination
             pageIndex={toPageIndex(pageNumber)}

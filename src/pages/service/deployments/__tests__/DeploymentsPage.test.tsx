@@ -116,14 +116,15 @@ describe('DeploymentsPage — KPI → 탭 (T649g)', () => {
 
 describe('DeploymentsPage — 승인 (🔴 A급)', () => {
   it('승인하면 행이 사라지고 KPI 대기 -1 · 배치 온 +1 · 성공 토스트', async () => {
+    // 🔴 배수진 = 시작일이 지난 배치(배치중) — 배치예정이면 "현재 인원" 에 들어가지 않는다(T656)
     const success = vi.spyOn(notify, 'success')
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(await screen.findByRole('button', { name: '최범수 승인' }))
+    await user.click(await screen.findByRole('button', { name: '배수진 승인' }))
 
-    await waitFor(() => expect(screen.queryByText('최범수')).not.toBeInTheDocument())
-    expect(success).toHaveBeenCalledWith('최범수님의 배치 요청을 승인했습니다.')
+    await waitFor(() => expect(screen.queryByText('배수진')).not.toBeInTheDocument())
+    expect(success).toHaveBeenCalledWith('배수진님의 배치 요청을 승인했습니다.')
     await waitFor(() => expect(kpiValue('대기중인 배치요청').getByText('1')).toBeInTheDocument())
     expect(kpiValue('배치 온 인원').getByText('2')).toBeInTheDocument()
   })

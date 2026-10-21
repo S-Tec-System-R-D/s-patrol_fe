@@ -43,7 +43,7 @@ const DeploymentRequestActions = ({ request, siteSeq }: DeploymentRequestActions
       </AppButton>
       <AppDialog
         title="배치 요청 거부"
-        description={`${request.userName}님의 ${request.requestTypeName} 요청을 거부하는 사유를 입력해주세요.`}
+        description={`${request.userName}님의 배치 요청을 거부하는 사유를 입력해주세요.`}
         open={rejectOpen}
         onOpenChange={setRejectOpen}
         trigger={

@@ -47,15 +47,16 @@ export const toRequestListParams = (
 })
 
 /**
- * 이력 상태 필터 — URL `?status=active|returned`(T649h). 그 외 값은 **전체**(키를 뺀다).
+ * 이력 상태 필터 — URL `?status=scheduled|active|returned`(T649h · T656 배치예정 추가). 그 외 값은 **전체**.
  * 🔴 KPI(현재 인원)를 누르면 `active` 로 온다 — 숫자와 행 수가 맞게.
  */
-export type HistoryStatusFilter = 'active' | 'returned'
+export type HistoryStatusFilter = 'scheduled' | 'active' | 'returned'
 
 export const parseHistoryStatus = (value?: string): HistoryStatusFilter | undefined =>
-  value === 'active' || value === 'returned' ? value : undefined
+  value === 'scheduled' || value === 'active' || value === 'returned' ? value : undefined
 
 const toStatusCode = (status?: HistoryStatusFilter): DeploymentHistoryStatusCode | undefined => {
+  if (status === 'scheduled') return DEPLOYMENT_HISTORY_STATUS.SCHEDULED
   if (status === 'active') return DEPLOYMENT_HISTORY_STATUS.ACTIVE
   if (status === 'returned') return DEPLOYMENT_HISTORY_STATUS.RETURNED
   return undefined
@@ -63,6 +64,7 @@ const toStatusCode = (status?: HistoryStatusFilter): DeploymentHistoryStatusCode
 
 export const historyStatusOptions: AppSelectOption[] = [
   { value: ALL_VALUE, label: '전체' },
+  { value: 'scheduled', label: '배치예정' },
   { value: 'active', label: '배치중' },
   { value: 'returned', label: '복귀완료' },
 ]
