@@ -1,18 +1,26 @@
-import AppButton from '@/components/app/AppButton'
-import { notify } from '@/lib/notify'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { useDeploymentStore } from '../store/deploymentStore'
-import type { DeploymentRequestSummary } from '../types/deployment'
+
+import AppButton from '@/components/app/AppButton'
+import { useRejectDeployment } from '../hooks/useRejectDeployment'
+import type { DeploymentRequestRow } from '../types/deployment'
 import { rejectRequestSchema, type RejectRequestFormData } from './schema'
 
 interface RejectRequestFormProps {
-  request: DeploymentRequestSummary
+  request: DeploymentRequestRow
+  siteSeq: number
   onSuccess: () => void
 }
 
-const RejectRequestForm = ({ request, onSuccess }: RejectRequestFormProps) => {
-  const reject = useDeploymentStore((state) => state.reject)
+/**
+ * 배치 요청 거부 사유 (`spec 039` T645).
+ *
+ * 🔴 **성공해야 닫는다**(029 규약) — `onSuccess` 는 서버가 받아들인 뒤에만 부른다. 실패하면 모달과
+ * 입력이 그대로 남고, 사유는 전역 토스트가 알린다.
+ * 🔴 처리 중에는 제출 버튼을 막는다(연타 방지).
+ */
+const RejectRequestForm = ({ request, siteSeq, onSuccess }: RejectRequestFormProps) => {
+  const rejection = useRejectDeployment(siteSeq)
   const {
     register,
     handleSubmit,
@@ -22,19 +30,18 @@ const RejectRequestForm = ({ request, onSuccess }: RejectRequestFormProps) => {
   })
 
   const onSubmit = (data: RejectRequestFormData) => {
-    reject(request.id, data.reason)
-    notify.success(`${request.workerName}님의 배치 요청을 거부했습니다.`)
-    onSuccess()
+    rejection.mutate({ row: request, rejectReason: data.reason }, { onSuccess })
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-foreground">
+        <label htmlFor="reject-reason" className="text-sm font-medium text-foreground">
           거부 사유
           <span className="ml-1 text-danger">*</span>
         </label>
         <textarea
+          id="reject-reason"
           rows={3}
           placeholder="거부 사유를 입력해주세요 (근무자 앱에 노출됩니다)"
           className="w-full rounded-sm border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-point focus:ring-2 focus:ring-point/20"
@@ -42,7 +49,7 @@ const RejectRequestForm = ({ request, onSuccess }: RejectRequestFormProps) => {
         />
         {errors.reason && <p className="text-xs text-danger">{errors.reason.message}</p>}
       </div>
-      <AppButton variant="destructive" size="full" type="submit">
+      <AppButton variant="destructive" size="full" type="submit" disabled={rejection.isPending}>
         거부
       </AppButton>
     </form>

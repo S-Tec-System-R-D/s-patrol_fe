@@ -44,14 +44,14 @@
 > **독립 테스트 기준**: 승인 → 행이 사라지고 KPI·뱃지·이력이 갱신된다. 거부 → 사유 필수, 성공 시 모달 닫힘, 이력 불변.
 > 처리 중 버튼 비활성. 이미 처리된 요청 → 토스트 + 재조회. 거부 실패 → 모달 유지.
 
-- [ ] T640 [US2] 요청 목록 재작성 in src/features/deployments/components/DeploymentRequestList.tsx — `useDeploymentRequests` + 서버 페이징(`?requestPage`). 상태 분기 4종(실패 다시 시도 · 로딩 · 0건 "대기 중인 요청이 없습니다" · 목록)
-- [ ] T641 [US2] 요청 행 재작성 in src/features/deployments/components/DeploymentRequestRow.tsx — 가정 타입 필드(`userName` · `fromSiteName → toSiteName` · `requestTypeName` · `reason` · `requestDt`). 승인/거부 버튼 사이 간격 유지(되돌릴 수 없는 승인의 오클릭 방지 — spec §3)
-- [ ] T642 [US2] 🔴 **승인 제출** in src/features/deployments/hooks/useApproveDeployment.ts — `useMutation`. **비옵티미스틱**(023 승계). 처리 중 그 행 두 버튼 `disabled`
-- [ ] T643 [US2] 🔴 **성공 갱신** in src/features/deployments/hooks/useApproveDeployment.ts · src/features/deployments/hooks/useRejectDeployment.ts — `deploymentKeys.all(siteSeq)` 무효화(요약·요청·이력 한 번에) + 성공 토스트. 🔴 **마지막 행 처리 후 빈 페이지** → 이전 페이지로(spec §4)
-- [ ] T644 [US2] 🔴 **실패 처리** in 같은 훅 — 서버 메시지 토스트(전역 에러 정규화 경로 확인 후 중복 토스트 방지) + **요청 목록 재조회**(이미 처리된 행 정리)
-- [ ] T645 [US2] 거부 폼 전환 in src/features/deployments/form/RejectRequestForm.tsx · src/features/deployments/form/schema.ts — store → `useRejectDeployment`. 🔴 **성공해야 닫는다**(실패 시 모달·입력 유지, 029 규약). 사유 **트림 후 필수**. 처리 중 제출 버튼 비활성
-- [ ] T646 [US2] [P] 🔴 **통합 테스트** in src/pages/service/deployments/__tests__/DeploymentsPage.test.tsx — MSW 상태 기준: 승인 → 행 사라짐·KPI 대기 -1·배치 온 +1·전입 이력 +1 · 거부 → 이력 불변 · 연타 시 요청 1회 · 처리된 요청 400 → 토스트 + 재조회 · 거부 500 → 모달 유지
-- [ ] T647 [US2] [P] 폼 테스트 갱신 in src/features/deployments/form/__tests__/RejectRequestForm.test.tsx — 공백만 거부 · 성공 시 `onSuccess` · 실패 시 미호출
+- [x] T640 [US2] 요청 목록 재작성 in src/features/deployments/components/DeploymentRequestList.tsx — `useDeploymentRequests` + 서버 페이징(`?requestPage`). 상태 분기 4종(실패 다시 시도 · 로딩 · 0건 "대기 중인 요청이 없습니다" · 목록)
+- [x] T641 [US2] 요청 행 재작성 in src/features/deployments/components/DeploymentRequestRow.tsx — 가정 타입 필드(`userName` · `fromSiteName → toSiteName` · `requestTypeName` · `reason` · `requestDt`). 승인/거부 버튼 사이 간격 유지(되돌릴 수 없는 승인의 오클릭 방지 — spec §3)
+- [x] T642 [US2] 🔴 **승인 제출** in src/features/deployments/hooks/useApproveDeployment.ts — `useMutation`. **비옵티미스틱**(023 승계). 처리 중 그 행 두 버튼 `disabled`
+- [x] T643 [US2] 🔴 **성공 갱신** in src/features/deployments/hooks/useApproveDeployment.ts · src/features/deployments/hooks/useRejectDeployment.ts — `deploymentKeys.all(siteSeq)` 무효화(요약·요청·이력 한 번에) + 성공 토스트. 🔴 **마지막 행 처리 후 빈 페이지** → 이전 페이지로(spec §4)
+- [x] T644 [US2] 🔴 **실패 처리** in 같은 훅 — ✅ 확인: 전역 `MutationCache.onError`(`queryClient.ts`)가 이미 서버 메시지로 토스트한다 → **훅에서는 띄우지 않는다**(중복 방지). 성공·실패 모두 `onSettled` 에서 `all(siteSeq)` 무효화 — 원래 계획: 서버 메시지 토스트(전역 에러 정규화 경로 확인 후 중복 토스트 방지) + **요청 목록 재조회**(이미 처리된 행 정리)
+- [x] T645 [US2] 거부 폼 전환 in src/features/deployments/form/RejectRequestForm.tsx · src/features/deployments/form/schema.ts — store → `useRejectDeployment`. 🔴 **성공해야 닫는다**(실패 시 모달·입력 유지, 029 규약). 사유 **트림 후 필수**. 처리 중 제출 버튼 비활성
+- [x] T646 [US2] [P] 🔴 **통합 테스트** — ⚠️ "승인 → 전입 이력 +1" 은 이력이 아직 store 라 **T649 로 옮겼다**. 빈 페이지 방지 1건 추가 — in src/pages/service/deployments/__tests__/DeploymentsPage.test.tsx — MSW 상태 기준: 승인 → 행 사라짐·KPI 대기 -1·배치 온 +1·전입 이력 +1 · 거부 → 이력 불변 · 연타 시 요청 1회 · 처리된 요청 400 → 토스트 + 재조회 · 거부 500 → 모달 유지
+- [x] T647 [US2] [P] 폼 테스트 갱신 in src/features/deployments/form/__tests__/RejectRequestForm.test.tsx — 공백만 거부 · 성공 시 `onSuccess` · 실패 시 미호출
 
 ## Phase 5: US3 — 전출 / 전입 이력
 
