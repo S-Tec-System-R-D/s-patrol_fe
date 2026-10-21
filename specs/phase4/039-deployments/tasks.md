@@ -25,10 +25,10 @@
 > **독립 테스트 기준**: MSW 에서 승인하면 **요청이 사라지고 · 이력(전입)에 1건 · 요약 `pendingCount -1`·`inCount +1`**,
 > 거부하면 **요청만 사라지고 이력은 그대로**. 처리된 요청을 다시 처리하면 400 래퍼. 테스트마다 `reset` 된다.
 
-- [ ] T632 🔴 **상태 보유 MSW** in src/mocks/handlers/deployments.ts · src/mocks/handlers/index.ts — 시드는 `deploymentData.ts` 를 가정 계약 형태로 옮긴다(사업장 7 기준: 대기 2 · 전출 1(배치 중) · 전입 2). 023 `courses.ts` 처럼 **store + `resetDeploymentStore()`**. 승인 = 요청 제거 + 이력 1건(`startDt` = 처리 시각, `endDt` null) · 거부 = 요청만 제거 · 없는/처리된 `requestSeq` = **400 + 래퍼 `"이미 처리된 요청입니다."`**(가정) · 요약은 **store 에서 계산**(따로 들고 있지 않는다 — 어긋나지 않게) · `pageSize` 상한 100
-- [ ] T633 MSW reset 규약 in 각 테스트 파일 — 🔴 **`setup.ts` 에 두지 않는다**: 선례(`resetCourseStore`·`resetPointStore`)는 **상태를 바꾸는 테스트 파일의 `beforeEach`** 에서 부른다. 같은 방식으로 T635·T646 등 배치 테스트 파일에서 `resetDeploymentStore()` 를 부른다
-- [ ] T634 [P] 조회 훅 3종 in src/features/deployments/hooks/ — `useDeploymentSummary` · `useDeploymentRequests` · `useDeploymentHistory`. `siteSeq` null 이면 요청 안 함
-- [ ] T635 [P] 훅·MSW 테스트 in src/features/deployments/hooks/__tests__/deploymentQueries.test.tsx — 조회 3종 · 방향 필터 · 페이징 · `null` 미요청
+- [x] T632 🔴 **상태 보유 MSW** in src/mocks/handlers/deployments.ts · src/mocks/handlers/index.ts — 시드는 `deploymentData.ts` 를 가정 계약 형태로 옮긴다 — 🔴 **계획 수정**: 014 시드는 오준혁을 "강동 → 강서 전출" 로 뒀는데 **근무자 mock(038)은 그를 강서 소속으로 배치 온 사람**(`originSiteSeq 12`)으로 둔다. 두 화면이 같은 사람을 반대로 말하지 않게 **전입**으로 바꿨다 → 대기 2 · 전출 2(배치 중 1 · 복귀 1) · 전입 2(배치 중 1 = 오준혁 · 복귀 1) · 요약 **나간 1 · 온 1 · 대기 2**(KPI 가 "온 2명" 에서 1명으로 바뀐다). 023 `courses.ts` 처럼 **store + `resetDeploymentStore()`**. 승인 = 요청 제거 + 이력 1건(`startDt` = 처리 시각, `endDt` null) · 거부 = 요청만 제거 · 없는/처리된 `requestSeq` = **400 + 래퍼 `"이미 처리된 요청입니다."`**(가정) · 요약은 **store 에서 계산**(따로 들고 있지 않는다 — 어긋나지 않게) · `pageSize` 상한 100
+- [x] T633 MSW reset 규약 in 각 테스트 파일 — 🔴 **`setup.ts` 에 두지 않는다**: 선례(`resetCourseStore`·`resetPointStore`)는 **상태를 바꾸는 테스트 파일의 `beforeEach`** 에서 부른다. 같은 방식으로 T635·T646 등 배치 테스트 파일에서 `resetDeploymentStore()` 를 부른다
+- [x] T634 [P] 조회 훅 3종 in src/features/deployments/hooks/ — `useDeploymentSummary` · `useDeploymentRequests` · `useDeploymentHistory`. `siteSeq` null 이면 요청 안 함
+- [x] T635 [P] 훅·MSW 테스트 in src/features/deployments/hooks/__tests__/deploymentQueries.test.tsx — 조회 3종 · 방향 필터 · 페이징 · `null` 미요청
 
 ## Phase 3: US1 — 현황 (KPI · 사이드바 뱃지 · 부제)
 
