@@ -792,7 +792,7 @@ export interface RemovePointFromCourseRequest {
 
 // ✅ `spec 040` 에서 swagger 기준으로 교체했다(실측 — `api-spec.md` §5-1-B 공지 3종).
 //   코드: `features/notice/types/notice.ts`. 셋 다 multipart, 성공 `data: true`(ID 미반환).
-//   앱 푸시 필드는 서버에 없다(B-42) — 옛 `sendAppPush` 는 지웠다.
+//   앱 푸시는 웹 범위가 아니다(테이블에 컬럼 없음, B-42 철회) — 옛 `sendAppPush` 는 지웠다.
 export interface AddNoticeRequest {     // POST AddNotice
   siteSeq: number
   title: string
