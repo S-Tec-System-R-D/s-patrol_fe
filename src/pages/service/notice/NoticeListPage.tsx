@@ -37,7 +37,7 @@ import { paths } from '@/router/paths'
  * 🔴 **필터·검색·페이지는 전부 URL 에 있고 서버 파라미터로 나간다**(클라이언트 필터 0건).
  * `siteSeq` 는 URL 에 두지 않는다(`spec 021` DoD #13).
  *
- * ⚠️ 작성은 **모달 UI 만** 있고 저장은 mock 이다(변경계 전환은 별도 spec).
+ * 작성은 모달 → `AddNotice`(`spec 040`). 성공해야 닫히고 목록에 머문다(서버가 ID 를 주지 않는다).
  */
 
 type FilterKey = keyof NoticeQuery
@@ -55,6 +55,7 @@ const NoticeListPage = () => {
 
   /** 🔴 행 수는 URL 에 두지 않지만 동작은 한다(027·036·037 승계). 바꾸면 첫 페이지로 */
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const [createOpen, setCreateOpen] = useState(false)
 
   const listParams = useMemo(
     () => (siteSeq === null ? null : { ...toNoticeListParams(siteSeq, query), pageSize }),
@@ -152,19 +153,23 @@ const NoticeListPage = () => {
         <AppDialog
           title="공지 작성"
           description="근무자에게 전달할 공지를 작성합니다."
+          open={createOpen}
+          onOpenChange={setCreateOpen}
           trigger={
             /* 🔴 `xl` 미만에서는 아이콘만 — `aria-label` 로 이름을 유지한다(`PointTopNav` 승계) */
             <AppButton
               icon={PlusIcon}
               iconSize={14}
               aria-label="공지 작성"
+              // 사업장이 없으면 목록도 요청하지 않는다 — 같은 기준으로 막는다
+              disabled={siteSeq === null}
               className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
             >
               <span className="hidden xl:inline">공지 작성</span>
             </AppButton>
           }
         >
-          <NoticeForm />
+          <NoticeForm onSuccess={() => setCreateOpen(false)} />
         </AppDialog>
       </div>
 

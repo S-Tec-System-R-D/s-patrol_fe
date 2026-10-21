@@ -23,11 +23,11 @@
 
 > **독립 테스트 기준**: 작성하면 목록에 나오고(고정이면 맨 위) 모달이 닫힌다. 실패하면 모달·입력이 남는다. 허용 밖 확장자·30MB 이상은 선택 단계에서 막힌다.
 
-- [ ] T665 [US1] 폼 스키마 in src/features/notice/form/schema.ts — `content` → `description` · `sendAppPush` 제거 · `isPin` 추가 · 트림 필수
-- [ ] T666 [US1] 첨부 입력 in src/features/notice/form/NoticeAttachInput.tsx — 한 입력 · 이름·크기 목록 · 개별 제거 · 확장자/합계 30MB 검사
-- [ ] T667 [US1] 🔴 **작성 제출** in src/features/notice/form/NoticeForm.tsx — `useMutation(addNotice)` · 비옵티미스틱 · `lists` 무효화 · 성공해야 `onSuccess`(모달 닫힘) · `isPending` 비활성
-- [ ] T668 [US1] 목록 연결 in src/pages/service/notice/NoticeListPage.tsx — 작성 모달 open 제어 + 사업장 미선택 시 버튼 비활성
-- [ ] T669 [US1] [P] 테스트 in src/features/notice/form/__tests__/NoticeForm.test.tsx — 필수 · 고정 기본 해제 · 첨부 차단 · 성공/실패 · 연타
+- [x] T665 [US1] 폼 스키마 in src/features/notice/form/schema.ts — `content` → `description` · `sendAppPush` 제거 · `isPin` 추가 · 트림 필수
+- [x] T666 [US1] 첨부 입력 in src/features/notice/form/NoticeAttachInput.tsx — 한 입력 · 이름·크기 목록 · 개별 제거 · 확장자/합계 용량 검사. 🔴 **계획 수정**: 상한을 **합계 28MB** 로 — 실측 29MB 거부 · 한도는 요청 전체 약 30,000,000 바이트(Kestrel 기본값)라 본문·경계 여유를 둔다. 규칙은 `lib/noticeAttach.ts`
+- [x] T667 [US1] 🔴 **작성 제출** in src/features/notice/form/NoticeForm.tsx — `useMutation(addNotice)` · 비옵티미스틱 · `lists` 무효화 · 성공해야 `onSuccess`(모달 닫힘) · `isPending` 비활성
+- [x] T668 [US1] 목록 연결 in src/pages/service/notice/NoticeListPage.tsx — 작성 모달 open 제어 + 사업장 미선택 시 버튼 비활성
+- [x] T669 [US1] [P] 테스트 in src/features/notice/form/__tests__/NoticeForm.test.tsx — 필수 · 고정 기본 해제 · 첨부 차단 · 성공/실패 · 연타 + 목록 페이지 작성 흐름 2건(`NoticeListPage.test.tsx`)
 
 ## Phase 3: US2 — 수정
 

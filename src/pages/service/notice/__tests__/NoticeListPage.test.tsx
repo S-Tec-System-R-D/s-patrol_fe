@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { setSite } from '@/lib/auth/site'
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
+import { resetNoticeStore } from '@/mocks/handlers/notices'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
 import NoticeListPage from '../NoticeListPage'
@@ -57,6 +58,7 @@ const captureQuery = () => {
 }
 
 beforeEach(() => {
+  resetNoticeStore()
   clearTokens()
   setAccessToken(makeAccessToken())
   setSite(7, '테스트 사업장')
@@ -242,5 +244,33 @@ describe('NoticeListPage — 필터가 서버로 나간다', () => {
 
     await waitFor(() => expect(calls.length).toBeGreaterThan(0))
     expect(Number(calls[calls.length - 1].get('pageSize'))).toBeLessThanOrEqual(100)
+  })
+})
+
+describe('NoticeListPage — 작성 (spec 040 US1)', () => {
+  it('작성 모달에서 등록하면 모달이 닫히고 목록 맨 위에 나온다', async () => {
+    renderPage()
+    const user = userEvent.setup()
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: '공지 작성' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.type(within(dialog).getByPlaceholderText('공지 제목을 입력해주세요'), '방금 쓴 공지')
+    await user.type(within(dialog).getByPlaceholderText('공지 내용을 입력해주세요'), '본문')
+    await user.click(within(dialog).getByRole('checkbox', { name: '상단 고정' }))
+    await user.click(within(dialog).getByRole('button', { name: '등록' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    // 🔴 서버가 ID 를 주지 않아 상세로 가지 않는다 — 목록에 머문다
+    expect(url()).toBe('')
+    await waitFor(() => expect(inTable().getAllByRole('row')[1]).toHaveTextContent('방금 쓴 공지'))
+  })
+
+  it('사업장이 없으면 작성 버튼이 잠긴다', () => {
+    // clearTokens() 가 선택 사업장도 지운다(spec 021)
+    clearTokens()
+    setAccessToken(makeAccessToken())
+    renderPage()
+    expect(screen.getByRole('button', { name: '공지 작성' })).toBeDisabled()
   })
 })
