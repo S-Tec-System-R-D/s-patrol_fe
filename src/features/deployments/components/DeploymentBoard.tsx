@@ -14,11 +14,13 @@ import {
 import AppButton from '@/components/app/AppButton'
 import AppEmpty from '@/components/app/AppEmpty'
 import AppIconButton from '@/components/app/AppIconButton'
+import AppInput from '@/components/app/AppInput'
 import AppPagination from '@/components/app/AppPagination'
 import AppSelect from '@/components/app/AppSelect'
 import AppTable from '@/components/AppTable'
 import { parsePageNumber } from '@/features/course-history/lib/courseHistoryListParams'
 import { toPageIndex, toPageNumber } from '@/features/courses/lib/courseListParams'
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback'
 import { useQueryParams } from '@/hooks/useQueryParams'
 import { getSiteSeq } from '@/lib/auth/site'
 import { ALL_VALUE } from '@/lib/listQuery'
@@ -77,12 +79,31 @@ const ERROR_TITLE: Record<DeploymentTab, string> = {
   in: '배치 이력을 불러오지 못했습니다',
 }
 
+const SEARCH_DEBOUNCE_MS = 300
+
 const DeploymentBoard = () => {
   const siteSeq = getSiteSeq()
-  const [params, setParams] = useQueryParams<'tab' | 'page' | 'status'>()
+  const [params, setParams] = useQueryParams<'tab' | 'page' | 'status' | 'q'>()
   const tab = parseDeploymentTab(params.tab)
-  /** 이력 상태 필터(T649h) — 요청 탭에서는 쓰지 않는다 */
+  /** 이력 상태 필터(T649h) · 이름 검색(T658) — 요청 탭에서는 쓰지 않는다 */
   const status = tab === 'requests' ? undefined : parseHistoryStatus(params.status)
+  const keyword = tab === 'requests' ? undefined : params.q
+
+  /**
+   * 🔴 입력은 로컬 state, URL 은 디바운스 뒤에(027 규약). URL 이 밖에서 바뀌면(뒤로가기·초기화·탭 전환)
+   * 입력창을 맞춘다 — effect 가 아니라 **렌더 중 조정**(026·038 과 같다)
+   */
+  const [keywordDraft, setKeywordDraft] = useState(keyword ?? '')
+  const [lastKeyword, setLastKeyword] = useState(keyword)
+  if (keyword !== lastKeyword) {
+    setLastKeyword(keyword)
+    setKeywordDraft(keyword ?? '')
+  }
+  const pushKeyword = useDebouncedCallback(
+    (value: string) => setParams({ q: value.trim() || undefined, page: undefined }),
+    SEARCH_DEBOUNCE_MS
+  )
+  const hasFilter = Boolean(status || keyword)
   const pageNumber = parsePageNumber(params.page)
   /** 행 수는 URL 에 두지 않지만 동작은 한다. 바꾸면 첫 페이지로 */
   const [pageSize, setPageSize] = useState(DEPLOYMENT_PAGE_SIZE)
@@ -100,8 +121,8 @@ const DeploymentBoard = () => {
     () =>
       siteSeq === null || tab === 'requests'
         ? null
-        : { ...toHistoryParams(siteSeq, tab, params.page, status), pageSize },
-    [siteSeq, tab, params.page, status, pageSize]
+        : { ...toHistoryParams(siteSeq, tab, params.page, status, keyword), pageSize },
+    [siteSeq, tab, params.page, status, keyword, pageSize]
   )
   const requests = useDeploymentRequests(requestParams)
   const history = useDeploymentHistory(historyParams)
@@ -127,19 +148,31 @@ const DeploymentBoard = () => {
   const pageEmptied = active.isSuccess && items.length === 0 && pageNumber > 1
   useEffect(() => {
     if (pageEmptied) {
-      setParams({ page: pageNumber - 1 > 1 ? String(pageNumber - 1) : undefined }, { replace: true })
+      setParams(
+        { page: pageNumber - 1 > 1 ? String(pageNumber - 1) : undefined },
+        { replace: true }
+      )
     }
   }, [pageEmptied, pageNumber, setParams])
 
-  /** 🔴 탭을 바꾸면 페이지·상태 필터를 지운다 — 다른 탭에 끌고 가면 일부만 보이는 이유를 모른다 */
+  /** 🔴 탭을 바꾸면 페이지·상태·검색을 지운다 — 다른 탭에 끌고 가면 일부만 보이는 이유를 모른다 */
   const selectTab = (next: DeploymentTab) =>
-    setParams({ tab: next === 'requests' ? undefined : next, page: undefined, status: undefined })
+    setParams({
+      tab: next === 'requests' ? undefined : next,
+      page: undefined,
+      status: undefined,
+      q: undefined,
+    })
 
   return (
     <div className="flex flex-col gap-4">
       {/* 페이지 탭 — 순찰이력(`PatrolHistoryTabs`)·코스/지점과 같은 밑줄형(사용자 결정 2026-10-21).
           라우트가 아니라 쿼리(`?tab`)를 바꾸므로 링크가 아니라 **탭 버튼**이다 */}
-      <div role="tablist" aria-label="배치 목록" className="flex items-center gap-1 border-b border-border">
+      <div
+        role="tablist"
+        aria-label="배치 목록"
+        className="flex items-center gap-1 border-b border-border"
+      >
         {TABS.map(({ key, label, icon: Icon }) => {
           const selected = tab === key
           const pending = key === 'requests' ? summary.data?.pendingCount : undefined
@@ -170,37 +203,56 @@ const DeploymentBoard = () => {
         })}
       </div>
 
-      {/* 이력 탭의 필터 줄 — 다른 목록 화면과 같은 자리·모양(필터 → 초기화).
+      {/* 이력 탭의 필터 줄 — 🔴 **다른 목록 화면과 같은 마크업**(T658, 사용자 요청): 검색창(왼쪽) →
+          `role="group"` 필터 · 초기화 → spacer. 공지(026)·근무자(038)·지점 이력(037)과 같은 줄이다.
           🔴 KPI(지금 나가/와 있는 **인원**)를 누르면 `배치중` 으로 걸려서 온다 — 숫자와 행 수가 맞는다(T649h) */}
       {tab !== 'requests' && (
-        <div role="group" aria-label="목록 필터" className="flex items-center gap-2">
-          <AppSelect
-            aria-label="상태"
-            icon={FilterIcon}
-            options={historyStatusOptions}
-            value={status ?? ALL_VALUE}
-            onChange={(value) =>
-              setParams({ status: value === ALL_VALUE ? undefined : value, page: undefined })
-            }
-            active={Boolean(status)}
-            className="w-auto"
+        <div className="flex items-center gap-2">
+          <AppInput
+            variant="search"
+            placeholder="이름 검색"
+            aria-label="이름 검색"
+            className="w-[260px]"
+            value={keywordDraft}
+            onChange={(event) => {
+              setKeywordDraft(event.target.value)
+              pushKeyword(event.target.value)
+            }}
           />
-          {status && (
-            <AppIconButton
-              icon={RotateCcwIcon}
-              aria-label="필터 초기화"
-              title="필터 초기화"
-              onClick={() => setParams({ status: undefined, page: undefined })}
-              className="bg-card"
+          <div role="group" aria-label="목록 필터" className="contents">
+            <AppSelect
+              aria-label="상태"
+              icon={FilterIcon}
+              options={historyStatusOptions}
+              value={status ?? ALL_VALUE}
+              onChange={(value) =>
+                setParams({ status: value === ALL_VALUE ? undefined : value, page: undefined })
+              }
+              active={Boolean(status)}
+              className="w-auto"
             />
-          )}
+            {hasFilter && (
+              <AppIconButton
+                icon={RotateCcwIcon}
+                aria-label="필터 초기화"
+                title="필터 초기화"
+                onClick={() => setParams({ status: undefined, q: undefined, page: undefined })}
+                className="bg-card"
+              />
+            )}
+          </div>
+          <div className="flex-1" />
         </div>
       )}
 
       {active.isError ? (
         /* 🔴 조회 실패를 "없음" 으로 보여주지 않는다 — 처리할 요청을 놓친다 */
         <div className="rounded-lg border border-border bg-card">
-          <AppEmpty icon={TriangleAlertIcon} title={ERROR_TITLE[tab]} description={active.error?.message} />
+          <AppEmpty
+            icon={TriangleAlertIcon}
+            title={ERROR_TITLE[tab]}
+            description={active.error?.message}
+          />
           <div className="flex justify-center pb-6">
             <AppButton variant="sub" onClick={() => void active.refetch()}>
               다시 시도
@@ -218,11 +270,11 @@ const DeploymentBoard = () => {
       ) : items.length === 0 ? (
         <div className="rounded-lg border border-border bg-card">
           {/* 🔴 필터 0건과 "기록 없음" 을 다르게 그린다(다른 목록 화면 규약) */}
-          {status ? (
+          {hasFilter ? (
             <AppEmpty
               icon={FilterXIcon}
               title="조건에 맞는 이력이 없습니다"
-              description="상태 필터를 바꿔보세요."
+              description="검색어나 상태 필터를 바꿔보세요."
             />
           ) : (
             <AppEmpty
@@ -236,7 +288,12 @@ const DeploymentBoard = () => {
           {/* 🔴 `hidePagination` 은 `manualPagination` 을 함께 건다 — 클라이언트 페이징을 끈다.
               ⚠️ `key` 로 탭마다 표를 새로 만든다 — 컬럼 집합이 다른 표를 같은 인스턴스로 갈아 끼우지 않는다 */}
           {tab === 'requests' ? (
-            <AppTable key="requests" columns={requestColumns} data={requests.data?.items ?? []} hidePagination />
+            <AppTable
+              key="requests"
+              columns={requestColumns}
+              data={requests.data?.items ?? []}
+              hidePagination
+            />
           ) : (
             <AppTable
               key={tab}

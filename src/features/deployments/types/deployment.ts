@@ -100,6 +100,11 @@ export interface DeploymentHistoryParams {
    * 🔴 KPI(지금 나가/와 있는 **인원**)를 누르면 `배치중` 으로 좁힌다 — 그래야 숫자와 행 수가 맞는다
    */
   status?: DeploymentHistoryStatusCode
+  /**
+   * 근무자 이름 **부분 일치**(가정 · T658). 순찰이력(`GetPointHistory`·`GetCourseHistory`)이 같은 이름·
+   * 같은 방식(`userName` 부분 문자열)이라 맞췄다
+   */
+  userName?: string
   pageNumber: number
   pageSize: number
 }

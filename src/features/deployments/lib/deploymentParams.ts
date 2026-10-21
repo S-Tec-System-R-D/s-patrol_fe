@@ -1,5 +1,6 @@
 import {
   clampPageSize,
+  omitIfAll,
   parsePageNumber,
 } from '@/features/course-history/lib/courseHistoryListParams'
 import type { AppSelectOption } from '@/components/app/AppSelect'
@@ -73,11 +74,14 @@ export const toHistoryParams = (
   siteSeq: number,
   tab: 'out' | 'in',
   page?: string,
-  status?: string
+  status?: string,
+  /** 이름 검색 — URL `?q`(T658). 빈 값·공백은 키를 뺀다 */
+  q?: string
 ): DeploymentHistoryParams => ({
   siteSeq,
   direction: toDirection(tab),
   status: toStatusCode(parseHistoryStatus(status)),
+  userName: omitIfAll(q),
   pageNumber: parsePageNumber(page),
   pageSize: clampPageSize(DEPLOYMENT_PAGE_SIZE),
 })

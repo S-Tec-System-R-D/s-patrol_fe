@@ -112,6 +112,8 @@
 
 - [x] T657 탭 순서 **배치 요청 · 전입 이력 · 전출 이력** · 대기 건수 뱃지를 **사이드바와 같은 빨강**(`bg-danger` + 흰 글자) in src/features/deployments/components/DeploymentBoard.tsx — 사용자 요청. 전입이 먼저인 이유: 승인한 요청이 전입으로 이어지고 복귀일 지정도 전입에서 한다
 
+- [x] T658 전입·전출 이력에 **이름 검색** + 필터 줄을 **다른 화면과 같은 마크업**으로 in DeploymentBoard.tsx · lib/deploymentParams.ts · types/deployment.ts · mocks/handlers/deployments.ts · docs/api-request-deployment.md — 사용자 요청. 검색창(260px, 왼쪽) → `role="group"` `contents` 필터 · 초기화 → spacer(공지·근무자·지점 이력과 같다). URL `?q` · 디바운스 · 검색하면 첫 페이지 · **탭을 바꾸면 검색도 지운다** · 초기화는 검색·상태를 함께. 가정 파라미터 `userName`(부분 일치 — 순찰이력과 같은 이름·방식). 요청서 4·5번에 이름 검색 추가
+
 ---
 
 ## DoD 대조표 (T655)

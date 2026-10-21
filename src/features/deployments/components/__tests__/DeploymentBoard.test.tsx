@@ -144,6 +144,65 @@ describe('DeploymentBoard — 탭', () => {
   })
 })
 
+describe('DeploymentBoard — 이름 검색 (T658)', () => {
+  const captureUserName = () => {
+    const names: (string | null)[] = []
+    server.events.on('request:start', ({ request }) => {
+      const target = new URL(request.url)
+      if (target.pathname === HISTORY_PATH) names.push(target.searchParams.get('userName'))
+    })
+    return names
+  }
+
+  it('🔴 필터 줄이 다른 화면과 같다 — 검색창 다음에 필터 그룹', async () => {
+    renderBoard('/deployments?tab=in')
+
+    await screen.findByText('오준혁')
+    const search = screen.getByLabelText('이름 검색')
+    const group = screen.getByRole('group', { name: '목록 필터' })
+    // 검색창이 필터 그룹보다 앞에 있다
+    expect(search.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('🔴 입력하면 디바운스 뒤 ?q 와 서버 userName 으로 나가고 첫 페이지로 간다', async () => {
+    const names = captureUserName()
+    const user = userEvent.setup()
+    renderBoard('/deployments?tab=in&page=2')
+
+    await user.type(await screen.findByLabelText('이름 검색'), '오준')
+
+    await waitFor(() => expect(search()).toContain('q=%EC%98%A4%EC%A4%80'))
+    expect(search()).not.toContain('page=2')
+    await waitFor(() => expect(names[names.length - 1]).toBe('오준'))
+    expect(await screen.findByText('오준혁')).toBeInTheDocument()
+    expect(screen.queryByText('한지민')).not.toBeInTheDocument()
+  })
+
+  it('🔴 탭을 바꾸면 검색어도 지운다 · 초기화는 검색과 상태를 함께 지운다', async () => {
+    const user = userEvent.setup()
+    renderBoard('/deployments?tab=in&q=없는사람&status=active')
+
+    expect(await screen.findByText('조건에 맞는 이력이 없습니다')).toBeInTheDocument()
+    await user.click(screen.getByLabelText('필터 초기화'))
+    await waitFor(() => expect(search()).not.toContain('q='))
+    expect(search()).not.toContain('status')
+    expect(screen.getByLabelText('이름 검색')).toHaveValue('')
+
+    await user.type(screen.getByLabelText('이름 검색'), '오')
+    await waitFor(() => expect(search()).toContain('q='))
+    await user.click(screen.getByRole('tab', { name: /전출 이력/ }))
+    await waitFor(() => expect(search()).toContain('tab=out'))
+    expect(search()).not.toContain('q=')
+  })
+
+  it('요청 탭에는 검색창이 없다', async () => {
+    renderBoard()
+
+    await screen.findByRole('table')
+    expect(screen.queryByLabelText('이름 검색')).not.toBeInTheDocument()
+  })
+})
+
 describe('DeploymentBoard — 복귀일 지정 (T656)', () => {
   it('🔴 전입 이력의 복귀 전 행에만 버튼이 있다 — 복귀완료·전출에는 없다', async () => {
     const user = userEvent.setup()

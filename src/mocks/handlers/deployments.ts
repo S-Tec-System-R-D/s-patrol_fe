@@ -240,10 +240,13 @@ export const deploymentHandlers = [
     const direction = Number(query.get('direction'))
     // 0 배치중 / 1 복귀완료 / 2 배치예정 — 없으면 전체(가정)
     const status = query.get('status')
+    // 근무자 이름 부분 일치(가정 · T658)
+    const userName = query.get('userName')
     const rows = history
       .filter((row) => (direction === 1 ? row.toSiteSeq === siteSeq : row.fromSiteSeq === siteSeq))
       .map(withStatus)
       .filter((row) => (status === null ? true : row.status === Number(status)))
+      .filter((row) => (userName === null ? true : row.userName.includes(userName)))
       .sort((a, b) => b.startDt.localeCompare(a.startDt))
     return paged(rows, pageNumber, pageSize)
   }),
