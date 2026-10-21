@@ -606,6 +606,7 @@ import { ArrowRightIcon } from 'lucide-react'
 | `hint` | `string` | — (제목 줄 **오른쪽**) |
 | `compactValue` | `boolean` | `false` |
 | `tone` | `'neutral' \| 'point' \| 'warning' \| 'danger'` | `'neutral'` |
+| **`inline`** | `boolean` | `false` — 🔴 **한 줄 얇은 카드**(`[아이콘] 라벨 · 보조 ··· 값 단위`, `spec 039`). **opt-in** — 주지 않으면 지금과 같다. `bar`·`foot`·`badge` 는 그리지 않는다(값 하나만). 첫 소비처: 배치관리 |
 
 > ⚠️ 위 표는 **형태만** 적는다. 어느 칸에 무엇을 쓰는지는 아래 **KPI 카드** 절의 규칙이
 > 정한다(`spec 031` 재작성 · 2026-10-20 보조 문구 위치 변경).

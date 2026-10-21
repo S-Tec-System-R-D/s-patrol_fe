@@ -1,30 +1,3 @@
-import type { DeploymentDirection, DeploymentStatus } from '@/types/enum'
-
-// 배치 요청 목록(대기 큐) 행 — data-model.md §3-1 `DeploymentRequestSummary` 기준.
-// `reason`은 목업(배치관리-신규.png) 근거로 추가된 필드(spec.md §3 참조, data-model.md 동기화 예정).
-export interface DeploymentRequestSummary {
-  id: string
-  direction: DeploymentDirection
-  workerName: string
-  fromLocationName: string
-  toLocationName: string
-  reason: string
-  status: DeploymentStatus
-  requestedAt: string
-  processedAt?: string
-}
-
-// 배치 이력(승인된 배치만) — 화면 표시 필드만 보유(CLAUDE.md B4).
-export interface DeploymentHistoryItem {
-  id: string
-  workerName: string
-  fromLocationName: string
-  toLocationName: string
-  reason: string
-  startedAt: string
-  endedAt?: string
-}
-
 /**
  * ── 🔴 가정 계약 (`spec 039` T627) ───────────────────────────────────────────
  *
@@ -36,8 +9,8 @@ export interface DeploymentHistoryItem {
  * 🔴 **백엔드가 구현하면 WF-1-0 으로 실측해 이 파일과 MSW(`mocks/handlers/deployments.ts`)만 고친다.**
  * 화면 컴포넌트는 이 파일의 타입만 본다 — 가정이 다른 곳으로 퍼지지 않게 한다.
  *
- * ⚠️ 위의 구 타입 2종(`DeploymentRequestSummary`·`DeploymentHistoryItem`)은 zustand mock 시절 것이다.
- * 소비처를 옮긴 뒤 T650 에서 지운다.
+ * zustand mock 시절 타입(`DeploymentRequestSummary`·`DeploymentHistoryItem` — 문자열 enum · 사업장명 비교)은
+ * T650 에서 지웠다.
  */
 
 /** 요청서 1번 — 현재 사업장으로 들어온 **대기 중** 배치·복귀 요청 */

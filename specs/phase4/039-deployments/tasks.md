@@ -79,12 +79,12 @@
 
 ## Phase 6: Polish
 
-- [ ] T650 🔴 **삭제** in src/features/deployments/store/deploymentStore.ts (+ 테스트) · src/features/deployments/mocks/deploymentData.ts · 구 타입 2종 — grep 소비처 **0건** 후. `enum.ts` 의 `DeploymentDirection`·`DeploymentStatus`·라벨은 다른 소비처 확인 후 판단(`data-model.md` 설계 기록과 별개)
-- [ ] T651 `npm run verify` 0 + `npm run test` green(1158 → 증가). 🔴 병렬 실행
-- [ ] T652 🔴 **사용자 브라우저 확인**(mock — 실 API 없음) — 승인·거부·연타·이력 탭·사이드바 뱃지
-- [ ] T653 `npm run capture` — `현장/deployments--대시보드` 교체. 나머지 바이트 대조만
-- [ ] T654 문서 동기화 — docs/screens.md(§1-4A) · docs/flow.md(배치 흐름) · docs/data-model.md(배치 타입·엔드포인트 = 가정) · docs/api-spec.md(§6-5 "요청서 전달" 로) · docs/roadmap.md(039 행·§12) · docs/ui-current/README.md
-- [ ] T655 DoD 20개 대조표 + `## 다음 spec으로 이월` in specs/phase4/039-deployments/tasks.md — 🔴 백엔드 구현 후 WF-1-0(가정 계약 교정) · 근무자 상세 배치 이력 카드 · OQ-039-A~D
+- [x] T650 🔴 **삭제** — ✅ `store/`(+ 테스트) · `mocks/` · 구 타입 2종 · `enum.ts` 의 `DeploymentDirection`·`DeploymentStatus`·라벨 2종(구 타입만 썼다 — 가정 계약의 정수 코드로 대체). 원래 경로 in src/features/deployments/store/deploymentStore.ts (+ 테스트) · src/features/deployments/mocks/deploymentData.ts · 구 타입 2종 — grep 소비처 **0건** 후. `enum.ts` 의 `DeploymentDirection`·`DeploymentStatus`·라벨은 다른 소비처 확인 후 판단(`data-model.md` 설계 기록과 별개)
+- [x] T651 `npm run verify` 0 + `npm run test` green(1158 → **1196**, 107 files). 🔴 병렬 실행
+- [~] T652 🔴 **사용자 브라우저 확인**(mock — 실 API 없음) — 승인·거부·연타·이력 탭·사이드바 뱃지 — ◩ **화면은 Phase 5 이후 사용자가 캡쳐·화면으로 확인하며 재구성 9건(T649a~i)을 냈다.** ⚠️ dev 서버에서 **승인·거부를 직접 눌러 본 확인**은 아직이다(동작은 통합 테스트가 본다)
+- [x] T653 `npm run capture` — `현장/deployments--대시보드` 교체. 나머지 바이트 대조만 — 10 동일 · 지도 3 · 🔴 `users--상세` **2×3 픽셀**(카드 모서리 안티앨리어싱, 노이즈) — 덮지 않았다
+- [x] T654 문서 동기화 — ✅ + docs/components.md(`AppKpiCard inline`) · `AppTable.tsx` 주석(030 근거의 바뀐 이름) · docs/screens.md(§1-4A) · docs/flow.md(배치 흐름) · docs/data-model.md(배치 타입·엔드포인트 = 가정) · docs/api-spec.md(§6-5 "요청서 전달" 로) · docs/roadmap.md(039 행·§12) · docs/ui-current/README.md
+- [x] T655 DoD 20개 대조표 + `## 다음 spec으로 이월` in specs/phase4/039-deployments/tasks.md — 🔴 백엔드 구현 후 WF-1-0(가정 계약 교정) · 근무자 상세 배치 이력 카드 · OQ-039-A~D
 
 ---
 
@@ -98,3 +98,59 @@
 - **T640·T641 → T646**
 - **T650 은 Phase 3~5 뒤** — 삭제는 전환 후. 🔴 **T637 이 끝나기 전에는 store 를 지울 수 없다**(사이드바가 읽는다)
 - Phase 3·4·5 는 T634 이후 **서로 독립 진행 가능**. Phase 6 은 모든 US 뒤
+
+---
+
+## DoD 대조표 (T655)
+
+| # | 조건 | 판정 | 증거 |
+|:-:|---|:-:|---|
+| 1 | KPI 3종이 요약 쿼리 — store import 0건 | ✅ | `DeploymentKpiRow.tsx` · `store/` 삭제 |
+| 2 | 사이드바 뱃지가 같은 쿼리 | ✅ | `RailSidebar.tsx` · config `badge` 키 · 테스트 2 |
+| 3 | 요약 실패 시 KPI 만 `-` | ✅ | `DeploymentKpiRow.test.tsx` |
+| 4 | 부제가 선택 사업장명 | ✅ | `DeploymentsPage.tsx` `getSiteName()` · 통합 테스트 |
+| 5 | 요청 목록 서버 페이징 + 상태 분기 4종 | ✅ | `DeploymentBoard.tsx`(T649g 로 통합) · 테스트 |
+| 6 | 승인 → 요청 사라짐 · 요약 · 이력 +1 · 뱃지 | ✅ | `DeploymentsPage.test.tsx` · `DeploymentBoard.test.tsx` |
+| 7 | 거부 → 사유 필수 · 모달 닫힘 · 이력 불변 | ✅ | 통합 테스트 · `RejectRequestForm.test.tsx` |
+| 8 | 연타 방지 — 요청 1회 | ✅ | 통합 테스트 "연타해도 요청은 1번" |
+| 9 | 처리된 요청 → 토스트 + 재조회 | ✅ | 통합 테스트(전역 MutationCache 경로) |
+| 10 | 거부 실패 시 모달 유지 | ✅ | 통합 테스트 · 폼 테스트 |
+| 11 | 마지막 행 처리 후 빈 페이지 없음 | ✅ | 통합 테스트 "이전 페이지로" |
+| 12 | 전출/전입이 `direction` 으로 · URL 보존 | ✅ | `DeploymentBoard.test.tsx`(`?tab`·`?page` — T649g 에서 키 정리) |
+| 13 | 기간·상태가 `endDt` 로 갈린다 · 상태 분기 | ✅ | 같은 테스트 + **상태 필터**(T649h) |
+| 14 | store·mock·구 타입 삭제 · enum 판단 | ✅ | T650 |
+| 15 | 가정 타입이 한 곳 | ✅ | `types/deployment.ts` 만 — MSW 는 그 타입을 import |
+| 16 | `verify` + `test` green | ✅ | 0 errors · **1196 passed**(107 files) |
+| 17 | 브라우저 확인 + 캡쳐 | ◩ | 캡쳐 ✅ · 화면 확인 ✅(재구성 9건) · ⚠️ dev 에서 승인·거부 직접 클릭 미확인(T652) |
+| 18 | 요청서 전달 가능 · §6-5 갱신 | ✅ | `docs/api-request-deployment.md`(상태 필터 반영) · `api-spec.md` §6-5 |
+| 19 | 문서 동기화 | ✅ | T654 |
+| 20 | 이월 블록 | ✅ | 아래 |
+
+**판정: 20개 중 ✅ 19 · ◩ 1(#17).**
+
+---
+
+## 다음 spec으로 이월
+
+### ① 🔴 백엔드 구현 후 WF-1-0 — 가정 계약 교정
+
+요청서(`docs/api-request-deployment.md`)대로 백엔드가 만들면 **실측해서 `types/deployment.ts` 와
+`mocks/handlers/deployments.ts` 만** 고친다. 확인할 것(전부 가정):
+- 경로·메서드 · 파라미터 이름(`siteSeq`·`direction`·`status`·`requestSeq`·`rejectReason`)
+- 이력 엔드포인트 1개 + `direction` 인지 2개인지(OQ-039-B) · 요약 API 유무(OQ-039-C)
+- 코드값(배치/복귀 `requestType` · `direction` · `status`) · 처리된 요청 재처리 오류 형태
+- 승인 즉시 이동인지(OQ-039-D) · 복귀 승인 시 이력 처리
+- 현장관리자 권한(근무자 API 는 처음에 403 이었다 — B-41)
+
+### ② 근무자 상세의 배치 이력 카드(038 이월 ③)
+
+요청서 6번. API 가 나오면 근무자 상세(`/users/:userSeq`)에 **카드로** 붙인다(가정 타입을 근무자 화면까지 넓히지 않았다).
+
+### ③ 남겨 둔 판단
+
+- KPI 카드 클릭은 **버튼으로 감쌌다** — 공용 `AppKpiCard` 에 클릭이 생길 수요가 다른 화면에서 나오면 그때 올린다
+- 요청서 7번(요약) 중 "나간·온 인원" 은 **현재 인원**이다 — 이력 상태 필터(배치 중)의 건수와 같아야 한다. 백엔드 구현 후 둘이 일치하는지 실측한다
+
+### ④ T652 dev 화면에서 승인·거부 직접 확인
+
+`npm run dev` → 사업장 7 → `/deployments` — 승인(행 사라짐 · KPI · 뱃지 · 전입 탭 +1) · 거부(사유 · 이력 불변) · 연타.

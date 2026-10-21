@@ -53,6 +53,8 @@ interface AppTableProps<TData> {
    * **카드 안에 들어 있는 표**(`CoursePatrolLog` 코스 상세 · `DeploymentHistoryTabs`
    * 배치 이력)가 자동으로 카드가 되면 **카드 안에 카드**가 생긴다. `/users` 도 제외 —
    * 400px 고정 패널이 그대로라 카드가 들어갈 폭이 안 남는다(OQ-030-A).
+   * ⚠️ (030 당시 근거) `/users` 는 `spec 038` 에서 카드를 붙였고, `DeploymentHistoryTabs` 는 `spec 039`
+   * 에서 `DeploymentBoard`(카드 밖 표)가 됐다. opt-in 원칙은 그대로다.
    *
    * 🔴 **CSS 로 분기한다**(`hidden xl:block` / `xl:hidden`). JS 로 폭을 재서 하나만
    * 그리면 ① 첫 렌더에 깜빡이고 ② 테스트·SSR 에서 폭이 0이라 **항상 카드**가 된다.

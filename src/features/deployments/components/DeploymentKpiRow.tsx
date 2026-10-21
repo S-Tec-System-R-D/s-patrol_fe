@@ -13,7 +13,7 @@ import { useDeploymentSummary } from '../hooks/useDeploymentSummary'
  *
  * 🔴 **요약 API 의 숫자를 그대로 쓴다**(가정 계약 — 요청서 7번). 전에는 store 의 이력을 **사업장명
  * 문자열**(`useMe().locationName`)과 비교해 셌는데, 그 값이 JWT 에 없어 실제로는 항상 0 이 될 수
- * 있었다(`deploymentData.ts` 2026-10-10 교정 주석의 근본 원인). 이제 서버가 사업장 번호로 센다.
+ * 있었다(지운 `deploymentData.ts` 의 2026-10-10 교정 주석이 적은 근본 원인). 이제 서버가 사업장 번호로 센다.
  *
  * 🔴 **실패는 `-` 다, 0 이 아니다** — "대기 0건" 은 처리할 것이 없다는 **거짓 안심**을 준다.
  * 요약만 실패해도 아래 목록·이력은 따로 뜬다(독립 쿼리, spec §4).

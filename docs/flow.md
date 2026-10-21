@@ -155,10 +155,10 @@ flowchart LR
     UD -- "비밀번호" --> UPwd[(비밀번호 변경<br/>모달)]
     UD -- "삭제" --> Conf3[(확인<br/>모달)]
 
-    Deploy["/deployments<br/>배치요청 큐"] -- "탭 전환" --> DTab["대기 / 처리 완료"]
-    Deploy -- "행 선택" --> DReq[요청 상세 패널]
-    DReq -- "승인" --> DApp[(승인 확인<br/>모달)]
-    DReq -- "거부" --> DRej[(거부 모달<br/>사유 입력 선택)]
+    Deploy["/deployments<br/>배치관리"] -- "탭" --> DTab["배치 요청 · 전출 이력 · 전입 이력"]
+    Deploy -- "KPI 클릭" --> DTab
+    DTab -- "승인(즉시)" --> DApp["요청 제거 + 이력 1건"]
+    DTab -- "거부" --> DRej[(거부 모달<br/>사유 필수)]
 
     Notice["/notice<br/>공지 목록"] -- 행 클릭 --> NDet["/notice/:noticeSeq<br/>공지 상세 페이지"]
     Notice -- "공지 작성" --> NForm[(공지 폼<br/>모달 + 앱푸시 체크박스)]
@@ -199,10 +199,8 @@ flowchart LR
 %%{init: {'theme':'dark'}}%%
 flowchart LR
     APP(["근무자 APP<br/>배치·복귀 요청"]) -. "목적지 관리자 큐" .-> Q["/deployments<br/>대기 큐"]
-    Q -- "행 선택" --> D[요청 상세]
-    D -- "승인" --> A1[(승인 확인 모달)]
-    A1 -- "확정" --> H["근무자 소속 이동<br/>+ 배치 이력 자동 추가"]
-    D -- "거부" --> R1[(거부 모달<br/>사유 입력 선택)]
+    Q -- "승인(즉시, 모달 없음)" --> H["근무자 소속 이동<br/>+ 배치 이력 자동 추가"]
+    Q -- "거부" --> R1[(거부 모달<br/>사유 필수)]
     R1 -- "확정" --> Q
     APP -. "근무자 취소" .-> Q
 ```
