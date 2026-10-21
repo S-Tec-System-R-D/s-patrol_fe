@@ -37,12 +37,12 @@
 > **독립 테스트 기준**: MSW 200 에서 서버 행이 테이블로 그려지고, 검색·권한·근무 상태·페이지가 URL 에
 > 실려 서버로 나간다. 우측 패널이 없다. 403 에서 "조회 실패" 가 뜬다.
 
-- [ ] T607 [US1] 컬럼 재작성 in src/features/workers/components/WorkerColumns.tsx — `ColumnDef<UserRow>`: 이름(`WorkerAvatar` + 이름) · 사번 · 권한(`codeName` 뱃지) · 근무 상태(점 + 라벨) · 원소속(Seq 있을 때만 `원소속 {이름}`, OQ-038-B) · 등록일 · 꺾쇠. 🔴 **정렬 off**(서버 페이징) · 연락처·사용자 상태 **없음**. ⚠️ `WorkerAvatar` 는 `id: string` 을 받는다 — `String(userSeq)` 로 넘기고 컴포넌트는 고치지 않는다
-- [ ] T608 [US1] [P] 카드 모드 in src/features/workers/components/WorkerCard.tsx — 034 골격: 아바타 타일 + 이름·권한 뱃지 + `사번 │ 근무 상태 │ 등록일` + 꺾쇠. 🔴 **OQ-030-A 종결**
-- [ ] T609 [US1] 🔴 **페이지 재작성** in src/pages/service/users/UsersPage.tsx — `workerData`·우측 `aside`·`WorkerDetailPanel` 제거. 026 배치: 헤더(제목 + `{사업장명} 소속 {totalCount}명`) → 필터 줄(검색 → `role="group"` 권한 `AppSelect`·근무 상태 `AppSelect`·초기화 → spacer → **근무자 추가**, `PointTopNav` 모양) → `AppTable`(`hidePagination` + `renderCard`) → `AppPagination`. ⚠️ 부제의 사업장명은 **`getSiteName()`(선택한 사업장)** 이 출처다 — `useMe().locationName` 은 JWT 값이라 선택 사업장과 다를 수 있다(확인 후 결정)
-- [ ] T610 [US1] 상태 분기 in src/pages/service/users/UsersPage.tsx — 조회 실패(다시 시도, 🔴 403 포함 — 권한을 단정하지 않는 문구) / 로딩 / 0건 2문구 / 목록
-- [ ] T611 [US1] [P] 화면 테스트 in src/pages/service/users/__tests__/UsersPage.test.tsx — 서버 행 렌더 · 서버에 없는 컬럼 없음 · 필터 3종 → 서버 파라미터(`siteId`·`searchKey`·`codeSeq`·`workYn`) · 필터 변경 시 첫 페이지 · 🔴 **403 → 조회 실패** · 0건 2문구 · 행 클릭 → 상세 경로 · 우측 패널 없음
-- [ ] T612 [US1] [P] 컬럼 테스트 갱신 in src/features/workers/components/__tests__/WorkerColumns.test.tsx — 🔴 **기존 3건은 구 타입 기준이라 대체**한다(배치중 뱃지·사용자 상태 라벨은 서버 근거가 없어 사라진다). 원소속 표시 조건 · 권한 뱃지 · 근무 상태
+- [x] T607 [US1] 컬럼 재작성 in src/features/workers/components/WorkerColumns.tsx — `ColumnDef<UserRow>`: 이름(`WorkerAvatar` + 이름) · 사번 · 권한(`codeName` 뱃지) · 근무 상태(점 + 라벨) · 원소속(Seq 있을 때만 `원소속 {이름}`, OQ-038-B) · 등록일 · 꺾쇠. 🔴 **정렬 off**(서버 페이징) · 연락처·사용자 상태 **없음**. ⚠️ `WorkerAvatar` 는 `id: string` 을 받는다 — `String(userSeq)` 로 넘기고 컴포넌트는 고치지 않는다
+- [x] T608 [US1] [P] 카드 모드 in src/features/workers/components/WorkerCard.tsx — 034 골격: 아바타 타일 + 이름·권한 뱃지 + `사번 │ 근무 상태 │ 등록일` + 꺾쇠. 🔴 **OQ-030-A 종결**
+- [x] T609 [US1] 🔴 **페이지 재작성** in src/pages/service/users/UsersPage.tsx — `workerData`·우측 `aside`·`WorkerDetailPanel` 제거. 026 배치: 헤더(제목 + `{사업장명} 소속 {totalCount}명`) → 필터 줄(검색 → `role="group"` 권한 `AppSelect`·근무 상태 `AppSelect`·초기화 → spacer → **근무자 추가**, `PointTopNav` 모양) → `AppTable`(`hidePagination` + `renderCard`) → `AppPagination`. ✅ 부제의 사업장명은 **`getSiteName()`(선택한 사업장)** — 확인해 보니 `useMe().locationName` 은 **JWT 클레임에 없어 항상 `undefined`**(020)라 구 화면의 부제는 **한 번도 나온 적이 없었다**
+- [x] T610 [US1] 상태 분기 in src/pages/service/users/UsersPage.tsx — 조회 실패(다시 시도, 🔴 403 포함 — 권한을 단정하지 않는 문구) / 로딩 / 0건 2문구 / 목록
+- [x] T611 [US1] [P] 화면 테스트 in src/pages/service/users/__tests__/UsersPage.test.tsx — 서버 행 렌더 · 서버에 없는 컬럼 없음 · 필터 3종 → 서버 파라미터(`siteId`·`searchKey`·`codeSeq`·`workYn`) · 필터 변경 시 첫 페이지 · 🔴 **403 → 조회 실패** · 0건 2문구 · 행 클릭 → 상세 경로 · 우측 패널 없음
+- [x] T612 [US1] [P] 컬럼 테스트 갱신 in src/features/workers/components/__tests__/WorkerColumns.test.tsx — 🔴 **기존 3건은 구 타입 기준이라 대체**한다(배치중 뱃지·사용자 상태 라벨은 서버 근거가 없어 사라진다). 원소속 표시 조건 · 권한 뱃지 · 근무 상태
 
 ## Phase 4: US2 — 근무자 상세 페이지 (신설)
 
