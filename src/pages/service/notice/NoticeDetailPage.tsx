@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeftIcon,
@@ -29,7 +30,8 @@ import { paths } from '@/router/paths'
  * 🔴 **조회 중과 "없음" 을 구분한다** — 빈 상태가 단정하면 조회 중에 그것이 뜨는 순간 사용자는
  * 방금 지운 줄 안다(023 T375 선례).
  *
- * ⚠️ 수정·삭제는 **UI 만** 있고 저장은 mock 이다(변경계 전환은 별도 spec).
+ * 수정은 모달 → `UpsertNotice`(`spec 040` US2) — 성공해야 닫힌다.
+ * ⚠️ 삭제는 아직 mock 이다(`spec 040` Phase 4 에서 연결).
  */
 
 const Breadcrumb = () => (
@@ -64,6 +66,7 @@ const NoticeDetailPage = () => {
   const noticeSeq = Number.isInteger(parsed) && parsed > 0 ? parsed : null
 
   const detail = useNoticeDetail(noticeSeq)
+  const [editOpen, setEditOpen] = useState(false)
 
   /**
    * 🔴🔴 **주소 오류를 로딩보다 먼저 분기한다**(037 T557 이 잡은 결함). `noticeSeq` 가 `null`
@@ -149,13 +152,15 @@ const NoticeDetailPage = () => {
             <AppDialog
               title="공지 수정"
               description="공지 내용을 수정할 수 있습니다."
+              open={editOpen}
+              onOpenChange={setEditOpen}
               trigger={
                 <AppButton icon={SquarePenIcon} variant="sub" className="bg-card">
                   수정
                 </AppButton>
               }
             >
-              <NoticeForm notice={notice} />
+              <NoticeForm notice={notice} onSuccess={() => setEditOpen(false)} />
             </AppDialog>
             <AppAlertDialog
               size="sm"

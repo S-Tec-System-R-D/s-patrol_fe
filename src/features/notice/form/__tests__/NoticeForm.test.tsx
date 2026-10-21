@@ -10,6 +10,7 @@ import { resetNoticeStore } from '@/mocks/handlers/notices'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
 
+import { fetchNoticeDetail } from '../../api/getNoticeDetail'
 import { fetchNoticeList } from '../../api/getNoticeList'
 import NoticeForm from '../NoticeForm'
 
@@ -21,6 +22,38 @@ import NoticeForm from '../NoticeForm'
  */
 
 const ADD_NOTICE_PATH = '/api/v1/Notice/W/sign/AddNotice'
+const UPSERT_NOTICE_PATH = '/api/v1/Notice/W/sign/UpsertNotice'
+
+/** 시드 4번(이미지 41·42 + 파일 43·44)과 같은 모양 */
+const EXISTING = {
+  noticeSeq: 4,
+  title: '기존 공지 제목',
+  description: '기존 공지 본문',
+  isPin: true,
+  imageList: [
+    { attachSeq: 41, attachPath: '', attachName: '점검_구역_안내.jpg', attachExt: '.jpg' },
+    { attachSeq: 42, attachPath: '', attachName: 'NFC_태그_위치.png', attachExt: '.png' },
+  ],
+  fileList: [
+    { attachSeq: 43, attachPath: '', attachName: '6월_순찰점검_안내.pdf', attachExt: '.pdf' },
+    { attachSeq: 44, attachPath: '', attachName: '점검표_양식.xlsx', attachExt: '.xlsx' },
+  ],
+}
+
+/** multipart 본문을 [키, 값] 으로 기록하고 처리는 기본 핸들러(상태 보유)에 넘긴다 */
+const recordMultipart = (method: 'post' | 'patch', path: string) => {
+  const sent: [string, string][] = []
+  server.use(
+    http[method](path, async ({ request }) => {
+      const form = await request.clone().formData()
+      for (const [key, value] of form.entries()) {
+        sent.push([key, typeof value === 'string' ? value : value.name])
+      }
+      return undefined
+    })
+  )
+  return sent
+}
 
 const renderForm = (props: Parameters<typeof NoticeForm>[0] = {}) => {
   const onSuccess = vi.fn()
@@ -81,7 +114,7 @@ describe('NoticeForm — 입력', () => {
   })
 
   it('기존 공지 값으로 필드 프리필(상단 고정 포함)', () => {
-    renderForm({ notice: { title: '기존 공지 제목', description: '기존 공지 본문', isPin: true } })
+    renderForm({ notice: EXISTING })
 
     expect(screen.getByDisplayValue('기존 공지 제목')).toBeInTheDocument()
     expect(screen.getByDisplayValue('기존 공지 본문')).toBeInTheDocument()
@@ -133,17 +166,7 @@ describe('NoticeForm — 첨부 선택', () => {
 
 describe('NoticeForm — 작성 제출', () => {
   it('multipart 필드를 swagger 이름으로 보내고, 성공하면 닫고 목록에 나온다', async () => {
-    const sent: [string, string][] = []
-    server.use(
-      http.post(ADD_NOTICE_PATH, async ({ request }) => {
-        const form = await request.clone().formData()
-        for (const [key, value] of form.entries()) {
-          sent.push([key, typeof value === 'string' ? value : value.name])
-        }
-        // 기록만 하고 실제 처리는 기본 핸들러(상태 보유)에 넘긴다
-        return undefined
-      })
-    )
+    const sent = recordMultipart('post', ADD_NOTICE_PATH)
 
     const { onSuccess } = renderForm()
     const user = userEvent.setup()
@@ -198,5 +221,72 @@ describe('NoticeForm — 작성 제출', () => {
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1))
     expect(calls).toBe(1)
+  })
+})
+
+describe('NoticeForm — 수정 (spec 040 US2)', () => {
+  it('기존 첨부를 삭제 표시하고 되돌릴 수 있다', async () => {
+    renderForm({ notice: EXISTING })
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: '점검_구역_안내.jpg 삭제' }))
+    expect(screen.getByText('삭제 예정')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '점검_구역_안내.jpg 삭제 취소' }))
+    expect(screen.queryByText('삭제 예정')).not.toBeInTheDocument()
+  })
+
+  it('삭제 표시 + 새 첨부를 attachList 한 요청으로 보내고 상세에 반영된다', async () => {
+    const sent = recordMultipart('patch', UPSERT_NOTICE_PATH)
+    const { onSuccess } = renderForm({ notice: EXISTING })
+    const user = userEvent.setup()
+
+    const title = screen.getByDisplayValue('기존 공지 제목')
+    await user.clear(title)
+    await user.type(title, '바뀐 제목')
+    await user.click(screen.getByRole('checkbox', { name: '상단 고정' }))
+    await user.click(screen.getByRole('button', { name: '6월_순찰점검_안내.pdf 삭제' }))
+    await user.upload(screen.getByLabelText('첨부 파일 선택'), [
+      new File(['a'], 'n1.png'),
+      new File(['b'], 'n2.docx'),
+    ])
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1))
+    expect(sent).toEqual([
+      ['noticeSeq', '4'],
+      ['title', '바뀐 제목'],
+      ['description', '기존 공지 본문'],
+      ['isPin', 'false'],
+      ['attachList[0].attachSeq', '43'],
+      ['attachList[0].isRemove', 'true'],
+      ['attachList[1].files', 'n1.png'],
+      ['attachList[1].isRemove', 'false'],
+      ['attachList[2].files', 'n2.docx'],
+      ['attachList[2].isRemove', 'false'],
+    ])
+    const detail = await fetchNoticeDetail(4)
+    expect(detail).toMatchObject({ title: '바뀐 제목', isPin: false })
+    expect(detail.imageList.map((a) => a.attachName)).toContain('n1.png')
+    expect(detail.fileList.map((a) => a.attachName)).toEqual(['점검표_양식.xlsx', 'n2.docx'])
+  })
+
+  it('첨부를 건드리지 않으면 attachList 를 보내지 않는다', async () => {
+    const sent = recordMultipart('patch', UPSERT_NOTICE_PATH)
+    const { onSuccess } = renderForm({ notice: EXISTING })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1))
+    expect(sent.map(([key]) => key)).toEqual(['noticeSeq', 'title', 'description', 'isPin'])
+  })
+
+  it('이미 지워진 공지면 닫지 않는다', async () => {
+    const { onSuccess } = renderForm({ notice: { ...EXISTING, noticeSeq: 999 } })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: '저장' })).toBeEnabled())
+    expect(onSuccess).not.toHaveBeenCalled()
   })
 })

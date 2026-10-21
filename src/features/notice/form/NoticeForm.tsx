@@ -10,14 +10,18 @@ import { getSiteSeq } from '@/lib/auth/site'
 import { notify } from '@/lib/notify'
 
 import { addNotice } from '../api/addNotice'
+import { upsertNotice } from '../api/upsertNotice'
 import { noticeKeys } from '../queryKeys'
 import type { NoticeDetail } from '../types/notice'
 import NoticeAttachInput from './NoticeAttachInput'
 import { noticeFormSchema, type NoticeFormData } from './schema'
 
 interface NoticeFormProps {
-  /** 수정 시 기본값. 🔴 서버 상세(`NoticeDetail`)의 이름을 그대로 받는다(`spec 026` T587) */
-  notice?: Pick<NoticeDetail, 'title' | 'description' | 'isPin'>
+  /** 수정 대상. 🔴 서버 상세(`NoticeDetail`)의 이름을 그대로 받는다(`spec 026` T587) */
+  notice?: Pick<
+    NoticeDetail,
+    'noticeSeq' | 'title' | 'description' | 'isPin' | 'imageList' | 'fileList'
+  >
   /** 🔴 성공해야 부르는 닫기 — 먼저 닫으면 실패했을 때 입력이 사라진다(`AddPointForm` 규약) */
   onSuccess?: () => void
 }
@@ -27,12 +31,13 @@ interface NoticeFormProps {
  *
  * 🔴 **실패 토스트를 여기서 띄우지 않는다** — 전역 `MutationCache.onError` 가 띄운다(중복 금지).
  * 작성 성공 후에는 **목록에 머문다** — 서버가 새 `noticeSeq` 를 주지 않는다(§5-1-B).
- * ⚠️ 수정 제출은 Phase 3(T671)에서 연결한다.
+ * 수정은 제목·본문·고정을 늘 같이 보낸다 — 부분 갱신이라 안 바뀐 값을 보내도 무해하다.
  */
 const NoticeForm = ({ notice, onSuccess }: NoticeFormProps) => {
   const queryClient = useQueryClient()
   const siteSeq = getSiteSeq()
   const [files, setFiles] = useState<File[]>([])
+  const [removedSeqs, setRemovedSeqs] = useState<number[]>([])
 
   const {
     register,
@@ -60,13 +65,41 @@ const NoticeForm = ({ notice, onSuccess }: NoticeFormProps) => {
     },
   })
 
+  const upsertMutation = useMutation({
+    mutationFn: upsertNotice,
+    onSuccess: async (_, { noticeSeq }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: noticeKeys.lists }),
+        queryClient.invalidateQueries({ queryKey: noticeKeys.detail(noticeSeq) }),
+      ])
+      notify.success('공지를 수정했습니다.')
+      onSuccess?.()
+    },
+    // 🔴 다른 관리자가 지운 공지면 400 이다 — 상세를 다시 읽어 지금 상태를 보여 준다(spec §4)
+    onError: (_, { noticeSeq }) =>
+      queryClient.invalidateQueries({ queryKey: noticeKeys.detail(noticeSeq) }),
+  })
+
   const onSubmit = (data: NoticeFormData) => {
-    if (notice) return // T671
+    if (notice) {
+      upsertMutation.mutate({
+        noticeSeq: notice.noticeSeq,
+        ...data,
+        removeAttachSeqs: removedSeqs,
+        newFiles: files,
+      })
+      return
+    }
     if (siteSeq === null) return
     addMutation.mutate({ siteSeq, ...data, file: files })
   }
 
-  const isPending = addMutation.isPending
+  const toggleRemove = (attachSeq: number) =>
+    setRemovedSeqs((prev) =>
+      prev.includes(attachSeq) ? prev.filter((seq) => seq !== attachSeq) : [...prev, attachSeq]
+    )
+
+  const isPending = addMutation.isPending || upsertMutation.isPending
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -96,7 +129,14 @@ const NoticeForm = ({ notice, onSuccess }: NoticeFormProps) => {
 
       <AppCheckbox label="상단 고정" {...register('isPin')} />
 
-      {!notice && <NoticeAttachInput files={files} onChange={setFiles} disabled={isPending} />}
+      <NoticeAttachInput
+        files={files}
+        onChange={setFiles}
+        disabled={isPending}
+        existing={notice ? [...notice.imageList, ...notice.fileList] : undefined}
+        removedSeqs={removedSeqs}
+        onToggleRemove={toggleRemove}
+      />
 
       <AppButton size="full" type="submit" disabled={isPending}>
         {notice ? '저장' : '등록'}

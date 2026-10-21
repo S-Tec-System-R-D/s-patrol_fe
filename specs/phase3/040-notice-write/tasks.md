@@ -33,10 +33,10 @@
 
 > **독립 테스트 기준**: 기본값이 현재 값(`isPin` 포함)이고, 기존 첨부 삭제 표시/되돌리기 · 새 첨부가 한 요청으로 나가며 저장 후 상세가 갱신된다.
 
-- [ ] T670 [US2] 기존 첨부 목록 in src/features/notice/form/NoticeAttachInput.tsx — `imageList`+`fileList` 를 이름·확장자로 · 삭제 표시 토글(미리보기 없음, B-40)
-- [ ] T671 [US2] 🔴 **수정 제출** in src/features/notice/form/NoticeForm.tsx — `upsertNotice` · `lists`·`detail` 무효화
-- [ ] T672 [US2] 상세 연결 in src/pages/service/notice/NoticeDetailPage.tsx — 수정 모달 open 제어 · `notice` 전체 전달
-- [ ] T673 [US2] [P] 테스트 — 기본값 · 삭제 표시 → 요청 · 저장 후 상세 갱신(MSW 상태)
+- [x] T670 [US2] 기존 첨부 목록 in src/features/notice/form/NoticeAttachInput.tsx — `imageList`+`fileList` 를 이름·확장자로 · 삭제 표시 토글(미리보기 없음, B-40)
+- [x] T671 [US2] 🔴 **수정 제출** in src/features/notice/form/NoticeForm.tsx — `upsertNotice` · `lists`·`detail` 무효화. 실패 시 `detail` 만 무효화(지워진 공지면 상세가 실패 화면으로 바뀐다 — spec §4)
+- [x] T672 [US2] 상세 연결 in src/pages/service/notice/NoticeDetailPage.tsx — 수정 모달 open 제어 · `notice` 전체 전달
+- [x] T673 [US2] [P] 테스트 — 기본값 · 삭제 표시/되돌리기 · `attachList` 본문 검증 · 첨부 무변경이면 `attachList` 없음 · 없는 공지 · 상세 페이지 저장→닫힘→갱신(`NoticeForm.test.tsx` 4건 · `NoticeDetailPage.test.tsx` 1건)
 
 ## Phase 4: US3 — 삭제
 

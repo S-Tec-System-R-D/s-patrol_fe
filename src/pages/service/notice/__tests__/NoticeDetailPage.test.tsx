@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
+import { resetNoticeStore } from '@/mocks/handlers/notices'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
 import NoticeDetailPage from '../NoticeDetailPage'
@@ -44,6 +45,7 @@ const captureDetailCalls = () => {
 }
 
 beforeEach(() => {
+  resetNoticeStore()
   clearTokens()
   setAccessToken(makeAccessToken())
 })
@@ -125,6 +127,26 @@ describe('NoticeDetailPage — 정상', () => {
 
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByDisplayValue('6월 정기 순찰 점검 안내')).toBeInTheDocument()
+    // 기존 첨부 4개가 이름으로 나온다(미리보기 없음 — B-40)
+    expect(within(dialog).getByText('점검_구역_안내.jpg')).toBeInTheDocument()
+    expect(within(dialog).getByText('점검표_양식.xlsx')).toBeInTheDocument()
+  })
+
+  it('수정을 저장하면 모달이 닫히고 상세가 새 값으로 갱신된다 (spec 040 US2)', async () => {
+    const user = userEvent.setup()
+    renderAt('4')
+
+    await user.click(await screen.findByRole('button', { name: '수정' }))
+    const dialog = await screen.findByRole('dialog')
+    const title = within(dialog).getByDisplayValue('6월 정기 순찰 점검 안내')
+    await user.clear(title)
+    await user.type(title, '바뀐 제목')
+    await user.click(within(dialog).getByRole('button', { name: '점검_구역_안내.jpg 삭제' }))
+    await user.click(within(dialog).getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(await screen.findByRole('heading', { name: '바뀐 제목' })).toBeInTheDocument()
+    expect(screen.getByText('이미지 1')).toBeInTheDocument()
   })
 
   it('삭제를 확인하면 목록으로 돌아간다 (mock)', async () => {
