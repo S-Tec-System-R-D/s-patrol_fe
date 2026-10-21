@@ -1,4 +1,5 @@
-import { useDeploymentStore } from '@/features/deployments/store/deploymentStore'
+import { useDeploymentSummary } from '@/features/deployments/hooks/useDeploymentSummary'
+import { getSiteSeq } from '@/lib/auth/site'
 import { cn } from '@/lib/utils'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -14,8 +15,12 @@ import { ServiceMenus } from './sidebar.config'
  */
 export const RailSidebar = () => {
   const location = useLocation()
-  // 배치관리 대기건수 뱃지가 승인/거부 직후(페이지 이동 없이) 갱신되도록 store 변경에 재렌더 트리거.
-  useDeploymentStore((state) => state.pendingRequests.length)
+  /**
+   * 배치관리 대기 건수 — 🔴 **KPI 와 같은 쿼리**(`spec 039` T637). 승인·거부가 `deploymentKeys.all` 을
+   * 무효화하므로 페이지 이동 없이 뱃지도 함께 줄어든다. ⚠️ 실패·로딩이면 뱃지를 그리지 않는다
+   * (숫자를 지어내지 않는다).
+   */
+  const deploymentPending = useDeploymentSummary(getSiteSeq()).data?.pendingCount
 
   return (
     <div className="w-[68px] shrink-0 h-screen sticky top-0 bg-rail flex flex-col items-center pt-[18px] pb-5">
@@ -31,7 +36,7 @@ export const RailSidebar = () => {
           const isActive = activeUrl
             ? activeUrl.some((u) => location.pathname.startsWith(u))
             : location.pathname.startsWith(url)
-          const count = badge?.()
+          const count = badge === 'deploymentPending' ? deploymentPending : undefined
 
           return (
             <Tooltip key={url}>

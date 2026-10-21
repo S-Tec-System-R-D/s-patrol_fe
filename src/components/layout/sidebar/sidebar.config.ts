@@ -7,7 +7,6 @@ import {
   UsersIcon,
   type LucideIcon,
 } from 'lucide-react'
-import { useDeploymentStore } from '@/features/deployments/store/deploymentStore'
 import { paths } from '@/router/paths'
 
 // 서비스 메뉴, 타입
@@ -17,7 +16,13 @@ export interface MenuItemType {
   url: string
   activeUrl?: string[]
   /** 대기 요청 수 등 동적 뱃지 (현장 레일 전용). 미지정 시 뱃지 숨김 */
-  badge?: () => number
+  /**
+   * 뱃지 **종류**. 값은 `RailSidebar` 가 훅으로 읽는다(`spec 039` T637).
+   *
+   * 🔴 **함수가 아니라 키다** — 전에는 `() => store.getState()...` 였는데, 숫자가 서버 쿼리로 옮겨가면서
+   * config(모듈 상수)에서는 **훅을 부를 수 없다**. 무엇을 셀지만 적고, 세는 일은 컴포넌트가 한다.
+   */
+  badge?: 'deploymentPending'
 }
 
 export interface MenuGroupType {
@@ -51,7 +56,7 @@ export const ServiceMenus: MenuItemType[] = [
     icon: ArrowLeftRightIcon,
     title: '배치관리',
     url: paths.service.deployments,
-    badge: () => useDeploymentStore.getState().pendingRequests.length,
+    badge: 'deploymentPending',
   },
   {
     icon: MegaphoneIcon,

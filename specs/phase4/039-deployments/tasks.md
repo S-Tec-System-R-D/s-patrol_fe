@@ -34,10 +34,10 @@
 
 > **독립 테스트 기준**: KPI 3종이 요약 응답 숫자를 그리고, 요약만 실패하면 KPI 만 `-` 다. 사이드바 뱃지가 같은 숫자다.
 
-- [ ] T636 [US1] KPI 재작성 in src/features/deployments/components/DeploymentKpiRow.tsx — `useDeploymentSummary`. 🔴 로딩은 스켈레톤, **실패는 값 `-`**(0 으로 그리지 않는다 — "대기 0건" 은 거짓 안심이다). `AppKpiCard` 그대로
-- [ ] T637 [US1] 🔴 **사이드바 뱃지 전환** in src/components/layout/sidebar/sidebar.config.ts · src/components/layout/sidebar/RailSidebar.tsx — store `.getState()`·구독 제거 → `useDeploymentSummary(getSiteSeq())` 의 `pendingCount`. ⚠️ config 의 `badge: () => number` 는 **훅을 부를 수 없는 자리**다 — 뱃지 값을 RailSidebar 가 훅으로 받아 넘기는 구조로 바꾼다(형태는 코드를 보고 최소 변경으로)
-- [ ] T638 [US1] 부제 in src/pages/service/deployments/DeploymentsPage.tsx — `useMe().locationName`(JWT 에 없다) → `getSiteName()`
-- [ ] T639 [US1] [P] 테스트 in src/features/deployments/components/__tests__/DeploymentKpiRow.test.tsx · src/components/layout/sidebar/__tests__/ — KPI 숫자 · 요약 실패 시 `-` · 뱃지 = `pendingCount`(기존 사이드바 테스트가 있으면 갱신)
+- [x] T636 [US1] KPI 재작성 in src/features/deployments/components/DeploymentKpiRow.tsx — `useDeploymentSummary`. 🔴 로딩은 스켈레톤, **실패는 값 `-`**(0 으로 그리지 않는다 — "대기 0건" 은 거짓 안심이다). `AppKpiCard` 그대로
+- [x] T637 [US1] 🔴 **사이드바 뱃지 전환** in src/components/layout/sidebar/sidebar.config.ts · src/components/layout/sidebar/RailSidebar.tsx — store `.getState()`·구독 제거 → `useDeploymentSummary(getSiteSeq())` 의 `pendingCount`. ⚠️ config 의 `badge: () => number` 는 **훅을 부를 수 없는 자리**다 — 뱃지 값을 RailSidebar 가 훅으로 받아 넘기는 구조로 바꾼다(형태는 코드를 보고 최소 변경으로) — ✅ config 의 `badge` 를 **함수 → 키**(`'deploymentPending'`)로 바꾸고 `RailSidebar` 가 `useDeploymentSummary` 로 센다. 실패·로딩이면 뱃지 없음
+- [x] T638 [US1] 부제 in src/pages/service/deployments/DeploymentsPage.tsx — `useMe().locationName`(JWT 에 없다) → `getSiteName()`
+- [x] T639 [US1] [P] 테스트 in src/features/deployments/components/__tests__/DeploymentKpiRow.test.tsx · src/components/layout/sidebar/__tests__/ — KPI 숫자 · 요약 실패 시 `-` · 뱃지 = `pendingCount`(기존 사이드바 테스트가 있으면 갱신)
 
 ## Phase 4: US2 — 요청 목록 · 승인 · 거부 (🔴 A급 — 제출 / 갱신 / 실패 분리)
 
