@@ -44,8 +44,8 @@ export interface UserDetail {
   siteSeq: number
   siteName: string
   workYn: boolean
-  /** `'0'` — 문자열, 의미 불명(OQ-6) */
-  deviceType: string
+  /** `'0'` — 문자열, 의미 불명(OQ-6). 🔴 앱을 깔지 않은 새 계정은 `null`(실측 2026-10-21) */
+  deviceType: string | null
   /** ⚠️ 토큰 값이 아니라 **보유 여부** */
   fcmToken: boolean
   voipToken: boolean
@@ -53,6 +53,39 @@ export interface UserDetail {
   imagePath: string | null
   imageName: string | null
   imageExt: string | null
+  /**
+   * 권한 이름(`'현장 근무자'`). ✅ **2026-10-21 관측**(B-41 ② 일부) — `codeSeq`·`createDt` 는 아직 없다.
+   * 화면에는 아직 쓰지 않는다(OQ-041-C)
+   */
+  codeName: string
+}
+
+/**
+ * `POST User/W/sign/AddUser` (multipart — `spec 041` T681). 성공해도 **ID 를 주지 않는다**.
+ *
+ * 🔴 `codeSeq` 는 swagger 상 선택인데 **빼면 500** 이다(B-44) — 화면은 항상 근무자(7)를 보낸다.
+ * 🔴 서버는 입력을 거의 검사하지 않는다(B-45) — 규칙은 폼(zod)이 지킨다.
+ * 사진(`image`)은 보내지 않는다(범위 제외 — 사용자 결정 2026-10-21).
+ */
+export interface AddUserRequest {
+  siteSeq: number
+  codeSeq: number
+  loginId: string
+  loginPw: string
+  name: string
+  /** 🔴 **숫자만** — 서버는 보낸 그대로 저장한다(하이픈이 섞인다, B-45) */
+  phone: string
+}
+
+/**
+ * `POST User/W/sign/UpdateUser` — 🔴 **PATCH 가 아니라 POST** 다. 부분 갱신이라 바꿀 것만 보낸다
+ * (정보 수정 = `name`·`phone`, 비밀번호 변경 = `loginPw`). `''` 는 무시된다(비울 수 없다).
+ */
+export interface UpdateUserRequest {
+  userSeq: number
+  name?: string
+  phone?: string
+  loginPw?: string
 }
 
 /**

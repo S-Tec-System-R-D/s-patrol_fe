@@ -74,11 +74,13 @@ describe('useUserList', () => {
 })
 
 describe('useUserDetail', () => {
-  it('🔴 상세에는 권한·등록일이 없다 (OQ-8) — 실서버와 같은 모양', async () => {
+  it('🔴 상세에는 권한 코드·등록일이 없다 (OQ-8) — 실서버와 같은 모양', async () => {
     const { result } = renderHook(() => useUserDetail(101), { wrapper })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.phone).toBe('01023456789')
-    expect(result.current.data).not.toHaveProperty('codeName')
+    // ✅ `codeName` 은 생겼다(실측 2026-10-21, B-41 ② 일부) — `codeSeq`·`createDt` 는 아직 없다
+    expect(result.current.data?.codeName).toBe('현장 근무자')
+    expect(result.current.data).not.toHaveProperty('codeSeq')
     expect(result.current.data).not.toHaveProperty('createDt')
   })
 

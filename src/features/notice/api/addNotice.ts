@@ -1,5 +1,5 @@
 import api from '@/lib/axios'
-import { toFormData } from '../lib/formData'
+import { toFormData } from '@/lib/formData'
 import type { AddNoticeRequest } from '../types/notice'
 
 /**
