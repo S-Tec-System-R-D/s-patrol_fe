@@ -631,6 +631,43 @@ interface PagedData<T> {
 > ✅ **`UserDetail` 에 `codeName` 이 생겼다**(관측 2026-10-21, 새로 만든 계정) — B-41 ② 의 일부. `codeSeq`·`createDt` 는 여전히 없다.
 > `deviceType` 은 새 계정에서 **`null`** 이다(`'0'` 이 아니다 — OQ-6).
 
+**배치 10종 (실측 2026-10-21, `spec 042` WF-1-0)**
+
+> 실서버 배치 데이터가 0건이라 **사업장 7 에 테스트 근무자(사번 `9904201`)를 만들고** 7 → 8 배치를 요청 → 승인·반려 → 복귀 요청 → 반려·승인까지 돌렸다(`assignmentSeq` 35·36·37).
+> 끝에 근무자를 `RemoveUser` 로 지웠더니 **배치 이력 3건이 조회에서 모두 사라졌다**(사업장 7·8 전입·전출·요약 0, `GetAssignmentHistory` 빈 목록) — 화면에 보이는 잔여 데이터는 없다.
+> 🔴 **요청 생성은 근무자 토큰 전용이다** — `UserAssignment` 를 현장관리자 토큰으로 부르면 **403**(빈 body). 웹은 쓰지 않는다. 단 `UserAssignmentReturn` 은 현장관리자 토큰으로도 200 이었다.
+> 변경계 4종은 **JSON**(multipart 아님) · 승인·거부는 **`PUT`** · 성공 `data: true`(ID 미반환).
+
+| 엔드포인트 | 응답 | 특이사항 |
+|---|---|---|
+| `GET GetAssignmentList?siteSeq` | `data: Row[]` — 🔴 **배열, 페이징 없음** | **목적지** 사업장에 대기 중 요청. 행: `assignmentSeq · fromSiteSeq · fromSiteName · toSiteSeq · toSiteName · startDt · plannedEndDt(null 가능) · reason · createDt`. 🔴🔴 **근무자(`userSeq`·`userName`)가 없다**(B-46) |
+| `GET GetAssignmentReturnList?siteSeq` | 위와 **같은 행** | **원소속** 사업장에 대기 중 복귀 요청. 🔴 근무자 없음(B-46) · 🔴 **복귀일이 없다** — 복귀 요청 바디가 `assignmentSeq` 뿐이다(B-47) |
+| `PUT AssignmentApprove` | `{assignmentSeq, approved}` | `approved: false` = 반려. 🔴 **반려 사유 필드 없음** → 화면에서 사유 입력 제거(사용자 결정 2026-10-21). 🔴🔴 **`approved` 를 빼면 반려로 처리된다**(200, bool 기본값) — 항상 명시해서 보낸다. 반려된 요청은 **어느 이력에도 나오지 않는다** |
+| `PUT AssignmentReturnApprove` | 같은 바디 | 반려하면 배치는 그대로(배치중), 근무자는 **다시 복귀 요청할 수 있다**. 승인하면 `completeYn: true` · `completeDt` = **승인 시각**. `endDt` 는 바뀌지 않는다(요청 때의 `plannedEndDt` 그대로 — `null` 이면 계속 `null`) |
+| `GET GetAssignmentInHistory?siteSeq&userName&pageNumber&pageSize` | `PagedData<Row>` | 행: `assignmentSeq · userName · fromSiteName · startDt · endDt · completeYn · completeDt`. 🔴 **상태 코드·사유·`userSeq`·`siteSeq` 없음**. `userName` 은 **부분 일치** ✅. 최신순(`assignmentSeq` 내림차순) |
+| `GET GetAssignmentOutHistory?…` | 같은 형태 | 행에 `fromSiteName` 대신 **`toSiteName`** |
+| `GET GetAssignmentHistory?userSeq&pageNumber&pageSize` | `PagedData<Row>` | 행: `assignmentSeq · siteSeq · siteName(도착) · startDt · endDt · completeYn · completeDt`. 없는 `userSeq` 도 200 빈 목록. 반려 건은 안 나온다 |
+| `GET GetAssignmentCount?siteSeq` | `{outCount, inCount, pendingCount}` | 🔴 **복귀 대기 건수 없음**(가정의 `pendingReturnCount`). 🔴 **시작 전(미래) 배치도 `inCount` 에 센다** — 승인 직후 1 |
+
+**동작**
+
+| 관측 | 결과 |
+|---|---|
+| 승인(오늘 시작) | **즉시 이동** — 사업장 8 `UserList` 에 `originSiteSeq: 7` 로 나오고 사업장 7 목록에서 빠진다. 복귀 승인하면 7 로 돌아온다(`originSiteSeq: null`) |
+| 승인(미래 시작 `2026-11-01`) | 🔴 **이동하지 않는다**(사업장 7 에 그대로) — 그런데 `inCount` 는 1. 이력에서 "배치예정" 을 구분할 값이 없다(`completeYn: false` 뿐 — B-47) |
+| 진행 중 배치가 있는 근무자가 다시 요청 | 400 래퍼 `"이미 대치 신청 중이거나 대치 근무 중인 사용자입니다."`(원문 그대로 — "대치") — **1인 1건** |
+
+**오류 응답 (배치)**
+
+| 상황 | 결과 |
+|---|---|
+| 없는 `assignmentSeq` 승인·복귀 요청 | ✅ **404 + 래퍼 `"배치 정보를 찾을 수 없습니다."`** |
+| `assignmentSeq` 누락 승인 | 400 래퍼 `"배치 정보를 확인할 수 없습니다."` |
+| 처리된 요청 재승인·재반려 | ✅ **400 래퍼 `"이미 승인 또는 반려 처리된 배치입니다."`** — 사유를 말해 준다(B-17 의 예외) |
+| 처리된(또는 없는) 복귀 요청 재처리 | ✅ 400 래퍼 `"이미 처리되었거나 존재하지 않는 복귀 요청입니다."` — 없는 ID 도 404 가 아니라 이것 |
+| 반려된 배치로 복귀 요청 / 중복 복귀 요청 | 400 래퍼 `"승인된 배치만 복귀 신청할 수 있습니다."` / `"이미 복귀 승인 대기 중입니다."`(앱 경로) |
+| 종료일 < 시작일로 요청 | 🔴 **500** ProblemDetails(B-48, 앱 경로) |
+
 **코스 편성·총 소요시간 (실측 2026-10-12, `spec 023` Phase 4)**
 
 > 편성 편집을 만들기 전에 "순서·시간·중복을 서버가 어떻게 다루는가" 를 쟀다. 코스 1개를
@@ -1367,6 +1404,9 @@ interface NoticeAttach {
 | B-43 | ⚪ **`UpsertNotice` 첨부 추가 형식이 까다롭다**(실측 2026-10-21) — ① `attachList[i].files` 에 **항목당 1파일만** 붙고 ② `isRemove=false` 를 **같이 보내야** 하며 ③ 최상위 `file` 은 **200 인데 무시**된다(작성 `AddNotice` 는 최상위 `file` 이 맞다). 실패가 성공으로 보이므로 **무시 대신 400** 을 주거나 작성과 같은 `file` 을 받도록 맞추길 제안 | ⚪ |
 | B-44 | 🔴 **`AddUser` 에 `codeSeq` 를 빼면 500 이다**(실측 2026-10-21). swagger 는 `required` 가 아닌데 생략하면 **500 ProblemDetails**("서버에서 요청을 처리하지 못하였습니다") — 유효성 오류가 500 으로 샌다(B-16 계열). 프론트는 **항상 `codeSeq: 7`(근무자)** 을 보낸다(`spec 041` 결정). **요청**: 필수로 표시하거나 생략 시 기본값(근무자) 처리 | 🟡 |
 | B-45 | 🟡 **근무자 입력값을 서버가 검사하지 않는다**(실측 2026-10-21) — 비밀번호 강도(`1234`·`12` 통과) · 사번 길이·문자(9자·영문 통과, 로그인은 8자 상한) · 연락처 형식(`abc` 통과, **하이픈 유무 그대로 저장 → 형식이 섞인다**). 화면이 막지만 **앱·다른 경로로는 들어온다.** **요청**: 로그인과 같은 규칙으로 서버 검증 + 연락처 정규화(숫자만) | 🟡 |
+| B-46 | 🔴🔴 **배치·복귀 요청 목록에 근무자가 없다**(실측 2026-10-21, `spec 042`). `GetAssignmentList`·`GetAssignmentReturnList` 행에 `userSeq`·`userName` 이 없어 **누가 요청했는지 화면에 표시할 수 없다** — 승인·반려 판단의 핵심 정보다. **요청**(사용자 전달 2026-10-21): ① 두 목록 행에 `userSeq`·`userName` 추가(이력 API 는 `userName` 을 이미 준다) ② **복귀일** — 복귀 요청 바디·복귀 요청 목록 행에 추가. 페이징은 필요 없다(대기 건만 오는 목록) | 🔴 |
+| B-47 | 🟡 **배치 상태를 구분할 값이 부족하다**(실측 2026-10-21) — ① 이력 행은 `completeYn` 뿐이라 **시작 전(배치예정)** 을 가릴 수 없고, 미래 시작 배치는 이동하지 않았는데 `GetAssignmentCount.inCount` 에 들어간다 ② 복귀 요청에 **복귀일이 없고** 승인하면 `completeDt` = 승인 시각이다 ③ 요약에 **대기 복귀 요청 건수**가 없다. **요청**(사용자 전달 2026-10-21): 이력 행에 **상태**(예정/배치중/복귀완료)·**사유**. ③ 은 요청하지 않는다(사용자 결정 — 복귀 탭 뱃지는 목록 길이) | 🟡 |
+| B-48 | ⚪ **배치 요청 검증**(실측 2026-10-21, 앱 경로) — 종료일 < 시작일이면 **500**. `AssignmentApprove`·`AssignmentReturnApprove` 에서 `approved` 를 빼면 **반려로 처리된다**(bool 기본값 — 400 이 낫다). 오류 문구 오타 `"대치"` → `"배치"` | ⚪ |
 
 ### 6-1-A. 🔴 백엔드 전달용 — 우선순위 (2026-10-10 기준)
 
