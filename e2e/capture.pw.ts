@@ -244,9 +244,22 @@ test('공지사항', async ({ page }) => {
   await open(page, '/notice')
   await shoot(page, '현장/notice--목록')
 
+  // `spec 040` — 작성 모달(상단 고정 해제 · 첨부 입력)
+  await page.getByRole('button', { name: '공지 작성' }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.waitForTimeout(400)
+  await shoot(page, '현장/notice--작성')
+
   // 시드 `noticeSeq 4` — 이미지 2 + 파일 2 (`src/mocks/handlers/notices.ts`). 이미지는 B-40 폴백으로 찍힌다
   await open(page, '/notice/4')
   await shoot(page, '현장/notice--상세')
+
+  // `spec 040` — 수정 모달. 기존 첨부 4개 중 1개를 삭제 표시한 상태로 찍는다(표시가 보이게)
+  await page.getByRole('button', { name: '수정' }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.getByRole('button', { name: '점검_구역_안내.jpg 삭제' }).click()
+  await page.waitForTimeout(400)
+  await shoot(page, '현장/notice--수정')
 })
 
 // ── 공통 / 에러 ───────────────────────────────────────

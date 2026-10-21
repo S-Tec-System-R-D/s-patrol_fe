@@ -47,8 +47,32 @@
 
 ## Phase 5: 마무리
 
-- [ ] T676 `npm run verify` + `npm run test` (병렬)
-- [ ] T677 브라우저 확인(mock) + 🔴 **dev:real**(작성→수정→삭제 자기 정리 · 026 T592 함께)
-- [ ] T678 캡쳐 — 작성 모달 · 수정 모달(첨부 있음)
-- [ ] T679 문서 — `patterns.md` multipart 절 · `data-model.md` §5-3 · `screens.md` §1-5 · `roadmap.md`
-- [ ] T680 DoD 점검 + `## 다음 spec으로 이월`
+- [x] T676 `npm run verify` + `npm run test` (병렬)
+- [~] T677 브라우저 확인(mock ✅ 사용자 직접 — 등록·수정·삭제) + 🔴 **dev:real**(⚠️ 미완 → 이월 ①)
+- [x] T678 캡쳐 — `notice--작성` · `notice--수정`(삭제 표시 1건) 신설. 같은 테스트의 목록·상세는 픽셀 차이 0
+- [x] T679 문서 — `patterns.md` multipart 절 · `data-model.md` §5-3 · `screens.md` §1-5 · `roadmap.md`
+- [x] T680 DoD 점검 + `## 다음 spec으로 이월`
+
+---
+
+## DoD 점검 (2026-10-21)
+
+**14/15 + 부분 1** — #12 브라우저 확인은 mock 만(사용자 직접), dev:real 미완.
+
+## 다음 spec으로 이월
+
+### ① dev:real 화면 확인 (#12 · 026 T592 함께)
+
+`npm run dev:real` + 현장관리자로 사업장 7 → `/notice` 작성(첨부 이미지·파일 각 1) → 상세 수정(첨부 1 삭제 + 1 추가) → 삭제.
+🔴 **만든 공지만** 지운다. 본사 계정으로 사업장 6 → `/notice/56`(026 T592 — 이미지 404 폴백).
+
+### ② 백엔드 회신 대기
+
+- **B-42** 앱 푸시 — 오면 체크박스를 되살릴지 판단(OQ-040-A)
+- **OQ-19** 첨부 한도·허용 확장자 공식값 — 오면 `lib/noticeAttach.ts` 한 곳만 고친다(`hwp` 포함 여부)
+- **B-43** 수정 첨부 형식 — 바뀌면 `toUpsertNoticeFormData` 한 곳만 고친다
+
+### ③ multipart 두 번째 소비처 — 근무자 사진(`AddUser`·`UpdateUser`)
+
+`toFormData` 는 공지 폴더에 있다. **두 번째 소비처가 생기면** `lib/` 공용으로 옮긴다(지금은 수요 1건 — A6).
+

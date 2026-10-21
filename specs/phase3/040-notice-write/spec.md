@@ -132,29 +132,29 @@ interface UpsertNoticeRequest {
 ## 5. 완료 조건 (DoD)
 
 **기반**
-- [ ] 1. 요청 타입이 swagger 이름(`description`·`isPin`·`file`)이다 — `content`·`sendAppPush` 0건
-- [ ] 2. FormData 빌더 단위 테스트 — boolean 문자열화 · 파일 반복 · `attachList[i]` 펼침(삭제 먼저 · 추가 항목당 1파일 + `isRemove=false`)
-- [ ] 3. `Content-Type` 수동 지정 0건
-- [ ] 4. MSW 쓰기 3종 + 상태 보유 + reset
+- [x] 1. 요청 타입이 swagger 이름(`description`·`isPin`·`file`)이다 — `content`·`sendAppPush` 0건
+- [x] 2. FormData 빌더 단위 테스트 — boolean 문자열화 · 파일 반복 · `attachList[i]` 펼침(삭제 먼저 · 추가 항목당 1파일 + `isRemove=false`)
+- [x] 3. `Content-Type` 수동 지정 0건
+- [x] 4. MSW 쓰기 3종 + 상태 보유 + reset
 
 **작성 (US1)**
-- [ ] 5. 작성 → 목록에 나온다(상단 고정이면 맨 위) · 모달 닫힘 · 토스트
-- [ ] 6. 상단 고정 기본 해제 · 첨부 선택/제거 · 확장자·용량 선택 단계 차단
-- [ ] 7. 실패 시 모달 유지 + 입력 유지 · 연타 1회
+- [x] 5. 작성 → 목록에 나온다(상단 고정이면 맨 위) · 모달 닫힘 · 토스트
+- [x] 6. 상단 고정 기본 해제 · 첨부 선택/제거 · 확장자·용량 선택 단계 차단
+- [x] 7. 실패 시 모달 유지 + 입력 유지 · 연타 1회
 
 **수정 (US2)**
-- [ ] 8. 기본값이 현재 값(`isPin` 포함) · 기존 첨부 삭제 표시/되돌리기 · 새 첨부 추가
-- [ ] 9. 저장 → 상세·목록 갱신 · 모달 닫힘
+- [x] 8. 기본값이 현재 값(`isPin` 포함) · 기존 첨부 삭제 표시/되돌리기 · 새 첨부 추가
+- [x] 9. 저장 → 상세·목록 갱신 · 모달 닫힘
 
 **삭제 (US3)**
-- [ ] 10. 확인 → 삭제 → 목록 이동 · 목록에서 사라짐
+- [x] 10. 확인 → 삭제 → 목록 이동 · 목록에서 사라짐
 
 **마무리**
-- [ ] 11. `npm run verify` + `npm run test` green
-- [ ] 12. 브라우저 확인(mock) + **dev:real 확인**(작성→수정→삭제 자기 정리, 026 T592 함께)
-- [ ] 13. 캡쳐 — 작성 모달 · 수정 모달(첨부 있음)
-- [ ] 14. 문서 — `patterns.md` multipart 절 · `data-model.md` §5-3 · `screens.md` §1-5 · `roadmap.md`
-- [ ] 15. `## 다음 spec으로 이월`
+- [x] 11. `npm run verify` + `npm run test` green
+- [~] 12. 브라우저 확인(mock ✅ 사용자 직접 — 등록·수정·삭제) + **dev:real 확인**(⚠️ 미완 — 이월 ①)(작성→수정→삭제 자기 정리, 026 T592 함께)
+- [x] 13. 캡쳐 — 작성 모달 · 수정 모달(첨부 있음)
+- [x] 14. 문서 — `patterns.md` multipart 절 · `data-model.md` §5-3 · `screens.md` §1-5 · `roadmap.md`
+- [x] 15. `## 다음 spec으로 이월`
 
 ---
 

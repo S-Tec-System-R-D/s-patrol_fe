@@ -790,14 +790,27 @@ export interface RemovePointFromCourseRequest {
   pointId: string
 }
 
-// ⚠ 아래 2종은 mock 시절 설계다 — 변경계 전환 spec 에서 swagger(`AddNotice`·`UpsertNotice`)
-//   기준으로 교체한다(026 은 조회만 전환했다). 폼 스키마 필드명 `content` 도 그때 함께 맞춘다.
-export interface CreateNoticeRequest {
+// ✅ `spec 040` 에서 swagger 기준으로 교체했다(실측 — `api-spec.md` §5-1-B 공지 3종).
+//   코드: `features/notice/types/notice.ts`. 셋 다 multipart, 성공 `data: true`(ID 미반환).
+//   앱 푸시 필드는 서버에 없다(B-42) — 옛 `sendAppPush` 는 지웠다.
+export interface AddNoticeRequest {     // POST AddNotice
+  siteSeq: number
   title: string
-  content: string
-  sendAppPush: boolean             // 저장 시 앱 푸시 발송
+  description: string
+  isPin: boolean
+  file: File[]                          // 같은 키 반복
 }
-export interface UpdateNoticeRequest extends Partial<CreateNoticeRequest> { id: string }
+// PATCH UpsertNotice — 🔴 화면용 모양. 빌더(`lib/formData.ts`)가 서버의 attachList[i] 로 펼친다:
+//   삭제 = attachSeq + isRemove=true / 추가 = files 1개 + isRemove=false (항목당 1파일, B-43)
+export interface UpsertNoticeRequest {
+  noticeSeq: number
+  title: string
+  description: string
+  isPin: boolean
+  removeAttachSeqs: number[]
+  newFiles: File[]
+}
+// DELETE DeleteNotice?noticeSeq=
 ```
 
 ### 5-4. 이력 — 조회만 (요청 DTO는 쿼리)
