@@ -55,7 +55,8 @@
 
 ### 사용 화면
 
-- `/zones`, `/points`, `/patrol/zones`, `/users`, `/admin/admins`, `/admin/locations`
+- `/zones`, `/points`, `/patrol/zones`, `/admin/admins`, `/admin/locations`
+- 🔴 `/users` 는 **빠졌다**(`spec 038`) — 목록 + 상세 페이지(`/users/:userSeq`)로 바뀌었다. 027 지점 · 026 공지와 같은 구조
 - `/notice`는 좌측 목록+우측 패널이 아니라 **목록(테이블) + 별도 상세 페이지(`/notice/:noticeSeq`)** 변형(015, 위 규칙의 상세 단위 라우트 예외 참조). 🔴 `spec 026` 에서 목록이 리스트 → **테이블**이 됐다 — `/points`·`/zones`·`/patrol/*` 와 같은 "목록 페이지 + 상세 페이지" 구조다.
 
 ---
@@ -544,8 +545,8 @@ AlertDialog: 바뀌는 결과를 문장으로 설명
   시각적으로 갈라질 위험이 큰 **셸은 이미 `AppTable` 이 공유**한다(023 DoD #17 과 같은 판단).
 - **좁은 폭 baseline 캡쳐를 남기지 않는다**(OQ-030-B). 폭별로 찍으면 장수도 노이즈도 두
   배다 — baseline 의 목적은 **PC 화면의 퇴행 감시**다.
-- **`/users` 는 제외**(OQ-030-A). 좁은 폭에서 깨지는 주범이 테이블이 아니라 **400px 고정
-  패널**이라, 카드만 붙이면 카드가 들어갈 폭이 안 남는다. Phase 4 재구성 때 함께 붙인다.
+- ~~**`/users` 는 제외**(OQ-030-A).~~ ✅ **`spec 038` 에서 종결** — 400px 패널이 상세 페이지로 가면서
+  카드(`WorkerCard`, 아바타 타일)를 붙였다.
 
 ### 사용 화면
 
@@ -661,7 +662,7 @@ AlertDialog: 바뀌는 결과를 문장으로 설명
 ### 사용 화면
 
 - `/points` (027) — 인증수단 · 사용여부
-- 대기 중: `/users` 2종
+- ~~대기 중: `/users` 2종~~ — `spec 038` 은 `AppSelect`(권한·근무 상태)로 조립했다(이력 2화면과 같다). 소비처가 되지 않았다
 - ⚠️ **`/patrol/points` 는 소비처가 아니다**(`spec 037`) — 이력 2화면은 `AppDatePicker` + `AppSelect` 로
   조립했다. `AppFilterPopover` 는 `/points`(027) 한 곳이 유일한 소비처로 남는다.
 

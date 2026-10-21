@@ -2,7 +2,7 @@
  * 근무자(사용자) 서버 타입 (`spec 038` T596).
  *
  * `api-spec.md` §8·9 **실측 그대로 전량** 선언한다(안 쓰는 필드도 둔다 — CLAUDE.md B4).
- * mock 시절 `worker.ts` 는 소비처를 옮긴 뒤 T618 에서 지운다.
+ * mock 시절 `worker.ts`(사용자 상태·배치 이력 등 서버에 없는 필드)는 T618 에서 지웠다.
  *
  * 🔴 **현장관리자는 이 두 API 가 403 이다**(재실측 2026-10-21) — 서버 타입으로 만들어 두고
  * 권한 개방을 요청했다(B-41). 열리면 코드 변경 없이 동작한다.
@@ -17,8 +17,9 @@ export interface UserRow {
   codeSeq: number
   codeName: string
   /**
-   * ⚠️ 의미 미확정(OQ-7 · OQ-038-B). 실측: 대부분 `null` + `originSiteName` = 현재 사업장명,
-   * 1행만 다른 사업장 Seq·이름. 🔴 **해석하지 않는다** — Seq 가 있을 때만 이름을 그대로 보인다
+   * ✅ **배치 온 사람의 소속지**(실측 2026-10-21, OQ-7 · OQ-038-B 해소). Seq 가 있으면 그 사업장
+   * 소속으로 **이 사업장에 배치된** 사람이다(소속지 목록에는 안 나온다). 소속 그대로인 사람은
+   * Seq `null` + 이름 = 현재 사업장명이다
    */
   originSiteSeq: number | null
   originSiteName: string | null
@@ -39,6 +40,7 @@ export interface UserDetail {
   userName: string
   /** 하이픈 없음(`01012345678`) */
   phone: string
+  /** 🔴 **소속지**다 — 배치된 사람은 지금 보고 있는 사업장이 아니라 원래 소속을 준다(실측) */
   siteSeq: number
   siteName: string
   workYn: boolean
@@ -59,7 +61,7 @@ export interface UserDetail {
  */
 export interface UserListParams {
   siteId: number
-  /** ⚠️ 검색 대상 미실측(OQ-038-A) */
+  /** **이름 + 사번** 부분일치. 🔴 연락처는 아니다(실측 2026-10-21) */
   searchKey?: string
   codeSeq?: number
   workYn?: boolean

@@ -227,9 +227,9 @@ interface UserDetail {
 
 ## Open Questions
 
-- **OQ-038-A `searchKey` 검색 대상** — 이름/사번/연락처 중 무엇인지 미실측. 본사 계정 GET 으로 확인하고
+- ✅ **OQ-038-A 해소(T619)**: **이름 + 사번** 부분일치, 연락처 ✗ → placeholder `이름·사번 검색`. (원문) **`searchKey` 검색 대상** — 이름/사번/연락처 중 무엇인지 미실측. 본사 계정 GET 으로 확인하고
   placeholder 를 맞춘다(026 OQ-026-A 와 같은 절차).
-- **OQ-038-B 원소속(`originSiteSeq`/`originSiteName`) 의미**(= `api-spec.md` OQ-7) — 실측: 대부분 행이
+- ✅ **OQ-038-B 해소(T619)**: **배치 온 사람의 소속지**다 — 소속지 목록에는 안 나오고 상세 `siteSeq` 는 소속지를 준다(OQ-7 해소). (원문) **원소속(`originSiteSeq`/`originSiteName`) 의미**(= `api-spec.md` OQ-7) — 실측: 대부분 행이
   **Seq `null` + Name = 현재 사업장명**이고, 1행만 **Seq `11` + 다른 사업장명**이다. 가설: **Seq 가 있으면
   다른 사업장에서 파견 온 사람**. 🔴 확정 전까지 **값을 해석하지 않고** Seq 가 있을 때만 `원소속 {이름}` 을
   보여준다 — 백엔드에 의미 확인을 요청한다.

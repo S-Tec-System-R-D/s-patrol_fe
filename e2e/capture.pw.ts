@@ -230,8 +230,9 @@ test('근무자', async ({ page }) => {
   await open(page, '/users')
   await shoot(page, '현장/users--목록')
 
+  // 🔴 038 에서 우측 패널 → **상세 페이지**가 됐다. 첫 행(등록일 최신)을 눌러 이동한다
   await selectFirstRow(page)
-  await shoot(page, '현장/users--상세선택')
+  await shoot(page, '현장/users--상세')
 })
 
 test('배치관리', async ({ page }) => {

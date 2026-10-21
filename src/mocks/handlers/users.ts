@@ -6,7 +6,7 @@ import type { UserDetail, UserRow } from '@/features/workers/types/user'
  * MSW 근무자 핸들러 (`spec 038` T604).
  *
  * 시드는 mock 시절 `features/workers/mocks/workerData.ts`(목업 8명)를 **서버 형태로 옮긴 것**이다
- * (index.ts 머리말 — 버리지 않는다). 원본은 화면 전환 뒤 T618 에서 지운다.
+ * (index.ts 머리말 — 버리지 않는다). 원본은 화면 전환 뒤 T618 에서 지웠다.
  *
  * 🔴 **화면이 갈리는 경우를 전부 심는다**: 관리자 행(`codeSeq 6`) · 근무 종료 행 · 파견 행
  * (`originSiteSeq` 有). 실서버 사업장 6 에 실제로 있는 모양이다(재실측 2026-10-21).
@@ -17,10 +17,13 @@ import type { UserDetail, UserRow } from '@/features/workers/types/user'
  * 🔴 **파라미터는 서버 이름**이다 — `siteId`(≠ `siteSeq`) · 상세 `userId`(≠ `userSeq`)(B-12).
  * mock 이 우리 이름을 받아 주면 그 불일치를 코드가 영원히 모른다.
  *
- * ⚠️ **가정**(T619 에서 실측으로 교정한다):
- * - `searchKey` 는 **이름 부분일치**(OQ-038-A)
- * - 정렬은 `createDt` 내림차순
- * - 없는 `userId` 는 400 + 래퍼(026 공지 상세 실측과 같은 형태로 둔다)
+ * ✅ **실측으로 맞췄다**(2026-10-21, T619 — `api-spec.md` §8·9):
+ * - `searchKey` 는 **이름 + 사번** 부분일치. 🔴 연락처는 아니다(OQ-038-A)
+ * - 🔴 **원소속 = 배치 온 사람의 소속지**(OQ-038-B): `originSiteSeq` 가 있는 사람은 **그 사업장
+ *   소속으로 이 사업장에 배치된 사람**이다 — 이 사업장 목록에 나오고 소속지 목록에는 **안 나온다**.
+ *   상세의 `siteSeq`·`siteName` 은 **소속지**를 준다
+ * - 없는 `userId` 는 **404** + 래퍼(`code: 404`)
+ * - ⚠️ 정렬은 `createDt` 내림차순으로 둔다(실측 순서와 다르지 않았다 — 별도 확인은 안 했다)
  */
 
 const GET_USER_LIST_PATH = '/api/v1/User/W/sign/UserList'
@@ -31,7 +34,11 @@ const MAX_PAGE_SIZE = 100
 const SITE_SEQ = 7
 const SITE_NAME = '강동 테크노타워'
 
-type MockUser = UserRow & Pick<UserDetail, 'phone' | 'siteSeq' | 'siteName'>
+type MockUser = UserRow &
+  Pick<UserDetail, 'phone' | 'siteSeq' | 'siteName'> & {
+    /** 이 사람이 **목록에 나오는** 사업장. 배치된 사람은 소속지(`siteSeq`)와 다르다(실측) */
+    listedSiteSeq: number
+  }
 
 const worker = (
   userSeq: number,
@@ -54,6 +61,7 @@ const worker = (
   phone,
   siteSeq: SITE_SEQ,
   siteName: SITE_NAME,
+  listedSiteSeq: SITE_SEQ,
   ...over,
 })
 
@@ -64,6 +72,9 @@ const seeds: MockUser[] = [
   worker(103, '오준혁', '01045678901', true, '2026-01-05T09:00:00', {
     originSiteSeq: 12,
     originSiteName: '강서 스퀘어타워',
+    // 🔴 상세는 **소속지**를 준다(실측) — 목록에는 이 사업장(7)에 나온다
+    siteSeq: 12,
+    siteName: '강서 스퀘어타워',
   }),
   worker(104, '박지우', '01056789012', true, '2025-11-02T09:00:00'),
   worker(105, '정하은', '01067890123', false, '2025-08-15T09:00:00'),
@@ -124,8 +135,12 @@ export const userHandlers = [
     const codeSeq = query.get('codeSeq')
     const workYn = query.get('workYn')
     const filtered = seeds
-      .filter((item) => item.siteSeq === siteId)
-      .filter((item) => (searchKey === null ? true : item.userName.includes(searchKey)))
+      .filter((item) => item.listedSiteSeq === siteId)
+      .filter((item) =>
+        searchKey === null
+          ? true
+          : item.userName.includes(searchKey) || item.loginId.includes(searchKey)
+      )
       .filter((item) => (codeSeq === null ? true : item.codeSeq === Number(codeSeq)))
       .filter((item) => (workYn === null ? true : String(item.workYn) === workYn))
       .sort((a, b) => b.createDt.localeCompare(a.createDt))
@@ -149,8 +164,8 @@ export const userHandlers = [
     const found = seeds.find((item) => item.userSeq === userId)
     if (!found) {
       return HttpResponse.json(
-        { message: '잘못된 요청입니다.', data: null, code: 400 },
-        { status: 400 }
+        { message: '사용자를 찾을 수 없습니다.', data: null, code: 404 },
+        { status: 404 }
       )
     }
     return HttpResponse.json({

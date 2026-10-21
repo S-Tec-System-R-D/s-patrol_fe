@@ -13,8 +13,8 @@ import WorkerAvatar from './WorkerAvatar'
  * 🔴 **mock 컬럼에서 서버 컬럼으로 바꿨다.** 빠진 것 — 서버에 근거가 없다(CLAUDE.md B4):
  * - **연락처** — 목록 응답에 없다(상세에만 `phone`). 붙이면 행마다 상세 조회(N+1)
  * - **사용자 상태(활성/비활성)** — 필드가 없다
- * - **"배치중" 뱃지** — mock 의 `isAssignedElsewhere` 는 서버에 없다. 가장 가까운 `originSiteSeq`
- *   는 의미가 확정되지 않아(OQ-038-B) **해석하지 않고 원소속 이름만** 보인다
+ * - **"배치중" 뱃지** — mock 의 `isAssignedElsewhere` 는 서버에 없다. 대신 `originSiteSeq` 가
+ *   **배치 온 사람의 소속지**임이 실측됐다(OQ-038-B) → 원소속 컬럼에 소속지 이름을 보인다
  *
  * 생긴 것 — **사번**(`loginId`) · **권한**(`codeName`): 목록에 관리자도 섞여 온다(사용자 결정 2026-10-21).
  */
@@ -72,8 +72,8 @@ export const workerColumns = (): ColumnDef<UserRow>[] =>
       id: 'origin',
       header: '원소속',
       /**
-       * ⚠️ **Seq 가 있을 때만** 이름을 보인다(OQ-038-B). 실측에서 Seq 가 `null` 인 행은 이름이
-       * **현재 사업장명**이라 매 행 같은 글자가 반복될 뿐이다. 의미가 확정되면 문구를 정한다
+       * **Seq 가 있을 때만** 이름을 보인다 — Seq 가 있으면 **다른 사업장 소속으로 배치 온 사람**이고
+       * 그 이름이 소속지다(실측 2026-10-21). Seq 가 `null` 인 행은 이름이 현재 사업장명이라 매 행 반복될 뿐이다
        */
       cell: ({ row }) => {
         const { originSiteSeq, originSiteName } = row.original

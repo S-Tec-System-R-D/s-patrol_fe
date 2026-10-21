@@ -121,7 +121,7 @@ describe('UsersPage — 서버 목록', () => {
     renderPage()
 
     const button = screen.getByRole('button', { name: '근무자 추가' })
-    expect(button.parentElement).toContainElement(screen.getByLabelText('이름 검색'))
+    expect(button.parentElement).toContainElement(screen.getByLabelText('이름·사번 검색'))
     await user.click(button)
 
     expect(await screen.findByRole('dialog')).toBeInTheDocument()
@@ -205,7 +205,7 @@ describe('UsersPage — 필터가 서버로 나간다', () => {
     await user.click(await screen.findByLabelText('필터 초기화'))
 
     await waitFor(() => expect(url()).toBe(''))
-    expect(screen.getByLabelText('이름 검색')).toHaveValue('')
+    expect(screen.getByLabelText('이름·사번 검색')).toHaveValue('')
   })
 
   it('🔴 pageSize 는 서버 상한(100)을 넘지 않는다', async () => {

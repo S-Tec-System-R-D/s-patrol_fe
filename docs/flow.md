@@ -92,7 +92,7 @@ flowchart TB
         SBar([사이드바])
         SBar --> Patrol["/patrol/* 순찰이력"]
         SBar --> ZP["/zones, /points 구역·지점"]
-        SBar --> Users["/users 사용자 관리"]
+        SBar --> Users["/users 근무자"]
         SBar --> Deploy["/deployments 배치관리"]
         SBar --> Notice["/notice 공지사항"]
 
@@ -150,7 +150,7 @@ flowchart LR
     PP["/patrol/points<br/>지점 이력"] -- 행 클릭 --> PPD["/patrol/points/:detailSeq<br/>지점 인증 상세"]
     PPD -- "순찰코스" --> ZD
 
-    Users["/users<br/>근무자 목록"] -- 행 선택 --> UD["근무자 상세 패널<br/>(배치 이력은 참고 표시)"]
+    Users["/users<br/>근무자 목록"] -- 행 클릭 --> UD["/users/:userSeq<br/>근무자 상세 페이지"]
     UD -- "근무자 추가" --> UForm[(근무자 폼<br/>모달)]
     UD -- "비밀번호" --> UPwd[(비밀번호 변경<br/>모달)]
     UD -- "삭제" --> Conf3[(확인<br/>모달)]
@@ -184,7 +184,7 @@ flowchart LR
 flowchart LR
     A(["/ 랜딩"]) --> B["/login"]
     B -- 인증 --> C["/* 홈"]
-    C -- "사이드바 '사용자 관리'" --> D["/users"]
+    C -- "사이드바 '근무자'" --> D["/users"]
     D -- "근무자 추가" --> E[(근무자 폼)]
     E -- 등록 --> D
     D -- 새 근무자 행 선택 --> F["근무자 상세<br/>(배치 이력 참고)"]

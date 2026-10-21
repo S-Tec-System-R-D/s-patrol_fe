@@ -52,6 +52,11 @@ describe('useUserList', () => {
     expect(seqs(await listOf({ q: '서' }))).toEqual([107, 102])
   })
 
+  it('🔴 검색은 이름·사번을 거르고 연락처는 거르지 않는다 (실측 2026-10-21)', async () => {
+    expect(seqs(await listOf({ q: '240105' }))).toEqual([105])
+    expect(seqs(await listOf({ q: '01067890123' }))).toEqual([])
+  })
+
   it('페이징이 나간다', async () => {
     const page2 = await listOf({ page: '2', size: '4' })
     expect(page2.items).toHaveLength(4)
@@ -75,6 +80,12 @@ describe('useUserDetail', () => {
     expect(result.current.data?.phone).toBe('01023456789')
     expect(result.current.data).not.toHaveProperty('codeName')
     expect(result.current.data).not.toHaveProperty('createDt')
+  })
+
+  it('🔴 배치 온 사람의 상세는 소속지를 준다 (실측 2026-10-21)', async () => {
+    const { result } = renderHook(() => useUserDetail(103), { wrapper })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data?.siteName).toBe('강서 스퀘어타워')
   })
 
   it('없는 근무자는 오류다', async () => {

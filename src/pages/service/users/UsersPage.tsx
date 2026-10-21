@@ -97,7 +97,8 @@ const UsersPage = () => {
    * 🔴 입력은 로컬 state, URL 은 디바운스 뒤에. URL 이 밖에서 바뀌면(뒤로가기·초기화) 입력창을
    * 맞춘다 — 렌더 중 조정(026 승계).
    *
-   * ⚠️ placeholder 는 "이름 검색" — `searchKey` 대상 미실측(OQ-038-A, T619).
+   * 🔴 **"이름·사번 검색"** 이다 — 서버 `searchKey` 는 이름 + 사번을 거르고 **연락처는 거르지
+   * 않는다**(실측 2026-10-21). 구 화면의 "이름 또는 연락처 검색" 을 두면 번호를 넣고 0건을 받는다.
    */
   const [keywordDraft, setKeywordDraft] = useState(params.q ?? '')
   const [lastKeyword, setLastKeyword] = useState(params.q)
@@ -131,8 +132,8 @@ const UsersPage = () => {
       <div className="flex items-center gap-2">
         <AppInput
           variant="search"
-          placeholder="이름 검색"
-          aria-label="이름 검색"
+          placeholder="이름·사번 검색"
+          aria-label="이름·사번 검색"
           className="w-[260px]"
           value={keywordDraft}
           onChange={(event) => {

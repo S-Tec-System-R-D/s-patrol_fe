@@ -67,14 +67,14 @@
 
 ## Phase 6: Polish
 
-- [ ] T618 🔴 **삭제** in src/features/workers/components/WorkerDetailPanel.tsx · src/features/workers/mocks/workerData.ts · src/features/workers/types/worker.ts — grep 소비처 **0건** 확인 후. ⚠️ `src/types/enum.ts` 의 `UserStatus`·`WorkStatus`·라벨은 **다른 소비처를 확인한 뒤** 판단(`features/auth/types/me.ts` 가 `FieldRole` 을 쓴다 — 건드리지 않는다)
-- [ ] T619 OQ-038-A·B 실측 in docs/api-spec.md — **본사 계정** GET 만: `searchKey` 가 이름/사번/연락처 중 무엇을 거르는지 · `originSiteSeq` 가 있는 행의 의미(사업장 11 의 목록에서 같은 사람이 어떻게 보이는지). 결과로 placeholder·MSW·원소속 표시를 교정. 🔴 한글 검색은 **Python `urlencode`** 로 보낸다(026 T590 — Git Bash `curl` 은 인코딩이 깨진다)
-- [ ] T620 백엔드 요청 정리 in docs/api-spec.md — 🔴 **B-41 신설**: 현장관리자 `UserList`·`UserDetail` 403(현장 사이트 근무자 화면의 주 사용자) + 상세에 `codeSeq`·`codeName`·`createDt` 부재(OQ-8). 변경계 3종도 같은 권한일 가능성을 **미실측으로** 적는다
-- [ ] T621 `npm run verify` 0 + `npm run test` green(1106 → 증가). 🔴 **병렬 실행**
-- [ ] T622 🔴 **사용자 브라우저 확인** — mock 화면 + **실서버는 본사 계정**으로 사업장 6(6명)
-- [ ] T623 `npm run capture` — `현장/users--목록` 교체 · `users--상세선택` → **`users--상세`**(이름·성격 변경, `e2e/capture.pw.ts` 수정). 🔴 나머지는 **바이트 대조만** 하고 덮지 않는다(026 T593)
-- [ ] T624 문서 동기화 — docs/screens.md(§1-4 행·결정 블록·§4 라우트) · docs/patterns.md(§1 사용 화면에서 `/users` 제외) · docs/flow.md(근무자 흐름) · docs/data-model.md(근무자 타입·엔드포인트·OQ) · docs/roadmap.md(038 행·§12) · docs/ui-current/README.md · `030` OQ-030-A 종결 표시
-- [ ] T625 DoD 21개 대조표 + `## 다음 spec으로 이월` in specs/phase4/038-workers/tasks.md — 변경계 전환(추가·수정·비밀번호·삭제·사진 · OQ-038-C) · 배치 이력(→ 배치관리) · B-41 회신 대기
+- [x] T618 🔴 **삭제** — ✅ `workerData.ts`·`worker.ts` 삭제(`WorkerDetailPanel` 은 T614 에서 앞당김). `enum.ts` 는 근무자 전용 `WorkStatus`·`workStatusLabel` 만 지웠다 — `UserStatus`·`userStatusLabel` 은 `auth/types/me.ts` 가 다시 내보내고 본사(관리자) 도메인 값이라 남긴다. 원래 경로 in src/features/workers/components/WorkerDetailPanel.tsx · src/features/workers/mocks/workerData.ts · src/features/workers/types/worker.ts — grep 소비처 **0건** 확인 후. ⚠️ `src/types/enum.ts` 의 `UserStatus`·`WorkStatus`·라벨은 **다른 소비처를 확인한 뒤** 판단(`features/auth/types/me.ts` 가 `FieldRole` 을 쓴다 — 건드리지 않는다)
+- [x] T619 OQ-038-A·B 실측 in docs/api-spec.md — ✅ **A: 이름 + 사번**(연락처 ✗ → `이름·사번 검색`) · **B: 배치 온 사람의 소속지**(소속지 목록에 안 나옴, 상세 `siteSeq` = 소속지 → MSW 에 `listedSiteSeq` 를 두어 재현) · 상세 없는 ID 는 **404**(공지는 400). 원래 계획 — **본사 계정** GET 만: `searchKey` 가 이름/사번/연락처 중 무엇을 거르는지 · `originSiteSeq` 가 있는 행의 의미(사업장 11 의 목록에서 같은 사람이 어떻게 보이는지). 결과로 placeholder·MSW·원소속 표시를 교정. 🔴 한글 검색은 **Python `urlencode`** 로 보낸다(026 T590 — Git Bash `curl` 은 인코딩이 깨진다)
+- [x] T620 백엔드 요청 정리 in docs/api-spec.md — 🔴 **B-41 신설**: 현장관리자 `UserList`·`UserDetail` 403(현장 사이트 근무자 화면의 주 사용자) + 상세에 `codeSeq`·`codeName`·`createDt` 부재(OQ-8). 변경계 3종도 같은 권한일 가능성을 **미실측으로** 적는다
+- [x] T621 `npm run verify` 0 + `npm run test` green(1106 → **1154**, 104 files). 🔴 **병렬 실행**
+- [~] T622 🔴 **사용자 브라우저 확인** — mock 화면 + **실서버는 본사 계정**으로 사업장 6(6명) — ◩ **mock 화면은 사용자가 Phase 3 에서 확인했다**(2026-10-21, 상세는 캡쳐로 확인 후 부제 제거 1건). ⚠️ **실서버 화면 확인은 아직** — 본사 계정 · 사업장 6
+- [x] T623 `npm run capture` — `현장/users--목록` 교체 · `users--상세선택` → **`users--상세`**(이름·성격 변경, `e2e/capture.pw.ts` 수정). 🔴 나머지는 **바이트 대조만** 하고 덮지 않는다(026 T593)
+- [x] T624 문서 동기화 — docs/screens.md(§1-4 행·결정 블록·§4 라우트) · docs/patterns.md(§1 사용 화면에서 `/users` 제외) · docs/flow.md(근무자 흐름) · docs/data-model.md(근무자 타입·엔드포인트·OQ) · docs/roadmap.md(038 행·§12) · docs/ui-current/README.md · `030` OQ-030-A 종결 표시
+- [x] T625 DoD 21개 대조표 + `## 다음 spec으로 이월` in specs/phase4/038-workers/tasks.md — 변경계 전환(추가·수정·비밀번호·삭제·사진 · OQ-038-C) · 배치 이력(→ 배치관리) · B-41 회신 대기
 
 ---
 
@@ -91,3 +91,60 @@
 - **T618 은 Phase 3~5 뒤** 🔴 삭제는 전환 후
 - **T619 는 T621 앞** — 실측으로 placeholder·MSW 가 바뀌면 테스트가 함께 바뀐다
 - Phase 3(US1)과 Phase 4(US2)는 T603~T606 이후 **독립 진행 가능**. Phase 6 은 모든 US 뒤
+
+---
+
+## DoD 대조표 (T625)
+
+| # | 조건 | 판정 | 증거 |
+|:-:|---|:-:|---|
+| 1 | `/users` 가 `UserList` 로 `AppTable` — `workerData` 0건, 우측 패널 0건 | ✅ | `UsersPage.tsx` · 테스트 "우측 상세 패널이 없다" · `workerData.ts` 삭제 |
+| 2 | 컬럼 6종 — 연락처·사용자 상태 없음 | ✅ | `WorkerColumns.tsx` · 테스트 "서버에 없는 컬럼이 없다" |
+| 3 | 필터 줄 026 배치 | ✅ | 검색 → 권한·근무 상태·초기화 → spacer → 추가 · 테스트 "추가 버튼은 필터 줄에" |
+| 4 | `q`·`role`·`work`·`page` → `searchKey`·`codeSeq`·`workYn`·`pageNumber` | ✅ | 테스트 "서버 이름의 파라미터로 실린다" |
+| 5 | `siteSeq` 는 URL 에 없고 서버엔 `siteId` | ✅ | 같은 테스트(`siteSeq` null 단언) · `userListParams.test.ts` |
+| 6 | 상태 분기 4종 — 403 도 조회 실패 | ✅ | `UsersPage.test.tsx` "상태 분기" 4건 |
+| 7 | `xl` 미만 카드 — OQ-030-A 종결 | ✅ | `WorkerCard.tsx` · 030 spec·`patterns.md` 종결 표시 |
+| 8 | 행 클릭 → `/users/:userSeq` | ✅ | 테스트 "행을 누르면 상세 페이지로" |
+| 9 | 상세가 `UserDetail`(`userId`)로 | ✅ | 테스트 "상세는 서버 이름 userId 로 요청한다" |
+| 10 | 브레드크럼 + 머리 줄 + 기본정보 카드 | ✅ | `UserDetailPage.tsx` (부제는 사용자 결정으로 제거 — T615a) |
+| 11 | 연락처 하이픈 | ✅ | `userFormat.test.ts` · 상세 테스트 |
+| 12 | 주소 오류 즉시 · 조회 실패 다시 시도 + 목록으로 | ✅ | 상세 테스트 "상태 분기" 3건(403 포함) |
+| 13 | 배치 변경 이력 없음 | ✅ | 테스트 "권한·등록일·배치 이력이 없다" |
+| 14 | 추가·수정·비밀번호·삭제 흐름 | ✅ | 목록 "모달을 연다" · 상세 "수정 모달이 서버 값으로" · "비밀번호 확인 모달" · "삭제 → 목록" |
+| 15 | 구 타입·패널·`workerData` 삭제, enum 판단 | ✅ | T618 |
+| 16 | `verify` + `test` green | ✅ | 0 errors · **1154 passed**(104 files) |
+| 17 | 캡쳐 baseline | ✅ | `users--목록` 교체 · `users--상세` 신설(`상세선택` 삭제) · 나머지 바이트 대조 |
+| 18 | 실서버 화면 확인(본사 계정) | ◩ | mock 화면 확인 ✅ · ⚠️ **실서버 미실시**(T622) |
+| 19 | 백엔드 요청 정리 | ✅ | `api-spec.md` **B-41** 신설 · OQ-7 해소 · OQ-8 → B-41 · 실측 블록 §8·9 |
+| 20 | 문서 동기화 | ✅ | T624 — screens · patterns · flow · data-model · roadmap · ui-current README · 030 spec |
+| 21 | 이월 블록 | ✅ | 아래 |
+
+**판정: 21개 중 ✅ 20 · ◩ 1(#18).**
+
+---
+
+## 다음 spec으로 이월
+
+### ① 🔴 B-41 회신 대기 — 현장관리자 403
+
+회신되면 **코드 변경 없이** 현장관리자에게 목록·상세가 보인다. 그때 확인할 것:
+- 현장관리자 토큰으로 `UserList`(자기 사업장) · `UserDetail` 200
+- `UserDetail` 에 `codeName`·`createDt` 가 추가됐으면 **기본정보 카드에 권한·등록일 행**을 붙인다(OQ-8)
+
+### ② 변경계 전환 — 추가·수정·비밀번호·삭제
+
+- `AddUser` · `UpdateUser` · `RemoveUser` — 🔴 **WF-1-0 실측부터**(지금은 현장관리자 권한으로 찍을 수조차 없다 — B-41 선행)
+- 전부 **multipart/form-data**(사진 `image`) · `UpdateUser.isRemove` 의 의미(사진 삭제?) 미확인
+- **OQ-038-C 비밀번호** — 화면은 "초기화" 인데 서버는 `UpdateUser.loginPw` 로 **새 값 지정**이다
+- 추가 폼의 **권한 선택**(`AddUser.codeSeq`) — 지금 폼에 없다
+- 폼 스키마 필드명(`name`·`phone`·`initialPassword`) → swagger 기준으로
+
+### ③ 배치관리로 넘기는 것
+
+- **배치 변경 이력** — 038 이 상세에서 지웠다(백엔드 미개발, 가짜 데이터). 배치 API 가 생기면 근무자 상세에 **카드로** 붙인다
+- 🔴 **원소속 = 배치 온 사람의 소속지**(실측) — 배치관리 화면이 "지금 이 사업장에 와 있는 사람" 을 보여줄 때 같은 필드를 쓴다
+
+### ④ 실서버 화면 확인 (T622)
+
+`npm run dev:real` + **본사 계정 `000000`** → 사업장 6 → `/users`(6명, 관리자 2 · 배치 온 사람 1) → 행 클릭 → 상세.

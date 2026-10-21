@@ -231,6 +231,12 @@ export interface AdminSummary {
 }
 
 // 현장 근무자(현장관리자 포함) — /users
+// 🔴 `spec 038` 에서 **화면은 서버 타입으로 옮겼다**(api-spec.md §8·9 실측 SSOT).
+//    코드: `src/features/workers/types/user.ts` — `UserRow`(목록) · `UserDetail`(상세).
+//    아래 `Worker`·`WorkerSummary` 는 **설계 의도 기록**으로 남긴다. 서버에 없는 것:
+//    `status`(활성/비활성) · 목록의 `phone` · `isAssignedElsewhere` · `assignmentHistory`(백엔드 미개발).
+//    대신 서버에는 `loginId`(사번) · `codeSeq`/`codeName`(권한, 6 관리자 / 7 근무자) ·
+//    `originSiteSeq`/`originSiteName`(**배치 온 사람의 소속지** — 실측 2026-10-21)가 있다.
 export interface Worker {
   id: string
   name: string
@@ -560,8 +566,8 @@ export interface Keyword {
 | 코스 상세 (+ 지점) | `GET /api/courses/:id` | `ApiDetailResponse<PatrolCourse>` |
 | 지점 목록 | `GET /api/points` | `ApiListResponse<PatrolPointSummary>` |
 | 지점 상세 | `GET /api/points/:id` | `ApiDetailResponse<PatrolPoint>` |
-| 근무자 목록 | `GET /api/workers` | `ApiListResponse<WorkerSummary>` |
-| 근무자 상세 | `GET /api/workers/:id` | `ApiDetailResponse<Worker>` |
+| 근무자 목록 | `GET /api/v1/User/W/sign/UserList` (**`siteId`**·`searchKey`·`codeSeq`·`workYn`·페이징) | `ApiListResponse<UserRow>` — ✅ `spec 038` 전환. ⚠️ 현장관리자 403(B-41) |
+| 근무자 상세 | `GET /api/v1/User/W/sign/UserDetail?userId=` | `ApiDetailResponse<UserDetail>` — ✅ `spec 038` 전환. ⚠️ 권한·등록일 없음(OQ-8) |
 | 배치요청 대기 큐 | `GET /api/deployments?status=PENDING` | `ApiListResponse<DeploymentRequestSummary>` |
 | 배치요청 처리이력 | `GET /api/deployments?status=PROCESSED` | `ApiListResponse<DeploymentRequestSummary>` (APPROVED·REJECTED·CANCELLED 통합) |
 | 배치요청 상세 | `GET /api/deployments/:id` | `ApiDetailResponse<DeploymentRequest>` |
@@ -711,6 +717,8 @@ export interface UpdateEmergencyContactRosterRequest {
 ### 5-3. 현장 — 근무자 / 지점 / 코스 / 공지
 
 ```ts
+// ⚠ 아래 2종은 mock 시절 설계다 — 변경계 spec 에서 swagger(`AddUser`·`UpdateUser`, multipart + 사진)로
+//   교체한다. 서버는 비밀번호도 `UpdateUser.loginPw` 로 받는다(OQ-038-C).
 export interface CreateWorkerRequest {
   name: string
   phone: string

@@ -15,9 +15,6 @@ export type Role = AdminRole | FieldRole
 // 사용자 상태
 export type UserStatus = 'ACTIVE' | 'INACTIVE'
 
-// 근무 상태 (근무자)
-export type WorkStatus = 'WORKING' | 'OFF_DUTY'
-
 // 사업장 운영 상태
 export type LocationStatus = 'OPERATING' | 'SUSPENDED' | 'TERMINATED'
 
@@ -59,11 +56,6 @@ export const roleLabel: Record<Role, string> = {
 export const userStatusLabel: Record<UserStatus, string> = {
   ACTIVE: '활성',
   INACTIVE: '비활성',
-}
-
-export const workStatusLabel: Record<WorkStatus, string> = {
-  WORKING: '근무 중',
-  OFF_DUTY: '근무 종료',
 }
 
 export const locationStatusLabel: Record<LocationStatus, string> = {
