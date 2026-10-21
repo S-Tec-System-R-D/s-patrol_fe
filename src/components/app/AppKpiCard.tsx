@@ -119,6 +119,14 @@ interface AppKpiCardProps {
    * 날짜가 숫자 자리에 들어가면 줄바꿈된다.
    */
   compactValue?: boolean
+  /**
+   * 🔴 **한 줄 얇은 카드**(`spec 039`, 사용자 요청 2026-10-21) — `[아이콘] 라벨 · 보조 ··· 값 단위`.
+   * 넓은 폭에서 3칸짜리 KPI 가 세로로 두꺼우면 **숫자 하나에 카드 높이가 너무 크다**.
+   *
+   * **opt-in 이다** — 주지 않으면 지금과 같다(소비처 5곳 무변화). ⚠️ 이 모드는 **값 하나만** 말한다 —
+   * `bar`·`foot`·`badge` 는 그리지 않는다(한 줄에 들어갈 자리가 없다). 그것이 필요한 칸이면 기본 모드다.
+   */
+  inline?: boolean
 }
 
 /** 0~1 로 자른다 — 범위 밖 값이 바를 넘치게 하지 않는다 */
@@ -198,7 +206,39 @@ const AppKpiCard = ({
   hint,
   tone = 'neutral',
   compactValue = false,
+  inline = false,
 }: AppKpiCardProps) => {
+  if (inline) {
+    return (
+      <div className="flex h-full items-center gap-2 rounded-lg border border-border bg-card px-4 py-3">
+        <span
+          className={cn('grid size-8 shrink-0 place-items-center rounded-md', toneStyles[tone])}
+        >
+          <Icon size={15} strokeWidth={1.75} />
+        </span>
+        <p className="min-w-0 shrink-0 text-caption font-medium text-foreground/80">{label}</p>
+        {/* 보조 문구는 라벨 뒤 — 좁으면 이것부터 말줄임(라벨·값이 먼저 자리를 갖는다) */}
+        {hint ? (
+          <span className="min-w-0 flex-1 truncate text-label text-muted-foreground/80" title={hint}>
+            {hint}
+          </span>
+        ) : (
+          <span className="flex-1" />
+        )}
+        <p className="flex shrink-0 items-baseline gap-1">
+          <span
+            className={cn(
+              'font-bold text-foreground tabular-nums',
+              compactValue ? 'text-panel-title' : 'text-xl'
+            )}
+          >
+            {value}
+          </span>
+          {unit && <span className="text-caption font-medium text-muted-foreground">{unit}</span>}
+        </p>
+      </div>
+    )
+  }
 
   return (
     /* 🔴 **높이를 맞춘다**(`h-full`). 라벨이 2줄인 칸이 섞이면 4칸이 들쭉날쭉해지고,

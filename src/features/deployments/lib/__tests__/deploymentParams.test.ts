@@ -3,19 +3,23 @@ import { describe, expect, it } from 'vitest'
 import { DEPLOYMENT_DIRECTION } from '../../types/deployment'
 import {
   DEPLOYMENT_PAGE_SIZE,
-  parseHistoryTab,
+  parseDeploymentTab,
   toHistoryParams,
   toRequestListParams,
 } from '../deploymentParams'
 
-/** URL 쿼리 → 배치 API 파라미터 (`spec 039` T631) */
+/** URL 쿼리 → 배치 API 파라미터 (`spec 039` T631 · T649g 탭 3개) */
 
-describe('parseHistoryTab', () => {
-  it('in 이 아니면 전부 out 이다 (014 동작 유지)', () => {
-    expect(parseHistoryTab('in')).toBe('in')
-    expect(parseHistoryTab('out')).toBe('out')
-    expect(parseHistoryTab(undefined)).toBe('out')
-    expect(parseHistoryTab('xyz')).toBe('out')
+describe('parseDeploymentTab', () => {
+  it('🔴 기본은 요청 탭이다 — 처리할 일이 먼저다', () => {
+    expect(parseDeploymentTab(undefined)).toBe('requests')
+    expect(parseDeploymentTab('requests')).toBe('requests')
+    expect(parseDeploymentTab('xyz')).toBe('requests')
+  })
+
+  it('전출·전입을 인정한다', () => {
+    expect(parseDeploymentTab('out')).toBe('out')
+    expect(parseDeploymentTab('in')).toBe('in')
   })
 })
 
@@ -25,7 +29,7 @@ describe('toHistoryParams', () => {
     expect(toHistoryParams(7, 'in').direction).toBe(DEPLOYMENT_DIRECTION.IN)
   })
 
-  it('사업장 · 1-based 페이지 · 고정 행 수를 싣는다', () => {
+  it('사업장 · 1-based 페이지 · 행 수를 싣는다', () => {
     expect(toHistoryParams(7, 'in', '3')).toEqual({
       siteSeq: 7,
       direction: DEPLOYMENT_DIRECTION.IN,

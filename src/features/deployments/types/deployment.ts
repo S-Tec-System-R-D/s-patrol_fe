@@ -89,6 +89,14 @@ export const DEPLOYMENT_DIRECTION = {
 } as const
 export type DeploymentDirectionCode = (typeof DEPLOYMENT_DIRECTION)[keyof typeof DEPLOYMENT_DIRECTION]
 
+/** 이력 상태 필터 — 0 배치 중 / 1 복귀 완료 (가정) */
+export const DEPLOYMENT_HISTORY_STATUS = {
+  ACTIVE: 0,
+  RETURNED: 1,
+} as const
+export type DeploymentHistoryStatusCode =
+  (typeof DEPLOYMENT_HISTORY_STATUS)[keyof typeof DEPLOYMENT_HISTORY_STATUS]
+
 export interface DeploymentRequestListParams {
   siteSeq: number
   pageNumber: number
@@ -102,6 +110,11 @@ export interface DeploymentRequestListParams {
 export interface DeploymentHistoryParams {
   siteSeq: number
   direction: DeploymentDirectionCode
+  /**
+   * 0 배치 중(`endDt` 없음) / 1 복귀 완료 — 생략하면 전체 (가정 · T649h).
+   * 🔴 KPI(지금 나가/와 있는 **인원**)를 누르면 이 필터로 이력을 좁힌다 — 그래야 숫자와 행 수가 맞는다
+   */
+  status?: DeploymentHistoryStatusCode
   pageNumber: number
   pageSize: number
 }

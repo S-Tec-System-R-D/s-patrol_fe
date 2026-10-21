@@ -57,8 +57,25 @@
 
 > **독립 테스트 기준**: 탭이 `direction` 으로 서버에 나가고 `?historyTab`·`?historyPage` 가 보존된다. 기간·상태가 `endDt` 로 갈린다.
 
-- [ ] T648 [US3] 이력 탭·컬럼 재작성 in src/features/deployments/components/DeploymentHistoryTabs.tsx · src/features/deployments/components/DeploymentHistoryColumns.tsx — `useDeploymentHistory(direction)` + 서버 페이징. 컬럼: 이름(아바타) · 배치 경로 · 사유 · 기간(`yyyy.MM ~ 현재|yyyy.MM`) · 상태(`배치중`/`복귀완료`). 🔴 정렬 off. 상태 분기 4종. 🔴 탭을 바꾸면 `historyPage` 를 지운다
-- [ ] T649 [US3] [P] 테스트 갱신 in src/features/deployments/components/__tests__/DeploymentHistoryTabs.test.tsx — 방향 파라미터 · URL 보존 · `endDt` 분기 · 탭 전환 시 첫 페이지
+- [x] T648 [US3] 이력 탭·컬럼 재작성 in src/features/deployments/components/DeploymentHistoryTabs.tsx · src/features/deployments/components/DeploymentHistoryColumns.tsx — `useDeploymentHistory(direction)` + 서버 페이징. 컬럼: 이름(아바타) · 배치 경로 · 사유 · 기간(`yyyy.MM ~ 현재|yyyy.MM`) · 상태(`배치중`/`복귀완료`). 🔴 정렬 off. 상태 분기 4종. 🔴 탭을 바꾸면 `historyPage` 를 지운다
+- [x] T649 [US3] [P] 테스트 갱신 in src/features/deployments/components/__tests__/DeploymentHistoryTabs.test.tsx — 방향 파라미터 · URL 보존 · `endDt` 분기 · 탭 전환 시 첫 페이지
+
+### Phase 5 사용자 수정 (2026-10-21)
+
+- [x] ~~T649a~~ (T649g 에서 대체 — 페이지 탭으로) [US3] 이력 탭을 **필터 컨트롤 모양으로** in src/features/deployments/components/DeploymentHistoryTabs.tsx — 크기(`h-8`)·테두리·아이콘(16px 반투명, **`SquareArrowRightExit` 전출 / `SquareArrowRightEnter` 전입** — 사용자 선택)·선택 톤(`border-point bg-point-bg`)을 `AppSelect` 와 맞췄다. 셀렉트가 아니라 **radix 탭 그대로**(키보드·ARIA). 공용 `ui/tabs` 는 건드리지 않고 이 화면에서 클래스만 덮었다(소비처가 여기 하나)
+- [x] T649b [US2] 요청 행 버튼을 **필터와 같은 높이(`h-8`)** in src/features/deployments/components/DeploymentRequestRow.tsx — 기본 버튼(`py-2`)이 카드 행보다 무거웠다. 아이콘 14px
+
+- [x] T649c [US1] KPI 나간·온 아이콘을 탭과 같은 `SquareArrowRightExit`/`Enter` 로 in src/features/deployments/components/DeploymentKpiRow.tsx
+- [x] T649d [US2] 요청 행에서 **사업장과 사유를 분리** in src/features/deployments/components/DeploymentRequestRow.tsx — 전에는 `A → B · 사유: …` 한 줄이라 이어져 읽혔다. 사업장은 **회색 뱃지 2개 + 화살표**, 배치/복귀는 **포인트 뱃지**(종류라 사업장과 구분), 사유는 **가운데 칸**(작은 "사유" 라벨 + 본문, 넘치면 말줄임 + `title`)
+
+- [x] T649e [US2] 🔴 **요청 목록을 카드형 → 표로** in src/features/deployments/components/DeploymentRequestColumns.tsx · DeploymentRequestActions.tsx(← `DeploymentRequestRow.tsx` 이름 변경) · DeploymentRequestList.tsx — 사용자 결정. 카드 행이 이미 근무자 · 구분 · 경로 · 사유 · 요청일 · 액션의 **열 구조**였다(사유 칸 정렬을 위해 폭을 고정한 것이 신호). 액션은 행마다 mutation 을 들어야 해 **셀이 아니라 컴포넌트**. 처리할 일이라는 강조는 액션 칸과 KPI(주황)가 맡는다. 014 의 "마스터-디테일 폐기" 근거는 그대로(상세 없음)
+- [x] T649f [US2·US3] 🔴 **경로 표기 `SiteRoute`** in src/features/deployments/components/SiteRoute.tsx — 도착 사업장 **진하게 + 굵게**, 출발은 회색(사용자 요청). 요청 표와 이력 표가 같은 컴포넌트를 쓴다
+
+- [x] T649g [US2·US3] 🔴 **섹션 박스 제거 · 탭 3개 + 표 1개** in src/features/deployments/components/DeploymentBoard.tsx(신설) · DeploymentKpiRow.tsx · lib/deploymentParams.ts · pages/service/deployments/DeploymentsPage.tsx — 사용자 결정. 요청 목록이 표가 되면서(T649e) 세 목록의 공통 칸이 같아져 **끝 칸만** 탭별로 바뀐다. 레이아웃은 다른 목록 화면 틀(헤더 → KPI → 탭 → 표 → 페이지네이션). ① 탭은 순찰이력·코스/지점과 같은 **밑줄형 페이지 탭**(쿼리라 링크가 아니라 `role=tab` 버튼) — 필터형 탭(T649a)을 대체 ② **기본 탭 = 배치 요청** + 대기 건수 뱃지(014 "요청 우선" 을 탭 순서·숫자로) ③ **활성 탭의 쿼리만** 요청 ④ URL `?tab=requests|out|in` + `?page` 하나(`requestPage`·`historyPage`·`historyTab` 폐기) ⑤ 🔴 **KPI 카드 클릭 → 해당 탭**(나간 ↔ 전출 · 온 ↔ 전입 · 대기 ↔ 요청 — 014 의 "클릭 시 스크롤 미구현" 자리). `AppKpiCard` 는 손대지 않고 버튼으로 감쌌다. `DeploymentRequestList`·`DeploymentHistoryTabs` 삭제 · 테스트 재배치(`DeploymentBoard.test.tsx` 8 · KPI→탭 1). ⚠️ `AppTable.tsx` 주석의 `DeploymentHistoryTabs` 언급은 T654 에서 정리
+
+- [x] T649h [US1·US3] 🔴 **이력 상태 필터 + KPI → 탭·배치중** in types/deployment.ts · lib/deploymentParams.ts · DeploymentBoard.tsx · DeploymentKpiRow.tsx · mocks/handlers/deployments.ts · docs/api-request-deployment.md — 사용자 지적: KPI 는 **지금** 나가/와 있는 **인원**, 탭은 **기록**(복귀 포함)이라 "1명" 을 눌러 2건이 나왔다. 사용자 결정(B안): KPI 유지 + 이력 탭에 **상태 필터**(전체/배치중/복귀완료, `?status=active|returned`) + KPI 클릭 시 **해당 탭 + 배치중** → 숫자와 행 수가 맞는다. 탭 숫자는 **배치 요청에만**(이력 탭에 현재 인원을 달면 "이력 n건" 으로 읽힌다). 가정 계약에 `status`(0 배치 중 / 1 복귀 완료) 추가 · 요청서 4·5번에 상태 필터 한 줄. 탭 전환 시 상태 필터도 지운다. 필터 0건은 "조건에 맞는 이력이 없습니다". 테스트 5건(+ KPI→탭 행 수 단언)
+
+- [x] T649i [US1] KPI 를 **한 줄 얇게** in src/components/app/AppKpiCard.tsx · DeploymentKpiRow.tsx — 사용자 요청(넓은 폭에서 숫자 하나에 카드가 너무 두껍다). 🔴 **공용 카드에 opt-in `inline`** 을 열었다(`[아이콘] 라벨 · 보조 ··· 값 단위`) — 주지 않은 소비처 5곳은 무변화. 이 모드는 `bar`·`foot`·`badge` 를 그리지 않는다(값 하나만 말한다). ⚠️ T654 에서 `components.md` AppKpiCard 에 `inline` 추가
 
 ## Phase 6: Polish
 

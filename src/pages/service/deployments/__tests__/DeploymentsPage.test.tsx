@@ -84,10 +84,33 @@ describe('DeploymentsPage — 요청 목록', () => {
 describe('DeploymentsPage — 빈 페이지 방지 (spec §4)', () => {
   it('🔴 요청이 사라져 현재 페이지가 비면 이전 페이지로 돌아간다', async () => {
     // 2페이지를 보고 있었는데(1페이지 10건 + 2페이지 1건) 처리로 2페이지가 비었다 — 시드 2건이면 2페이지는 빈 응답이다
-    renderPage('/deployments?requestPage=2')
+    renderPage('/deployments?page=2')
 
-    expect(await screen.findByText('최범수')).toBeInTheDocument()
+    // 2페이지 조회 → 비었음 → 이전 페이지로 → 다시 조회, 왕복이 두 번이라 기본 1초보다 길게 기다린다
+    expect(await screen.findByText('최범수', undefined, { timeout: 3000 })).toBeInTheDocument()
     expect(screen.queryByText('대기 중인 요청이 없습니다')).not.toBeInTheDocument()
+  })
+})
+
+describe('DeploymentsPage — KPI → 탭 (T649g)', () => {
+  it('🔴 KPI 카드를 누르면 해당 탭 + 배치중 필터 — 숫자와 행 수가 맞는다 (T649h)', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('최범수')
+
+    await user.click(screen.getByRole('button', { name: '전입 이력 보기' }))
+    expect(await screen.findByText('오준혁')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /전입 이력/ })).toHaveAttribute('aria-selected', 'true')
+    // 배치 온 인원 1명 = 행 1개(복귀 완료한 한지민은 없다)
+    expect(screen.queryByText('한지민')).not.toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(2)
+
+    await user.click(screen.getByRole('button', { name: '전출 이력 보기' }))
+    expect(await screen.findByText('장도윤')).toBeInTheDocument()
+    expect(screen.queryByText('박지우')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '배치 요청 보기' }))
+    expect(await screen.findByText('최범수')).toBeInTheDocument()
   })
 })
 

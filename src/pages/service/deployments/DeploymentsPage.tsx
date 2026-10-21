@@ -1,7 +1,6 @@
 import AppPageHeader from '@/components/app/AppPageHeader'
 import DeploymentKpiRow from '@/features/deployments/components/DeploymentKpiRow'
-import DeploymentHistoryTabs from '@/features/deployments/components/DeploymentHistoryTabs'
-import DeploymentRequestList from '@/features/deployments/components/DeploymentRequestList'
+import DeploymentBoard from '@/features/deployments/components/DeploymentBoard'
 import { getSiteName } from '@/lib/auth/site'
 
 const DeploymentsPage = () => {
@@ -21,8 +20,8 @@ const DeploymentsPage = () => {
       />
 
       <DeploymentKpiRow />
-      <DeploymentRequestList />
-      <DeploymentHistoryTabs />
+      {/* 🔴 요청 · 전출 · 전입을 **탭 3개 + 표 1개**로(T649g) — 다른 목록 화면 틀(헤더 → 탭 → 표) */}
+      <DeploymentBoard />
     </div>
   )
 }

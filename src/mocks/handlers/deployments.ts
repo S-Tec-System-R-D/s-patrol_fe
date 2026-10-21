@@ -206,8 +206,13 @@ export const deploymentHandlers = [
 
     const siteSeq = Number(query.get('siteSeq'))
     const direction = Number(query.get('direction'))
+    // 0 배치 중(`endDt` 없음) / 1 복귀 완료 — 없으면 전체(가정 · T649h)
+    const status = query.get('status')
     const rows = history
       .filter((row) => (direction === 1 ? row.toSiteSeq === siteSeq : row.fromSiteSeq === siteSeq))
+      .filter((row) =>
+        status === null ? true : status === '0' ? row.endDt === null : row.endDt !== null
+      )
       .sort((a, b) => b.startDt.localeCompare(a.startDt))
     return paged(rows, pageNumber, pageSize)
   }),

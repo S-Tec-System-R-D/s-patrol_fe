@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
+import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { setSite } from '@/lib/auth/site'
@@ -23,7 +24,10 @@ const renderRow = () => {
   })
   return render(
     <QueryClientProvider client={queryClient}>
-      <DeploymentKpiRow />
+      {/* KPI 가 탭 쿼리(`?tab`)를 바꾸므로 라우터가 필요하다(T649g) */}
+      <MemoryRouter>
+        <DeploymentKpiRow />
+      </MemoryRouter>
     </QueryClientProvider>
   )
 }

@@ -1,7 +1,11 @@
-import { ArrowLeftIcon, ArrowRightIcon, ClockIcon } from 'lucide-react'
+import { ClockIcon, SquareArrowRightEnterIcon, SquareArrowRightExitIcon } from 'lucide-react'
+
+import type { ReactNode } from 'react'
 
 import AppKpiCard from '@/components/app/AppKpiCard'
+import { useQueryParams } from '@/hooks/useQueryParams'
 import { getSiteSeq } from '@/lib/auth/site'
+import type { DeploymentTab } from '../lib/deploymentParams'
 import { useDeploymentSummary } from '../hooks/useDeploymentSummary'
 
 /**
@@ -24,36 +28,82 @@ const valueOf = (isPending: boolean, isError: boolean, value: number | undefined
   return value
 }
 
+/**
+ * 🔴 **카드를 누르면 해당 탭으로 간다**(T649g, 사용자 결정 2026-10-21) — KPI 3개와 탭 3개가 1:1 이다
+ * (나간 ↔ 전출 · 온 ↔ 전입 · 대기 ↔ 배치 요청). 인원 KPI 는 **`배치중` 필터를 걸고** 간다(T649h). 014 가 "클릭 시 스크롤 — 미구현" 으로 남긴 자리다.
+ * `AppKpiCard` 는 클릭을 받지 않으므로 **버튼으로 감싼다**(공용 카드는 건드리지 않는다).
+ */
+const KpiButton = ({
+  label,
+  onClick,
+  children,
+}: {
+  label: string
+  onClick: () => void
+  children: ReactNode
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label={`${label} 보기`}
+    className="rounded-lg text-left transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-point/40"
+  >
+    {children}
+  </button>
+)
+
 const DeploymentKpiRow = () => {
   const summary = useDeploymentSummary(getSiteSeq())
+  const [, setParams] = useQueryParams<'tab' | 'page' | 'status'>()
+  /**
+   * 🔴 **인원 KPI 는 `배치중` 필터를 걸고 간다**(T649h) — 숫자는 **지금** 나가/와 있는 사람이고 탭은
+   * **기록**(복귀 완료 포함)이라, 필터 없이 가면 1명을 눌렀는데 2건이 나온다.
+   */
+  const goTo = (tab: DeploymentTab) =>
+    setParams({
+      tab: tab === 'requests' ? undefined : tab,
+      page: undefined,
+      status: tab === 'requests' ? undefined : 'active',
+    })
   const data = summary.data
   const pending = data?.pendingCount ?? 0
 
   return (
-    /* 🔴 `spec 031`: tone 은 **대기중 요청에만** 색을 남긴다 — 세 칸이 다른 색이면 무엇이 급한지가 사라진다.
+    /* 🔴 **한 줄 얇은 카드**(`inline`, 사용자 요청 2026-10-21) — 숫자 하나에 카드가 너무 두꺼웠다.
+       🔴 `spec 031`: tone 은 **대기중 요청에만** 색을 남긴다 — 세 칸이 다른 색이면 무엇이 급한지가 사라진다.
        ⚠️ 보조 줄(`hint`)은 나간/온 인원에만 — "진행 중인 배치만 센다" 는 화면만으로 알 수 없는 집계 규칙이다 */
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <AppKpiCard
-        icon={ArrowRightIcon}
-        label="배치 나간 인원"
-        value={valueOf(summary.isPending, summary.isError, data?.outCount)}
-        unit={summary.isError ? undefined : '명'}
-        hint="복귀하지 않은 인원"
-      />
-      <AppKpiCard
-        icon={ArrowLeftIcon}
-        label="배치 온 인원"
-        value={valueOf(summary.isPending, summary.isError, data?.inCount)}
-        unit={summary.isError ? undefined : '명'}
-        hint="복귀하지 않은 인원"
-      />
-      <AppKpiCard
-        icon={ClockIcon}
-        label="대기중인 배치요청"
-        value={valueOf(summary.isPending, summary.isError, data?.pendingCount)}
-        unit={summary.isError ? undefined : '건'}
-        tone={pending > 0 ? 'warning' : 'neutral'}
-      />
+      <KpiButton label="전출 이력" onClick={() => goTo('out')}>
+        <AppKpiCard
+          inline
+          // 이력 탭과 같은 아이콘 — 사업장(네모)에서 나간다 / 들어온다(사용자 요청 2026-10-21)
+          icon={SquareArrowRightExitIcon}
+          label="배치 나간 인원"
+          value={valueOf(summary.isPending, summary.isError, data?.outCount)}
+          unit={summary.isError ? undefined : '명'}
+          hint="복귀하지 않은 인원"
+        />
+      </KpiButton>
+      <KpiButton label="전입 이력" onClick={() => goTo('in')}>
+        <AppKpiCard
+          inline
+          icon={SquareArrowRightEnterIcon}
+          label="배치 온 인원"
+          value={valueOf(summary.isPending, summary.isError, data?.inCount)}
+          unit={summary.isError ? undefined : '명'}
+          hint="복귀하지 않은 인원"
+        />
+      </KpiButton>
+      <KpiButton label="배치 요청" onClick={() => goTo('requests')}>
+        <AppKpiCard
+          inline
+          icon={ClockIcon}
+          label="대기중인 배치요청"
+          value={valueOf(summary.isPending, summary.isError, data?.pendingCount)}
+          unit={summary.isError ? undefined : '건'}
+          tone={pending > 0 ? 'warning' : 'neutral'}
+        />
+      </KpiButton>
     </div>
   )
 }
