@@ -215,16 +215,14 @@ const UserDetailPage = () => {
         </div>
       </div>
 
-      {/* **좌 2/3 최근 순찰 기록 / 우 1/3 기본정보** — 지점 상세(027·029)와 같은 배치(사용자 요청
-          2026-10-21). 시간이 쌓이는 것이 좌측, 그 사람을 설명하는 값이 우측이다.
-          🔴 **좁은 폭에서는 기본정보가 먼저**(`order`) — 1단이 되면 "누구인가" 가 먼저 와야 한다.
-          🔴 `items-start` — 우측 카드가 좌측 높이만큼 늘어나지 않게(036) */}
+      {/* **좌 1/3 기본정보 / 우 2/3 최근 순찰 기록**(사용자 요청 2026-10-21 — 처음엔 지점 상세처럼 기록이
+          좌측이었는데 좌우를 바꿨다). "누구인가" 를 먼저 읽고 그 사람의 기록을 본다.
+          좁은 폭(1단)에서도 기본정보가 먼저다 — DOM 순서 그대로라 `order` 가 필요 없다.
+          🔴 `items-start` — 짧은 카드가 긴 카드 높이만큼 늘어나지 않게(036) */}
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3">
-        <div className="order-2 xl:order-1 xl:col-span-2">
+        <UserInfoCard user={user} />
+        <div className="xl:col-span-2">
           <UserPatrolCard userSeq={user.userSeq} userName={user.userName} siteSeq={siteSeq} />
-        </div>
-        <div className="order-1 xl:order-2">
-          <UserInfoCard user={user} />
         </div>
       </div>
     </div>
