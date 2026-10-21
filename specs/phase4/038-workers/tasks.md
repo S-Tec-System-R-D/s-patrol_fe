@@ -92,6 +92,11 @@
 - **T619 는 T621 앞** — 실측으로 placeholder·MSW 가 바뀌면 테스트가 함께 바뀐다
 - Phase 3(US1)과 Phase 4(US2)는 T603~T606 이후 **독립 진행 가능**. Phase 6 은 모든 US 뒤
 
+### 종료 후 후속 (2026-10-21)
+
+- [x] T626 [US2] **최근 순찰 기록 카드** in src/features/workers/components/detail/UserPatrolCard.tsx · src/pages/service/users/UserDetailPage.tsx — 사용자 요청. "근무 이력" API(배치·출퇴근)는 **없고**(실서버 swagger 44종 재대조, 신규 0), 순찰 수행 이력은 **기존 `GetPointHistory` 에 `userSeq`** 로 만들 수 있었다(실측: 그 사람 행만 · 최신순 · 없으면 0건). 🔴 **선택 사업장** 기준(상세 `siteSeq` 는 소속지라 쓰지 않는다). 최근 8건 + 전체 건수 + "전체 기록"(→ `/patrol/points?user=이름`, ⚠️ 목록은 이름 부분 검색이라 동명이인이 섞인다). 상세가 **좌 2/3 기록 / 우 1/3 기본정보**(지점 상세 배치, 좁은 폭은 기본정보 먼저). `PointHistoryParams.userSeq` · MSW `userSeq` 필터 추가. 테스트 4건 · `users--상세` baseline 교체
+- ✅ **B-41 ① 해소 확인**(재실측 2026-10-21) — 현장관리자 `UserList`·`UserDetail` **200**, 응답 형태 동일 → **코드 변경 없이 동작**. 현장관리자 사업장 선택지에 루트 6 이 있어 실데이터 6명이 보인다. ⚠️ **② 상세 `codeName`·`createDt` 는 미반영**(백엔드 요청 중)
+
 ---
 
 ## DoD 대조표 (T625)

@@ -14,10 +14,12 @@ import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
 import UserInfoCard from '@/features/workers/components/detail/UserInfoCard'
+import UserPatrolCard from '@/features/workers/components/detail/UserPatrolCard'
 import WorkerAvatar from '@/features/workers/components/WorkerAvatar'
 import EditWorkerForm from '@/features/workers/form/EditWorkerForm'
 import { useUserDetail } from '@/features/workers/hooks/useUserDetail'
 import { workLabel } from '@/features/workers/lib/userFormat'
+import { getSiteSeq } from '@/lib/auth/site'
 import { paths } from '@/router/paths'
 
 /**
@@ -60,6 +62,8 @@ const UserDetailPage = () => {
   const userSeq = Number.isInteger(parsed) && parsed > 0 ? parsed : null
 
   const detail = useUserDetail(userSeq)
+  /* 🔴 순찰 기록은 **선택한 사업장** 기준이다 — 상세의 `siteSeq` 는 소속지라(배치 온 사람은 다르다) 쓰지 않는다 */
+  const siteSeq = getSiteSeq()
 
   /** 🔴🔴 주소 오류를 로딩보다 먼저 분기한다 — `enabled: false` 는 영원히 `isPending` 이다(037 T557) */
   if (userSeq === null) {
@@ -173,10 +177,17 @@ const UserDetailPage = () => {
         </div>
       </div>
 
-      {/* 🔴 **카드 하나라 열을 나누지 않는다** — 026 공지에서 "분리할 이유가 사라지면 열도 사라진다"
-          를 거쳤다. 폭은 다른 상세의 우측 열(1/3)과 맞춰 값이 멀리 떨어지지 않게 한다 */}
+      {/* **좌 2/3 최근 순찰 기록 / 우 1/3 기본정보** — 지점 상세(027·029)와 같은 배치(사용자 요청
+          2026-10-21). 시간이 쌓이는 것이 좌측, 그 사람을 설명하는 값이 우측이다.
+          🔴 **좁은 폭에서는 기본정보가 먼저**(`order`) — 1단이 되면 "누구인가" 가 먼저 와야 한다.
+          🔴 `items-start` — 우측 카드가 좌측 높이만큼 늘어나지 않게(036) */}
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3">
-        <UserInfoCard user={user} />
+        <div className="order-2 xl:order-1 xl:col-span-2">
+          <UserPatrolCard userSeq={user.userSeq} userName={user.userName} siteSeq={siteSeq} />
+        </div>
+        <div className="order-1 xl:order-2">
+          <UserInfoCard user={user} />
+        </div>
       </div>
     </div>
   )

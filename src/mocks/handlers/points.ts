@@ -491,6 +491,8 @@ export const pointHandlers = [
     // 🔴 `spec 037` T547 — 지점 순찰이력 **목록 화면**이 쓰는 필터 2종을 더했다
     const authMethod = query.get('authMethod')
     const userName = query.get('userName')?.trim() ?? ''
+    // 🔴 `spec 038` — 근무자 상세의 최근 순찰 기록이 **정확 일치**로 좁힌다(실측 2026-10-21)
+    const userSeq = query.get('userSeq')
     const pageNumber = Number(query.get('pageNumber') ?? 1)
     const pageSize = Number(query.get('pageSize') ?? 20)
 
@@ -536,6 +538,7 @@ export const pointHandlers = [
       // 🔴 **부분 일치**다 — 서버가 `userName` 을 부분 문자열로 받는다(현장 계정은 순찰자
       //    목록 API 가 403 이라 드롭다운을 만들 수 없어 텍스트 검색으로 간다)
       .filter((row) => (userName === '' ? true : row.userName.includes(userName)))
+      .filter((row) => (userSeq === null ? true : row.userSeq === Number(userSeq)))
       .filter((row) => {
         const day = row.checkDt.slice(0, 10)
         if (from && day < from) return false

@@ -5,6 +5,7 @@ import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { setSite } from '@/lib/auth/site'
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
@@ -45,6 +46,7 @@ const captureDetailCalls = () => {
 beforeEach(() => {
   clearTokens()
   setAccessToken(makeAccessToken())
+  setSite(7, '강동 테크노타워')
 })
 
 afterEach(() => {
@@ -131,6 +133,63 @@ describe('UserDetailPage — 정상', () => {
     await user.click(await screen.findByRole('button', { name: '비밀번호' }))
 
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument()
+  })
+})
+
+describe('UserDetailPage — 최근 순찰 기록', () => {
+  const HISTORY_PATH = '/api/v1/History/W/sign/GetPointHistory'
+
+  it('🔴 선택 사업장 + userSeq 로 조회한다 — 이름 검색이 아니다(동명이인)', async () => {
+    const calls: URL[] = []
+    server.events.on('request:start', ({ request }) => {
+      const target = new URL(request.url)
+      if (target.pathname === HISTORY_PATH) calls.push(target)
+    })
+    renderAt('101')
+
+    await screen.findByText('최근 순찰 기록')
+    await screen.findAllByRole('link', { name: /\d{4}-\d{2}-\d{2}/ })
+    const query = calls[calls.length - 1].searchParams
+    expect(query.get('siteSeq')).toBe('7')
+    expect(query.get('userSeq')).toBe('101')
+    expect(query.get('userName')).toBeNull()
+  })
+
+  it('기록 행은 지점 인증 상세로 간다 · 전체 기록은 순찰자 필터를 건 목록으로 간다', async () => {
+    renderAt('101')
+
+    const rows = await screen.findAllByRole('link', { name: /\d{4}-\d{2}-\d{2}/ })
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows.length).toBeLessThanOrEqual(8)
+    expect(rows[0].getAttribute('href')).toMatch(/^\/patrol\/points\/\d+$/)
+    expect(screen.getByRole('link', { name: '전체 기록' })).toHaveAttribute(
+      'href',
+      `/patrol/points?user=${encodeURIComponent('김민준')}`
+    )
+  })
+
+  it('🔴 기록 조회 실패는 "기록 없음" 이 아니다 — 상세 본문은 그대로 있다', async () => {
+    server.use(http.get(HISTORY_PATH, () => HttpResponse.json({ message: 'x' }, { status: 500 })))
+    renderAt('101')
+
+    expect(await screen.findByText('순찰 기록을 불러오지 못했습니다')).toBeInTheDocument()
+    expect(screen.queryByText('순찰 기록이 없습니다')).not.toBeInTheDocument()
+    expect(screen.getByText('기본정보')).toBeInTheDocument()
+  })
+
+  it('기록이 없으면 단정하지 않는 빈 상태', async () => {
+    server.use(
+      http.get(HISTORY_PATH, () =>
+        HttpResponse.json({
+          message: '',
+          code: 200,
+          data: { items: [], page: 1, pageSize: 8, totalCount: 0 },
+        })
+      )
+    )
+    renderAt('101')
+
+    expect(await screen.findByText('순찰 기록이 없습니다')).toBeInTheDocument()
   })
 })
 

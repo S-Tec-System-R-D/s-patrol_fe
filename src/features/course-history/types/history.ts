@@ -195,6 +195,11 @@ export interface PointHistoryParams {
   toDt?: string
   /** 순찰자명 부분 검색. 🔴 드롭다운이 아니라 **텍스트**다 — 현장 계정은 `UserList` 가 403 */
   userName?: string
+  /**
+   * 순찰자 **정확 일치**(`spec 038` 근무자 상세 — 최근 순찰 기록). 실측 2026-10-21: 그 사람 행만
+   * 오고 최신순이다. 이름 부분 검색(`userName`)과 달리 동명이인이 섞이지 않는다
+   */
+  userSeq?: number
   /** 코스명 부분 검색. ⚠️ 037 은 쓰지 않는다(코스는 셀렉트) — 실측 파라미터라 선언만 둔다 */
   courseName?: string
   pageNumber: number
