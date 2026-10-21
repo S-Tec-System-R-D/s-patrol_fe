@@ -4,7 +4,6 @@ import AppBadge from '@/components/app/AppBadge'
 import WorkerAvatar from '@/features/workers/components/WorkerAvatar'
 import { formatPeriod } from '../lib/deploymentPeriod'
 import { DEPLOYMENT_HISTORY_STATUS, type DeploymentHistoryRow } from '../types/deployment'
-import DeploymentEndDateAction from './DeploymentEndDateAction'
 import SiteRoute from './SiteRoute'
 
 /**
@@ -13,8 +12,7 @@ import SiteRoute from './SiteRoute'
  * 🔴 **상태는 서버가 준 코드를 그린다**(T656) — 배치예정 · 배치중 · 복귀완료. 종료일이 **미래일 수 있게**
  * 되면서(근무자가 입력한 예정 종료일) `endDt` 유무만으로는 복귀를 판단할 수 없다.
  *
- * 🔴 **전입 이력에만 복귀일 지정 버튼**(배치 로직 4) — 승인한 목적지 관리자가 관리한다. 전출은 보기만.
- * 복귀완료 행에는 버튼이 없다(이미 끝난 배치).
+ * ⚠️ T656 의 "전입 이력의 복귀일 지정 버튼" 은 **폐기**됐다(T659) — 복귀는 근무자의 **복귀 요청**으로 한다.
  */
 
 const STATUS_VARIANT: Record<number, 'point' | 'muted' | 'warning'> = {
@@ -27,11 +25,8 @@ const STATUS_VARIANT: Record<number, 'point' | 'muted' | 'warning'> = {
 const noSort = (columns: ColumnDef<DeploymentHistoryRow>[]): ColumnDef<DeploymentHistoryRow>[] =>
   columns.map((column) => ({ ...column, enableSorting: false }))
 
-/** @param endDateAction 전입 이력이면 복귀일 지정 버튼을 붙인다 — 사업장이 필요하다 */
-export const deploymentHistoryColumns = (
-  endDateAction: { siteSeq: number } | null = null
-): ColumnDef<DeploymentHistoryRow>[] => {
-  const columns: ColumnDef<DeploymentHistoryRow>[] = [
+export const deploymentHistoryColumns = (): ColumnDef<DeploymentHistoryRow>[] =>
+  noSort([
     {
       accessorKey: 'userName',
       header: '이름',
@@ -47,7 +42,9 @@ export const deploymentHistoryColumns = (
       id: 'route',
       header: '배치 경로',
       // 요청 표와 같은 표기 — 도착 사업장을 진하게(사용자 요청 2026-10-21)
-      cell: ({ row }) => <SiteRoute from={row.original.fromSiteName} to={row.original.toSiteName} />,
+      cell: ({ row }) => (
+        <SiteRoute from={row.original.fromSiteName} to={row.original.toSiteName} />
+      ),
     },
     {
       accessorKey: 'reason',
@@ -71,19 +68,4 @@ export const deploymentHistoryColumns = (
         </AppBadge>
       ),
     },
-  ]
-
-  if (endDateAction) {
-    columns.push({
-      id: 'endDate',
-      header: () => <span className="sr-only">복귀일 지정</span>,
-      cell: ({ row }) =>
-        row.original.status === DEPLOYMENT_HISTORY_STATUS.RETURNED ? null : (
-          <DeploymentEndDateAction row={row.original} siteSeq={endDateAction.siteSeq} />
-        ),
-      meta: { className: 'w-px' },
-    })
-  }
-
-  return noSort(columns)
-}
+  ])

@@ -77,7 +77,7 @@ describe('DeploymentsPage — 요청 목록', () => {
     renderPage()
 
     expect(await screen.findByText('배치 요청을 불러오지 못했습니다')).toBeInTheDocument()
-    expect(screen.queryByText('대기 중인 요청이 없습니다')).not.toBeInTheDocument()
+    expect(screen.queryByText('대기 중인 배치 요청이 없습니다')).not.toBeInTheDocument()
   })
 })
 
@@ -88,7 +88,7 @@ describe('DeploymentsPage — 빈 페이지 방지 (spec §4)', () => {
 
     // 2페이지 조회 → 비었음 → 이전 페이지로 → 다시 조회, 왕복이 두 번이라 기본 1초보다 길게 기다린다
     expect(await screen.findByText('최범수', undefined, { timeout: 3000 })).toBeInTheDocument()
-    expect(screen.queryByText('대기 중인 요청이 없습니다')).not.toBeInTheDocument()
+    expect(screen.queryByText('대기 중인 배치 요청이 없습니다')).not.toBeInTheDocument()
   })
 })
 

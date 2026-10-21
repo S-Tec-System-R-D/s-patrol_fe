@@ -9,12 +9,13 @@
  * 🔴 **백엔드가 구현하면 WF-1-0 으로 실측해 이 파일과 MSW(`mocks/handlers/deployments.ts`)만 고친다.**
  * 화면 컴포넌트는 이 파일의 타입만 본다 — 가정이 다른 곳으로 퍼지지 않게 한다.
  *
- * **배치 로직**(사용자 정리 2026-10-21):
- * 1. 근무자가 앱에서 **사업장 · 시작일 · 종료일(선택) · 사유**로 배치를 요청한다
- * 2. **목적지 사업장 현장관리자**가 웹에서 승인·거부한다
- * 3. 승인하면 이력(전입/전출)에 나온다 — 기간은 **요청의 시작일·종료일**
- * 4. 종료일이 없거나 조기 복귀하면 **목적지 관리자가 복귀일을 지정**한다(전입 이력에서)
- * 🔴 **"복귀 요청" 은 없다** — 014 목업의 배치/복귀 구분은 지웠다. 복귀는 종료일·복귀일로만 처리한다.
+ * **배치 로직**(사용자 정리 2026-10-21 · T659 에서 정정):
+ * 1. 근무자가 앱에서 **사업장 · 시작일 · 종료일(선택) · 사유**로 **배치 요청** → **목적지 사업장** 관리자가 승인·거부
+ * 2. 승인하면 이력(전입/전출)에 나온다 — 기간은 **요청의 시작일·종료일**
+ * 3. 돌아올 때는 근무자가 앱에서 **복귀 요청** → **원소속 사업장** 관리자가 승인·거부(사용자 확인)
+ * 4. 복귀를 승인하면 그 배치 이력이 **복귀일로 닫힌다**
+ * 🔴 **API 는 배치(요청·승인·거부) · 복귀(요청·승인·거부)로 나뉜다**(백엔드 요청 완료). 웹은 각 목록·승인·거부만 쓴다.
+ * ⚠️ T656 의 "관리자가 복귀일을 지정" 은 **폐기**됐다(복귀는 요청으로 한다).
  */
 
 /** 요청서 1번 — 현재 사업장으로 들어온 **대기 중** 배치 요청 */
@@ -65,22 +66,50 @@ export interface DeploymentHistoryRow {
   statusName: string
 }
 
-/** 요청서 7번 — 현재 사업장 기준 숫자 3개 */
+/**
+ * 복귀 요청 — **원소속 사업장**(= 현재 사업장)으로 들어온 대기 중 복귀 요청(T659).
+ * 🔴 **우리 소속으로 다른 곳에 나가 있는 사람**(전출)이 보낸다. 원소속 관리자가 승인한다(사용자 확인 2026-10-21)
+ */
+export interface ReturnRequestRow {
+  requestSeq: number
+  userSeq: number
+  userName: string
+  /** 닫힐 배치 이력(전출) */
+  historySeq: number
+  /** 지금 배치돼 있는 사업장 */
+  fromSiteSeq: number
+  fromSiteName: string
+  /** 돌아올 사업장 = 원소속 = 현재 사업장 */
+  toSiteSeq: number
+  toSiteName: string
+  /** 복귀일 — 근무자가 입력. 승인하면 이력의 종료일이 된다 */
+  returnDt: string
+  reason: string
+  requestDt: string
+}
+
+/** 요청서 — 현재 사업장 기준 숫자 */
 export interface DeploymentSummary {
   /** 배치 나간 인원 — 이 사업장 소속인데 지금 타 사업장에 **배치중**인 사람(예정 제외) */
   outCount: number
   /** 배치 온 인원 — 타 사업장 소속인데 지금 여기 **배치중**인 사람(예정 제외) */
   inCount: number
-  /** 대기 중 요청 */
+  /** 대기 중 **배치** 요청 — KPI · 사이드바 뱃지(사용자 결정: 배치만 센다) */
   pendingCount: number
+  /** 대기 중 **복귀** 요청 — 복귀 요청 탭 뱃지에만 쓴다(T659) */
+  pendingReturnCount: number
 }
+
+/** 요청 종류 — 승인·거부 버튼·폼·훅이 같은 모양이라 이 값 하나로 갈린다(T659) */
+export type RequestKind = 'deploy' | 'return'
 
 /** 이력 방향 — 0 전출(이 사업장 → 타) / 1 전입(타 → 이 사업장) (가정) */
 export const DEPLOYMENT_DIRECTION = {
   OUT: 0,
   IN: 1,
 } as const
-export type DeploymentDirectionCode = (typeof DEPLOYMENT_DIRECTION)[keyof typeof DEPLOYMENT_DIRECTION]
+export type DeploymentDirectionCode =
+  (typeof DEPLOYMENT_DIRECTION)[keyof typeof DEPLOYMENT_DIRECTION]
 
 export interface DeploymentRequestListParams {
   siteSeq: number
@@ -119,11 +148,13 @@ export interface RejectDeploymentRequest {
   rejectReason: string
 }
 
-/**
- * 요청서 8번 — 복귀일 지정(T656). 종료일 미입력·조기 복귀 때 **목적지 관리자**가 정한다.
- * `endDt` 는 `yyyy-MM-dd`. 시작일보다 앞설 수 없다(가정 — 서버도 400).
- */
-export interface UpdateDeploymentEndDateRequest {
-  historySeq: number
-  endDt: string
+/** 복귀 요청 승인 — 승인하면 그 배치 이력이 복귀일로 닫힌다(가정) */
+export interface ApproveReturnRequest {
+  requestSeq: number
+}
+
+/** 복귀 요청 거부 — 사유 필수(배치 거부와 같다) */
+export interface RejectReturnRequest {
+  requestSeq: number
+  rejectReason: string
 }

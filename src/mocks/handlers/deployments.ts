@@ -7,16 +7,16 @@ import type {
   DeploymentRequestRow,
   DeploymentSummary,
   RejectDeploymentRequest,
-  UpdateDeploymentEndDateRequest,
+  ReturnRequestRow,
 } from '@/features/deployments/types/deployment'
 
 /**
- * MSW 배치관리 핸들러 (`spec 039` T632 · T656) — 🔴 **상태를 보유한다.**
+ * MSW 배치관리 핸들러 (`spec 039` T632 · T656 · T659 복귀 요청) — 🔴 **상태를 보유한다.**
  *
  * **실서버에 배치 API 가 없다** — 경로·필드·코드값은 전부 **가정 계약**(`types/deployment.ts`)이다.
  * 백엔드가 구현하면 WF-1-0 으로 실측해 이 파일과 타입 파일만 고친다.
  *
- * 🔴 **승인·거부·복귀일 지정이 실제로 상태를 바꾼다**(023 `courses.ts` 처럼 store + reset). 🔴 **요약과
+ * 🔴 **승인·거부(배치·복귀)가 실제로 상태를 바꾼다**(023 `courses.ts` 처럼 store + reset). 🔴 **요약과
  * 이력 상태는 store 에서 계산한다** — 따로 들고 있으면 요청·이력과 어긋난다.
  *
  * 🔴 **상태는 날짜로 계산한다**(T656, 가정 — 서버가 계산해 준다고 본다): 시작 전 = 배치예정 · 종료일이
@@ -29,8 +29,9 @@ import type {
  * ⚠️ **가정**(요청서 · OQ-039-A~D):
  * - 이미 처리됐거나 없는 요청 → **400 + 래퍼 `"이미 처리된 요청입니다."`**
  * - 거부 사유 공백 → 400 + 래퍼
- * - 승인 → 이력 1건(기간 = 요청의 시작일·종료일)
- * - 복귀일 지정: 시작일보다 앞서면 400 · 이미 복귀완료면 400
+ * - 배치 승인 → 이력 1건(기간 = 요청의 시작일·종료일)
+ * - 🔴 **복귀 요청**(T659): 원소속(`toSiteSeq` = 현재 사업장)으로 온다. 승인 → 그 배치 이력(`historySeq`)의
+ *   종료일 = 복귀일. 거부 → 요청만 사라진다. ⚠️ T656 의 복귀일 지정 API 는 폐기했다
  */
 
 const BASE = '/api/v1/Deployment/W/sign'
@@ -39,7 +40,9 @@ const GET_REQUEST_LIST_PATH = `${BASE}/GetDeploymentRequestList`
 const GET_HISTORY_PATH = `${BASE}/GetDeploymentHistory`
 const APPROVE_PATH = `${BASE}/ApproveDeploymentRequest`
 const REJECT_PATH = `${BASE}/RejectDeploymentRequest`
-const UPDATE_END_DATE_PATH = `${BASE}/UpdateDeploymentEndDate`
+const GET_RETURN_LIST_PATH = `${BASE}/GetReturnRequestList`
+const APPROVE_RETURN_PATH = `${BASE}/ApproveReturnRequest`
+const REJECT_RETURN_PATH = `${BASE}/RejectReturnRequest`
 /** 🔴 서버 공통 상한 — 다른 목록 API 와 같다고 가정 */
 const MAX_PAGE_SIZE = 100
 
@@ -75,6 +78,26 @@ const requestSeeds: DeploymentRequestRow[] = [
     endDt: null,
     reason: '휴가 대체',
     requestDt: '2026-05-28T15:05:00',
+  },
+]
+
+/**
+ * 복귀 요청 — 장도윤(우리 소속, 강서에 배치 중 · 이력 601)이 돌아오겠다고 요청했다.
+ * ⚠️ 복귀일은 앞날이라 승인해도 그날까지는 배치중이다(테스트는 상태가 아니라 **기간**을 단언한다)
+ */
+const returnSeeds: ReturnRequestRow[] = [
+  {
+    requestSeq: 701,
+    userSeq: 110,
+    userName: '장도윤',
+    historySeq: 601,
+    fromSiteSeq: 12,
+    fromSiteName: '강서 스퀘어타워',
+    toSiteSeq: SITE_SEQ,
+    toSiteName: SITE_NAME,
+    returnDt: '2026-11-15T00:00:00',
+    reason: '현장 인력 충원 완료',
+    requestDt: '2026-10-19T09:10:00',
   },
 ]
 
@@ -137,6 +160,7 @@ const historySeeds: StoredHistory[] = [
 
 let requests: DeploymentRequestRow[] = requestSeeds.map((row) => ({ ...row }))
 let history: StoredHistory[] = historySeeds.map((row) => ({ ...row }))
+let returnRequests: ReturnRequestRow[] = returnSeeds.map((row) => ({ ...row }))
 
 /**
  * 저장소를 초기 상태로 되돌린다.
@@ -147,6 +171,7 @@ let history: StoredHistory[] = historySeeds.map((row) => ({ ...row }))
 export const resetDeploymentStore = (): void => {
   requests = requestSeeds.map((row) => ({ ...row }))
   history = historySeeds.map((row) => ({ ...row }))
+  returnRequests = returnSeeds.map((row) => ({ ...row }))
 }
 
 /** 오늘(`yyyy-MM-dd`) — 브라우저(dev·캡쳐)는 `page.clock` 고정 시각을, 테스트는 실제 시계를 탄다 */
@@ -206,6 +231,7 @@ const summaryOf = (siteSeq: number): DeploymentSummary => {
     outCount: active.filter((row) => row.fromSiteSeq === siteSeq).length,
     inCount: active.filter((row) => row.toSiteSeq === siteSeq).length,
     pendingCount: requests.filter((row) => row.toSiteSeq === siteSeq).length,
+    pendingReturnCount: returnRequests.filter((row) => row.toSiteSeq === siteSeq).length,
   }
 }
 
@@ -287,19 +313,41 @@ export const deploymentHandlers = [
     return ok(true)
   }),
 
-  http.post(UPDATE_END_DATE_PATH, async ({ request }) => {
-    const body = (await request.json()) as UpdateDeploymentEndDateRequest
-    const target = history.find((row) => row.historySeq === body.historySeq)
-    if (!target) return businessError('배치 이력을 찾을 수 없습니다.')
-    if (statusOf(target) === 1) return businessError('이미 복귀한 배치입니다.')
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(body.endDt ?? '')) return businessError('복귀일을 입력해주세요.')
-    if (body.endDt < target.startDt.slice(0, 10)) {
-      return businessError('복귀일은 배치 시작일 이후여야 합니다.')
-    }
+  http.get(GET_RETURN_LIST_PATH, ({ request }) => {
+    const query = new URL(request.url).searchParams
+    const pageNumber = Number(query.get('pageNumber') ?? 1)
+    const pageSize = Number(query.get('pageSize') ?? 20)
+    const sizeError = pageSizeError(pageSize)
+    if (sizeError) return sizeError
 
+    // 🔴 원소속(= 돌아올 곳)이 이 사업장인 요청 — 원소속 관리자가 승인한다(사용자 확인)
+    const siteSeq = Number(query.get('siteSeq'))
+    const rows = returnRequests
+      .filter((row) => row.toSiteSeq === siteSeq)
+      .sort((a, b) => b.requestDt.localeCompare(a.requestDt))
+    return paged(rows, pageNumber, pageSize)
+  }),
+
+  http.post(APPROVE_RETURN_PATH, async ({ request }) => {
+    const body = (await request.json()) as { requestSeq: number }
+    const target = returnRequests.find((row) => row.requestSeq === body.requestSeq)
+    if (!target) return businessError('이미 처리된 요청입니다.')
+
+    returnRequests = returnRequests.filter((row) => row.requestSeq !== target.requestSeq)
+    // 그 배치 이력을 복귀일로 닫는다(가정)
     history = history.map((row) =>
-      row.historySeq === target.historySeq ? { ...row, endDt: `${body.endDt}T00:00:00` } : row
+      row.historySeq === target.historySeq ? { ...row, endDt: target.returnDt } : row
     )
+    return ok(true)
+  }),
+
+  http.post(REJECT_RETURN_PATH, async ({ request }) => {
+    const body = (await request.json()) as { requestSeq: number; rejectReason?: string }
+    if (!body.rejectReason?.trim()) return businessError('거부 사유를 입력해주세요.')
+    const target = returnRequests.find((row) => row.requestSeq === body.requestSeq)
+    if (!target) return businessError('이미 처리된 요청입니다.')
+
+    returnRequests = returnRequests.filter((row) => row.requestSeq !== target.requestSeq)
     return ok(true)
   }),
 ]

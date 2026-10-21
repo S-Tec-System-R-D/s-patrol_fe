@@ -2,8 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { notify } from '@/lib/notify'
 import { approveDeploymentRequest } from '../api/approveDeploymentRequest'
+import { approveReturnRequest } from '../api/approveReturnRequest'
 import { deploymentKeys } from '../queryKeys'
-import type { DeploymentRequestRow } from '../types/deployment'
+import type { RequestKind } from '../types/deployment'
 
 /**
  * 배치 요청 승인 (`spec 039` T642~T644) — 🔴 A급이라 세 단계를 나눠 적는다.
@@ -19,14 +20,22 @@ import type { DeploymentRequestRow } from '../types/deployment'
  * 서버 메시지로 이미 띄운다. 여기서 또 띄우면 두 번 뜬다. 대신 **목록을 다시 받는다** — "이미 처리된
  * 요청" 이면 그 행이 서버에서 사라졌을 것이고, 재조회해야 화면에서도 정리된다.
  */
-export const useApproveDeployment = (siteSeq: number) => {
+export const REQUEST_KIND_LABEL: Record<RequestKind, string> = { deploy: '배치', return: '복귀' }
+
+/**
+ * 🔴 **배치·복귀가 같은 훅이다**(T659) — 승인 규약(비옵티미스틱 · 무효화 · 전역 오류 토스트)이 같고 API 만
+ * 다르다. 두 벌로 복사하면 한쪽만 고쳐진다.
+ */
+export const useApproveDeployment = (siteSeq: number, kind: RequestKind = 'deploy') => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (row: DeploymentRequestRow) =>
-      approveDeploymentRequest({ requestSeq: row.requestSeq }),
-    onSuccess: (_data, row) => {
-      notify.success(`${row.userName}님의 배치 요청을 승인했습니다.`)
+    mutationFn: ({ requestSeq }: { requestSeq: number; userName: string }) =>
+      kind === 'return'
+        ? approveReturnRequest({ requestSeq })
+        : approveDeploymentRequest({ requestSeq }),
+    onSuccess: (_data, { userName }) => {
+      notify.success(`${userName}님의 ${REQUEST_KIND_LABEL[kind]} 요청을 승인했습니다.`)
     },
     // 성공·실패 모두 서버 상태를 다시 받는다(①은 반영, ③은 정리)
     onSettled: () => queryClient.invalidateQueries({ queryKey: deploymentKeys.all(siteSeq) }),

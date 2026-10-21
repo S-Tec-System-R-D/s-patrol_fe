@@ -3,11 +3,14 @@ import { useForm } from 'react-hook-form'
 
 import AppButton from '@/components/app/AppButton'
 import { useRejectDeployment } from '../hooks/useRejectDeployment'
-import type { DeploymentRequestRow } from '../types/deployment'
+import type { RequestKind } from '../types/deployment'
 import { rejectRequestSchema, type RejectRequestFormData } from './schema'
 
 interface RejectRequestFormProps {
-  request: DeploymentRequestRow
+  /** 배치 · 복귀 — 폼은 같고 API 만 다르다(T659) */
+  kind?: RequestKind
+  requestSeq: number
+  userName: string
   siteSeq: number
   onSuccess: () => void
 }
@@ -19,8 +22,14 @@ interface RejectRequestFormProps {
  * 입력이 그대로 남고, 사유는 전역 토스트가 알린다.
  * 🔴 처리 중에는 제출 버튼을 막는다(연타 방지).
  */
-const RejectRequestForm = ({ request, siteSeq, onSuccess }: RejectRequestFormProps) => {
-  const rejection = useRejectDeployment(siteSeq)
+const RejectRequestForm = ({
+  kind = 'deploy',
+  requestSeq,
+  userName,
+  siteSeq,
+  onSuccess,
+}: RejectRequestFormProps) => {
+  const rejection = useRejectDeployment(siteSeq, kind)
   const {
     register,
     handleSubmit,
@@ -30,7 +39,7 @@ const RejectRequestForm = ({ request, siteSeq, onSuccess }: RejectRequestFormPro
   })
 
   const onSubmit = (data: RejectRequestFormData) => {
-    rejection.mutate({ row: request, rejectReason: data.reason }, { onSuccess })
+    rejection.mutate({ requestSeq, userName, rejectReason: data.reason }, { onSuccess })
   }
 
   return (

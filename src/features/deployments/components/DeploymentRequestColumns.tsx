@@ -41,7 +41,9 @@ export const deploymentRequestColumns = (siteSeq: number): ColumnDef<DeploymentR
     {
       id: 'route',
       header: '배치 경로',
-      cell: ({ row }) => <SiteRoute from={row.original.fromSiteName} to={row.original.toSiteName} />,
+      cell: ({ row }) => (
+        <SiteRoute from={row.original.fromSiteName} to={row.original.toSiteName} />
+      ),
     },
     {
       id: 'period',
@@ -71,7 +73,13 @@ export const deploymentRequestColumns = (siteSeq: number): ColumnDef<DeploymentR
     {
       id: 'actions',
       header: () => <span className="sr-only">처리</span>,
-      cell: ({ row }) => <DeploymentRequestActions request={row.original} siteSeq={siteSeq} />,
+      cell: ({ row }) => (
+        <DeploymentRequestActions
+          requestSeq={row.original.requestSeq}
+          userName={row.original.userName}
+          siteSeq={siteSeq}
+        />
+      ),
       // 버튼 폭만큼만 — 남는 폭을 나눠 받으면 버튼이 표 가운데로 밀린다
       meta: { className: 'w-px' },
     },

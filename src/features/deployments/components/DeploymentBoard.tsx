@@ -5,6 +5,7 @@ import {
   FilterXIcon,
   InboxIcon,
   RotateCcwIcon,
+  Undo2Icon,
   SquareArrowRightEnterIcon,
   SquareArrowRightExitIcon,
   TriangleAlertIcon,
@@ -28,9 +29,11 @@ import { cn } from '@/lib/utils'
 import { useDeploymentHistory } from '../hooks/useDeploymentHistory'
 import { useDeploymentRequests } from '../hooks/useDeploymentRequests'
 import { useDeploymentSummary } from '../hooks/useDeploymentSummary'
+import { useReturnRequests } from '../hooks/useReturnRequests'
 import {
   DEPLOYMENT_PAGE_SIZE,
   historyStatusOptions,
+  isRequestTab,
   parseDeploymentTab,
   parseHistoryStatus,
   toHistoryParams,
@@ -39,9 +42,13 @@ import {
 } from '../lib/deploymentParams'
 import { deploymentHistoryColumns } from './DeploymentHistoryColumns'
 import { deploymentRequestColumns } from './DeploymentRequestColumns'
+import { returnRequestColumns } from './ReturnRequestColumns'
 
 /**
- * 배치 요청 · 전출 이력 · 전입 이력 — **탭 3개 + 표 1개** (`spec 039` T649g, 사용자 결정 2026-10-21).
+ * 배치 요청 · 복귀 요청 · 전입 이력 · 전출 이력 — **탭 4개 + 표 1개** (`spec 039` T649g · T659 복귀 요청 탭).
+ *
+ * 🔴 **복귀 요청 탭**(T659, 사용자 정정 2026-10-21) — 복귀는 관리자의 복귀일 지정이 아니라 근무자의 **복귀 요청**
+ * 이다. 우리 소속으로 나가 있는 사람의 요청이 오고 **원소속 관리자(우리)** 가 승인한다. 배치 요청과 같은 형태다.
  *
  * 🔴 **섹션 박스 2개(요청 카드 목록 · 이력 탭)를 걷고 다른 목록 화면 틀로 맞췄다** — 헤더 → (KPI) → 탭 →
  * 표 → 페이지네이션. 요청 목록이 표가 되면서(T649e) 세 목록의 공통 칸(근무자 · 경로 · 사유)이 같아졌고,
@@ -62,19 +69,23 @@ interface TabDef {
 
 const TABS: TabDef[] = [
   { key: 'requests', label: '배치 요청', icon: InboxIcon },
-  // 🔴 전입이 먼저다(사용자 요청 2026-10-21) — 승인한 요청은 **전입**으로 이어지고, 복귀일 지정도 전입에서 한다
+  // 🔴 요청 탭 둘이 나란히(사용자 요청 2026-10-21) — 처리할 일이 앞이다
+  { key: 'returns', label: '복귀 요청', icon: Undo2Icon },
+  // 🔴 전입이 전출보다 먼저다(사용자 요청 2026-10-21) — 승인한 배치 요청은 **전입**으로 이어진다
   { key: 'in', label: '전입 이력', icon: SquareArrowRightEnterIcon },
   { key: 'out', label: '전출 이력', icon: SquareArrowRightExitIcon },
 ]
 
 const EMPTY_TITLE: Record<DeploymentTab, string> = {
-  requests: '대기 중인 요청이 없습니다',
+  requests: '대기 중인 배치 요청이 없습니다',
+  returns: '대기 중인 복귀 요청이 없습니다',
   out: '전출 이력이 없습니다',
   in: '전입 이력이 없습니다',
 }
 
 const ERROR_TITLE: Record<DeploymentTab, string> = {
   requests: '배치 요청을 불러오지 못했습니다',
+  returns: '복귀 요청을 불러오지 못했습니다',
   out: '배치 이력을 불러오지 못했습니다',
   in: '배치 이력을 불러오지 못했습니다',
 }
@@ -86,8 +97,8 @@ const DeploymentBoard = () => {
   const [params, setParams] = useQueryParams<'tab' | 'page' | 'status' | 'q'>()
   const tab = parseDeploymentTab(params.tab)
   /** 이력 상태 필터(T649h) · 이름 검색(T658) — 요청 탭에서는 쓰지 않는다 */
-  const status = tab === 'requests' ? undefined : parseHistoryStatus(params.status)
-  const keyword = tab === 'requests' ? undefined : params.q
+  const status = isRequestTab(tab) ? undefined : parseHistoryStatus(params.status)
+  const keyword = isRequestTab(tab) ? undefined : params.q
 
   /**
    * 🔴 입력은 로컬 state, URL 은 디바운스 뒤에(027 규약). URL 이 밖에서 바뀌면(뒤로가기·초기화·탭 전환)
@@ -117,16 +128,24 @@ const DeploymentBoard = () => {
         : { ...toRequestListParams(siteSeq, params.page), pageSize },
     [siteSeq, tab, params.page, pageSize]
   )
+  const returnParams = useMemo(
+    () =>
+      siteSeq === null || tab !== 'returns'
+        ? null
+        : { ...toRequestListParams(siteSeq, params.page), pageSize },
+    [siteSeq, tab, params.page, pageSize]
+  )
   const historyParams = useMemo(
     () =>
-      siteSeq === null || tab === 'requests'
+      siteSeq === null || isRequestTab(tab)
         ? null
         : { ...toHistoryParams(siteSeq, tab, params.page, status, keyword), pageSize },
     [siteSeq, tab, params.page, status, keyword, pageSize]
   )
   const requests = useDeploymentRequests(requestParams)
+  const returns = useReturnRequests(returnParams)
   const history = useDeploymentHistory(historyParams)
-  const active = tab === 'requests' ? requests : history
+  const active = tab === 'requests' ? requests : tab === 'returns' ? returns : history
   const items = active.data?.items ?? []
 
   /** 🔴 메모이즈한다 — 렌더마다 만들면 행(과 그 안의 mutation 상태)이 리마운트된다(027) */
@@ -134,12 +153,11 @@ const DeploymentBoard = () => {
     () => (siteSeq === null ? [] : deploymentRequestColumns(siteSeq)),
     [siteSeq]
   )
-  const historyColumns = useMemo(() => deploymentHistoryColumns(), [])
-  /** 🔴 전입 이력에만 복귀일 지정 버튼(T656 — 목적지 관리자가 관리한다) */
-  const inHistoryColumns = useMemo(
-    () => (siteSeq === null ? deploymentHistoryColumns() : deploymentHistoryColumns({ siteSeq })),
+  const returnColumns = useMemo(
+    () => (siteSeq === null ? [] : returnRequestColumns(siteSeq)),
     [siteSeq]
   )
+  const historyColumns = useMemo(() => deploymentHistoryColumns(), [])
 
   /**
    * 🔴 **마지막 요청을 처리해 현재 페이지가 비면 이전 페이지로**(spec §4) — 2페이지의 유일한 요청을
@@ -175,7 +193,13 @@ const DeploymentBoard = () => {
       >
         {TABS.map(({ key, label, icon: Icon }) => {
           const selected = tab === key
-          const pending = key === 'requests' ? summary.data?.pendingCount : undefined
+          /* 배치 요청 = `pendingCount`(KPI·사이드바와 같은 숫자) · 복귀 요청 = `pendingReturnCount`(탭에만) */
+          const pending =
+            key === 'requests'
+              ? summary.data?.pendingCount
+              : key === 'returns'
+                ? summary.data?.pendingReturnCount
+                : undefined
           return (
             <button
               key={key}
@@ -206,7 +230,7 @@ const DeploymentBoard = () => {
       {/* 이력 탭의 필터 줄 — 🔴 **다른 목록 화면과 같은 마크업**(T658, 사용자 요청): 검색창(왼쪽) →
           `role="group"` 필터 · 초기화 → spacer. 공지(026)·근무자(038)·지점 이력(037)과 같은 줄이다.
           🔴 KPI(지금 나가/와 있는 **인원**)를 누르면 `배치중` 으로 걸려서 온다 — 숫자와 행 수가 맞는다(T649h) */}
-      {tab !== 'requests' && (
+      {!isRequestTab(tab) && (
         <div className="flex items-center gap-2">
           <AppInput
             variant="search"
@@ -278,7 +302,7 @@ const DeploymentBoard = () => {
             />
           ) : (
             <AppEmpty
-              icon={tab === 'requests' ? InboxIcon : ArrowLeftRightIcon}
+              icon={isRequestTab(tab) ? InboxIcon : ArrowLeftRightIcon}
               title={EMPTY_TITLE[tab]}
             />
           )}
@@ -294,10 +318,17 @@ const DeploymentBoard = () => {
               data={requests.data?.items ?? []}
               hidePagination
             />
+          ) : tab === 'returns' ? (
+            <AppTable
+              key="returns"
+              columns={returnColumns}
+              data={returns.data?.items ?? []}
+              hidePagination
+            />
           ) : (
             <AppTable
               key={tab}
-              columns={tab === 'in' ? inHistoryColumns : historyColumns}
+              columns={historyColumns}
               data={history.data?.items ?? []}
               hidePagination
             />

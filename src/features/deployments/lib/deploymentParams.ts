@@ -23,14 +23,18 @@ import {
  * 헬퍼(`parsePageNumber`·`clampPageSize`)는 `course-history` 것을 **재사용**한다(상한 100 · 1-based).
  */
 
-export type DeploymentTab = 'requests' | 'out' | 'in'
+export type DeploymentTab = 'requests' | 'returns' | 'out' | 'in'
+
+/** 요청 탭(승인·거부 표) — 이력 탭과 필터·컬럼이 다르다 */
+export const isRequestTab = (tab: DeploymentTab): tab is 'requests' | 'returns' =>
+  tab === 'requests' || tab === 'returns'
 
 /**
  * 🔴 **기본은 요청 탭이다** — 처리할 일이 먼저다(014 "요청이 이력보다 위" 근거를 탭 순서로 지킨다).
  * 모르는 값도 요청 탭으로 수렴한다(손으로 고친 URL 이 화면을 깨뜨리지 않게).
  */
 export const parseDeploymentTab = (value?: string): DeploymentTab =>
-  value === 'out' || value === 'in' ? value : 'requests'
+  value === 'returns' || value === 'out' || value === 'in' ? value : 'requests'
 
 export const toDirection = (tab: 'out' | 'in'): DeploymentDirectionCode =>
   tab === 'in' ? DEPLOYMENT_DIRECTION.IN : DEPLOYMENT_DIRECTION.OUT

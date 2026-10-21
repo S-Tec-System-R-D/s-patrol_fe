@@ -74,7 +74,9 @@ describe('DeploymentBoard — 탭', () => {
 
     await screen.findByRole('table')
     expect(screen.getByRole('tab', { name: /배치 요청/ })).toHaveAttribute('aria-selected', 'true')
-    expect(within(screen.getByRole('tab', { name: /배치 요청/ })).getByText('2')).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('tab', { name: /배치 요청/ })).getByText('2')
+    ).toBeInTheDocument()
     expect(inTable().getByText('최범수')).toBeInTheDocument()
     expect(calls.every((call) => call.path === REQUEST_LIST_PATH)).toBe(true)
   })
@@ -203,96 +205,62 @@ describe('DeploymentBoard — 이름 검색 (T658)', () => {
   })
 })
 
-describe('DeploymentBoard — 복귀일 지정 (T656)', () => {
-  it('🔴 전입 이력의 복귀 전 행에만 버튼이 있다 — 복귀완료·전출에는 없다', async () => {
+describe('DeploymentBoard — 복귀 요청 (T659)', () => {
+  const RETURN_LIST_PATH = '/api/v1/Deployment/W/sign/GetReturnRequestList'
+
+  it('🔴 탭 순서는 배치 요청 · 복귀 요청 · 전입 이력 · 전출 이력이다', async () => {
+    renderBoard()
+
+    await screen.findByRole('table')
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent?.replace(/\d+$/, ''))).toEqual([
+      '배치 요청',
+      '복귀 요청',
+      '전입 이력',
+      '전출 이력',
+    ])
+    // 복귀 요청 대기 건수도 탭에 붙는다
+    expect(within(screen.getByRole('tab', { name: /복귀 요청/ })).getByText('1')).toBeInTheDocument()
+  })
+
+  it('복귀 요청 탭은 배치 요청과 같은 형태다 — 경로·복귀일·사유·요청일·승인/거부', async () => {
+    const paths: string[] = []
+    server.events.on('request:start', ({ request }) => {
+      const target = new URL(request.url)
+      if (target.pathname.includes('Request')) paths.push(target.pathname)
+    })
     const user = userEvent.setup()
+    renderBoard()
+    await screen.findByRole('table')
+
+    await user.click(screen.getByRole('tab', { name: /복귀 요청/ }))
+
+    expect(await screen.findByText('장도윤')).toBeInTheDocument()
+    expect(inTable().getByText('복귀 경로')).toBeInTheDocument()
+    expect(inTable().getByText('복귀일')).toBeInTheDocument()
+    expect(inTable().getByText('2026-11-15')).toBeInTheDocument()
+    expect(inTable().getByRole('button', { name: '장도윤 승인' })).toBeInTheDocument()
+    expect(inTable().getByRole('button', { name: '장도윤 거부' })).toBeInTheDocument()
+    expect(paths[paths.length - 1]).toBe(RETURN_LIST_PATH)
+    // 복귀 요청 탭에는 이력 필터가 없다
+    expect(screen.queryByLabelText('이름 검색')).not.toBeInTheDocument()
+  })
+
+  it('🔴 복귀 요청을 승인하면 행이 사라지고 전출 이력이 복귀일로 닫힌다', async () => {
+    const user = userEvent.setup()
+    renderBoard('/deployments?tab=returns')
+
+    await user.click(await screen.findByRole('button', { name: '장도윤 승인' }))
+    expect(await screen.findByText('대기 중인 복귀 요청이 없습니다')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: /전출 이력/ }))
+    expect(await screen.findByText('2026-03-01 ~ 2026-11-15')).toBeInTheDocument()
+  })
+
+  it('🔴 복귀일 지정 버튼은 더 없다 (T656 폐기)', async () => {
     renderBoard('/deployments?tab=in')
 
     await screen.findByText('오준혁')
-    expect(screen.getByRole('button', { name: '오준혁 복귀일 지정' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '한지민 복귀일 지정' })).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('tab', { name: /전출 이력/ }))
-    await screen.findByText('장도윤')
     expect(screen.queryByRole('button', { name: /복귀일 지정/ })).not.toBeInTheDocument()
-  })
-
-  it('🔴 복귀일을 고르면 서버로 나가고 기간이 바뀐다', async () => {
-    const bodies: unknown[] = []
-    server.events.on('request:start', async ({ request }) => {
-      if (new URL(request.url).pathname === '/api/v1/Deployment/W/sign/UpdateDeploymentEndDate') {
-        bodies.push(await request.clone().json())
-      }
-    })
-    const user = userEvent.setup()
-    renderBoard('/deployments?tab=in')
-
-    await user.click(await screen.findByRole('button', { name: '오준혁 복귀일 지정' }))
-    const dialog = await screen.findByRole('dialog')
-    // 🔴 종료일이 미정이면 **이번 달**로 열린다(조기 복귀를 고르기 쉽게) — 1일을 고른다(시작일 이후)
-    await user.click(within(dialog).getAllByText('1').find((el) => !el.closest('button')?.hasAttribute('disabled'))!)
-    const submit = within(dialog).getByRole('button', { name: /^\d{4}-\d{2}-01 로 지정$/ })
-    const picked = (submit.textContent ?? '').slice(0, 10)
-    await user.click(submit)
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(bodies).toEqual([{ historySeq: 603, endDt: picked }])
-    // 기간이 바뀐다(상태 계산은 훅 테스트가 날짜를 고정해 본다)
-    expect(await screen.findByText(`2026-01-05 ~ ${picked}`)).toBeInTheDocument()
-  })
-
-  it('🔴 시작일 이전 날은 고를 수 없다', async () => {
-    const user = userEvent.setup()
-    renderBoard('/deployments?tab=in')
-
-    await user.click(await screen.findByRole('button', { name: '오준혁 복귀일 지정' }))
-    const dialog = await screen.findByRole('dialog')
-
-    // 이번 달로 열린다 — 시작월(2026-01)로 이동해 01-04(시작일 전)가 막혀 있는지 본다
-    const prev = within(dialog).getByRole('button', { name: /이전|previous/i })
-    for (let i = 0; i < 60 && !within(dialog).queryByText('2026년 1월'); i += 1) {
-      await user.click(prev)
-    }
-    expect(within(dialog).getByText('2026년 1월')).toBeInTheDocument()
-    expect(within(dialog).getAllByText('4').map((el) => el.closest('button')?.hasAttribute('disabled'))).toContain(true)
-    expect(within(dialog).getByRole('button', { name: '날짜를 선택해주세요' })).toBeDisabled()
-  })
-
-  it('서버가 준 배치예정 상태를 그린다', async () => {
-    server.use(
-      http.get(HISTORY_PATH, () =>
-        HttpResponse.json({
-          message: '',
-          code: 200,
-          data: {
-            items: [
-              {
-                historySeq: 900,
-                userSeq: 201,
-                userName: '최범수',
-                fromSiteSeq: 21,
-                fromSiteName: '해운대 마린시티',
-                toSiteSeq: 7,
-                toSiteName: '강동 테크노타워',
-                reason: '야간 인력 부족 지원',
-                startDt: '2099-01-01T00:00:00',
-                endDt: null,
-                status: 2,
-                statusName: '배치예정',
-              },
-            ],
-            page: 1,
-            pageSize: 10,
-            totalCount: 1,
-          },
-        })
-      )
-    )
-    renderBoard('/deployments?tab=in')
-
-    expect(await screen.findByText('배치예정')).toBeInTheDocument()
-    // 배치예정도 아직 복귀 전이다 — 복귀일을 미리 정할 수 있다
-    expect(screen.getByRole('button', { name: '최범수 복귀일 지정' })).toBeInTheDocument()
   })
 })
 
@@ -320,7 +288,9 @@ describe('DeploymentBoard — 이력 상태 필터 (T649h)', () => {
     renderBoard('/deployments?tab=in')
     await screen.findByText('오준혁')
 
-    await user.click(within(screen.getByRole('group', { name: '목록 필터' })).getByLabelText('상태'))
+    await user.click(
+      within(screen.getByRole('group', { name: '목록 필터' })).getByLabelText('상태')
+    )
     await user.click(await screen.findByRole('option', { name: '복귀완료' }))
 
     await waitFor(() => expect(search()).toContain('status=returned'))
@@ -373,15 +343,25 @@ describe('DeploymentBoard — 상태', () => {
   it('요청이 0건이면 탭 건수를 그리지 않고 빈 상태다', async () => {
     server.use(
       http.get(REQUEST_LIST_PATH, () =>
-        HttpResponse.json({ message: '', code: 200, data: { items: [], page: 1, pageSize: 10, totalCount: 0 } })
+        HttpResponse.json({
+          message: '',
+          code: 200,
+          data: { items: [], page: 1, pageSize: 10, totalCount: 0 },
+        })
       ),
       http.get('/api/v1/Deployment/W/sign/GetDeploymentSummary', () =>
-        HttpResponse.json({ message: '', code: 200, data: { outCount: 1, inCount: 1, pendingCount: 0 } })
+        HttpResponse.json({
+          message: '',
+          code: 200,
+          data: { outCount: 1, inCount: 1, pendingCount: 0 },
+        })
       )
     )
     renderBoard()
 
-    expect(await screen.findByText('대기 중인 요청이 없습니다')).toBeInTheDocument()
-    expect(within(screen.getByRole('tab', { name: /배치 요청/ })).queryByText('0')).not.toBeInTheDocument()
+    expect(await screen.findByText('대기 중인 배치 요청이 없습니다')).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('tab', { name: /배치 요청/ })).queryByText('0')
+    ).not.toBeInTheDocument()
   })
 })

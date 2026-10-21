@@ -18,6 +18,10 @@ export const deploymentKeys = {
   requests: (params: DeploymentRequestListParams) =>
     ['deployment', params.siteSeq, 'requests', params] as const,
 
+  /** 복귀 요청 — 승인하면 이력(전출)이 바뀌므로 같은 루트 아래 둔다(T659) */
+  returns: (params: DeploymentRequestListParams) =>
+    ['deployment', params.siteSeq, 'returns', params] as const,
+
   history: (params: DeploymentHistoryParams) =>
     ['deployment', params.siteSeq, 'history', params] as const,
 }

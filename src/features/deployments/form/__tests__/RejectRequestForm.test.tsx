@@ -38,7 +38,12 @@ const renderForm = (onSuccess = vi.fn()) => {
   })
   render(
     <QueryClientProvider client={queryClient}>
-      <RejectRequestForm request={request} siteSeq={7} onSuccess={onSuccess} />
+      <RejectRequestForm
+        requestSeq={request.requestSeq}
+        userName={request.userName}
+        siteSeq={7}
+        onSuccess={onSuccess}
+      />
     </QueryClientProvider>
   )
   return onSuccess

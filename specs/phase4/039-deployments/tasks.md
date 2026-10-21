@@ -114,6 +114,16 @@
 
 - [x] T658 전입·전출 이력에 **이름 검색** + 필터 줄을 **다른 화면과 같은 마크업**으로 in DeploymentBoard.tsx · lib/deploymentParams.ts · types/deployment.ts · mocks/handlers/deployments.ts · docs/api-request-deployment.md — 사용자 요청. 검색창(260px, 왼쪽) → `role="group"` `contents` 필터 · 초기화 → spacer(공지·근무자·지점 이력과 같다). URL `?q` · 디바운스 · 검색하면 첫 페이지 · **탭을 바꾸면 검색도 지운다** · 초기화는 검색·상태를 함께. 가정 파라미터 `userName`(부분 일치 — 순찰이력과 같은 이름·방식). 요청서 4·5번에 이름 검색 추가
 
+- [x] T659 🔴 **복귀 요청 탭 · 복귀일 지정 폐기**(사용자 정정 2026-10-21) — 복귀는 관리자의 복귀일 지정이 아니라 근무자가 앱에서 **복귀 요청** → **원소속 관리자**가 승인·거부(사용자 확인). API = 배치(요청·승인·거부) · 복귀(요청·승인·거부) — 백엔드에 요청 완료.
+  - 🔴 **삭제**: `DeploymentEndDateAction` · `useUpdateDeploymentEndDate` · `updateDeploymentEndDate` · MSW `UpdateDeploymentEndDate` · 관련 테스트 · 요청서 8번(T656 의 복귀일 지정)
+  - **신설**: 가정 계약 `ReturnRequestRow`(`historySeq` · 지금 배치지 → 원소속 · `returnDt`) · API 3(`GetReturnRequestList` · `ApproveReturnRequest` · `RejectReturnRequest` — 가정) · `useReturnRequests` · `ReturnRequestColumns`
+  - 🔴 **승인·거부 버튼·폼·훅을 `kind`(배치/복귀)로 일반화** — 규약이 같고 API 만 다르다. 두 벌이면 한쪽만 고쳐진다
+  - 탭 4개: 배치 요청 · **복귀 요청** · 전입 이력 · 전출 이력. 복귀 요청 탭 뱃지 = `pendingReturnCount`(요약에 추가). 🔴 **KPI·사이드바는 배치만**(사용자 결정)
+  - 복귀 승인 → 그 전출 이력의 종료일 = 복귀일(상태는 날짜로 — 그날 지나면 복귀완료)
+  - 빈 상태 문구 `대기 중인 배치 요청이 없습니다` / `…복귀 요청이…`
+  - 요청서를 **배치 · 복귀 · 이력/요약** 3구획으로 다시 썼다(10항목)
+  - 테스트: 복귀 탭 4 · 훅 2 · 복귀일 지정 테스트 삭제
+
 ---
 
 ## DoD 대조표 (T655)
@@ -149,8 +159,9 @@
 
 ### ① 🔴 백엔드 구현 후 WF-1-0 — 가정 계약 교정
 
-⚠️ T656 이후 가정이 늘었다: 요청의 `startDt`·`endDt` · 이력 `status`(0 배치중 / 1 복귀완료 / 2 배치예정) +
-`statusName` 을 **서버가 날짜로 계산**하는지 · `UpdateDeploymentEndDate`(경로·바디·시작일 검증·복귀완료 거부).
+⚠️ T656·T659 이후 가정이 늘었다: 요청의 `startDt`·`endDt` · 이력 `status`(0 배치중 / 1 복귀완료 / 2 배치예정) +
+`statusName` 을 **서버가 날짜로 계산**하는지 · **복귀 API 3종**(경로·필드 — 특히 `historySeq` 를 주는지 · 승인 시 이력 종료일 처리) ·
+요약의 `pendingReturnCount`. (T656 의 복귀일 지정 API 는 폐기 — 확인 대상 아님)
 
 요청서(`docs/api-request-deployment.md`)대로 백엔드가 만들면 **실측해서 `types/deployment.ts` 와
 `mocks/handlers/deployments.ts` 만** 고친다. 확인할 것(전부 가정):

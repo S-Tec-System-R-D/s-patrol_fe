@@ -54,7 +54,7 @@ const requestsOf = async () => {
 
 describe('조회 3종', () => {
   it('요약은 store 에서 계산된다 — 나간 1 · 온 1 · 대기 2', async () => {
-    expect(await summary()).toEqual({ outCount: 1, inCount: 1, pendingCount: 2 })
+    expect(await summary()).toEqual({ outCount: 1, inCount: 1, pendingCount: 2, pendingReturnCount: 1 })
   })
 
   it('요청 목록은 이 사업장으로 들어온 대기 요청이다', async () => {
@@ -84,11 +84,15 @@ describe('🔴 상태 보유 MSW — 승인·거부가 숫자를 바꾼다', () 
     // 🔴 배수진(502) = 시작일이 지난 배치 → 승인하면 바로 배치중(T656). 배치예정은 현재 인원이 아니다
     await api.post('/api/v1/Deployment/W/sign/ApproveDeploymentRequest', { requestSeq: 502 })
 
-    expect(await summary()).toEqual({ outCount: 1, inCount: 2, pendingCount: 1 })
+    expect(await summary()).toEqual({ outCount: 1, inCount: 2, pendingCount: 1, pendingReturnCount: 1 })
     expect((await requestsOf()).items.map((row) => row.requestSeq)).toEqual([501])
     const approved = (await historyOf('in')).items.find((row) => row.userName === '배수진')
     // 기간은 요청의 시작일·종료일 그대로(종료일 미입력 → 미정)
-    expect(approved).toMatchObject({ startDt: '2026-06-03T00:00:00', endDt: null, statusName: '배치중' })
+    expect(approved).toMatchObject({
+      startDt: '2026-06-03T00:00:00',
+      endDt: null,
+      statusName: '배치중',
+    })
   })
 
   it('거부하면 요청만 사라지고 이력은 그대로다', async () => {
@@ -102,24 +106,25 @@ describe('🔴 상태 보유 MSW — 승인·거부가 숫자를 바꾼다', () 
     expect((await historyOf('in')).totalCount).toBe(before)
   })
 
-  it('🔴 복귀일을 지정하면 기간이 바뀌고, 지난 날이면 복귀완료가 되어 현재 인원에서 빠진다 (T656)', async () => {
-    await api.post('/api/v1/Deployment/W/sign/UpdateDeploymentEndDate', {
-      historySeq: 603,
-      endDt: '2026-01-20',
-    })
+  it('🔴 복귀 요청을 승인하면 그 전출 이력이 복귀일로 닫힌다 (T659)', async () => {
+    await api.post('/api/v1/Deployment/W/sign/ApproveReturnRequest', { requestSeq: 701 })
 
-    const row = (await historyOf('in')).items.find((item) => item.historySeq === 603)
-    expect(row).toMatchObject({ endDt: '2026-01-20T00:00:00', statusName: '복귀완료' })
-    expect((await summary()).inCount).toBe(0)
+    const row = (await historyOf('out')).items.find((item) => item.historySeq === 601)
+    expect(row?.endDt).toBe('2026-11-15T00:00:00')
+    expect((await summary()).pendingReturnCount).toBe(0)
+    // 🔴 배치 요청 숫자(KPI·사이드바)는 그대로다 — 복귀는 탭 뱃지에만 센다
+    expect((await summary()).pendingCount).toBe(2)
   })
 
-  it('복귀일이 시작일보다 앞서면 400 이다 (가정)', async () => {
-    await expect(
-      api.post('/api/v1/Deployment/W/sign/UpdateDeploymentEndDate', {
-        historySeq: 603,
-        endDt: '2026-01-01',
-      })
-    ).rejects.toBeTruthy()
+  it('복귀 요청을 거부하면 요청만 사라지고 이력은 그대로다', async () => {
+    await api.post('/api/v1/Deployment/W/sign/RejectReturnRequest', {
+      requestSeq: 701,
+      rejectReason: '인력 부족',
+    })
+
+    expect((await summary()).pendingReturnCount).toBe(0)
+    const row = (await historyOf('out')).items.find((item) => item.historySeq === 601)
+    expect(row?.endDt).toBeNull()
   })
 
   it('이미 처리된 요청을 다시 처리하면 400 이다 (가정)', async () => {
