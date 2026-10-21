@@ -35,10 +35,10 @@
 
 ## Phase 4: US3·US4 — 비밀번호 변경 · 삭제
 
-- [ ] T693 [US3] 비밀번호 폼 in src/features/workers/form/PasswordForm.tsx · schema.ts — 새 비밀번호 + 확인(`refine`) · `loginPw` 만
-- [ ] T694 [US3] 상세 연결 — "비밀번호" 초기화 확인창 → **"비밀번호 변경" 버튼 + 모달**
-- [ ] T695 [US4] 🔴 **삭제** in src/pages/service/users/UserDetailPage.tsx — 이동 먼저 → `detail` 제거 → `lists` 무효화 · 본인 계정 비활성
-- [ ] T696 [US3][US4] [P] 테스트
+- [x] T693 [US3] 비밀번호 폼 in src/features/workers/form/PasswordForm.tsx · schema.ts — 새 비밀번호 + 확인(`refine`) · `loginPw` 만
+- [x] T694 [US3] 상세 연결 — "비밀번호" 초기화 확인창 → **"비밀번호 변경" 버튼 + 모달**
+- [x] T695 [US4] 🔴 **삭제** in src/pages/service/users/UserDetailPage.tsx — 이동 먼저 → `detail` 제거 → `lists` 무효화 · 본인 계정 비활성
+- [x] T696 [US3][US4] [P] 테스트 in src/pages/service/users/__tests__/UserDetailPage.test.tsx — 비밀번호: 다른 모달 · 불일치 거부 · `userSeq`+`loginPw` 만 · 로그인 규칙 / 삭제: 서버에서 사라짐 · 이미 지워진 근무자 → 상세에 머묾 · 본인 계정 잠금(5건, mock 2건 대체)
 
 ## Phase 5: 마무리
 

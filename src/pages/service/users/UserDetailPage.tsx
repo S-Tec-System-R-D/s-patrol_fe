@@ -1,3 +1,4 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -14,13 +15,18 @@ import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
+import { useMe } from '@/features/auth/hooks/useMe'
+import { removeUser } from '@/features/workers/api/removeUser'
 import UserInfoCard from '@/features/workers/components/detail/UserInfoCard'
 import UserPatrolCard from '@/features/workers/components/detail/UserPatrolCard'
 import WorkerAvatar from '@/features/workers/components/WorkerAvatar'
 import EditWorkerForm from '@/features/workers/form/EditWorkerForm'
+import PasswordForm from '@/features/workers/form/PasswordForm'
 import { useUserDetail } from '@/features/workers/hooks/useUserDetail'
 import { workLabel } from '@/features/workers/lib/userFormat'
+import { userKeys } from '@/features/workers/queryKeys'
 import { getSiteSeq } from '@/lib/auth/site'
+import { notify } from '@/lib/notify'
 import { paths } from '@/router/paths'
 
 /**
@@ -31,8 +37,8 @@ import { paths } from '@/router/paths'
  * 🔴 **현장관리자는 이 API 가 403 이다**(B-41) — 실서버에서는 "불러오지 못했습니다" 가 뜬다.
  * 🔴 조회 중과 "없음" 을 구분한다 — 단정하면 조회 중에 그것이 뜨는 순간 방금 지운 줄 안다(023).
  *
- * 정보 수정은 모달 → `UpdateUser`(`spec 041` US2) — 성공해야 닫힌다.
- * ⚠️ 비밀번호·삭제는 아직 mock 이다(`spec 041` Phase 4 에서 연결).
+ * 정보 수정·비밀번호 변경은 **각각 다른 모달** → `UpdateUser`(`spec 041` US2·US3) — 성공해야 닫힌다.
+ * 삭제는 확인 → `RemoveUser` → 목록(US4). 🔴 본인 계정은 삭제할 수 없게 잠근다.
  */
 
 const Breadcrumb = () => (
@@ -65,6 +71,24 @@ const UserDetailPage = () => {
 
   const detail = useUserDetail(userSeq)
   const [editOpen, setEditOpen] = useState(false)
+  const [passwordOpen, setPasswordOpen] = useState(false)
+  const me = useMe()
+  const queryClient = useQueryClient()
+
+  /** 🔴 실패 토스트는 전역 `MutationCache` 가 띄운다 — 여기서 또 띄우지 않는다 */
+  const deleteMutation = useMutation({
+    mutationFn: removeUser,
+    onSuccess: async (_, deletedSeq) => {
+      // 🔴 이동을 **무효화보다 먼저** 한다 — 지운 근무자의 상세를 다시 읽어 실패 화면이 깜빡인다(029 승계)
+      navigate(paths.service.users, { replace: true })
+      queryClient.removeQueries({ queryKey: userKeys.detail(deletedSeq) })
+      notify.success('근무자를 삭제했습니다.')
+      await queryClient.invalidateQueries({ queryKey: userKeys.lists })
+    },
+    // 다른 관리자가 이미 지웠으면 400 이다 — 상세를 다시 읽어 지금 상태(404 실패 화면)를 보여 준다
+    onError: (_, deletedSeq) =>
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(deletedSeq) }),
+  })
   /* 🔴 순찰 기록은 **선택한 사업장** 기준이다 — 상세의 `siteSeq` 는 소속지라(배치 온 사람은 다르다) 쓰지 않는다 */
   const siteSeq = getSiteSeq()
 
@@ -121,6 +145,7 @@ const UserDetailPage = () => {
   }
 
   const user = detail.data
+  const isMe = me.data?.userSeq === user.userSeq
 
   return (
     <div className="flex flex-col gap-4 p-8">
@@ -141,19 +166,21 @@ const UserDetailPage = () => {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          {/* ⚠️ "초기화" 문구는 구 화면 그대로다. 서버는 `UpdateUser.loginPw` 로 **새 값을 지정**하는
-              방식이라 동작 정의는 변경계 spec 에서 한다(OQ-038-C) */}
-          <AppAlertDialog
-            size="sm"
-            icon={KeyRoundIcon}
-            title="비밀번호를 초기화하시겠습니까?"
-            description="초기화된 비밀번호는 근무자 앱으로 안내됩니다."
-            onAction={() => {}}
+          {/* 🔴 **초기화가 아니라 변경**이다 — 서버는 `UpdateUser.loginPw` 로 새 값을 지정한다. 정보 수정과
+              **다른 버튼**으로 둔다(사용자 결정 2026-10-21, OQ-038-C) */}
+          <AppDialog
+            title="비밀번호 변경"
+            description="근무자가 로그인에 쓸 새 비밀번호를 지정합니다."
+            open={passwordOpen}
+            onOpenChange={setPasswordOpen}
+            trigger={
+              <AppButton icon={KeyRoundIcon} variant="sub" className="bg-card">
+                비밀번호 변경
+              </AppButton>
+            }
           >
-            <AppButton icon={KeyRoundIcon} variant="sub" className="bg-card">
-              비밀번호
-            </AppButton>
-          </AppAlertDialog>
+            <PasswordForm userSeq={user.userSeq} onSuccess={() => setPasswordOpen(false)} />
+          </AppDialog>
           <AppDialog
             title="근무자 수정"
             description="근무자 정보를 수정할 수 있습니다."
@@ -172,10 +199,16 @@ const UserDetailPage = () => {
             icon={Trash2Icon}
             variant="destructive"
             title="근무자를 삭제하시겠습니까?"
-            // ⚠️ mock — 실제 삭제 없이 목록으로 돌아간다(변경계 전환 spec 에서 연결)
-            onAction={() => navigate(paths.service.users)}
+            onAction={() => deleteMutation.mutate(user.userSeq)}
           >
-            <AppButton icon={Trash2Icon} variant="destructive" className="bg-card">
+            <AppButton
+              icon={Trash2Icon}
+              variant="destructive"
+              className="bg-card"
+              // 🔴 본인 계정은 지울 수 없다 — 목록에 관리자도 섞여 온다(038). 처리 중에도 잠근다(확인 창은 즉시 닫힌다)
+              disabled={isMe || deleteMutation.isPending}
+              title={isMe ? '본인 계정은 삭제할 수 없습니다' : undefined}
+            >
               삭제
             </AppButton>
           </AppAlertDialog>

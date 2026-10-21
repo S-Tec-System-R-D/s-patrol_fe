@@ -27,3 +27,19 @@ export type EditWorkerFormData = z.infer<typeof editWorkerSchema>
 
 /** `010-1234-5678` → `01012345678` — 🔴 서버는 보낸 그대로 저장한다(B-45). 기존 데이터는 숫자만이다 */
 export const toPhoneDigits = (phone: string): string => phone.replace(/-/g, '')
+
+/**
+ * 비밀번호 변경 (`spec 041` US3) — 관리자가 **새 값을 지정**한다(사용자 결정 2026-10-21, OQ-038-C).
+ * 규칙은 로그인과 같다 — 서버는 `12` 도 받는다(B-45). 확인 칸은 서버로 보내지 않는다.
+ */
+export const passwordSchema = z
+  .object({
+    loginPw: loginSchema.shape.loginPw,
+    confirm: z.string().min(1, '한 번 더 입력해주세요.'),
+  })
+  .refine((data) => data.loginPw === data.confirm, {
+    message: '비밀번호가 일치하지 않습니다.',
+    path: ['confirm'],
+  })
+
+export type PasswordFormData = z.infer<typeof passwordSchema>

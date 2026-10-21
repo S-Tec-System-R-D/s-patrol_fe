@@ -10,6 +10,9 @@ import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
 import { resetUserStore } from '@/mocks/handlers/users'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
+import { fetchUserDetail } from '@/features/workers/api/getUserDetail'
+import { fetchUserList } from '@/features/workers/api/getUserList'
+import { removeUser } from '@/features/workers/api/removeUser'
 import UserDetailPage from '../UserDetailPage'
 
 /**
@@ -132,7 +135,7 @@ describe('UserDetailPage — 정상', () => {
     expect(await screen.findByRole('heading', { name: '김민준2' })).toBeInTheDocument()
   })
 
-  it('삭제를 확인하면 목록으로 돌아간다 (mock)', async () => {
+  it('삭제를 확인하면 서버에서 지우고 목록으로 돌아간다 (spec 041 US4)', async () => {
     const user = userEvent.setup()
     renderAt('101')
 
@@ -141,15 +144,77 @@ describe('UserDetailPage — 정상', () => {
     await user.click(within(dialog).getByRole('button', { name: /삭제|확인/ }))
 
     expect(await screen.findByText('LIST_ROUTE')).toBeInTheDocument()
+    await expect(fetchUserDetail(101)).rejects.toBeTruthy()
+    const { items } = await fetchUserList({ siteId: 7, pageNumber: 1, pageSize: 100 })
+    expect(items.map((u) => u.userSeq)).not.toContain(101)
   })
 
-  it('비밀번호 확인 모달을 연다', async () => {
+  it('이미 지워진 근무자면 상세에 머물고 실패 화면으로 바뀐다', async () => {
+    const user = userEvent.setup()
+    renderAt('101')
+    await screen.findByRole('heading', { name: '김민준' })
+    // 다른 관리자가 먼저 지웠다
+    await removeUser(101)
+
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+    const dialog = await screen.findByRole('alertdialog')
+    await user.click(within(dialog).getByRole('button', { name: /삭제|확인/ }))
+
+    expect(await screen.findByText(/불러오지 못했습니다/)).toBeInTheDocument()
+    expect(screen.queryByText('LIST_ROUTE')).not.toBeInTheDocument()
+  })
+
+  it('🔴 본인 계정은 삭제 버튼이 잠긴다', async () => {
+    setAccessToken(makeAccessToken({ userSeq: '109' }))
+    renderAt('109')
+
+    await screen.findByRole('heading', { name: '홍관리' })
+    expect(screen.getByRole('button', { name: '삭제' })).toBeDisabled()
+  })
+
+  it('비밀번호 변경은 정보 수정과 다른 모달이다 — loginPw 만 보내고 닫힌다 (spec 041 US3)', async () => {
+    const sent: [string, string][] = []
+    server.use(
+      http.post('/api/v1/User/W/sign/UpdateUser', async ({ request }) => {
+        const form = await request.clone().formData()
+        for (const [key, value] of form.entries()) sent.push([key, String(value)])
+        return undefined
+      })
+    )
     const user = userEvent.setup()
     renderAt('101')
 
-    await user.click(await screen.findByRole('button', { name: '비밀번호' }))
+    await user.click(await screen.findByRole('button', { name: '비밀번호 변경' }))
+    const dialog = await screen.findByRole('dialog', { name: '비밀번호 변경' })
+    expect(within(dialog).queryByDisplayValue('김민준')).not.toBeInTheDocument()
 
-    expect(await screen.findByRole('alertdialog')).toBeInTheDocument()
+    await user.type(within(dialog).getByPlaceholderText('8자리 이상, 영문·숫자·특수문자 포함'), 'Newpw12!')
+    await user.type(within(dialog).getByPlaceholderText('한 번 더 입력해주세요'), 'Newpw12?')
+    await user.click(within(dialog).getByRole('button', { name: '변경' }))
+    expect(await within(dialog).findByText('비밀번호가 일치하지 않습니다.')).toBeInTheDocument()
+
+    const confirm = within(dialog).getByPlaceholderText('한 번 더 입력해주세요')
+    await user.clear(confirm)
+    await user.type(confirm, 'Newpw12!')
+    await user.click(within(dialog).getByRole('button', { name: '변경' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(sent).toEqual([
+      ['userSeq', '101'],
+      ['loginPw', 'Newpw12!'],
+    ])
+  })
+
+  it('비밀번호는 로그인과 같은 규칙이다', async () => {
+    const user = userEvent.setup()
+    renderAt('101')
+
+    await user.click(await screen.findByRole('button', { name: '비밀번호 변경' }))
+    const dialog = await screen.findByRole('dialog', { name: '비밀번호 변경' })
+    await user.type(within(dialog).getByPlaceholderText('8자리 이상, 영문·숫자·특수문자 포함'), '12')
+    await user.click(within(dialog).getByRole('button', { name: '변경' }))
+
+    expect(await within(dialog).findByText('8자리 이상 입력해주세요.')).toBeInTheDocument()
   })
 })
 
