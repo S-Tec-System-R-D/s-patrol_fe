@@ -45,7 +45,7 @@ import { paths } from '@/router/paths'
  * 🔴 **현장관리자는 이 API 가 403 이다**(B-41) — 실서버에서는 "불러오지 못했습니다" 가 뜬다.
  * 문구가 권한을 단정하지 않는 이유는 B-41 이 풀리면 그 문구가 거짓이 되기 때문이다.
  *
- * ⚠️ 추가는 **모달 UI 만** 있고 저장은 mock 이다(변경계 전환은 별도 spec).
+ * 추가는 모달 → `AddUser`(`spec 041`). 성공해야 닫히고 목록에 머문다(서버가 ID 를 주지 않는다).
  */
 
 type FilterKey = keyof UserQuery
@@ -74,6 +74,7 @@ const UsersPage = () => {
 
   /** 🔴 행 수는 URL 에 두지 않지만 동작은 한다(027·036·037·026 승계). 바꾸면 첫 페이지로 */
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const [addOpen, setAddOpen] = useState(false)
 
   const listParams = useMemo(
     () => (siteSeq === null ? null : { ...toUserListParams(siteSeq, query), pageSize }),
@@ -174,19 +175,23 @@ const UsersPage = () => {
         <AppDialog
           title="근무자 추가"
           description="새 근무자를 등록할 수 있습니다."
+          open={addOpen}
+          onOpenChange={setAddOpen}
           trigger={
             /* 🔴 `xl` 미만에서는 아이콘만 — `aria-label` 로 이름을 유지한다(`PointTopNav` 승계) */
             <AppButton
               icon={PlusIcon}
               iconSize={14}
               aria-label="근무자 추가"
+              // 사업장이 없으면 목록도 요청하지 않는다 — 같은 기준으로 막는다
+              disabled={siteSeq === null}
               className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
             >
               <span className="hidden xl:inline">근무자 추가</span>
             </AppButton>
           }
         >
-          <AddWorkerForm />
+          <AddWorkerForm onSuccess={() => setAddOpen(false)} />
         </AppDialog>
       </div>
 

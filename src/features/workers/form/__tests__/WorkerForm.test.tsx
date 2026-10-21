@@ -1,19 +1,63 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import type { ReactElement } from 'react'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { setSite } from '@/lib/auth/site'
+import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
+import { resetUserStore } from '@/mocks/handlers/users'
+import { server } from '@/mocks/server'
+import { makeAccessToken } from '@/test/jwt'
+
+import { fetchUserList } from '../../api/getUserList'
 import AddWorkerForm from '../AddWorkerForm'
 import EditWorkerForm from '../EditWorkerForm'
 
+const ADD_USER_PATH = '/api/v1/User/W/sign/AddUser'
+
 const renderWithQuery = (ui: ReactElement) => {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
   })
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
 
-describe('AddWorkerForm', () => {
+/** multipart 본문을 [키, 값] 으로 기록하고 처리는 기본 핸들러(상태 보유)에 넘긴다 */
+const recordMultipart = (path: string) => {
+  const sent: [string, string][] = []
+  server.use(
+    http.post(path, async ({ request }) => {
+      const form = await request.clone().formData()
+      for (const [key, value] of form.entries()) {
+        sent.push([key, typeof value === 'string' ? value : value.name])
+      }
+      return undefined
+    })
+  )
+  return sent
+}
+
+const fillAdd = async (
+  user: ReturnType<typeof userEvent.setup>,
+  over: Partial<Record<'name' | 'loginId' | 'phone' | 'loginPw', string>> = {}
+) => {
+  const v = { name: '새근무자', loginId: '990001', phone: '010-1234-5678', loginPw: 'Abcd123!', ...over }
+  await user.type(screen.getByPlaceholderText('이름을 입력해주세요'), v.name)
+  await user.type(screen.getByPlaceholderText('로그인에 쓰는 사번(8자리 이하)'), v.loginId)
+  await user.type(screen.getByPlaceholderText('010-0000-0000'), v.phone)
+  await user.type(screen.getByPlaceholderText('8자리 이상, 영문·숫자·특수문자 포함'), v.loginPw)
+}
+
+beforeEach(() => {
+  resetUserStore()
+  clearTokens()
+  setAccessToken(makeAccessToken())
+  setSite(7, '강동 테크노타워')
+})
+
+describe('AddWorkerForm — 입력', () => {
   it('필수값 미입력 시 zod 에러 노출', async () => {
     renderWithQuery(<AddWorkerForm />)
     const user = userEvent.setup()
@@ -21,8 +65,76 @@ describe('AddWorkerForm', () => {
     await user.click(screen.getByRole('button', { name: '등록' }))
 
     expect(await screen.findByText('두 글자 이상 입력해주세요.')).toBeInTheDocument()
+    expect(await screen.findByText('사번을 입력해주세요.')).toBeInTheDocument()
     expect(await screen.findByText('010-0000-0000 형식으로 입력해주세요.')).toBeInTheDocument()
     expect(await screen.findByText('8자리 이상 입력해주세요.')).toBeInTheDocument()
+  })
+
+  it('🔴 사번·비밀번호는 로그인과 같은 규칙이다 — 서버는 검사하지 않는다(B-45)', async () => {
+    renderWithQuery(<AddWorkerForm />)
+    const user = userEvent.setup()
+    await fillAdd(user, { loginId: '123456789', loginPw: 'abcdefgh' })
+    await user.click(screen.getByRole('button', { name: '등록' }))
+
+    expect(await screen.findByText('8자리 이하로 입력해주세요.')).toBeInTheDocument()
+    expect(await screen.findByText('숫자를 1자 이상 포함해주세요.')).toBeInTheDocument()
+  })
+})
+
+describe('AddWorkerForm — 제출', () => {
+  it('근무자(7)로, 연락처는 숫자만 보내고 성공하면 닫고 목록에 나온다', async () => {
+    const sent = recordMultipart(ADD_USER_PATH)
+    const onSuccess = vi.fn()
+    renderWithQuery(<AddWorkerForm onSuccess={onSuccess} />)
+    const user = userEvent.setup()
+    await fillAdd(user)
+    await user.click(screen.getByRole('button', { name: '등록' }))
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1))
+    expect(Object.fromEntries(sent)).toEqual({
+      siteSeq: '7',
+      codeSeq: '7',
+      loginId: '990001',
+      loginPw: 'Abcd123!',
+      name: '새근무자',
+      phone: '01012345678',
+    })
+    const { items } = await fetchUserList({ siteId: 7, pageNumber: 1, pageSize: 100 })
+    expect(items.find((u) => u.loginId === '990001')).toMatchObject({ userName: '새근무자', codeSeq: 7 })
+  })
+
+  it('사번이 겹치면 닫지 않고 입력이 남는다', async () => {
+    const onSuccess = vi.fn()
+    renderWithQuery(<AddWorkerForm onSuccess={onSuccess} />)
+    const user = userEvent.setup()
+    // 시드 101 의 사번(240000 + userSeq)
+    await fillAdd(user, { loginId: '240101' })
+    await user.click(screen.getByRole('button', { name: '등록' }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: '등록' })).toBeEnabled())
+    expect(onSuccess).not.toHaveBeenCalled()
+    expect(screen.getByDisplayValue('240101')).toBeInTheDocument()
+  })
+
+  it('처리 중에는 버튼이 잠겨 연타해도 한 번만 보낸다', async () => {
+    let calls = 0
+    server.use(
+      http.post(ADD_USER_PATH, async () => {
+        calls += 1
+        await new Promise((resolve) => setTimeout(resolve, 50))
+        return HttpResponse.json({ message: 'ok', data: true, code: 200 })
+      })
+    )
+    const onSuccess = vi.fn()
+    renderWithQuery(<AddWorkerForm onSuccess={onSuccess} />)
+    const user = userEvent.setup()
+    await fillAdd(user)
+    const submit = screen.getByRole('button', { name: '등록' })
+    await user.click(submit)
+    await user.click(submit)
+
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1))
+    expect(calls).toBe(1)
   })
 })
 

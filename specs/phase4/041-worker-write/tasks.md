@@ -22,10 +22,10 @@
 
 > **독립 테스트 기준**: 추가하면 목록에 나오고 `codeSeq: 7`·연락처 숫자만 나간다. 사번 중복이면 모달이 남는다.
 
-- [ ] T686 [US1] 스키마 in src/features/workers/form/schema.ts — `loginId`·`loginPw`(로그인 규칙) · `initialPassword` 제거
-- [ ] T687 [US1] 🔴 **추가 제출** in src/features/workers/form/AddWorkerForm.tsx — 사번 입력 추가 · `addUser` · `lists` 무효화 · 성공해야 `onSuccess`
-- [ ] T688 [US1] 목록 연결 in src/pages/service/users/UsersPage.tsx — 모달 open 제어 · 사업장 미선택 시 버튼 비활성
-- [ ] T689 [US1] [P] 테스트 — 규칙 · multipart 본문 · 성공/중복/연타 · 목록 흐름
+- [x] T686 [US1] 스키마 in src/features/workers/form/schema.ts — `loginId`·`loginPw` 는 **`loginSchema.shape` 를 그대로 재사용**(규칙 한 곳) · `initialPassword` 제거 · `toPhoneDigits`
+- [x] T687 [US1] 🔴 **추가 제출** in src/features/workers/form/AddWorkerForm.tsx — 사번 입력 추가 · `addUser` · `lists` 무효화 · 성공해야 `onSuccess`
+- [x] T688 [US1] 목록 연결 in src/pages/service/users/UsersPage.tsx — 모달 open 제어 · 사업장 미선택 시 버튼 비활성
+- [x] T689 [US1] [P] 테스트 — 규칙 · multipart 본문(`codeSeq: 7` · 연락처 숫자만) · 성공/중복/연타(`WorkerForm.test.tsx` 5건) · 목록 흐름 2건(`UsersPage.test.tsx`)
 
 ## Phase 3: US2 — 정보 수정
 

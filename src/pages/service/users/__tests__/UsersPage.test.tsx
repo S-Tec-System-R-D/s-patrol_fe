@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { setSite } from '@/lib/auth/site'
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
+import { resetUserStore } from '@/mocks/handlers/users'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
 import UsersPage from '../UsersPage'
@@ -58,6 +59,7 @@ const captureQuery = () => {
 }
 
 beforeEach(() => {
+  resetUserStore()
   clearTokens()
   setAccessToken(makeAccessToken())
   setSite(7, '강동 테크노타워')
@@ -214,5 +216,37 @@ describe('UsersPage — 필터가 서버로 나간다', () => {
 
     await waitFor(() => expect(calls.length).toBeGreaterThan(0))
     expect(Number(calls[calls.length - 1].get('pageSize'))).toBeLessThanOrEqual(100)
+  })
+})
+
+describe('UsersPage — 추가 (spec 041 US1)', () => {
+  it('추가 모달에서 등록하면 모달이 닫히고 목록에 나온다', async () => {
+    renderPage()
+    const user = userEvent.setup()
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: '근무자 추가' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.type(within(dialog).getByPlaceholderText('이름을 입력해주세요'), '신입근무')
+    await user.type(within(dialog).getByPlaceholderText('로그인에 쓰는 사번(8자리 이하)'), '990001')
+    await user.type(within(dialog).getByPlaceholderText('010-0000-0000'), '010-1234-5678')
+    await user.type(
+      within(dialog).getByPlaceholderText('8자리 이상, 영문·숫자·특수문자 포함'),
+      'Abcd123!'
+    )
+    await user.click(within(dialog).getByRole('button', { name: '등록' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    // 🔴 서버가 ID 를 주지 않아 상세로 가지 않는다 — 목록에 머문다
+    expect(url()).toBe('')
+    expect(await inTable().findByText('신입근무')).toBeInTheDocument()
+  })
+
+  it('사업장이 없으면 추가 버튼이 잠긴다', () => {
+    // clearTokens() 가 선택 사업장도 지운다(spec 021)
+    clearTokens()
+    setAccessToken(makeAccessToken())
+    renderPage()
+    expect(screen.getByRole('button', { name: '근무자 추가' })).toBeDisabled()
   })
 })
