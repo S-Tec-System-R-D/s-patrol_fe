@@ -42,8 +42,8 @@
 
 > **독립 테스트 기준**: 확인 → 삭제 → 목록 이동, 목록에서 사라진다. 이미 삭제된 공지는 토스트 + 재조회.
 
-- [ ] T674 [US3] 🔴 **삭제** in src/features/notice/hooks/useDeleteNotice.ts · src/pages/service/notice/NoticeDetailPage.tsx — `lists` 무효화 · `detail` 제거 · 성공 후 navigate · 처리 중 버튼 비활성
-- [ ] T675 [US3] [P] 테스트 in src/pages/service/notice/__tests__/ — 삭제 → 목록 이동 · 사라짐
+- [x] T674 [US3] 🔴 **삭제** in src/pages/service/notice/NoticeDetailPage.tsx — 🔴 **계획 수정**: 훅 파일을 따로 두지 않고 페이지 안 `useMutation`(029 `PointDetailPage` 선례, 소비처 1곳). 이동 먼저(replace) → `detail` 제거 → `lists` 무효화 · 실패 시 상세 재조회 · 처리 중 삭제 버튼 비활성
+- [x] T675 [US3] [P] 테스트 in src/pages/service/notice/__tests__/NoticeDetailPage.test.tsx — 삭제 → 목록 이동 · 서버에서 사라짐 · 취소 시 미전송 · 이미 지워진 공지 → 상세에 머묾 + 실패 화면
 
 ## Phase 5: 마무리
 

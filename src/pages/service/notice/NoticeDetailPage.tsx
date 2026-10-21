@@ -1,3 +1,4 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -15,9 +16,12 @@ import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
 import AppPageHeader from '@/components/app/AppPageHeader'
+import { deleteNotice } from '@/features/notice/api/deleteNotice'
 import NoticeContentCard from '@/features/notice/components/detail/NoticeContentCard'
 import NoticeForm from '@/features/notice/form/NoticeForm'
 import { useNoticeDetail } from '@/features/notice/hooks/useNoticeDetail'
+import { noticeKeys } from '@/features/notice/queryKeys'
+import { notify } from '@/lib/notify'
 import { paths } from '@/router/paths'
 
 /**
@@ -31,7 +35,7 @@ import { paths } from '@/router/paths'
  * 방금 지운 줄 안다(023 T375 선례).
  *
  * 수정은 모달 → `UpsertNotice`(`spec 040` US2) — 성공해야 닫힌다.
- * ⚠️ 삭제는 아직 mock 이다(`spec 040` Phase 4 에서 연결).
+ * 삭제는 확인 → `DeleteNotice` → 목록(`spec 040` US3). 실패하면 상세에 머문다.
  */
 
 const Breadcrumb = () => (
@@ -67,6 +71,22 @@ const NoticeDetailPage = () => {
 
   const detail = useNoticeDetail(noticeSeq)
   const [editOpen, setEditOpen] = useState(false)
+  const queryClient = useQueryClient()
+
+  /** 🔴 실패 토스트는 전역 `MutationCache` 가 띄운다 — 여기서 또 띄우지 않는다 */
+  const deleteMutation = useMutation({
+    mutationFn: deleteNotice,
+    onSuccess: async (_, deletedSeq) => {
+      // 🔴 이동을 **무효화보다 먼저** 한다 — 지운 공지의 상세를 다시 읽어 실패 화면이 깜빡인다(029 승계)
+      navigate(paths.service.notice, { replace: true })
+      queryClient.removeQueries({ queryKey: noticeKeys.detail(deletedSeq) })
+      notify.success('공지를 삭제했습니다.')
+      await queryClient.invalidateQueries({ queryKey: noticeKeys.lists })
+    },
+    // 다른 관리자가 이미 지웠으면 400 이다 — 상세를 다시 읽어 지금 상태를 보여 준다(spec §4)
+    onError: (_, deletedSeq) =>
+      queryClient.invalidateQueries({ queryKey: noticeKeys.detail(deletedSeq) }),
+  })
 
   /**
    * 🔴🔴 **주소 오류를 로딩보다 먼저 분기한다**(037 T557 이 잡은 결함). `noticeSeq` 가 `null`
@@ -168,10 +188,15 @@ const NoticeDetailPage = () => {
               variant="destructive"
               title="공지를 삭제하시겠습니까?"
               description="삭제된 공지는 복구할 수 없습니다."
-              // ⚠️ mock — 실제 삭제 없이 목록으로 돌아간다(변경계 전환 spec 에서 연결)
-              onAction={() => navigate(paths.service.notice)}
+              onAction={() => deleteMutation.mutate(notice.noticeSeq)}
             >
-              <AppButton icon={Trash2Icon} variant="destructive" className="bg-card">
+              <AppButton
+                icon={Trash2Icon}
+                variant="destructive"
+                className="bg-card"
+                // 확인 창은 누르는 즉시 닫힌다 — 처리 중 다시 열어 두 번 보내지 않게 잠근다
+                disabled={deleteMutation.isPending}
+              >
                 삭제
               </AppButton>
             </AppAlertDialog>

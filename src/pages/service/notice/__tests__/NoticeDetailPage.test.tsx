@@ -9,6 +9,9 @@ import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
 import { resetNoticeStore } from '@/mocks/handlers/notices'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
+import { deleteNotice } from '@/features/notice/api/deleteNotice'
+import { fetchNoticeDetail } from '@/features/notice/api/getNoticeDetail'
+import { fetchNoticeList } from '@/features/notice/api/getNoticeList'
 import NoticeDetailPage from '../NoticeDetailPage'
 
 /**
@@ -149,7 +152,7 @@ describe('NoticeDetailPage — 정상', () => {
     expect(screen.getByText('이미지 1')).toBeInTheDocument()
   })
 
-  it('삭제를 확인하면 목록으로 돌아간다 (mock)', async () => {
+  it('삭제를 확인하면 서버에서 지우고 목록으로 돌아간다 (spec 040 US3)', async () => {
     const user = userEvent.setup()
     renderAt('4')
 
@@ -158,6 +161,36 @@ describe('NoticeDetailPage — 정상', () => {
     await user.click(within(dialog).getByRole('button', { name: /삭제|확인/ }))
 
     expect(await screen.findByText('LIST_ROUTE')).toBeInTheDocument()
+    await expect(fetchNoticeDetail(4)).rejects.toBeTruthy()
+    const { items } = await fetchNoticeList({ siteSeq: 7, pageNumber: 1, pageSize: 100 })
+    expect(items.map((n) => n.noticeSeq)).not.toContain(4)
+  })
+
+  it('삭제를 취소하면 아무것도 보내지 않는다', async () => {
+    const user = userEvent.setup()
+    renderAt('4')
+
+    await user.click(await screen.findByRole('button', { name: '삭제' }))
+    const dialog = await screen.findByRole('alertdialog')
+    await user.click(within(dialog).getByRole('button', { name: '취소' }))
+
+    expect(screen.getByRole('heading', { name: '6월 정기 순찰 점검 안내' })).toBeInTheDocument()
+    expect(await fetchNoticeDetail(4)).toMatchObject({ noticeSeq: 4 })
+  })
+
+  it('이미 지워진 공지면 상세에 머물고 실패 화면으로 바뀐다', async () => {
+    const user = userEvent.setup()
+    renderAt('4')
+    await screen.findByRole('heading', { name: '6월 정기 순찰 점검 안내' })
+    // 다른 관리자가 먼저 지웠다
+    await deleteNotice(4)
+
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+    const dialog = await screen.findByRole('alertdialog')
+    await user.click(within(dialog).getByRole('button', { name: /삭제|확인/ }))
+
+    expect(await screen.findByText('공지를 불러오지 못했습니다')).toBeInTheDocument()
+    expect(screen.queryByText('LIST_ROUTE')).not.toBeInTheDocument()
   })
 })
 
