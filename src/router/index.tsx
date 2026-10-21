@@ -14,6 +14,7 @@ import PatrolPointDetailPage from '@/pages/service/patrol/points/PatrolPointDeta
 import PatrolZoneDetailPage from '@/pages/service/patrol/zones/PatrolZoneDetailPage'
 import PatrolPointsPage from '@/pages/service/patrol/points/PatrolPointsPage'
 import UsersPage from '@/pages/service/users/UsersPage'
+import UserDetailPage from '@/pages/service/users/UserDetailPage'
 import DeploymentsPage from '@/pages/service/deployments/DeploymentsPage'
 import NoticeListPage from '@/pages/service/notice/NoticeListPage'
 import NoticeDetailPage from '@/pages/service/notice/NoticeDetailPage'
@@ -102,6 +103,11 @@ export const router = createBrowserRouter([
           {
             path: paths.service.users,
             element: <UsersPage />,
+            errorElement: <PageErrorFallback />,
+          },
+          {
+            path: pathPatterns.userDetail,
+            element: <UserDetailPage />,
             errorElement: <PageErrorFallback />,
           },
           {

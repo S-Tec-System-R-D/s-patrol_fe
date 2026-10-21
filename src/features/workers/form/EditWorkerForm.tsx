@@ -1,17 +1,17 @@
 import AppButton from '@/components/app/AppButton'
 import AppInput from '@/components/app/AppInput'
-import { useMe } from '@/features/auth/hooks/useMe'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import type { Worker } from '../types/worker'
+import { formatPhone } from '../lib/userFormat'
+import type { UserDetail } from '../types/user'
 import { editWorkerSchema, type EditWorkerFormData } from './schema'
 
 interface EditWorkerFormProps {
-  worker: Worker
+  /** 🔴 서버 상세(`UserDetail`)의 이름을 그대로 받는다(`spec 038` T616) */
+  user: Pick<UserDetail, 'userName' | 'phone' | 'siteName'>
 }
 
-const EditWorkerForm = ({ worker }: EditWorkerFormProps) => {
-  const { data: me } = useMe()
+const EditWorkerForm = ({ user }: EditWorkerFormProps) => {
   const {
     register,
     handleSubmit,
@@ -19,8 +19,10 @@ const EditWorkerForm = ({ worker }: EditWorkerFormProps) => {
   } = useForm<EditWorkerFormData>({
     resolver: zodResolver(editWorkerSchema),
     defaultValues: {
-      name: worker.name,
-      phone: worker.phone,
+      // ⚠️ 스키마 필드명(`name`·`phone`)은 그대로 둔다 — 요청 DTO 는 변경계 spec 에서 맞춘다
+      name: user.userName,
+      // 🔴 서버는 하이픈 없이 준다 — 스키마가 `010-0000-0000` 이라 변환하지 않으면 열자마자 검증 에러
+      phone: formatPhone(user.phone),
     },
   })
 
@@ -45,7 +47,7 @@ const EditWorkerForm = ({ worker }: EditWorkerFormProps) => {
         error={errors.phone?.message}
         {...register('phone')}
       />
-      <AppInput label="소속 사업장" value={me?.locationName ?? ''} disabled readOnly />
+      <AppInput label="소속 사업장" value={user.siteName} disabled readOnly />
       <AppButton size="full" type="submit">
         저장
       </AppButton>

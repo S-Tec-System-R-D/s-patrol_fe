@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { describe, expect, it } from 'vitest'
-import type { Worker } from '../../types/worker'
 import AddWorkerForm from '../AddWorkerForm'
 import EditWorkerForm from '../EditWorkerForm'
 
@@ -28,23 +27,20 @@ describe('AddWorkerForm', () => {
 })
 
 describe('EditWorkerForm', () => {
-  const worker: Worker = {
-    id: 'w-01',
-    name: '김민준',
-    phone: '010-2345-6789',
-    role: 'WORKER',
-    locationName: '강동 테크노타워',
-    isAssignedElsewhere: false,
-    workStatus: 'WORKING',
-    status: 'ACTIVE',
-    registeredAt: '2025-09-12',
-    assignmentHistory: [],
-  }
+  // 🔴 기본값 출처가 서버 상세(`userName`·`phone`·`siteName`)로 바뀌었다(`spec 038` T617)
+  const user = { userName: '김민준', phone: '010-2345-6789', siteName: '강동 테크노타워' }
 
   it('기존 근무자 정보로 필드 프리필', () => {
-    renderWithQuery(<EditWorkerForm worker={worker} />)
+    renderWithQuery(<EditWorkerForm user={user} />)
 
     expect(screen.getByDisplayValue('김민준')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('010-2345-6789')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('강동 테크노타워')).toBeInTheDocument()
+  })
+
+  it('🔴 하이픈 없는 서버 연락처를 형식에 맞춰 채운다', () => {
+    renderWithQuery(<EditWorkerForm user={{ ...user, phone: '01023456789' }} />)
+
     expect(screen.getByDisplayValue('010-2345-6789')).toBeInTheDocument()
   })
 })

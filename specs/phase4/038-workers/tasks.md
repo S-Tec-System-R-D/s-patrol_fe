@@ -49,17 +49,21 @@
 > **독립 테스트 기준**: MSW 200 에서 `/users/:userSeq` 가 머리·기본정보를 그리고, `/users/abc` 는 요청
 > 없이 즉시 오류다. 배치 이력이 없다.
 
-- [ ] T613 [US2] 기본정보 카드 in src/features/workers/components/detail/UserInfoCard.tsx — `AppDetailCard` + `AppDetailRow`: 사번 · 연락처(하이픈) · 소속 사업장 · 근무 상태. 🔴 **권한·등록일 없음**(상세 응답에 없다, OQ-8) — 빈 행을 두지 않는다
-- [ ] T614 [US2] 🔴 **상세 페이지 신설** in src/pages/service/users/UserDetailPage.tsx · src/router/index.tsx — 026 골격: 브레드크럼(`근무자 > 근무자 상세`) → 머리(`WorkerAvatar` + 이름 + 근무 상태 뱃지 + 부제 `사번 · 소속` + 액션 3종: 비밀번호 `AppAlertDialog` · 수정 `AppDialog` · 삭제 `AppAlertDialog` → 목록) → 기본정보 카드. 분기 4종(🔴 주소 오류를 로딩보다 먼저). 라우트 등록(T606) 함께
-- [ ] T615 [US2] [P] 화면 테스트 in src/pages/service/users/__tests__/UserDetailPage.test.tsx — 정상 · 연락처 하이픈 · 배치 이력 없음 · 권한/등록일 행 없음 · `/users/abc` 요청 0건 · 조회 실패(다시 시도 + 목록으로) · 수정 모달 기본값 · 삭제 → 목록
+- [x] T613 [US2] 기본정보 카드 in src/features/workers/components/detail/UserInfoCard.tsx — `AppDetailCard` + `AppDetailRow`: 사번 · 연락처(하이픈) · 소속 사업장 · 근무 상태. 🔴 **권한·등록일 없음**(상세 응답에 없다, OQ-8) — 빈 행을 두지 않는다
+- [x] T614 [US2] 🔴 **상세 페이지 신설** in src/pages/service/users/UserDetailPage.tsx · src/router/index.tsx — 026 골격: 브레드크럼(`근무자 > 근무자 상세`) → 머리(`WorkerAvatar` + 이름 + 근무 상태 뱃지 + 부제 `사번 · 소속` + 액션 3종: 비밀번호 `AppAlertDialog` · 수정 `AppDialog` · 삭제 `AppAlertDialog` → 목록) → 기본정보 카드. 분기 4종(🔴 주소 오류를 로딩보다 먼저). 라우트 등록(T606) 함께. ⚠️ 머리 줄은 **직접 짰다** — `AppPageHeader` 의 `icon` 이 lucide 아이콘만 받아 아바타를 넣을 수 없다. 🔴 **T618 의 `WorkerDetailPanel.tsx` 삭제를 여기서 앞당겼다** — 폼 입력 타입(T616)이 바뀌면 컴파일이 안 되고, 목록 재작성(T609)으로 소비처가 0건이 됐다(026 `NoticeDetailView` 와 같다)
+- [x] T615 [US2] [P] 화면 테스트 in src/pages/service/users/__tests__/UserDetailPage.test.tsx — 정상 · 연락처 하이픈 · 배치 이력 없음 · 권한/등록일 행 없음 · `/users/abc` 요청 0건 · 조회 실패(다시 시도 + 목록으로) · 수정 모달 기본값 · 삭제 → 목록
+
+### Phase 4 사용자 수정 (2026-10-21)
+
+- [x] T615a [US2] 🔴 **머리 줄 부제 제거** in src/pages/service/users/UserDetailPage.tsx — `사번 · 소속` 이 기본정보 카드와 겹쳐 카드에 새로 남는 값이 **연락처 하나뿐**이었다. 값은 카드에 모은다(A안) — 상세 응답의 권한·등록일(B-41)이 생기면 들어갈 자리도 카드다
 
 ## Phase 5: US3 — 폼 입력 타입 (mock 유지)
 
 > **독립 테스트 기준**: 수정 모달이 `UserDetail` 의 이름·연락처(하이픈 형식)로 채워진다. 검증 규칙
 > 테스트는 고치지 않고 통과한다.
 
-- [ ] T616 [US3] 수정 폼 입력 타입 in src/features/workers/form/EditWorkerForm.tsx — prop 을 `user: Pick<UserDetail, 'userName' | 'phone'>` 로. 연락처는 **하이픈 형식으로 변환해** 채운다(스키마가 `010-0000-0000` 이다 — 변환하지 않으면 열자마자 검증 에러). 🔴 **스키마 필드명(`name`·`phone`·`initialPassword`)은 바꾸지 않는다** — 요청 DTO 는 변경계 spec 에서(026 T587 과 같은 판단)
-- [ ] T617 [US3] [P] 폼 테스트 갱신 in src/features/workers/form/__tests__/WorkerForm.test.tsx — 기본값 출처만 바뀐다. 하이픈 없는 `phone` 이 변환되어 들어오는지 1건 추가
+- [x] T616 [US3] 수정 폼 입력 타입 in src/features/workers/form/EditWorkerForm.tsx — prop 을 `user: Pick<UserDetail, 'userName' | 'phone'>` 로. 연락처는 **하이픈 형식으로 변환해** 채운다(스키마가 `010-0000-0000` 이다 — 변환하지 않으면 열자마자 검증 에러). 🔴 **스키마 필드명(`name`·`phone`·`initialPassword`)은 바꾸지 않는다** — 요청 DTO 는 변경계 spec 에서(026 T587 과 같은 판단). 🔴 **계획 외 1건**: 추가·수정 폼의 "소속 사업장" 칸이 `useMe().locationName`(JWT 에 없어 항상 `undefined`)이라 **늘 빈칸이었다** → 수정은 `UserDetail.siteName`, 추가는 `getSiteName()`. Pick 에 `siteName` 추가
+- [x] T617 [US3] [P] 폼 테스트 갱신 in src/features/workers/form/__tests__/WorkerForm.test.tsx — 기본값 출처만 바뀐다. 하이픈 없는 `phone` 이 변환되어 들어오는지 1건 추가
 
 ## Phase 6: Polish
 

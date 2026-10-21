@@ -1,12 +1,16 @@
 import AppButton from '@/components/app/AppButton'
 import AppInput from '@/components/app/AppInput'
-import { useMe } from '@/features/auth/hooks/useMe'
+import { getSiteName } from '@/lib/auth/site'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { addWorkerSchema, type AddWorkerFormData } from './schema'
 
 const AddWorkerForm = () => {
-  const { data: me } = useMe()
+  /**
+   * 🔴 **선택한 사업장**이 소속이다(`spec 038`). 전에는 `useMe().locationName` 이었는데 JWT 클레임에
+   * **없어서** 항상 빈칸이었다(020).
+   */
+  const siteName = getSiteName()
   const {
     register,
     handleSubmit,
@@ -43,7 +47,7 @@ const AddWorkerForm = () => {
         error={errors.phone?.message}
         {...register('phone')}
       />
-      <AppInput label="소속 사업장" value={me?.locationName ?? ''} disabled readOnly />
+      <AppInput label="소속 사업장" value={siteName ?? ''} disabled readOnly />
       <AppInput
         label="초기비밀번호"
         required
