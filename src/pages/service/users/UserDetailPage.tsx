@@ -152,8 +152,8 @@ const UserDetailPage = () => {
       <Breadcrumb />
 
       {/* 머리 줄 — 식별(아바타·이름·근무 상태)만. `AppPageHeader` 는 아이콘 자리에 lucide 아이콘만 받아 아바타를 넣을 수 없다.
-          같은 배치(좌: 식별 / 우: 액션)를 직접 짠다 */}
-      <div className="flex items-center justify-between gap-4">
+          🔴 **액션은 머리에 없다** — 기본정보 카드 아래로 옮겼다(사용자 요청 2026-10-21) */}
+      <div className="flex items-center gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <WorkerAvatar id={String(user.userSeq)} name={user.userName} className="size-11" />
           {/* 🔴 **부제를 두지 않는다**(사용자 결정 2026-10-21) — `사번 · 소속` 을 머리에 적으면
@@ -161,66 +161,82 @@ const UserDetailPage = () => {
               값은 카드에 모은다 — 상세 응답의 권한·등록일(B-41)이 생기면 들어갈 자리도 카드다 */}
           <div className="flex items-center gap-2">
             <h1 className="truncate text-page-title font-bold text-foreground">{user.userName}</h1>
-            <AppBadge variant={user.workYn ? 'success' : 'muted'}>{workLabel(user.workYn)}</AppBadge>
+            <AppBadge variant={user.workYn ? 'success' : 'muted'}>
+              {workLabel(user.workYn)}
+            </AppBadge>
           </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          {/* 🔴 **초기화가 아니라 변경**이다 — 서버는 `UpdateUser.loginPw` 로 새 값을 지정한다. 정보 수정과
-              **다른 버튼**으로 둔다(사용자 결정 2026-10-21, OQ-038-C) */}
-          <AppDialog
-            title="비밀번호 변경"
-            description="근무자가 로그인에 쓸 새 비밀번호를 지정합니다."
-            open={passwordOpen}
-            onOpenChange={setPasswordOpen}
-            trigger={
-              <AppButton icon={KeyRoundIcon} variant="sub" className="bg-card">
-                비밀번호 변경
-              </AppButton>
-            }
-          >
-            <PasswordForm userSeq={user.userSeq} onSuccess={() => setPasswordOpen(false)} />
-          </AppDialog>
-          <AppDialog
-            title="근무자 수정"
-            description="근무자 정보를 수정할 수 있습니다."
-            open={editOpen}
-            onOpenChange={setEditOpen}
-            trigger={
-              <AppButton icon={SquarePenIcon} variant="sub" className="bg-card">
-                수정
-              </AppButton>
-            }
-          >
-            <EditWorkerForm user={user} onSuccess={() => setEditOpen(false)} />
-          </AppDialog>
-          <AppAlertDialog
-            size="sm"
-            icon={Trash2Icon}
-            variant="destructive"
-            title="근무자를 삭제하시겠습니까?"
-            onAction={() => deleteMutation.mutate(user.userSeq)}
-          >
-            <AppButton
-              icon={Trash2Icon}
-              variant="destructive"
-              className="bg-card"
-              // 🔴 본인 계정은 지울 수 없다 — 목록에 관리자도 섞여 온다(038). 처리 중에도 잠근다(확인 창은 즉시 닫힌다)
-              disabled={isMe || deleteMutation.isPending}
-              title={isMe ? '본인 계정은 삭제할 수 없습니다' : undefined}
-            >
-              삭제
-            </AppButton>
-          </AppAlertDialog>
         </div>
       </div>
 
       {/* **좌 1/3 기본정보 / 우 2/3 최근 순찰 기록**(사용자 요청 2026-10-21 — 처음엔 지점 상세처럼 기록이
           좌측이었는데 좌우를 바꿨다). "누구인가" 를 먼저 읽고 그 사람의 기록을 본다.
           좁은 폭(1단)에서도 기본정보가 먼저다 — DOM 순서 그대로라 `order` 가 필요 없다.
-          🔴 `items-start` — 짧은 카드가 긴 카드 높이만큼 늘어나지 않게(036) */}
+          🔴 `items-start` — 짧은 카드가 긴 카드 높이만큼 늘어나지 않게(036).
+          🔴 **기본정보를 `div` 로 감싼다** — `AppDetailCard` 가 `h-full` 이라 그리드 칸에 바로 두면 행 높이(= 기록
+          카드 높이)까지 늘어난다. 감싼 `div`(카드 + 액션) 가 내용 높이가 된다 */}
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3">
-        <UserInfoCard user={user} />
+        {/* 🔴 **액션 3개는 기본정보 카드 바로 아래**(사용자 요청 2026-10-21) — 그 사람에 대한 조작을 그 사람의
+            정보 옆에 둔다. 🔴 균등 3칸이
+            아니라 `flex-auto` — 1/3 폭에서 "비밀번호 변경" 이 두 줄로 꺾였다. 글자 길이만큼 차지하고 남는 폭을 나눈다 */}
+        <div className="flex flex-col gap-2">
+          <UserInfoCard user={user} />
+          <div className="flex gap-2">
+            {/* 🔴 **초기화가 아니라 변경**이다 — 서버는 `UpdateUser.loginPw` 로 새 값을 지정한다. 정보 수정과
+             **다른 버튼**으로 둔다(사용자 결정 2026-10-21, OQ-038-C) */}
+            <AppDialog
+              title="비밀번호 변경"
+              description="근무자가 로그인에 쓸 새 비밀번호를 지정합니다."
+              open={passwordOpen}
+              onOpenChange={setPasswordOpen}
+              trigger={
+                <AppButton
+                  icon={KeyRoundIcon}
+                  // 🔴 수정과 색을 달리한다(사용자 요청 2026-10-21) — 목록의 "추가" 버튼과 같은 point 연한 톤
+                  className="flex-auto whitespace-nowrap border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
+                >
+                  비밀번호 변경
+                </AppButton>
+              }
+            >
+              <PasswordForm userSeq={user.userSeq} onSuccess={() => setPasswordOpen(false)} />
+            </AppDialog>
+            <AppDialog
+              title="근무자 수정"
+              description="근무자 정보를 수정할 수 있습니다."
+              open={editOpen}
+              onOpenChange={setEditOpen}
+              trigger={
+                <AppButton
+                  icon={SquarePenIcon}
+                  variant="sub"
+                  className="flex-auto whitespace-nowrap bg-card"
+                >
+                  수정
+                </AppButton>
+              }
+            >
+              <EditWorkerForm user={user} onSuccess={() => setEditOpen(false)} />
+            </AppDialog>
+            <AppAlertDialog
+              size="sm"
+              icon={Trash2Icon}
+              variant="destructive"
+              title="근무자를 삭제하시겠습니까?"
+              onAction={() => deleteMutation.mutate(user.userSeq)}
+            >
+              <AppButton
+                icon={Trash2Icon}
+                variant="destructive"
+                className="flex-auto whitespace-nowrap bg-card"
+                // 🔴 본인 계정은 지울 수 없다 — 목록에 관리자도 섞여 온다(038). 처리 중에도 잠근다(확인 창은 즉시 닫힌다)
+                disabled={isMe || deleteMutation.isPending}
+                title={isMe ? '본인 계정은 삭제할 수 없습니다' : undefined}
+              >
+                삭제
+              </AppButton>
+            </AppAlertDialog>
+          </div>
+        </div>
         <div className="xl:col-span-2">
           <UserPatrolCard userSeq={user.userSeq} userName={user.userName} siteSeq={siteSeq} />
         </div>
