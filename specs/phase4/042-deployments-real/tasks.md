@@ -61,7 +61,7 @@
 ## Phase 6: 마무리
 
 - [x] T726 `npm run verify` + `npm run test` (병렬) · 가정 경로·`rejectReason`·`pendingReturnCount` grep 0건
-- [ ] T727 브라우저 확인 — mock + 🔴 **dev:real**. 데이터: 테스트 근무자(사업장 7)를 만들어 그 토큰으로 `UserAssignment` 7 → 8 → 사업장 8 로 승인/반려 · `UserAssignmentReturn` → 사업장 7 로 복귀 승인 · 근무자 상세 확인 → **근무자 삭제**(이력도 사라진다)
+- [x] T727 브라우저 확인 — mock + 🔴 **dev:real**. 데이터: 테스트 근무자(사업장 7)를 만들어 그 토큰으로 `UserAssignment` 7 → 8 → 사업장 8 로 승인/반려 · `UserAssignmentReturn` → 사업장 7 로 복귀 승인 · 근무자 상세 확인 → **근무자 삭제**(이력도 사라진다)
 - [x] T728 문서 — `docs/api-request-deployment.md`(남은 요청: 복귀일 · 이력 사유) · `screens.md` §1-4A·§1-4 · `data-model.md` · `flow.md` · `roadmap.md`(042 행 · §12)
 - [x] T729 DoD 점검 + `## 다음 spec으로 이월`
 
@@ -80,7 +80,7 @@
 
 ## DoD 점검 (2026-10-22)
 
-**17/18 + 확인 대기 1** — #16 브라우저 확인(mock · dev:real)은 사용자 확인 대기(Phase 5 이후 일괄 확인 — 사용자 결정 2026-10-22).
+**18/18** — #16 브라우저 확인은 사용자가 dev:real 로 확인(2026-10-22). 테스트 근무자 3명(배치요청 · 복귀요청 · 복귀완료+배치예정) 시드 → 확인 후 삭제, 사업장 7·8 배치 0건 복구 확인.
 
 | # | 조건 | 판정 | 증거 |
 |:-:|---|:-:|---|
@@ -99,20 +99,20 @@
 | 13 | 상태 뱃지 · 기간 `endDt`/`미정` | ✅ | 같은 파일 · `AssignmentStatusBadge` |
 | 14 | 근무자 상세 배치 이력 | ✅ | `UserAssignmentCard.test.tsx` |
 | 15 | verify + test | ✅ | lint 0 errors(경고 1 = 기존 `mockServiceWorker.js`) · **1252 passed**(111 files) |
-| 16 | 브라우저 확인 | ⏳ | 사용자 확인 대기 |
+| 16 | 브라우저 확인 | ✅ | 사용자 dev:real 확인(2026-10-22) · 테스트 근무자 삭제 후 사업장 7·8 count·목록·이력 모두 0 |
 | 17 | 문서 | ✅ | `api-request-deployment.md`(남은 요청) · `api-spec.md` · `screens.md` · `data-model.md` · `flow.md` · `roadmap.md` |
 | 18 | 이월 블록 | ✅ | 아래 |
 
 ## 다음 spec으로 이월
 
-### ① 브라우저 확인 (#16) — 사용자 확인 대기
+### ① 브라우저 확인 (#16) — ✅ 완료(2026-10-22) · 아래는 재확인 방법
 
 - mock: `npm run dev` → 사업장 7 → `/deployments`(배치 요청 2 · 복귀 요청 1 · 전입·전출 각 2) · 근무자 상세 장도윤(배치 이력 1건)
 - dev:real: 웹에서 요청을 만들 수 없다 — 테스트 근무자(사업장 7)를 만들어 그 토큰으로 `UserAssignment` 7 → 8 → 사업장 8 에서 승인/반려 · `UserAssignmentReturn` → 사업장 7 에서 복귀 승인 → **근무자 삭제**(이력도 사라진다)
 
 ### ② 백엔드 회신 대기 (`docs/api-request-deployment.md`)
 
-- 🔴 **전입·전출 이력 `status` 필터 파라미터**(OQ-042-F — 백엔드 누락 확인 2026-10-22) → 오면 필터 UI 복원(`?status`, KPI 클릭 시 `배치중`)
+- 🔴 **전입·전출 이력 `status` 필터 파라미터**(OQ-042-F — 백엔드 누락 확인 2026-10-22) (2026-10-22 재확인: swagger·실호출 모두 미반영) → 오면 필터 UI 복원(`?status`, KPI 클릭 시 `배치중`)
 - 이력 **사유**(OQ-042-B) → 오면 이력 표 사유 칸
 - 복귀 요청 **복귀일**(OQ-042-A, 앱 쪽 입력 필요) → 오면 복귀 표 복귀일 칸
 - B-48 — `approved` 누락 시 반려 처리 · 종료일 < 시작일 500 · 문구 오타

@@ -210,7 +210,7 @@ interface AssignmentApproveRequest { assignmentSeq: number; approved: boolean }
 
 **마무리**
 - [x] 15. `npm run verify` + `npm run test` green
-- [ ] 16. 브라우저 확인 — mock + 🔴 **dev:real**(배치 데이터는 앱 경로로만 생긴다 → 확인 방법은 tasks 에 적는다)
+- [x] 16. 브라우저 확인 — mock + 🔴 **dev:real**(배치 데이터는 앱 경로로만 생긴다 → 확인 방법은 tasks 에 적는다)
 - [x] 17. 문서 — `api-request-deployment.md`(남은 요청 2건) · `screens.md` §1-4A·§1-4 · `data-model.md` · `flow.md` · `roadmap.md`
 - [x] 18. `## 다음 spec으로 이월`
 
