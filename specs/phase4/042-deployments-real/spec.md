@@ -120,7 +120,7 @@ interface AssignmentApproveRequest { assignmentSeq: number; approved: boolean }
 **복귀 요청**(US2) — `GetAssignmentReturnList`. 컬럼: 근무자 · **복귀 경로** · 배치 기간 · 사유 · 요청일 · `[승인]` `[반려]`.
 - 🔴 **복귀 경로는 뒤집어 그린다** — 행의 `from → to` 는 **원래 배치 방향**(7 → 8)이다. 복귀는 `toSiteName → fromSiteName`.
 - 🔴 **복귀일 칸 제거** — 서버에 없다(B-46 ②, 요청 중).
-- 두 목록 모두 **클라이언트 페이징**(배열 응답). `AppTable` 의 내장 페이징을 쓰고 `?page` 와 연결한다.
+- 두 목록 모두 **클라이언트 페이징**(배열 응답). 화면이 `?page` 로 배열을 잘라 `AppTable` 에 넘긴다 — 이력 탭과 같은 `AppPagination` 하나를 쓴다.
 
 **승인 / 반려**
 - 승인: 클릭 → 즉시(014 유지 — 확인 모달 없음).
@@ -131,7 +131,7 @@ interface AssignmentApproveRequest { assignmentSeq: number; approved: boolean }
 - 컬럼: 근무자 · 배치 경로 · 기간 · 상태. 🔴 **사유 칸 제거**(B-47, 요청 중).
 - 경로의 한쪽 끝은 행에 없다(전입은 `fromSiteName` 만, 전출은 `toSiteName` 만) → 다른 끝은 **선택 사업장명**(`getSiteName()`).
 - 기간: `시작 ~ 종료`. 종료 = `endDt`, 없으면 `미정`. 🔴 `completeDt` 는 쓰지 않는다 — 지금 값은 테스트 값이라 의미를 확정할 수 없다(사용자 2026-10-22, OQ-042-E).
-- 상태: `statusName` 뱃지 — 배치예정(neutral) · 배치중(point) · 복귀완료(muted).
+- 상태: `statusName` 뱃지 — 배치예정(warning, 039 색 유지) · 배치중(point) · 복귀완료(muted). `AssignmentStatusBadge` 하나를 근무자 상세와 함께 쓴다.
 - 🔴 **상태 필터(`?status`) 제거** — 서버 파라미터가 없고, 현재 페이지 안에서만 거르면 행 수가 페이지마다 달라진다.
 
 ### 2-3. 화면 — 근무자 상세 `/users/:userSeq` (US4)
@@ -185,34 +185,34 @@ interface AssignmentApproveRequest { assignmentSeq: number; approved: boolean }
 ## 5. 완료 조건 (DoD)
 
 **기반**
-- [ ] 1. 타입이 실측 그대로(`api-spec.md` §5-1-B) — 가정 타입·가정 경로(`Deployment/W/sign`) 0건
-- [ ] 2. 승인·반려 API 2개 · `approved` 를 항상 보낸다(반려 `false` 가 바디에 있다)
-- [ ] 3. MSW 실측 모양 + 상태 보유 + reset · `GetAssignmentHistory` 포함
+- [x] 1. 타입이 실측 그대로(`api-spec.md` §5-1-B) — 가정 타입·가정 경로(`Deployment/W/sign`) 0건
+- [x] 2. 승인·반려 API 2개 · `approved` 를 항상 보낸다(반려 `false` 가 바디에 있다)
+- [x] 3. MSW 실측 모양 + 상태 보유 + reset · `GetAssignmentHistory` 포함
 
 **현황 (US1)**
-- [ ] 4. KPI 3종이 `GetAssignmentCount` · 보조 문구 "배치예정 포함" · 카드 클릭이 상태 필터를 걸지 않는다
-- [ ] 5. 사이드바 뱃지 = `pendingCount`
+- [x] 4. KPI 3종이 `GetAssignmentCount` · 보조 문구 "배치예정 포함" · 카드 클릭이 상태 필터를 걸지 않는다
+- [x] 5. 사이드바 뱃지 = `pendingCount`
 
 **요청 (US2)**
-- [ ] 6. 배치·복귀 요청 표에 근무자가 나온다 · 클라이언트 페이징 + `?page`
-- [ ] 7. 복귀 경로가 뒤집혀 그려진다(`도착 → 출발`) · 복귀일 칸 없음
-- [ ] 8. 승인 → 행 사라짐 · 요약·이력·뱃지 갱신(MSW 통합 테스트)
-- [ ] 9. 반려 → 확인창 → `approved: false` · 이력 불변 · 사유 입력 0건(`RejectRequestForm` 삭제)
-- [ ] 10. 연타 1회 · 처리된 요청 → 토스트 + 재조회 · 마지막 행 처리 후 빈 페이지 없음
-- [ ] 11. 복귀 탭 뱃지 = 복귀 목록 길이
+- [x] 6. 배치·복귀 요청 표에 근무자가 나온다 · 클라이언트 페이징 + `?page`
+- [x] 7. 복귀 경로가 뒤집혀 그려진다(`도착 → 출발`) · 복귀일 칸 없음
+- [x] 8. 승인 → 행 사라짐 · 요약·이력·뱃지 갱신(MSW 통합 테스트)
+- [x] 9. 반려 → 확인창 → `approved: false` · 이력 불변 · 사유 입력 0건(`RejectRequestForm` 삭제)
+- [x] 10. 연타 1회 · 처리된 요청 → 토스트 + 재조회 · 마지막 행 처리 후 빈 페이지 없음
+- [x] 11. 복귀 탭 뱃지 = 복귀 목록 길이
 
 **이력 (US3)**
-- [ ] 12. 전입·전출이 각 엔드포인트로 나간다 · 이름 검색 `userName` · 사유 칸·상태 필터 없음
-- [ ] 13. 상태 3종 뱃지가 `statusName` · 기간 종료 = `endDt` 또는 `미정`(`completeDt` 미사용)
+- [x] 12. 전입·전출이 각 엔드포인트로 나간다 · 이름 검색 `userName` · 사유 칸·상태 필터 없음
+- [x] 13. 상태 3종 뱃지가 `statusName` · 기간 종료 = `endDt` 또는 `미정`(`completeDt` 미사용)
 
 **근무자 상세 (US4)**
-- [ ] 14. 배치 이력 섹션 — 5행 서버 페이징 · 상태 분기 4종 · 승인·반려 무효화에 함께 갱신
+- [x] 14. 배치 이력 섹션 — 5행 서버 페이징 · 상태 분기 4종 · 승인·반려 무효화에 함께 갱신
 
 **마무리**
-- [ ] 15. `npm run verify` + `npm run test` green
+- [x] 15. `npm run verify` + `npm run test` green
 - [ ] 16. 브라우저 확인 — mock + 🔴 **dev:real**(배치 데이터는 앱 경로로만 생긴다 → 확인 방법은 tasks 에 적는다)
-- [ ] 17. 문서 — `api-request-deployment.md`(남은 요청 2건) · `screens.md` §1-4A·§1-4 · `data-model.md` · `flow.md` · `roadmap.md`
-- [ ] 18. `## 다음 spec으로 이월`
+- [x] 17. 문서 — `api-request-deployment.md`(남은 요청 2건) · `screens.md` §1-4A·§1-4 · `data-model.md` · `flow.md` · `roadmap.md`
+- [x] 18. `## 다음 spec으로 이월`
 
 ---
 
@@ -221,5 +221,6 @@ interface AssignmentApproveRequest { assignmentSeq: number; approved: boolean }
 - **OQ-042-A 복귀일**(B-46 ②) — 복귀 요청에 복귀일이 없다. 앱 복귀 요청에서 입력받아야 생긴다. 칸을 뺐다.
 - **OQ-042-B 이력 사유**(B-47) — 이력 3종에 사유가 없다. 칸을 뺐다.
 - **OQ-042-C 요약이 배치예정을 센다** — "지금 나가/와 있는 인원" 이 아니다. 보조 문구로 알린다. 서버가 바꾸면 문구를 되돌린다.
+- **OQ-042-F 이력 상태 필터**(B-47) — 🔴 백엔드가 파라미터를 **빠뜨렸다**(사용자 전달 2026-10-22). swagger 에 없고 `status=0/1/2` 를 보내도 무시된다(재실측 2026-10-22). 필터 UI 를 빼 두었다 — 반영되면 `?status` + 서버 파라미터로 되살린다(039 구현이 git 에 있다).
 - **OQ-042-E `completeDt`** — 현재 값은 테스트 값이다(사용자 2026-10-22). 타입에는 두고 화면에는 쓰지 않는다. 실데이터가 쌓이면 다시 본다.
 - **OQ-042-D dev:real 확인 데이터** — 웹에서는 요청을 만들 수 없다. 앱으로 만들거나 실측 스크립트처럼 테스트 근무자 토큰으로 만든다(만든 근무자는 삭제 — 이력도 함께 사라진다).

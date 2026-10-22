@@ -155,7 +155,7 @@ flowchart LR
     UD -- "비밀번호" --> UPwd[(비밀번호 변경<br/>모달)]
     UD -- "삭제" --> Conf3[(확인<br/>모달)]
 
-    Deploy["/deployments<br/>배치관리"] -- "탭" --> DTab["배치 요청 · 전출 이력 · 전입 이력"]
+    Deploy["/deployments<br/>배치관리"] -- "탭" --> DTab["배치 요청 · 복귀 요청 · 전입 이력 · 전출 이력"]
     Deploy -- "KPI 클릭" --> DTab
     DTab -- "승인(즉시)" --> DApp["요청 제거 + 이력 1건"]
     DTab -- "거부" --> DRej[(거부 모달<br/>사유 필수)]

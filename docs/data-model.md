@@ -274,9 +274,9 @@ export interface WorkerAssignmentHistoryItem {
 }
 
 // 배치 요청 — /deployments 큐 + 이력
-// 🔴 `spec 039`: 화면은 **가정 계약**(`src/features/deployments/types/deployment.ts`)으로 옮겼다 —
-//    `DeploymentRequestRow` · `DeploymentHistoryRow` · `DeploymentSummary`(정수 코드 + 이름 · `~Seq`).
-//    API 가 아직 없다 — 요청서 `docs/api-request-deployment.md`. 아래는 설계 의도 기록으로 남긴다.
+// 🔴 `spec 042`: 화면은 **실측 타입**(`src/features/deployments/types/deployment.ts`)을 쓴다 —
+//    `AssignmentRequestRow` · `AssignmentIn/Out/UserHistoryRow`(`status` 0 예정 · 1 배치중 · 2 복귀완료) · `AssignmentCount`.
+//    응답 SSOT 는 `api-spec.md` §5-1-B "배치 10종". 아래는 설계 의도 기록으로 남긴다.
 // 근무자가 APP에서 특정 사업장으로 배치·복귀를 요청 → **목적지 사업장 관리자**가 승인/거부.
 // - 근무자는 대기 중 요청 1건만 보유(재요청 불가). 사용자 취소 가능.
 // - 승인 시점에 WorkerAssignmentHistoryItem 1건이 자동 생성된다.
@@ -571,9 +571,11 @@ export interface Keyword {
 | 지점 상세 | `GET /api/points/:id` | `ApiDetailResponse<PatrolPoint>` |
 | 근무자 목록 | `GET /api/v1/User/W/sign/UserList` (**`siteId`**·`searchKey`·`codeSeq`·`workYn`·페이징) | `ApiListResponse<UserRow>` — ✅ `spec 038` 전환. ⚠️ 현장관리자 403(B-41) |
 | 근무자 상세 | `GET /api/v1/User/W/sign/UserDetail?userId=` | `ApiDetailResponse<UserDetail>` — ✅ `spec 038` 전환. ⚠️ 권한·등록일 없음(OQ-8) |
-| 배치요청 대기 큐 | 🔴 **가정** `GET /api/v1/Deployment/W/sign/GetDeploymentRequestList` (`siteSeq`·페이징) | `ApiListResponse<DeploymentRequestRow>` — `spec 039`, API 미개발 |
-| 배치 이력(전출·전입) | 🔴 **가정** `GET .../GetDeploymentHistory` (`siteSeq`·`direction` 0/1·`status` 0/1·페이징) | `ApiListResponse<DeploymentHistoryRow>` |
-| 배치 현황 요약 | 🔴 **가정** `GET .../GetDeploymentSummary` (`siteSeq`) | `ApiDetailResponse<DeploymentSummary>` — KPI 3 · 사이드바 뱃지 |
+| 배치 요청 · 복귀 요청 대기 | `GET /api/v1/Assignment/W/sign/GetAssignmentList` · `GetAssignmentReturnList` (`siteSeq`) | `ApiResponse<AssignmentRequestRow[]>` — 🔴 **배열, 페이징 없음**(화면이 자른다) · `spec 042` |
+| 배치 승인·반려 | `PUT .../AssignmentApprove` · `AssignmentReturnApprove` (`{assignmentSeq, approved}`) | `data: true` — 🔴 `approved` 항상 명시(B-48) · 반려 사유 없음 |
+| 배치 이력(전입·전출) | `GET .../GetAssignmentInHistory` · `GetAssignmentOutHistory` (`siteSeq`·`userName`·페이징) | `ApiListResponse<AssignmentIn/OutHistoryRow>` — ⚠️ 상태 필터·사유 없음(요청 중) |
+| 근무자별 배치 이력 | `GET .../GetAssignmentHistory` (`userSeq`·페이징) | `ApiListResponse<UserAssignmentHistoryRow>` — 근무자 상세 |
+| 배치 현황 요약 | `GET .../GetAssignmentCount` (`siteSeq`) | `ApiDetailResponse<AssignmentCount>` — KPI 3 · 사이드바 뱃지 · 🔴 배치예정 포함 |
 | 배치요청 처리이력 | `GET /api/deployments?status=PROCESSED` | `ApiListResponse<DeploymentRequestSummary>` (APPROVED·REJECTED·CANCELLED 통합) |
 | 배치요청 상세 | `GET /api/deployments/:id` | `ApiDetailResponse<DeploymentRequest>` |
 | 공지 목록 | `GET /api/v1/Notice/W/sign/GetNoticeList` (`siteSeq`·`fromDt`·`toDt`·`keyword`·페이징) | `ApiListResponse<NoticeRow>` — ✅ `spec 026` 전환 |
