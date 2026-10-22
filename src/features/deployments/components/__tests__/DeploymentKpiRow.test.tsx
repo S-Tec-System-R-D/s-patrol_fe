@@ -13,8 +13,8 @@ import { makeAccessToken } from '@/test/jwt'
 import DeploymentKpiRow from '../DeploymentKpiRow'
 
 /**
- * 배치 KPI 3종 (`spec 039` T639 · `spec 042` T711) — 요약 쿼리의 숫자를 그린다.
- * 시드(사업장 7): 나간 1 · 온 1 · 대기 2.
+ * 배치 KPI 4종 (`spec 039` T639 · `spec 042` T711 · 042 후속) — 요약 쿼리의 숫자를 그린다.
+ * 시드(사업장 7): 나간 1 · 온 1 · 배치 대기 2 · 복귀 대기 1.
  */
 
 const SUMMARY_PATH = '/api/v1/Assignment/W/sign/GetAssignmentCount'
@@ -47,14 +47,26 @@ beforeEach(() => {
 })
 
 describe('DeploymentKpiRow', () => {
-  it('요약 응답의 숫자 3개를 그린다', async () => {
+  it('요약 응답의 숫자 4개를 그린다 — 복귀 대기는 pendingReturnCount', async () => {
     renderRow()
 
     expect(await screen.findByText('2')).toBeInTheDocument()
-    expect(screen.getAllByText('1')).toHaveLength(2)
+    expect(screen.getAllByText('1')).toHaveLength(3)
     expect(screen.getByText('배치 나간 인원')).toBeInTheDocument()
     expect(screen.getByText('배치 온 인원')).toBeInTheDocument()
     expect(screen.getByText('대기중인 배치요청')).toBeInTheDocument()
+    expect(screen.getByText('대기중인 복귀요청')).toBeInTheDocument()
+  })
+
+  it('복귀 대기 카드를 누르면 복귀 요청 탭으로 간다', async () => {
+    const user = userEvent.setup()
+    renderRow()
+
+    await user.click(await screen.findByRole('button', { name: '복귀 요청 보기' }))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location-search').textContent).toContain('tab=returns')
+    )
   })
 
   it('🔴 나간·온 인원에 "배치예정 포함" 을 적는다 — 서버가 시작 전 배치도 센다', async () => {
@@ -79,7 +91,7 @@ describe('DeploymentKpiRow', () => {
     server.use(http.get(SUMMARY_PATH, () => HttpResponse.json({ message: 'x' }, { status: 500 })))
     renderRow()
 
-    expect(await screen.findAllByText('-')).toHaveLength(3)
+    expect(await screen.findAllByText('-')).toHaveLength(4)
     expect(screen.queryByText('0')).not.toBeInTheDocument()
   })
 

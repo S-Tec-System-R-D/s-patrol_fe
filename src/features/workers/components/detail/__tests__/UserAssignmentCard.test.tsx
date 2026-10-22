@@ -87,6 +87,30 @@ describe('UserAssignmentCard', () => {
     expect(screen.queryByText('사업장1')).not.toBeInTheDocument()
   })
 
+  it('🔴 상태 필터 — 서버 status 코드로 거르고 첫 페이지로 · 0건은 "조건에 맞는" 빈 상태 (042 후속)', async () => {
+    const statuses: (string | null)[] = []
+    server.events.on('request:start', ({ request }) => {
+      const target = new URL(request.url)
+      if (target.pathname === USER_HISTORY_PATH) statuses.push(target.searchParams.get('status'))
+    })
+    const user = userEvent.setup()
+    renderCard(110)
+
+    expect(await screen.findByText('강서 스퀘어타워')).toBeInTheDocument()
+    expect(statuses[0]).toBeNull()
+
+    await user.click(screen.getByRole('combobox', { name: '상태' }))
+    await user.click(await screen.findByRole('option', { name: '복귀완료' }))
+
+    expect(await screen.findByText('조건에 맞는 배치 이력이 없습니다')).toBeInTheDocument()
+    expect(statuses[statuses.length - 1]).toBe('2')
+
+    await user.click(screen.getByRole('combobox', { name: '상태' }))
+    await user.click(await screen.findByRole('option', { name: '배치중' }))
+    expect(await screen.findByText('강서 스퀘어타워')).toBeInTheDocument()
+    server.events.removeAllListeners()
+  })
+
   it('배치 기록이 없으면 빈 상태다', async () => {
     renderCard(999)
 

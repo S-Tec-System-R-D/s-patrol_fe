@@ -190,11 +190,18 @@ describe('DeploymentBoard — 요청 탭 클라이언트 페이징 (T716)', () =
 })
 
 describe('DeploymentBoard — 복귀 요청 (T713)', () => {
-  it('🔴 탭 뱃지는 복귀 목록 길이다 — 배치 요청 탭에서도 보인다', async () => {
+  it('🔴 탭 뱃지는 요약의 pendingReturnCount 다 — 배치 요청 탭에서도 보이고 복귀 목록은 부르지 않는다', async () => {
+    const paths: string[] = []
+    server.events.on('request:start', ({ request }) => {
+      paths.push(new URL(request.url).pathname)
+    })
     renderBoard()
 
     await screen.findByRole('table')
-    expect(within(screen.getByRole('tab', { name: /복귀 요청/ })).getByText('1')).toBeInTheDocument()
+    expect(
+      await within(screen.getByRole('tab', { name: /복귀 요청/ })).findByText('1')
+    ).toBeInTheDocument()
+    expect(paths).not.toContain(RETURN_LIST_PATH)
   })
 
   it('🔴 복귀 경로를 뒤집어 그린다 — 배치지(강서) → 우리 사업장 · 복귀일 칸은 없다', async () => {
@@ -246,12 +253,48 @@ describe('DeploymentBoard — 이력 (T721)', () => {
     expect(routeCell.firstElementChild).toHaveTextContent('강동 테크노타워')
   })
 
-  it('🔴 상태 필터가 없다 — 검색창과 초기화만', async () => {
-    renderBoard('/deployments?tab=in')
+  it('🔴 상태 필터를 고르면 ?status 와 서버 status 코드로 나가고 첫 페이지로 간다 (042 후속)', async () => {
+    const statuses: (string | null)[] = []
+    server.events.on('request:start', ({ request }) => {
+      const target = new URL(request.url)
+      if (target.pathname === IN_HISTORY_PATH) statuses.push(target.searchParams.get('status'))
+    })
+    const user = userEvent.setup()
+    renderBoard('/deployments?tab=in&page=2')
 
-    await screen.findByText('오준혁')
-    expect(screen.getByLabelText('이름 검색')).toBeInTheDocument()
-    expect(screen.queryByLabelText('상태')).not.toBeInTheDocument()
+    await user.click(await screen.findByRole('combobox', { name: '상태' }))
+    await user.click(await screen.findByRole('option', { name: '복귀완료' }))
+
+    await waitFor(() => expect(search()).toContain('status=returned'))
+    expect(search()).not.toContain('page=2')
+    expect(await screen.findByText('한지민')).toBeInTheDocument()
+    expect(screen.queryByText('오준혁')).not.toBeInTheDocument()
+    expect(statuses[statuses.length - 1]).toBe('2')
+  })
+
+  it('🔴 상태 필터 — 초기화로 지우고, 탭을 바꿔도 지운다 · 모르는 값은 전체', async () => {
+    const user = userEvent.setup()
+    renderBoard('/deployments?tab=in&status=active')
+
+    expect(await screen.findByText('오준혁')).toBeInTheDocument()
+    expect(screen.queryByText('한지민')).not.toBeInTheDocument()
+    await user.click(screen.getByLabelText('필터 초기화'))
+    await waitFor(() => expect(search()).not.toContain('status='))
+    expect(await screen.findByText('한지민')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('combobox', { name: '상태' }))
+    await user.click(await screen.findByRole('option', { name: '배치중' }))
+    await waitFor(() => expect(search()).toContain('status=active'))
+    await user.click(screen.getByRole('tab', { name: /전출 이력/ }))
+    await waitFor(() => expect(search()).toContain('tab=out'))
+    expect(search()).not.toContain('status=')
+  })
+
+  it('깨진 ?status 는 전체로 본다 — 서버에 보내지 않는다', async () => {
+    renderBoard('/deployments?tab=in&status=bogus')
+
+    expect(await screen.findByText('오준혁')).toBeInTheDocument()
+    expect(screen.getByText('한지민')).toBeInTheDocument()
   })
 
   it('🔴 입력하면 디바운스 뒤 ?q 와 서버 userName 으로 나가고 첫 페이지로 간다', async () => {
@@ -326,7 +369,7 @@ describe('DeploymentBoard — 상태', () => {
         HttpResponse.json({
           message: '',
           code: 200,
-          data: { outCount: 1, inCount: 1, pendingCount: 0 },
+          data: { outCount: 1, inCount: 1, pendingCount: 0, pendingReturnCount: 0 },
         })
       )
     )
@@ -338,10 +381,8 @@ describe('DeploymentBoard — 상태', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('🔴 복귀 목록 조회가 실패하면 복귀 탭 뱃지를 그리지 않는다', async () => {
-    server.use(
-      http.get(RETURN_LIST_PATH, () => HttpResponse.json({ message: 'x' }, { status: 500 }))
-    )
+  it('🔴 요약 조회가 실패하면 탭 뱃지를 그리지 않는다', async () => {
+    server.use(http.get(COUNT_PATH, () => HttpResponse.json({ message: 'x' }, { status: 500 })))
     renderBoard()
 
     await screen.findByRole('table')

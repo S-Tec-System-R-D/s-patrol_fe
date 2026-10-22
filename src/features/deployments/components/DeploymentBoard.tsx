@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeftRightIcon,
+  FilterIcon,
   FilterXIcon,
   InboxIcon,
   RotateCcwIcon,
@@ -16,12 +17,14 @@ import AppEmpty from '@/components/app/AppEmpty'
 import AppIconButton from '@/components/app/AppIconButton'
 import AppInput from '@/components/app/AppInput'
 import AppPagination from '@/components/app/AppPagination'
+import AppSelect from '@/components/app/AppSelect'
 import AppTable from '@/components/AppTable'
 import { parsePageNumber } from '@/features/course-history/lib/courseHistoryListParams'
 import { toPageIndex, toPageNumber } from '@/features/courses/lib/courseListParams'
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback'
 import { useQueryParams } from '@/hooks/useQueryParams'
 import { getSiteName, getSiteSeq } from '@/lib/auth/site'
+import { ALL_VALUE } from '@/lib/listQuery'
 import { cn } from '@/lib/utils'
 import { useDeploymentHistory, type AssignmentHistoryRow } from '../hooks/useDeploymentHistory'
 import { useDeploymentRequests } from '../hooks/useDeploymentRequests'
@@ -29,8 +32,10 @@ import { useDeploymentSummary } from '../hooks/useDeploymentSummary'
 import { useReturnRequests } from '../hooks/useReturnRequests'
 import {
   DEPLOYMENT_PAGE_SIZE,
+  historyStatusOptions,
   isRequestTab,
   parseDeploymentTab,
+  parseHistoryStatus,
   toHistoryParams,
   type DeploymentTab,
 } from '../lib/deploymentParams'
@@ -52,8 +57,8 @@ import { returnRequestColumns } from './ReturnRequestColumns'
  * 🔴 **기본 탭은 배치 요청**이고 탭에 **대기 건수**를 붙인다 — 014 의 "요청 처리가 이력보다 우선" 을
  * 위치 대신 탭 순서·숫자로 지킨다.
  *
- * 🔴 **활성 탭의 쿼리만 요청한다** — 훅을 모두 부르되 안 보는 쪽은 `null`(요청 안 함). 예외: 복귀 목록(탭 뱃지).
- * 탭은 `?tab`, 페이지는 `?page` 하나(표가 하나다). 탭을 바꾸면 페이지를 지운다.
+ * 🔴 **활성 탭의 쿼리만 요청한다** — 훅을 모두 부르되 안 보는 쪽은 `null`(요청 안 함). 탭 뱃지 숫자는 요약에서 온다.
+ * 탭은 `?tab`, 페이지는 `?page` 하나(표가 하나다). 탭을 바꾸면 페이지·필터를 지운다.
  *
  * 🔴 **`spec 042` 실측 API** — 요청 목록 2종은 배열(화면이 자른다) · 이력은 전입/전출 엔드포인트가 따로다.
  */
@@ -92,8 +97,10 @@ const SEARCH_DEBOUNCE_MS = 300
 const DeploymentBoard = () => {
   const siteSeq = getSiteSeq()
   const siteName = getSiteName() ?? ''
-  const [params, setParams] = useQueryParams<'tab' | 'page' | 'q'>()
+  const [params, setParams] = useQueryParams<'tab' | 'page' | 'status' | 'q'>()
   const tab = parseDeploymentTab(params.tab)
+  /** 이력 탭의 상태 필터 — 서버가 거른다(042 후속). 요청 탭에서는 쓰지 않는다 */
+  const status = isRequestTab(tab) ? undefined : parseHistoryStatus(params.status)
   /** 이력 탭의 이름 검색(T658) — 요청 탭에서는 쓰지 않는다 */
   const keyword = isRequestTab(tab) ? undefined : params.q
 
@@ -111,25 +118,22 @@ const DeploymentBoard = () => {
     (value: string) => setParams({ q: value.trim() || undefined, page: undefined }),
     SEARCH_DEBOUNCE_MS
   )
-  const hasFilter = Boolean(keyword)
+  const hasFilter = Boolean(status || keyword)
   const pageNumber = parsePageNumber(params.page)
   /** 행 수는 URL 에 두지 않지만 동작은 한다. 바꾸면 첫 페이지로 */
   const [pageSize, setPageSize] = useState(DEPLOYMENT_PAGE_SIZE)
 
   const summary = useDeploymentSummary(siteSeq)
 
-  /**
-   * 🔴 요청 목록 2종은 **배열**이다(실측 — 페이징 없음). 화면이 `?page` 로 잘라 보인다.
-   * 🔴 복귀 목록은 **탭과 무관하게** 받는다 — 요약에 복귀 건수가 없어 탭 뱃지가 이 길이다(사용자 결정 2026-10-21)
-   */
+  /** 🔴 요청 목록 2종은 **배열**이다(실측 — 페이징 없음). 화면이 `?page` 로 잘라 보인다 */
   const requests = useDeploymentRequests(tab === 'requests' ? siteSeq : null)
-  const returns = useReturnRequests(siteSeq)
+  const returns = useReturnRequests(tab === 'returns' ? siteSeq : null)
   const historyTab = isRequestTab(tab) ? 'in' : tab
   // react-query 는 키를 값으로 비교한다 — 객체를 메모이즈할 필요가 없다
   const historyParams =
     siteSeq === null || isRequestTab(tab)
       ? null
-      : { ...toHistoryParams(siteSeq, params.page, keyword), pageSize }
+      : { ...toHistoryParams(siteSeq, params.page, status, keyword), pageSize }
   const history = useDeploymentHistory(historyTab, historyParams)
   const active = tab === 'requests' ? requests : tab === 'returns' ? returns : history
 
@@ -166,9 +170,14 @@ const DeploymentBoard = () => {
     }
   }, [pageEmptied, pageNumber, setParams])
 
-  /** 🔴 탭을 바꾸면 페이지·검색을 지운다 — 다른 탭에 끌고 가면 일부만 보이는 이유를 모른다 */
+  /** 🔴 탭을 바꾸면 페이지·검색·필터를 지운다 — 다른 탭에 끌고 가면 일부만 보이는 이유를 모른다 */
   const selectTab = (next: DeploymentTab) =>
-    setParams({ tab: next === 'requests' ? undefined : next, page: undefined, q: undefined })
+    setParams({
+      tab: next === 'requests' ? undefined : next,
+      page: undefined,
+      status: undefined,
+      q: undefined,
+    })
 
   return (
     <div className="flex flex-col gap-4">
@@ -181,12 +190,12 @@ const DeploymentBoard = () => {
       >
         {TABS.map(({ key, label, icon: Icon }) => {
           const selected = tab === key
-          /* 배치 요청 = `pendingCount`(KPI·사이드바와 같은 숫자) · 복귀 요청 = 복귀 목록 길이(탭에만) */
+          /* 배치 요청 = `pendingCount`(KPI·사이드바와 같은 숫자) · 복귀 요청 = `pendingReturnCount`(탭에만) */
           const pending =
             key === 'requests'
               ? summary.data?.pendingCount
               : key === 'returns'
-                ? returns.data?.length
+                ? summary.data?.pendingReturnCount
                 : undefined
           return (
             <button
@@ -216,8 +225,7 @@ const DeploymentBoard = () => {
       </div>
 
       {/* 이력 탭의 필터 줄 — 🔴 **다른 목록 화면과 같은 마크업**(T658, 사용자 요청): 검색창(왼쪽) →
-          `role="group"` 초기화 → spacer. 공지(026)·근무자(038)·지점 이력(037)과 같은 줄이다.
-          🔴 **상태 필터는 없다**(`spec 042`) — 서버에 파라미터가 없다. 페이지 안에서만 거르면 행 수가 페이지마다 달라진다 */}
+          `role="group"` 상태 필터 · 초기화 → spacer. 공지(026)·근무자(038)·지점 이력(037)과 같은 줄이다 */}
       {!isRequestTab(tab) && (
         <div className="flex items-center gap-2">
           <AppInput
@@ -232,12 +240,23 @@ const DeploymentBoard = () => {
             }}
           />
           <div role="group" aria-label="목록 필터" className="contents">
+            <AppSelect
+              aria-label="상태"
+              icon={FilterIcon}
+              options={historyStatusOptions}
+              value={status ?? ALL_VALUE}
+              onChange={(value) =>
+                setParams({ status: value === ALL_VALUE ? undefined : value, page: undefined })
+              }
+              active={Boolean(status)}
+              className="w-auto"
+            />
             {hasFilter && (
               <AppIconButton
                 icon={RotateCcwIcon}
                 aria-label="필터 초기화"
                 title="필터 초기화"
-                onClick={() => setParams({ q: undefined, page: undefined })}
+                onClick={() => setParams({ status: undefined, q: undefined, page: undefined })}
                 className="bg-card"
               />
             )}
@@ -275,7 +294,7 @@ const DeploymentBoard = () => {
             <AppEmpty
               icon={FilterXIcon}
               title="조건에 맞는 이력이 없습니다"
-              description="검색어를 바꿔보세요."
+              description="검색어나 상태 필터를 바꿔보세요."
             />
           ) : (
             <AppEmpty

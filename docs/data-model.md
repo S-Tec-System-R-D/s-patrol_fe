@@ -573,9 +573,9 @@ export interface Keyword {
 | 근무자 상세 | `GET /api/v1/User/W/sign/UserDetail?userId=` | `ApiDetailResponse<UserDetail>` — ✅ `spec 038` 전환. ⚠️ 권한·등록일 없음(OQ-8) |
 | 배치 요청 · 복귀 요청 대기 | `GET /api/v1/Assignment/W/sign/GetAssignmentList` · `GetAssignmentReturnList` (`siteSeq`) | `ApiResponse<AssignmentRequestRow[]>` — 🔴 **배열, 페이징 없음**(화면이 자른다) · `spec 042` |
 | 배치 승인·반려 | `PUT .../AssignmentApprove` · `AssignmentReturnApprove` (`{assignmentSeq, approved}`) | `data: true` — 🔴 `approved` 항상 명시(B-48) · 반려 사유 없음 |
-| 배치 이력(전입·전출) | `GET .../GetAssignmentInHistory` · `GetAssignmentOutHistory` (`siteSeq`·`userName`·페이징) | `ApiListResponse<AssignmentIn/OutHistoryRow>` — ⚠️ 상태 필터·사유 없음(요청 중) |
-| 근무자별 배치 이력 | `GET .../GetAssignmentHistory` (`userSeq`·페이징) | `ApiListResponse<UserAssignmentHistoryRow>` — 근무자 상세 |
-| 배치 현황 요약 | `GET .../GetAssignmentCount` (`siteSeq`) | `ApiDetailResponse<AssignmentCount>` — KPI 3 · 사이드바 뱃지 · 🔴 배치예정 포함 |
+| 배치 이력(전입·전출) | `GET .../GetAssignmentInHistory` · `GetAssignmentOutHistory` (`siteSeq`·`userName`·`status`·페이징) | `ApiListResponse<AssignmentIn/OutHistoryRow>` — ⚠️ 사유 없음(요청 중) |
+| 근무자별 배치 이력 | `GET .../GetAssignmentHistory` (`userSeq`·`status`·페이징) | `ApiListResponse<UserAssignmentHistoryRow>` — 근무자 상세 |
+| 배치 현황 요약 | `GET .../GetAssignmentCount` (`siteSeq`) | `ApiDetailResponse<AssignmentCount>` — KPI 4 · 사이드바 뱃지 · 복귀 탭 뱃지(`pendingReturnCount`) · 🔴 배치예정 포함 |
 | 배치요청 처리이력 | `GET /api/deployments?status=PROCESSED` | `ApiListResponse<DeploymentRequestSummary>` (APPROVED·REJECTED·CANCELLED 통합) |
 | 배치요청 상세 | `GET /api/deployments/:id` | `ApiDetailResponse<DeploymentRequest>` |
 | 공지 목록 | `GET /api/v1/Notice/W/sign/GetNoticeList` (`siteSeq`·`fromDt`·`toDt`·`keyword`·페이징) | `ApiListResponse<NoticeRow>` — ✅ `spec 026` 전환 |

@@ -97,7 +97,7 @@ interface AssignmentInHistoryRow extends AssignmentHistoryBase { userName: strin
 interface AssignmentOutHistoryRow extends AssignmentHistoryBase { userName: string; toSiteName: string }
 interface UserAssignmentHistoryRow extends AssignmentHistoryBase { siteSeq: number; siteName: string }
 
-interface AssignmentCount { outCount: number; inCount: number; pendingCount: number }
+interface AssignmentCount { outCount: number; inCount: number; pendingCount: number; pendingReturnCount: number } // 후속: pendingReturnCount
 
 interface AssignmentApproveRequest { assignmentSeq: number; approved: boolean }
 ```
@@ -112,9 +112,11 @@ interface AssignmentApproveRequest { assignmentSeq: number; approved: boolean }
 **KPI 3종**(US1) — `GetAssignmentCount`. 나간 · 온 · 대기. 사이드바 뱃지 = `pendingCount`(현행 유지).
 - 🔴 **보조 문구**: "복귀하지 않은 인원" → **"배치예정 포함"** — 서버가 시작 전 배치도 센다(실측). 이력의 `배치중` 건수와 다를 수 있다.
 - 🔴 **카드 클릭 시 `배치중` 필터 제거** — 서버에 상태 필터 파라미터가 없다. 클릭하면 해당 탭으로만 간다.
+  - 후속(2026-10-22): 필터가 생겼어도 **탭만 바꾸고 필터를 비운다** — 나간·온 숫자가 배치예정 + 배치중이라 상태 하나로 거르면 숫자와 행 수가 오히려 어긋난다.
 
 **탭 4개** — 배치 요청 · 복귀 요청 · 전입 이력 · 전출 이력(`?tab` · `?page`, 현행 유지).
 - 배치 요청 뱃지 = `pendingCount` · 🔴 **복귀 요청 뱃지 = 복귀 목록 길이**(사용자 결정 2026-10-21). 복귀 목록은 탭과 무관하게 조회한다(뱃지에 필요).
+  - 후속(2026-10-22): 복귀 요청 뱃지 = **`pendingReturnCount`** — 복귀 목록은 복귀 탭에서만 조회한다. KPI 에도 **"대기중인 복귀요청"** 카드를 더해 4종(사용자 요청).
 
 **배치 요청**(US2) — `GetAssignmentList`. 컬럼: 근무자 · 배치 경로(`출발 → 도착`) · 배치 기간(`시작 ~ 종료 | 미정`) · 사유 · 요청일 · `[승인]` `[반려]`.
 **복귀 요청**(US2) — `GetAssignmentReturnList`. 컬럼: 근무자 · **복귀 경로** · 배치 기간 · 사유 · 요청일 · `[승인]` `[반려]`.
@@ -133,6 +135,7 @@ interface AssignmentApproveRequest { assignmentSeq: number; approved: boolean }
 - 기간: `시작 ~ 종료`. 종료 = `endDt`, 없으면 `미정`. 🔴 `completeDt` 는 쓰지 않는다 — 지금 값은 테스트 값이라 의미를 확정할 수 없다(사용자 2026-10-22, OQ-042-E).
 - 상태: `statusName` 뱃지 — 배치예정(warning, 039 색 유지) · 배치중(point) · 복귀완료(muted). `AssignmentStatusBadge` 하나를 근무자 상세와 함께 쓴다.
 - 🔴 **상태 필터(`?status`) 제거** — 서버 파라미터가 없고, 현재 페이지 안에서만 거르면 행 수가 페이지마다 달라진다.
+  - 후속(2026-10-22): 서버 `status` 가 생겨 **복원** — `?status=scheduled|active|returned` → 0/1/2, 모르는 값은 전체. 초기화·탭 전환 시 지운다. 근무자 상세 배치 이력 카드에도 같은 필터(로컬 state).
 
 ### 2-3. 화면 — 근무자 상세 `/users/:userSeq` (US4)
 
@@ -175,7 +178,7 @@ interface AssignmentApproveRequest { assignmentSeq: number; approved: boolean }
 | 네트워크 실패 | 토스트 + 목록 유지 |
 | 마지막 행 처리 후 페이지가 빔 | 이전 페이지로(039 승계 — 클라이언트 페이징에서도 같다) |
 | 요약만 실패 | KPI 만 `-`, 목록·이력 정상(독립 쿼리) |
-| 복귀 목록 실패 | 복귀 탭 뱃지를 그리지 않는다(숫자를 지어내지 않는다) |
+| 복귀 목록 실패 | 복귀 탭 뱃지를 그리지 않는다(숫자를 지어내지 않는다) — 후속: 뱃지가 요약 값이라 **요약 실패** 시 그리지 않는다 |
 | 사업장 미선택 | 요청 안 함 |
 | `plannedEndDt`·`endDt` null | `미정` |
 | 근무자 상세 — 배치 이력 조회 실패 | 그 섹션만 실패 표시, 상세 나머지는 정상 |
@@ -221,6 +224,6 @@ interface AssignmentApproveRequest { assignmentSeq: number; approved: boolean }
 - **OQ-042-A 복귀일**(B-46 ②) — 복귀 요청에 복귀일이 없다. 앱 복귀 요청에서 입력받아야 생긴다. 칸을 뺐다.
 - **OQ-042-B 이력 사유**(B-47) — 이력 3종에 사유가 없다. 칸을 뺐다.
 - **OQ-042-C 요약이 배치예정을 센다** — "지금 나가/와 있는 인원" 이 아니다. 보조 문구로 알린다. 서버가 바꾸면 문구를 되돌린다.
-- **OQ-042-F 이력 상태 필터**(B-47) — 🔴 백엔드가 파라미터를 **빠뜨렸다**(사용자 전달 2026-10-22). swagger 에 없고 `status=0/1/2` 를 보내도 무시된다(재실측 2026-10-22). 필터 UI 를 빼 두었다 — 반영되면 `?status` + 서버 파라미터로 되살린다(039 구현이 git 에 있다).
+- ~~**OQ-042-F 이력 상태 필터**~~ ✅ **해소(2026-10-22 2차 실측 — 이력 3종 `status`, 042 후속에서 복원)**. (원문)(B-47) — 🔴 백엔드가 파라미터를 **빠뜨렸다**(사용자 전달 2026-10-22). swagger 에 없고 `status=0/1/2` 를 보내도 무시된다(재실측 2026-10-22). 필터 UI 를 빼 두었다 — 반영되면 `?status` + 서버 파라미터로 되살린다(039 구현이 git 에 있다).
 - **OQ-042-E `completeDt`** — 현재 값은 테스트 값이다(사용자 2026-10-22). 타입에는 두고 화면에는 쓰지 않는다. 실데이터가 쌓이면 다시 본다.
 - **OQ-042-D dev:real 확인 데이터** — 웹에서는 요청을 만들 수 없다. 앱으로 만들거나 실측 스크립트처럼 테스트 근무자 토큰으로 만든다(만든 근무자는 삭제 — 이력도 함께 사라진다).

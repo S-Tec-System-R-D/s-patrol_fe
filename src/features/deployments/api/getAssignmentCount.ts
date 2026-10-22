@@ -1,7 +1,7 @@
 import api from '@/lib/axios'
 import type { AssignmentCount } from '../types/deployment'
 
-/** 배치 현황 요약 (`spec 042` T703) — KPI 3종 + 사이드바 대기 뱃지 */
+/** 배치 현황 요약 (`spec 042` T703) — KPI 4종 + 사이드바 대기 뱃지 + 복귀 탭 뱃지 */
 
 const GET_ASSIGNMENT_COUNT_PATH = '/api/v1/Assignment/W/sign/GetAssignmentCount'
 

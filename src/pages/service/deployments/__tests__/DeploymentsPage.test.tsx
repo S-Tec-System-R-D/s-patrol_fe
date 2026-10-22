@@ -95,7 +95,7 @@ describe('DeploymentsPage — KPI → 탭', () => {
     await user.click(screen.getByRole('button', { name: '전입 이력 보기' }))
     expect(await screen.findByText('오준혁')).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /전입 이력/ })).toHaveAttribute('aria-selected', 'true')
-    // 복귀완료한 한지민도 나온다 — 서버에 상태 필터가 없다(spec 042)
+    // 복귀완료한 한지민도 나온다 — KPI 클릭은 상태 필터를 비운다(숫자 = 배치예정 + 배치중)
     expect(screen.getByText('한지민')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '배치 요청 보기' }))

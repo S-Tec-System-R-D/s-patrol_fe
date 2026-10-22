@@ -269,11 +269,30 @@ const pageOf = (query: URLSearchParams) => ({
 })
 
 /** 이력 공통 — 승인된 배치 · 이름 부분 일치 · 최신순(`assignmentSeq` 내림차순, 실측) */
-const approvedRows = (match: (row: StoredAssignment) => boolean, userName: string | null) =>
+const approvedRows = (
+  match: (row: StoredAssignment) => boolean,
+  userName: string | null,
+  status: number | null
+) =>
   store
     .filter((row) => row.state === 'approved' && match(row))
     .filter((row) => (userName === null ? true : row.userName.includes(userName)))
+    .filter((row) => (status === null ? true : statusOf(row) === status))
     .sort((a, b) => b.assignmentSeq - a.assignmentSeq)
+
+/** `?status` — 빈 값은 전체, 0~2 밖은 400(실측 문구) */
+const statusOfQuery = (query: URLSearchParams): number | null | Response => {
+  const raw = query.get('status')
+  if (raw === null || raw === '') return null
+  const status = Number(raw)
+  if (!Number.isInteger(status) || status < 0 || status > 2) {
+    return HttpResponse.json(
+      { message: '상태값은 0~2 사이여야 합니다.', data: null, code: 400 },
+      { status: 400 }
+    )
+  }
+  return status
+}
 
 const countOf = (siteSeq: number): AssignmentCount => {
   const open = store.filter((row) => row.state === 'approved' && !row.completeYn)
@@ -282,6 +301,9 @@ const countOf = (siteSeq: number): AssignmentCount => {
     inCount: open.filter((row) => row.toSiteSeq === siteSeq).length,
     pendingCount: store.filter((row) => row.state === 'pending' && row.toSiteSeq === siteSeq)
       .length,
+    pendingReturnCount: store.filter(
+      (row) => row.state === 'approved' && row.returnPending && row.fromSiteSeq === siteSeq
+    ).length,
   }
 }
 
@@ -320,8 +342,15 @@ export const deploymentHandlers = [
     const sizeError = pageSizeError(pageSize)
     if (sizeError) return sizeError
 
+    const status = statusOfQuery(query)
+    if (status instanceof Response) return status
+
     const siteSeq = Number(query.get('siteSeq'))
-    const rows = approvedRows((row) => row.toSiteSeq === siteSeq, query.get('userName')).map(
+    const rows = approvedRows(
+      (row) => row.toSiteSeq === siteSeq,
+      query.get('userName'),
+      status
+    ).map(
       (row) => ({ ...historyBase(row), userName: row.userName, fromSiteName: row.fromSiteName })
     )
     return paged(rows, pageNumber, pageSize)
@@ -333,8 +362,15 @@ export const deploymentHandlers = [
     const sizeError = pageSizeError(pageSize)
     if (sizeError) return sizeError
 
+    const status = statusOfQuery(query)
+    if (status instanceof Response) return status
+
     const siteSeq = Number(query.get('siteSeq'))
-    const rows = approvedRows((row) => row.fromSiteSeq === siteSeq, query.get('userName')).map(
+    const rows = approvedRows(
+      (row) => row.fromSiteSeq === siteSeq,
+      query.get('userName'),
+      status
+    ).map(
       (row) => ({ ...historyBase(row), userName: row.userName, toSiteName: row.toSiteName })
     )
     return paged(rows, pageNumber, pageSize)
@@ -346,8 +382,11 @@ export const deploymentHandlers = [
     const sizeError = pageSizeError(pageSize)
     if (sizeError) return sizeError
 
+    const status = statusOfQuery(query)
+    if (status instanceof Response) return status
+
     const userSeq = Number(query.get('userSeq'))
-    const rows = approvedRows((row) => row.userSeq === userSeq, null).map((row) => ({
+    const rows = approvedRows((row) => row.userSeq === userSeq, null, status).map((row) => ({
       ...historyBase(row),
       siteSeq: row.toSiteSeq,
       siteName: row.toSiteName,

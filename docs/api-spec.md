@@ -633,6 +633,8 @@ interface PagedData<T> {
 
 **배치 10종 (실측 2026-10-21 · 재실측 2026-10-22, `spec 042` WF-1-0)**
 
+> ✅ **재실측 2026-10-22 (2차, 042 후속)** — 이력 3종에 `status` 필터 파라미터 · 요약에 `pendingReturnCount` 가 생겼다. 테스트 근무자 3명(사업장 7 → 8: 대기 · 배치중+복귀요청 · 복귀완료+배치예정)으로 확인 후 삭제, 사업장 7·8 0건 복구.
+>
 > ✅ **재실측 2026-10-22** — 백엔드가 B-46·B-47 일부를 반영했다. 같은 방식(사업장 7 테스트 근무자 `9904202` · `assignmentSeq` 38·39 · 끝에 삭제, 사업장 7·8 이력·요약·근무자 0 확인).
 > ① 요청 목록 2종 행에 **`userSeq`·`userName`** ② 이력 3종 행에 **`status`·`statusName`**(`0` 배치예정 / `1` 배치중 / `2` 복귀완료). 🔴 **여전히 없다**: 복귀 요청의 **복귀일** · 이력의 **사유**.
 > 🔴 `UserAssignment`·`UserAssignmentReturn` 은 **백엔드가 근무자 웹 로그인을 가정하고 만든 것**이다(사용자 전달 2026-10-22) — 웹은 쓰지 않는다. 실측 데이터 생성에만 썼다.
@@ -648,10 +650,10 @@ interface PagedData<T> {
 | `GET GetAssignmentReturnList?siteSeq` | 위와 **같은 행** | **원소속** 사업장에 대기 중 복귀 요청. ✅ 근무자 있음(2026-10-22) · 🔴 **복귀일이 없다** — 복귀 요청 바디가 `assignmentSeq` 뿐이다(B-47). 🔴 `from`·`to` 는 **원래 배치 방향 그대로**다(`7 → 8` — 복귀 경로 `8 → 7` 이 아니다) |
 | `PUT AssignmentApprove` | `{assignmentSeq, approved}` | `approved: false` = 반려. 🔴 **반려 사유 필드 없음** → 화면에서 사유 입력 제거(사용자 결정 2026-10-21). 🔴🔴 **`approved` 를 빼면 반려로 처리된다**(200, bool 기본값) — 항상 명시해서 보낸다. 반려된 요청은 **어느 이력에도 나오지 않는다** |
 | `PUT AssignmentReturnApprove` | 같은 바디 | 반려하면 배치는 그대로(배치중), 근무자는 **다시 복귀 요청할 수 있다**. 승인하면 `completeYn: true` · `completeDt` = **승인 시각**. `endDt` 는 바뀌지 않는다(요청 때의 `plannedEndDt` 그대로 — `null` 이면 계속 `null`) |
-| `GET GetAssignmentInHistory?siteSeq&userName&pageNumber&pageSize` | `PagedData<Row>` | 행: `assignmentSeq · userName · fromSiteName · startDt · endDt · completeYn · completeDt · status · statusName`(✅ 상태 2종은 2026-10-22 추가). 🔴 **사유·`userSeq`·`siteSeq` 없음** · 상태 필터 파라미터 없음. `userName` 은 **부분 일치** ✅. 최신순(`assignmentSeq` 내림차순) |
+| `GET GetAssignmentInHistory?siteSeq&userName&status&pageNumber&pageSize` | `PagedData<Row>` | 행: `assignmentSeq · userName · fromSiteName · startDt · endDt · completeYn · completeDt · status · statusName`(✅ 상태 2종은 2026-10-22 추가). 🔴 **사유·`userSeq`·`siteSeq` 없음**. ✅ **`status` 필터**(2026-10-22 2차) — `0`/`1`/`2` 로 정확히 거르고 `totalCount` 도 걸러진 수 · 빈 값·생략 = 전체 · 0~2 밖은 **400 래퍼 `"상태값은 0~2 사이여야 합니다."`** · `userName` 과 함께 동작. `userName` 은 **부분 일치** ✅. 최신순(`assignmentSeq` 내림차순) |
 | `GET GetAssignmentOutHistory?…` | 같은 형태 | 행에 `fromSiteName` 대신 **`toSiteName`** |
-| `GET GetAssignmentHistory?userSeq&pageNumber&pageSize` | `PagedData<Row>` | 행: `assignmentSeq · siteSeq · siteName(도착) · startDt · endDt · completeYn · completeDt · status · statusName`. 없는 `userSeq` 도 200 빈 목록. 반려 건은 안 나온다 |
-| `GET GetAssignmentCount?siteSeq` | `{outCount, inCount, pendingCount}` | 🔴 **복귀 대기 건수 없음**(가정의 `pendingReturnCount`). 🔴 **시작 전(미래) 배치도 센다** — 배치예정 1건만 남은 상태에서 출발 사업장 `outCount 1` · 도착 사업장 `inCount 1`(2026-10-22 재확인). "지금 나가/와 있는 인원" 이 아니라 **복귀 안 한 배치 건수**다 |
+| `GET GetAssignmentHistory?userSeq&status&pageNumber&pageSize` | `PagedData<Row>` | 행: `assignmentSeq · siteSeq · siteName(도착) · startDt · endDt · completeYn · completeDt · status · statusName`(🔴 `userName` 없음). 없는 `userSeq` 도 200 빈 목록. 반려 건은 안 나온다. ✅ `status` 필터 — 전입·전출과 같은 규칙(2026-10-22 2차, 요청하지 않았는데 함께 생겼다) |
+| `GET GetAssignmentCount?siteSeq` | `{outCount, inCount, pendingCount, pendingReturnCount}` | ✅ **`pendingReturnCount`**(2026-10-22 2차) — 대기 중 복귀 요청 수, 🔴 **원소속(출발) 사업장에서 센다**(복귀 요청 목록과 같은 쪽 — 도착 사업장은 0). 승인하면 1 → 0. 🔴 **시작 전(미래) 배치도 센다** — 배치예정 1건만 남은 상태에서 출발 사업장 `outCount 1` · 도착 사업장 `inCount 1`(2026-10-22 재확인). "지금 나가/와 있는 인원" 이 아니라 **복귀 안 한 배치 건수**다 |
 
 **동작**
 
@@ -1409,7 +1411,7 @@ interface NoticeAttach {
 | B-44 | 🔴 **`AddUser` 에 `codeSeq` 를 빼면 500 이다**(실측 2026-10-21). swagger 는 `required` 가 아닌데 생략하면 **500 ProblemDetails**("서버에서 요청을 처리하지 못하였습니다") — 유효성 오류가 500 으로 샌다(B-16 계열). 프론트는 **항상 `codeSeq: 7`(근무자)** 을 보낸다(`spec 041` 결정). **요청**: 필수로 표시하거나 생략 시 기본값(근무자) 처리 | 🟡 |
 | B-45 | 🟡 **근무자 입력값을 서버가 검사하지 않는다**(실측 2026-10-21) — 비밀번호 강도(`1234`·`12` 통과) · 사번 길이·문자(9자·영문 통과, 로그인은 8자 상한) · 연락처 형식(`abc` 통과, **하이픈 유무 그대로 저장 → 형식이 섞인다**). 화면이 막지만 **앱·다른 경로로는 들어온다.** **요청**: 로그인과 같은 규칙으로 서버 검증 + 연락처 정규화(숫자만) | 🟡 |
 | B-46 | ◩ **① 해소(재실측 2026-10-22 — 두 목록 행에 `userSeq`·`userName`) · ② 복귀일 대기**. (원문) 🔴🔴 **배치·복귀 요청 목록에 근무자가 없다**(실측 2026-10-21, `spec 042`). `GetAssignmentList`·`GetAssignmentReturnList` 행에 `userSeq`·`userName` 이 없어 **누가 요청했는지 화면에 표시할 수 없다** — 승인·반려 판단의 핵심 정보다. **요청**(사용자 전달 2026-10-21): ① 두 목록 행에 `userSeq`·`userName` 추가(이력 API 는 `userName` 을 이미 준다) ② **복귀일** — 복귀 요청 바디·복귀 요청 목록 행에 추가. 페이징은 필요 없다(대기 건만 오는 목록) | 🔴 |
-| B-47 | ◩ **상태 값 해소(재실측 2026-10-22 — 이력 3종에 `status`·`statusName`) · 🔴 상태 필터 파라미터 누락(백엔드 확인 2026-10-22 — `status` 를 보내도 무시) · 사유·복귀일 대기** · 요약 건수가 배치예정을 포함하는 것은 그대로. (원문) 🟡 **배치 상태를 구분할 값이 부족하다**(실측 2026-10-21) — ① 이력 행은 `completeYn` 뿐이라 **시작 전(배치예정)** 을 가릴 수 없고, 미래 시작 배치는 이동하지 않았는데 `GetAssignmentCount.inCount` 에 들어간다 ② 복귀 요청에 **복귀일이 없고** 승인하면 `completeDt` = 승인 시각이다 ③ 요약에 **대기 복귀 요청 건수**가 없다. **요청**(사용자 전달 2026-10-21): 이력 행에 **상태**(예정/배치중/복귀완료)·**사유**. ③ 은 요청하지 않는다(사용자 결정 — 복귀 탭 뱃지는 목록 길이) | 🟡 |
+| B-47 | ◩ **상태 값 해소(재실측 2026-10-22 — 이력 3종에 `status`·`statusName`) · ✅ 상태 필터 해소(2026-10-22 2차 — 이력 3종 `status`) · ✅ ③ 복귀 대기 건수도 생겼다(`pendingReturnCount`) · 사유·복귀일 대기** · 요약 건수가 배치예정을 포함하는 것은 그대로. (원문) 🟡 **배치 상태를 구분할 값이 부족하다**(실측 2026-10-21) — ① 이력 행은 `completeYn` 뿐이라 **시작 전(배치예정)** 을 가릴 수 없고, 미래 시작 배치는 이동하지 않았는데 `GetAssignmentCount.inCount` 에 들어간다 ② 복귀 요청에 **복귀일이 없고** 승인하면 `completeDt` = 승인 시각이다 ③ 요약에 **대기 복귀 요청 건수**가 없다. **요청**(사용자 전달 2026-10-21): 이력 행에 **상태**(예정/배치중/복귀완료)·**사유**. ③ 은 요청하지 않는다(사용자 결정 — 복귀 탭 뱃지는 목록 길이) | 🟡 |
 | B-48 | ⚪ **배치 요청 검증**(실측 2026-10-21, 앱 경로) — 종료일 < 시작일이면 **500**. `AssignmentApprove`·`AssignmentReturnApprove` 에서 `approved` 를 빼면 **반려로 처리된다**(bool 기본값 — 400 이 낫다). 오류 문구 오타 `"대치"` → `"배치"` | ⚪ |
 
 ### 6-1-A. 🔴 백엔드 전달용 — 우선순위 (2026-10-10 기준)

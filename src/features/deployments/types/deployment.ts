@@ -7,6 +7,7 @@
  * - 🔴 복귀 요청 행의 `from → to` 는 **원래 배치 방향**이다(복귀 경로가 아니다)
  * - 이력 3종은 행 모양이 조금씩 다르다 — 전입은 `fromSiteName` 만, 전출은 `toSiteName` 만, 근무자별은 `siteName`(도착)
  * - 서버에 없는 것(요청 중): 복귀일(B-46 ②) · 이력 사유(B-47)
+ * - 이력 3종 `status` 필터 · 요약 `pendingReturnCount` 는 042 후속(2026-10-22 실측)에서 생겼다
  *
  * ⚠️ `UserAssignment`·`UserAssignmentReturn`(요청 생성)은 웹이 쓰지 않는다 — 근무자 앱 경로다.
  */
@@ -73,6 +74,8 @@ export interface AssignmentCount {
   outCount: number
   inCount: number
   pendingCount: number
+  /** 대기 중 복귀 요청 — 🔴 원소속(출발) 사업장에서 센다(복귀 요청 목록과 같은 쪽) */
+  pendingReturnCount: number
 }
 
 /** 요청 종류 — 승인·반려 버튼·훅이 같은 모양이라 이 값 하나로 갈린다 */
@@ -82,12 +85,15 @@ export interface AssignmentHistoryParams {
   siteSeq: number
   /** 근무자 이름 **부분 일치**(실측 ✅) */
   userName?: string
+  /** 상태 필터 — 빼면 전체. 0~2 밖은 400(실측) */
+  status?: AssignmentStatusCode
   pageNumber: number
   pageSize: number
 }
 
 export interface UserAssignmentHistoryParams {
   userSeq: number
+  status?: AssignmentStatusCode
   pageNumber: number
   pageSize: number
 }

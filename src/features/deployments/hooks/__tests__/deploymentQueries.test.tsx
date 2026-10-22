@@ -22,11 +22,12 @@ import { useUserAssignmentHistory } from '../useUserAssignmentHistory'
  *
  * 🔴 **승인·반려가 상태를 실제로 바꾸는지**와 **바디에 `approved` 가 항상 실리는지**를 여기서 본다.
  * 시드(사업장 7): 배치 대기 2(최범수 501 · 배수진 502) · 복귀 대기 1(장도윤 601) ·
- * 전출 2(장도윤 배치중 · 박지우 복귀완료) · 전입 2(오준혁 배치중 · 한지민 복귀완료) → 요약 나간 1 · 온 1 · 대기 2.
+ * 전출 2(장도윤 배치중 · 박지우 복귀완료) · 전입 2(오준혁 배치중 · 한지민 복귀완료) → 요약 나간 1 · 온 1 · 대기 2 · 복귀 대기 1.
  */
 
 const APPROVE_PATH = '/api/v1/Assignment/W/sign/AssignmentApprove'
 const RETURN_APPROVE_PATH = '/api/v1/Assignment/W/sign/AssignmentReturnApprove'
+const OUT_HISTORY_PATH = '/api/v1/Assignment/W/sign/GetAssignmentOutHistory'
 
 const wrapper = ({ children }: { children: ReactNode }) => {
   const queryClient = new QueryClient({
@@ -54,8 +55,13 @@ const returns = () => settle(() => useReturnRequests(7))
 const historyOf = (tab: 'in' | 'out') => settle(() => useDeploymentHistory(tab, toHistoryParams(7)))
 
 describe('조회', () => {
-  it('요약 — 나간 1 · 온 1 · 대기 2 (복귀 대기 건수는 없다)', async () => {
-    expect(await summary()).toEqual({ outCount: 1, inCount: 1, pendingCount: 2 })
+  it('요약 — 나간 1 · 온 1 · 대기 2 · 복귀 대기 1', async () => {
+    expect(await summary()).toEqual({
+      outCount: 1,
+      inCount: 1,
+      pendingCount: 2,
+      pendingReturnCount: 1,
+    })
   })
 
   it('🔴 요청 목록 2종은 배열이고 근무자가 있다', async () => {
@@ -76,6 +82,17 @@ describe('조회', () => {
     expect(out.items.map((row) => row.userName)).toEqual(['박지우', '장도윤'])
     expect(out.items[0]).toHaveProperty('toSiteName')
     expect(out.items.map((row) => row.statusName)).toEqual(['복귀완료', '배치중'])
+  })
+
+  it('🔴 이력 상태 필터는 서버가 거른다 — 0~2 밖은 400 (실측 문구)', async () => {
+    const out = await settle(() =>
+      useDeploymentHistory('out', toHistoryParams(7, undefined, 'returned'))
+    )
+    expect(out.items.map((item) => item.statusName)).toEqual(['복귀완료'])
+
+    const res = await fetch(`${OUT_HISTORY_PATH}?siteSeq=7&status=9&pageNumber=1&pageSize=10`)
+    expect(res.status).toBe(400)
+    expect((await res.json()).message).toBe('상태값은 0~2 사이여야 합니다.')
   })
 
   it('근무자별 이력은 그 사람의 승인된 배치다', async () => {
@@ -125,7 +142,12 @@ describe('🔴 상태 보유 MSW — 승인·반려가 숫자를 바꾼다', () 
   it('승인하면 요청이 사라지고 전입 이력 1건 · 요약 대기 -1 · 온 +1', async () => {
     await api.put(APPROVE_PATH, { assignmentSeq: 502, approved: true })
 
-    expect(await summary()).toEqual({ outCount: 1, inCount: 2, pendingCount: 1 })
+    expect(await summary()).toEqual({
+      outCount: 1,
+      inCount: 2,
+      pendingCount: 1,
+      pendingReturnCount: 1,
+    })
     expect((await requests()).map((row) => row.assignmentSeq)).toEqual([501])
     const approved = (await historyOf('in')).items.find((row) => row.userName === '배수진')
     // 기간은 요청의 시작일·종료일 그대로(종료일 미입력 → null)
@@ -151,7 +173,12 @@ describe('🔴 상태 보유 MSW — 승인·반려가 숫자를 바꾼다', () 
     expect(row?.statusName).toBe('복귀완료')
     expect(row?.endDt).toBeNull()
     expect(await returns()).toEqual([])
-    expect(await summary()).toEqual({ outCount: 0, inCount: 1, pendingCount: 2 })
+    expect(await summary()).toEqual({
+      outCount: 0,
+      inCount: 1,
+      pendingCount: 2,
+      pendingReturnCount: 0,
+    })
   })
 
   it('복귀 요청을 반려하면 요청만 사라지고 배치는 그대로다', async () => {

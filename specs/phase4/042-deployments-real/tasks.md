@@ -65,6 +65,16 @@
 - [x] T728 문서 — `docs/api-request-deployment.md`(남은 요청: 복귀일 · 이력 사유) · `screens.md` §1-4A·§1-4 · `data-model.md` · `flow.md` · `roadmap.md`(042 행 · §12)
 - [x] T729 DoD 점검 + `## 다음 spec으로 이월`
 
+## 후속 (2026-10-22) — 상태 필터 · 복귀 대기 건수 (사용자 결정: 042 후속으로)
+
+> 백엔드 반영 실측(2차): 이력 3종 `status`(0~2 밖 400) · 요약 `pendingReturnCount`(원소속 기준). 테스트 근무자로 확인 후 삭제.
+
+- [x] T730 타입 · MSW — `AssignmentCount.pendingReturnCount` · 이력 params `status?` · MSW `status` 필터 + 400 문구 · 요약 복귀 대기 수
+- [x] T731 이력 탭 상태 필터 복원 in DeploymentBoard.tsx · deploymentParams.ts — `?status`(039 구현 복원) · 초기화 · 탭 전환 시 지움 · 모르는 값 = 전체 · KPI 클릭은 필터를 비운다(숫자 = 예정 + 배치중)
+- [x] T732 복귀 요청 탭 뱃지 = `pendingReturnCount` · 복귀 목록은 복귀 탭에서만 조회 · **KPI 4번째 카드 "대기중인 복귀요청"**(사용자 요청 — 클릭 시 복귀 요청 탭, 0 초과면 warning · 폭 `sm:2열 xl:4열`)
+- [x] T733 근무자 상세 배치 이력 카드 상태 필터(로컬 state · 첫 페이지로 · 필터 0건 빈 상태)
+- [x] T734 테스트 · verify · 문서(`api-spec.md` · `api-request-deployment.md` · `screens.md` · `data-model.md` · spec OQ-042-F)
+
 ---
 
 ## Dependencies & Execution Order
@@ -112,7 +122,7 @@
 
 ### ② 백엔드 회신 대기 (`docs/api-request-deployment.md`)
 
-- 🔴 **전입·전출 이력 `status` 필터 파라미터**(OQ-042-F — 백엔드 누락 확인 2026-10-22) (2026-10-22 재확인: swagger·실호출 모두 미반영) → 오면 필터 UI 복원(`?status`, KPI 클릭 시 `배치중`)
+- ~~전입·전출 이력 `status` 필터 파라미터(OQ-042-F)~~ ✅ 2026-10-22 2차 반영 → 후속 T730~T734 에서 복원
 - 이력 **사유**(OQ-042-B) → 오면 이력 표 사유 칸
 - 복귀 요청 **복귀일**(OQ-042-A, 앱 쪽 입력 필요) → 오면 복귀 표 복귀일 칸
 - B-48 — `approved` 누락 시 반려 처리 · 종료일 < 시작일 500 · 문구 오타
