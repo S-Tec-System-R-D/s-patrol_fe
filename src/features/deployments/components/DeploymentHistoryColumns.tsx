@@ -1,39 +1,34 @@
 import type { ColumnDef } from '@tanstack/react-table'
 
-import AppBadge from '@/components/app/AppBadge'
 import WorkerAvatar from '@/features/workers/components/WorkerAvatar'
+import type { AssignmentHistoryRow } from '../hooks/useDeploymentHistory'
 import { formatPeriod } from '../lib/deploymentPeriod'
-import { DEPLOYMENT_HISTORY_STATUS, type DeploymentHistoryRow } from '../types/deployment'
+import AssignmentStatusBadge from './AssignmentStatusBadge'
 import SiteRoute from './SiteRoute'
 
 /**
- * 배치 이력 컬럼 (`spec 039` T648) — 가정 계약 `DeploymentHistoryRow` 기준.
+ * 배치 이력 컬럼 (`spec 039` T648 → `spec 042` T719 실측 행).
  *
- * 🔴 **상태는 서버가 준 코드를 그린다**(T656) — 배치예정 · 배치중 · 복귀완료. 종료일이 **미래일 수 있게**
- * 되면서(근무자가 입력한 예정 종료일) `endDt` 유무만으로는 복귀를 판단할 수 없다.
- *
- * ⚠️ T656 의 "전입 이력의 복귀일 지정 버튼" 은 **폐기**됐다(T659) — 복귀는 근무자의 **복귀 요청**으로 한다.
+ * 근무자 · 배치 경로 · 기간 · 상태.
+ * 🔴 **사유 칸이 없다** — 서버 이력 행에 없다(B-47, 요청 중).
+ * 🔴 **경로의 한쪽 끝은 행에 없다** — 전입은 `fromSiteName` 만, 전출은 `toSiteName` 만 온다(실측). 다른 끝은
+ * 조회한 사업장(= 선택 사업장)이다.
+ * 🔴 **상태는 서버가 준 것을 그린다**(`status`·`statusName` — 배치예정 · 배치중 · 복귀완료).
+ * ⚠️ 행에 `userSeq` 가 없어 아바타 색 키는 이름이다 — 요청 표(키 `userSeq`)와 색이 다를 수 있다.
  */
 
-const STATUS_VARIANT: Record<number, 'point' | 'muted' | 'warning'> = {
-  [DEPLOYMENT_HISTORY_STATUS.ACTIVE]: 'point',
-  [DEPLOYMENT_HISTORY_STATUS.RETURNED]: 'muted',
-  [DEPLOYMENT_HISTORY_STATUS.SCHEDULED]: 'warning',
-}
-
 /** 🔴 정렬을 전부 끈다 — 서버 페이징이라 클릭하면 현재 페이지만 섞인다(026·037·038 과 같은 판단) */
-const noSort = (columns: ColumnDef<DeploymentHistoryRow>[]): ColumnDef<DeploymentHistoryRow>[] =>
+const noSort = (columns: ColumnDef<AssignmentHistoryRow>[]): ColumnDef<AssignmentHistoryRow>[] =>
   columns.map((column) => ({ ...column, enableSorting: false }))
 
-export const deploymentHistoryColumns = (): ColumnDef<DeploymentHistoryRow>[] =>
+export const deploymentHistoryColumns = (siteName: string): ColumnDef<AssignmentHistoryRow>[] =>
   noSort([
     {
       accessorKey: 'userName',
-      header: '이름',
+      header: '근무자',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          {/* 근무자 목록(038)과 같은 사람이면 같은 색 — 해시 키를 `userSeq` 로 맞춘다 */}
-          <WorkerAvatar id={String(row.original.userSeq)} name={row.original.userName} />
+          <WorkerAvatar id={row.original.userName} name={row.original.userName} />
           <span className="font-medium">{row.original.userName}</span>
         </div>
       ),
@@ -42,13 +37,14 @@ export const deploymentHistoryColumns = (): ColumnDef<DeploymentHistoryRow>[] =>
       id: 'route',
       header: '배치 경로',
       // 요청 표와 같은 표기 — 도착 사업장을 진하게(사용자 요청 2026-10-21)
-      cell: ({ row }) => (
-        <SiteRoute from={row.original.fromSiteName} to={row.original.toSiteName} />
-      ),
-    },
-    {
-      accessorKey: 'reason',
-      header: '사유',
+      cell: ({ row }) => {
+        const r = row.original
+        return 'fromSiteName' in r ? (
+          <SiteRoute from={r.fromSiteName} to={siteName} />
+        ) : (
+          <SiteRoute from={siteName} to={r.toSiteName} />
+        )
+      },
     },
     {
       id: 'period',
@@ -63,9 +59,7 @@ export const deploymentHistoryColumns = (): ColumnDef<DeploymentHistoryRow>[] =>
       id: 'status',
       header: '상태',
       cell: ({ row }) => (
-        <AppBadge variant={STATUS_VARIANT[row.original.status] ?? 'muted'}>
-          {row.original.statusName}
-        </AppBadge>
+        <AssignmentStatusBadge status={row.original.status} statusName={row.original.statusName} />
       ),
     },
   ])

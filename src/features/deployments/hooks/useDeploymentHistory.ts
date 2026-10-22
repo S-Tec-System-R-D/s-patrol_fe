@@ -1,13 +1,25 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { fetchDeploymentHistory } from '../api/getDeploymentHistory'
+import type { PagedData } from '@/types/api'
+import { fetchAssignmentInHistory, fetchAssignmentOutHistory } from '../api/getAssignmentHistory'
 import { deploymentKeys } from '../queryKeys'
-import type { DeploymentHistoryParams } from '../types/deployment'
+import type {
+  AssignmentHistoryParams,
+  AssignmentInHistoryRow,
+  AssignmentOutHistoryRow,
+} from '../types/deployment'
 
-/** 전출·전입 이력 (`spec 039` T634). `params` 가 `null` 이면 요청하지 않는다 */
-export const useDeploymentHistory = (params: DeploymentHistoryParams | null) =>
-  useQuery({
-    queryKey: deploymentKeys.history(params ?? ({ siteSeq: -1 } as DeploymentHistoryParams)),
-    queryFn: () => fetchDeploymentHistory(params as DeploymentHistoryParams),
+export type AssignmentHistoryRow = AssignmentInHistoryRow | AssignmentOutHistoryRow
+
+/**
+ * 전입·전출 이력 (`spec 042` T705) — 탭으로 엔드포인트가 갈린다. `params` 가 `null` 이면 요청하지 않는다.
+ */
+export const useDeploymentHistory = (tab: 'in' | 'out', params: AssignmentHistoryParams | null) =>
+  useQuery<PagedData<AssignmentHistoryRow>>({
+    queryKey: deploymentKeys.history(tab, params ?? ({ siteSeq: -1 } as AssignmentHistoryParams)),
+    queryFn: () =>
+      tab === 'in'
+        ? fetchAssignmentInHistory(params as AssignmentHistoryParams)
+        : fetchAssignmentOutHistory(params as AssignmentHistoryParams),
     enabled: params !== null,
   })

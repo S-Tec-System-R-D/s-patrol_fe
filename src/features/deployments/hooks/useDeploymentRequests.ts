@@ -1,13 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { fetchDeploymentRequestList } from '../api/getDeploymentRequestList'
+import { fetchAssignmentList } from '../api/getAssignmentList'
 import { deploymentKeys } from '../queryKeys'
-import type { DeploymentRequestListParams } from '../types/deployment'
 
-/** 대기 중 배치 요청 목록 (`spec 039` T634). `params` 가 `null` 이면 요청하지 않는다 */
-export const useDeploymentRequests = (params: DeploymentRequestListParams | null) =>
+/** 대기 중 배치 요청 (`spec 042` T705) — 배열 전체. `siteSeq` 가 `null` 이면 요청하지 않는다 */
+export const useDeploymentRequests = (siteSeq: number | null) =>
   useQuery({
-    queryKey: deploymentKeys.requests(params ?? ({ siteSeq: -1 } as DeploymentRequestListParams)),
-    queryFn: () => fetchDeploymentRequestList(params as DeploymentRequestListParams),
-    enabled: params !== null,
+    queryKey: deploymentKeys.requests(siteSeq ?? -1),
+    queryFn: () => fetchAssignmentList(siteSeq as number),
+    enabled: siteSeq !== null,
   })

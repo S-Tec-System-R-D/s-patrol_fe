@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useLocation } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { setSite } from '@/lib/auth/site'
@@ -12,11 +13,16 @@ import { makeAccessToken } from '@/test/jwt'
 import DeploymentKpiRow from '../DeploymentKpiRow'
 
 /**
- * 배치 KPI 3종 (`spec 039` T639) — 요약 쿼리의 숫자를 그린다.
+ * 배치 KPI 3종 (`spec 039` T639 · `spec 042` T711) — 요약 쿼리의 숫자를 그린다.
  * 시드(사업장 7): 나간 1 · 온 1 · 대기 2.
  */
 
-const SUMMARY_PATH = '/api/v1/Deployment/W/sign/GetDeploymentSummary'
+const SUMMARY_PATH = '/api/v1/Assignment/W/sign/GetAssignmentCount'
+
+const LocationDisplay = () => {
+  const location = useLocation()
+  return <div data-testid="location-search">{location.search}</div>
+}
 
 const renderRow = () => {
   const queryClient = new QueryClient({
@@ -27,6 +33,7 @@ const renderRow = () => {
       {/* KPI 가 탭 쿼리(`?tab`)를 바꾸므로 라우터가 필요하다(T649g) */}
       <MemoryRouter>
         <DeploymentKpiRow />
+        <LocationDisplay />
       </MemoryRouter>
     </QueryClientProvider>
   )
@@ -48,6 +55,24 @@ describe('DeploymentKpiRow', () => {
     expect(screen.getByText('배치 나간 인원')).toBeInTheDocument()
     expect(screen.getByText('배치 온 인원')).toBeInTheDocument()
     expect(screen.getByText('대기중인 배치요청')).toBeInTheDocument()
+  })
+
+  it('🔴 나간·온 인원에 "배치예정 포함" 을 적는다 — 서버가 시작 전 배치도 센다', async () => {
+    renderRow()
+
+    await screen.findByText('2')
+    expect(screen.getAllByText('배치예정 포함')).toHaveLength(2)
+  })
+
+  it('🔴 카드를 누르면 탭만 바뀌고 상태 필터를 걸지 않는다', async () => {
+    const user = userEvent.setup()
+    renderRow()
+
+    await user.click(await screen.findByRole('button', { name: '전입 이력 보기' }))
+
+    const search = () => screen.getByTestId('location-search').textContent ?? ''
+    await waitFor(() => expect(search()).toContain('tab=in'))
+    expect(search()).not.toContain('status')
   })
 
   it('🔴 요약 실패는 0 이 아니라 - 다 — "대기 0건" 은 거짓 안심이다', async () => {

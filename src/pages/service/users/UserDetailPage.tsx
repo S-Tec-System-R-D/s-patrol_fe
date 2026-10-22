@@ -17,6 +17,7 @@ import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
 import { useMe } from '@/features/auth/hooks/useMe'
 import { removeUser } from '@/features/workers/api/removeUser'
+import UserAssignmentCard from '@/features/workers/components/detail/UserAssignmentCard'
 import UserInfoCard from '@/features/workers/components/detail/UserInfoCard'
 import UserPatrolCard from '@/features/workers/components/detail/UserPatrolCard'
 import WorkerAvatar from '@/features/workers/components/WorkerAvatar'
@@ -237,8 +238,10 @@ const UserDetailPage = () => {
             </AppAlertDialog>
           </div>
         </div>
-        <div className="xl:col-span-2">
+        {/* 🔴 우측 열에 **배치 이력**을 순찰 기록 아래로 쌓는다(`spec 042` T724) — 둘 다 "그 사람의 기록" 이다 */}
+        <div className="flex flex-col gap-4 xl:col-span-2">
           <UserPatrolCard userSeq={user.userSeq} userName={user.userName} siteSeq={siteSeq} />
+          <UserAssignmentCard userSeq={user.userSeq} />
         </div>
       </div>
     </div>

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeftRightIcon,
-  FilterIcon,
   FilterXIcon,
   InboxIcon,
   RotateCcwIcon,
@@ -17,29 +16,25 @@ import AppEmpty from '@/components/app/AppEmpty'
 import AppIconButton from '@/components/app/AppIconButton'
 import AppInput from '@/components/app/AppInput'
 import AppPagination from '@/components/app/AppPagination'
-import AppSelect from '@/components/app/AppSelect'
 import AppTable from '@/components/AppTable'
 import { parsePageNumber } from '@/features/course-history/lib/courseHistoryListParams'
 import { toPageIndex, toPageNumber } from '@/features/courses/lib/courseListParams'
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback'
 import { useQueryParams } from '@/hooks/useQueryParams'
-import { getSiteSeq } from '@/lib/auth/site'
-import { ALL_VALUE } from '@/lib/listQuery'
+import { getSiteName, getSiteSeq } from '@/lib/auth/site'
 import { cn } from '@/lib/utils'
-import { useDeploymentHistory } from '../hooks/useDeploymentHistory'
+import { useDeploymentHistory, type AssignmentHistoryRow } from '../hooks/useDeploymentHistory'
 import { useDeploymentRequests } from '../hooks/useDeploymentRequests'
 import { useDeploymentSummary } from '../hooks/useDeploymentSummary'
 import { useReturnRequests } from '../hooks/useReturnRequests'
 import {
   DEPLOYMENT_PAGE_SIZE,
-  historyStatusOptions,
   isRequestTab,
   parseDeploymentTab,
-  parseHistoryStatus,
   toHistoryParams,
-  toRequestListParams,
   type DeploymentTab,
 } from '../lib/deploymentParams'
+import type { AssignmentRequestRow } from '../types/deployment'
 import { deploymentHistoryColumns } from './DeploymentHistoryColumns'
 import { deploymentRequestColumns } from './DeploymentRequestColumns'
 import { returnRequestColumns } from './ReturnRequestColumns'
@@ -57,8 +52,10 @@ import { returnRequestColumns } from './ReturnRequestColumns'
  * 🔴 **기본 탭은 배치 요청**이고 탭에 **대기 건수**를 붙인다 — 014 의 "요청 처리가 이력보다 우선" 을
  * 위치 대신 탭 순서·숫자로 지킨다.
  *
- * 🔴 **활성 탭의 쿼리만 요청한다** — 두 훅을 모두 부르되 안 보는 쪽은 `null`(요청 안 함).
+ * 🔴 **활성 탭의 쿼리만 요청한다** — 훅을 모두 부르되 안 보는 쪽은 `null`(요청 안 함). 예외: 복귀 목록(탭 뱃지).
  * 탭은 `?tab`, 페이지는 `?page` 하나(표가 하나다). 탭을 바꾸면 페이지를 지운다.
+ *
+ * 🔴 **`spec 042` 실측 API** — 요청 목록 2종은 배열(화면이 자른다) · 이력은 전입/전출 엔드포인트가 따로다.
  */
 
 interface TabDef {
@@ -94,10 +91,10 @@ const SEARCH_DEBOUNCE_MS = 300
 
 const DeploymentBoard = () => {
   const siteSeq = getSiteSeq()
-  const [params, setParams] = useQueryParams<'tab' | 'page' | 'status' | 'q'>()
+  const siteName = getSiteName() ?? ''
+  const [params, setParams] = useQueryParams<'tab' | 'page' | 'q'>()
   const tab = parseDeploymentTab(params.tab)
-  /** 이력 상태 필터(T649h) · 이름 검색(T658) — 요청 탭에서는 쓰지 않는다 */
-  const status = isRequestTab(tab) ? undefined : parseHistoryStatus(params.status)
+  /** 이력 탭의 이름 검색(T658) — 요청 탭에서는 쓰지 않는다 */
   const keyword = isRequestTab(tab) ? undefined : params.q
 
   /**
@@ -114,39 +111,35 @@ const DeploymentBoard = () => {
     (value: string) => setParams({ q: value.trim() || undefined, page: undefined }),
     SEARCH_DEBOUNCE_MS
   )
-  const hasFilter = Boolean(status || keyword)
+  const hasFilter = Boolean(keyword)
   const pageNumber = parsePageNumber(params.page)
   /** 행 수는 URL 에 두지 않지만 동작은 한다. 바꾸면 첫 페이지로 */
   const [pageSize, setPageSize] = useState(DEPLOYMENT_PAGE_SIZE)
 
   const summary = useDeploymentSummary(siteSeq)
 
-  const requestParams = useMemo(
-    () =>
-      siteSeq === null || tab !== 'requests'
-        ? null
-        : { ...toRequestListParams(siteSeq, params.page), pageSize },
-    [siteSeq, tab, params.page, pageSize]
-  )
-  const returnParams = useMemo(
-    () =>
-      siteSeq === null || tab !== 'returns'
-        ? null
-        : { ...toRequestListParams(siteSeq, params.page), pageSize },
-    [siteSeq, tab, params.page, pageSize]
-  )
-  const historyParams = useMemo(
-    () =>
-      siteSeq === null || isRequestTab(tab)
-        ? null
-        : { ...toHistoryParams(siteSeq, tab, params.page, status, keyword), pageSize },
-    [siteSeq, tab, params.page, status, keyword, pageSize]
-  )
-  const requests = useDeploymentRequests(requestParams)
-  const returns = useReturnRequests(returnParams)
-  const history = useDeploymentHistory(historyParams)
+  /**
+   * 🔴 요청 목록 2종은 **배열**이다(실측 — 페이징 없음). 화면이 `?page` 로 잘라 보인다.
+   * 🔴 복귀 목록은 **탭과 무관하게** 받는다 — 요약에 복귀 건수가 없어 탭 뱃지가 이 길이다(사용자 결정 2026-10-21)
+   */
+  const requests = useDeploymentRequests(tab === 'requests' ? siteSeq : null)
+  const returns = useReturnRequests(siteSeq)
+  const historyTab = isRequestTab(tab) ? 'in' : tab
+  // react-query 는 키를 값으로 비교한다 — 객체를 메모이즈할 필요가 없다
+  const historyParams =
+    siteSeq === null || isRequestTab(tab)
+      ? null
+      : { ...toHistoryParams(siteSeq, params.page, keyword), pageSize }
+  const history = useDeploymentHistory(historyTab, historyParams)
   const active = tab === 'requests' ? requests : tab === 'returns' ? returns : history
-  const items = active.data?.items ?? []
+
+  /** 요청 탭은 받은 배열에서 현재 페이지를 자르고, 이력 탭은 서버가 자른 페이지 그대로 */
+  const requestRows = (tab === 'requests' ? requests.data : returns.data) ?? []
+  const pageStart = (pageNumber - 1) * pageSize
+  const items = isRequestTab(tab)
+    ? requestRows.slice(pageStart, pageStart + pageSize)
+    : (history.data?.items ?? [])
+  const total = isRequestTab(tab) ? requestRows.length : (history.data?.totalCount ?? 0)
 
   /** 🔴 메모이즈한다 — 렌더마다 만들면 행(과 그 안의 mutation 상태)이 리마운트된다(027) */
   const requestColumns = useMemo(
@@ -157,7 +150,7 @@ const DeploymentBoard = () => {
     () => (siteSeq === null ? [] : returnRequestColumns(siteSeq)),
     [siteSeq]
   )
-  const historyColumns = useMemo(() => deploymentHistoryColumns(), [])
+  const historyColumns = useMemo(() => deploymentHistoryColumns(siteName), [siteName])
 
   /**
    * 🔴 **마지막 요청을 처리해 현재 페이지가 비면 이전 페이지로**(spec §4) — 2페이지의 유일한 요청을
@@ -173,14 +166,9 @@ const DeploymentBoard = () => {
     }
   }, [pageEmptied, pageNumber, setParams])
 
-  /** 🔴 탭을 바꾸면 페이지·상태·검색을 지운다 — 다른 탭에 끌고 가면 일부만 보이는 이유를 모른다 */
+  /** 🔴 탭을 바꾸면 페이지·검색을 지운다 — 다른 탭에 끌고 가면 일부만 보이는 이유를 모른다 */
   const selectTab = (next: DeploymentTab) =>
-    setParams({
-      tab: next === 'requests' ? undefined : next,
-      page: undefined,
-      status: undefined,
-      q: undefined,
-    })
+    setParams({ tab: next === 'requests' ? undefined : next, page: undefined, q: undefined })
 
   return (
     <div className="flex flex-col gap-4">
@@ -193,12 +181,12 @@ const DeploymentBoard = () => {
       >
         {TABS.map(({ key, label, icon: Icon }) => {
           const selected = tab === key
-          /* 배치 요청 = `pendingCount`(KPI·사이드바와 같은 숫자) · 복귀 요청 = `pendingReturnCount`(탭에만) */
+          /* 배치 요청 = `pendingCount`(KPI·사이드바와 같은 숫자) · 복귀 요청 = 복귀 목록 길이(탭에만) */
           const pending =
             key === 'requests'
               ? summary.data?.pendingCount
               : key === 'returns'
-                ? summary.data?.pendingReturnCount
+                ? returns.data?.length
                 : undefined
           return (
             <button
@@ -228,8 +216,8 @@ const DeploymentBoard = () => {
       </div>
 
       {/* 이력 탭의 필터 줄 — 🔴 **다른 목록 화면과 같은 마크업**(T658, 사용자 요청): 검색창(왼쪽) →
-          `role="group"` 필터 · 초기화 → spacer. 공지(026)·근무자(038)·지점 이력(037)과 같은 줄이다.
-          🔴 KPI(지금 나가/와 있는 **인원**)를 누르면 `배치중` 으로 걸려서 온다 — 숫자와 행 수가 맞는다(T649h) */}
+          `role="group"` 초기화 → spacer. 공지(026)·근무자(038)·지점 이력(037)과 같은 줄이다.
+          🔴 **상태 필터는 없다**(`spec 042`) — 서버에 파라미터가 없다. 페이지 안에서만 거르면 행 수가 페이지마다 달라진다 */}
       {!isRequestTab(tab) && (
         <div className="flex items-center gap-2">
           <AppInput
@@ -244,23 +232,12 @@ const DeploymentBoard = () => {
             }}
           />
           <div role="group" aria-label="목록 필터" className="contents">
-            <AppSelect
-              aria-label="상태"
-              icon={FilterIcon}
-              options={historyStatusOptions}
-              value={status ?? ALL_VALUE}
-              onChange={(value) =>
-                setParams({ status: value === ALL_VALUE ? undefined : value, page: undefined })
-              }
-              active={Boolean(status)}
-              className="w-auto"
-            />
             {hasFilter && (
               <AppIconButton
                 icon={RotateCcwIcon}
                 aria-label="필터 초기화"
                 title="필터 초기화"
-                onClick={() => setParams({ status: undefined, q: undefined, page: undefined })}
+                onClick={() => setParams({ q: undefined, page: undefined })}
                 className="bg-card"
               />
             )}
@@ -298,7 +275,7 @@ const DeploymentBoard = () => {
             <AppEmpty
               icon={FilterXIcon}
               title="조건에 맞는 이력이 없습니다"
-              description="검색어나 상태 필터를 바꿔보세요."
+              description="검색어를 바꿔보세요."
             />
           ) : (
             <AppEmpty
@@ -309,34 +286,34 @@ const DeploymentBoard = () => {
         </div>
       ) : (
         <>
-          {/* 🔴 `hidePagination` 은 `manualPagination` 을 함께 건다 — 클라이언트 페이징을 끈다.
+          {/* 🔴 `hidePagination` 은 `manualPagination` 을 함께 건다 — 표 안의 페이징을 끄고 위에서 자른 행만 그린다.
               ⚠️ `key` 로 탭마다 표를 새로 만든다 — 컬럼 집합이 다른 표를 같은 인스턴스로 갈아 끼우지 않는다 */}
           {tab === 'requests' ? (
             <AppTable
               key="requests"
               columns={requestColumns}
-              data={requests.data?.items ?? []}
+              data={items as AssignmentRequestRow[]}
               hidePagination
             />
           ) : tab === 'returns' ? (
             <AppTable
               key="returns"
               columns={returnColumns}
-              data={returns.data?.items ?? []}
+              data={items as AssignmentRequestRow[]}
               hidePagination
             />
           ) : (
             <AppTable
               key={tab}
               columns={historyColumns}
-              data={history.data?.items ?? []}
+              data={items as AssignmentHistoryRow[]}
               hidePagination
             />
           )}
           <AppPagination
             pageIndex={toPageIndex(pageNumber)}
             pageSize={pageSize}
-            total={active.data?.totalCount ?? items.length}
+            total={total}
             pageSizeOptions={[10, 20, 50]}
             onPageChange={(pageIndex) => {
               const next = toPageNumber(pageIndex)

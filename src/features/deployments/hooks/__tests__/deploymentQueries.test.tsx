@@ -6,23 +6,31 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
 import api from '@/lib/axios'
 import { resetDeploymentStore } from '@/mocks/handlers/deployments'
+import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
 
-import { toHistoryParams, toRequestListParams } from '../../lib/deploymentParams'
+import { toHistoryParams } from '../../lib/deploymentParams'
+import { useApproveDeployment } from '../useApproveDeployment'
 import { useDeploymentHistory } from '../useDeploymentHistory'
 import { useDeploymentRequests } from '../useDeploymentRequests'
 import { useDeploymentSummary } from '../useDeploymentSummary'
+import { useReturnRequests } from '../useReturnRequests'
+import { useUserAssignmentHistory } from '../useUserAssignmentHistory'
 
 /**
- * 배치 조회 훅 3종 + 상태 보유 MSW (`spec 039` Phase 2 게이트, T635).
+ * 배치 조회·처리 훅 + 상태 보유 MSW (`spec 039` T635 → `spec 042` T708 실측 API).
  *
- * 🔴 **승인·거부가 상태를 실제로 바꾸는지**를 여기서 본다 — 화면 테스트(T646)가 그 위에서 돈다.
- * 시드(사업장 7): 대기 2 · 전출 2(배치 중 1) · 전입 2(배치 중 1) → 요약 나간 1 · 온 1 · 대기 2.
+ * 🔴 **승인·반려가 상태를 실제로 바꾸는지**와 **바디에 `approved` 가 항상 실리는지**를 여기서 본다.
+ * 시드(사업장 7): 배치 대기 2(최범수 501 · 배수진 502) · 복귀 대기 1(장도윤 601) ·
+ * 전출 2(장도윤 배치중 · 박지우 복귀완료) · 전입 2(오준혁 배치중 · 한지민 복귀완료) → 요약 나간 1 · 온 1 · 대기 2.
  */
+
+const APPROVE_PATH = '/api/v1/Assignment/W/sign/AssignmentApprove'
+const RETURN_APPROVE_PATH = '/api/v1/Assignment/W/sign/AssignmentReturnApprove'
 
 const wrapper = ({ children }: { children: ReactNode }) => {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
   })
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }
@@ -30,64 +38,97 @@ const wrapper = ({ children }: { children: ReactNode }) => {
 beforeEach(() => {
   clearTokens()
   setAccessToken(makeAccessToken())
-  // 🔴 T633 규약 — 상태를 바꾸는 테스트 파일은 매번 되돌린다
+  // 🔴 상태를 바꾸는 테스트 파일은 매번 되돌린다
   resetDeploymentStore()
 })
 
-const summary = async () => {
-  const { result } = renderHook(() => useDeploymentSummary(7), { wrapper })
+const settle = async <T,>(hook: () => { isSuccess: boolean; data?: T }) => {
+  const { result } = renderHook(hook, { wrapper })
   await waitFor(() => expect(result.current.isSuccess).toBe(true))
-  return result.current.data!
+  return result.current.data as T
 }
 
-const historyOf = async (tab: 'out' | 'in') => {
-  const { result } = renderHook(() => useDeploymentHistory(toHistoryParams(7, tab)), { wrapper })
-  await waitFor(() => expect(result.current.isSuccess).toBe(true))
-  return result.current.data!
-}
+const summary = () => settle(() => useDeploymentSummary(7))
+const requests = () => settle(() => useDeploymentRequests(7))
+const returns = () => settle(() => useReturnRequests(7))
+const historyOf = (tab: 'in' | 'out') => settle(() => useDeploymentHistory(tab, toHistoryParams(7)))
 
-const requestsOf = async () => {
-  const { result } = renderHook(() => useDeploymentRequests(toRequestListParams(7)), { wrapper })
-  await waitFor(() => expect(result.current.isSuccess).toBe(true))
-  return result.current.data!
-}
-
-describe('조회 3종', () => {
-  it('요약은 store 에서 계산된다 — 나간 1 · 온 1 · 대기 2', async () => {
-    expect(await summary()).toEqual({ outCount: 1, inCount: 1, pendingCount: 2, pendingReturnCount: 1 })
+describe('조회', () => {
+  it('요약 — 나간 1 · 온 1 · 대기 2 (복귀 대기 건수는 없다)', async () => {
+    expect(await summary()).toEqual({ outCount: 1, inCount: 1, pendingCount: 2 })
   })
 
-  it('요청 목록은 이 사업장으로 들어온 대기 요청이다', async () => {
-    const data = await requestsOf()
-    expect(data.totalCount).toBe(2)
-    expect(data.items.every((row) => row.toSiteSeq === 7)).toBe(true)
+  it('🔴 요청 목록 2종은 배열이고 근무자가 있다', async () => {
+    const rows = await requests()
+    expect(Array.isArray(rows)).toBe(true)
+    expect(rows.map((row) => row.userName)).toEqual(['최범수', '배수진'])
+    // 복귀 요청 행은 원래 배치 방향 그대로다(7 → 12)
+    expect(await returns()).toMatchObject([
+      { assignmentSeq: 601, userName: '장도윤', fromSiteSeq: 7, toSiteSeq: 12 },
+    ])
   })
 
-  it('🔴 direction 으로 전출·전입이 갈린다', async () => {
-    const out = await historyOf('out')
+  it('🔴 전입·전출이 각 엔드포인트로 갈리고 행 모양이 다르다', async () => {
     const inn = await historyOf('in')
-    expect(out.items.every((row) => row.fromSiteSeq === 7)).toBe(true)
-    expect(inn.items.every((row) => row.toSiteSeq === 7)).toBe(true)
-    // 근무자 mock(038)의 오준혁(원소속 강서)은 **전입**이다 — 두 mock 이 같은 말을 한다
-    expect(inn.items.map((row) => row.userName)).toContain('오준혁')
-    expect(out.items.map((row) => row.userName)).not.toContain('오준혁')
+    const out = await historyOf('out')
+    expect(inn.items.map((row) => row.userName)).toEqual(['한지민', '오준혁'])
+    expect(inn.items[0]).toHaveProperty('fromSiteName')
+    expect(out.items.map((row) => row.userName)).toEqual(['박지우', '장도윤'])
+    expect(out.items[0]).toHaveProperty('toSiteName')
+    expect(out.items.map((row) => row.statusName)).toEqual(['복귀완료', '배치중'])
+  })
+
+  it('근무자별 이력은 그 사람의 승인된 배치다', async () => {
+    const data = await settle(() =>
+      useUserAssignmentHistory({ userSeq: 110, pageNumber: 1, pageSize: 5 })
+    )
+    expect(data.items).toMatchObject([{ assignmentSeq: 601, siteName: '강서 스퀘어타워' }])
   })
 
   it('사업장이 없으면 요청하지 않는다', () => {
-    const { result } = renderHook(() => useDeploymentSummary(null), { wrapper })
+    const { result } = renderHook(() => useDeploymentRequests(null), { wrapper })
     expect(result.current.fetchStatus).toBe('idle')
   })
 })
 
-describe('🔴 상태 보유 MSW — 승인·거부가 숫자를 바꾼다', () => {
-  it('승인하면 요청이 사라지고 전입 이력 1건 · 요약 대기 -1 · 온 +1', async () => {
-    // 🔴 배수진(502) = 시작일이 지난 배치 → 승인하면 바로 배치중(T656). 배치예정은 현재 인원이 아니다
-    await api.post('/api/v1/Deployment/W/sign/ApproveDeploymentRequest', { requestSeq: 502 })
+describe('🔴 처리 — 바디에 approved 가 항상 실린다 (B-48)', () => {
+  const captureBodies = (path: string) => {
+    const bodies: unknown[] = []
+    server.events.on('request:start', async ({ request }) => {
+      if (new URL(request.url).pathname === path) bodies.push(await request.clone().json())
+    })
+    return bodies
+  }
 
-    expect(await summary()).toEqual({ outCount: 1, inCount: 2, pendingCount: 1, pendingReturnCount: 1 })
-    expect((await requestsOf()).items.map((row) => row.requestSeq)).toEqual([501])
+  it('배치 반려는 approved: false 로 나간다', async () => {
+    const bodies = captureBodies(APPROVE_PATH)
+    const { result } = renderHook(() => useApproveDeployment(7), { wrapper })
+
+    await result.current.mutateAsync({ assignmentSeq: 501, userName: '최범수', approved: false })
+
+    expect(bodies).toEqual([{ assignmentSeq: 501, approved: false }])
+    server.events.removeAllListeners()
+  })
+
+  it('복귀 승인은 복귀 경로 + approved: true 로 나간다', async () => {
+    const bodies = captureBodies(RETURN_APPROVE_PATH)
+    const { result } = renderHook(() => useApproveDeployment(7, 'return'), { wrapper })
+
+    await result.current.mutateAsync({ assignmentSeq: 601, userName: '장도윤', approved: true })
+
+    expect(bodies).toEqual([{ assignmentSeq: 601, approved: true }])
+    server.events.removeAllListeners()
+  })
+})
+
+describe('🔴 상태 보유 MSW — 승인·반려가 숫자를 바꾼다', () => {
+  it('승인하면 요청이 사라지고 전입 이력 1건 · 요약 대기 -1 · 온 +1', async () => {
+    await api.put(APPROVE_PATH, { assignmentSeq: 502, approved: true })
+
+    expect(await summary()).toEqual({ outCount: 1, inCount: 2, pendingCount: 1 })
+    expect((await requests()).map((row) => row.assignmentSeq)).toEqual([501])
     const approved = (await historyOf('in')).items.find((row) => row.userName === '배수진')
-    // 기간은 요청의 시작일·종료일 그대로(종료일 미입력 → 미정)
+    // 기간은 요청의 시작일·종료일 그대로(종료일 미입력 → null)
     expect(approved).toMatchObject({
       startDt: '2026-06-03T00:00:00',
       endDt: null,
@@ -95,51 +136,39 @@ describe('🔴 상태 보유 MSW — 승인·거부가 숫자를 바꾼다', () 
     })
   })
 
-  it('거부하면 요청만 사라지고 이력은 그대로다', async () => {
+  it('반려하면 요청만 사라지고 이력은 그대로다', async () => {
     const before = (await historyOf('in')).totalCount
-    await api.post('/api/v1/Deployment/W/sign/RejectDeploymentRequest', {
-      requestSeq: 501,
-      rejectReason: '인원 충분',
-    })
+    await api.put(APPROVE_PATH, { assignmentSeq: 501, approved: false })
 
     expect((await summary()).pendingCount).toBe(1)
     expect((await historyOf('in')).totalCount).toBe(before)
   })
 
-  it('🔴 복귀 요청을 승인하면 그 전출 이력이 복귀일로 닫힌다 (T659)', async () => {
-    await api.post('/api/v1/Deployment/W/sign/ApproveReturnRequest', { requestSeq: 701 })
+  it('🔴 복귀 요청을 승인하면 복귀완료 · 나간 인원 -1 · 복귀 목록이 빈다', async () => {
+    await api.put(RETURN_APPROVE_PATH, { assignmentSeq: 601, approved: true })
 
-    const row = (await historyOf('out')).items.find((item) => item.historySeq === 601)
-    expect(row?.endDt).toBe('2026-11-15T00:00:00')
-    expect((await summary()).pendingReturnCount).toBe(0)
-    // 🔴 배치 요청 숫자(KPI·사이드바)는 그대로다 — 복귀는 탭 뱃지에만 센다
-    expect((await summary()).pendingCount).toBe(2)
-  })
-
-  it('복귀 요청을 거부하면 요청만 사라지고 이력은 그대로다', async () => {
-    await api.post('/api/v1/Deployment/W/sign/RejectReturnRequest', {
-      requestSeq: 701,
-      rejectReason: '인력 부족',
-    })
-
-    expect((await summary()).pendingReturnCount).toBe(0)
-    const row = (await historyOf('out')).items.find((item) => item.historySeq === 601)
+    const row = (await historyOf('out')).items.find((item) => item.assignmentSeq === 601)
+    expect(row?.statusName).toBe('복귀완료')
     expect(row?.endDt).toBeNull()
+    expect(await returns()).toEqual([])
+    expect(await summary()).toEqual({ outCount: 0, inCount: 1, pendingCount: 2 })
   })
 
-  it('이미 처리된 요청을 다시 처리하면 400 이다 (가정)', async () => {
-    await api.post('/api/v1/Deployment/W/sign/ApproveDeploymentRequest', { requestSeq: 501 })
-    await expect(
-      api.post('/api/v1/Deployment/W/sign/ApproveDeploymentRequest', { requestSeq: 501 })
-    ).rejects.toBeTruthy()
+  it('복귀 요청을 반려하면 요청만 사라지고 배치는 그대로다', async () => {
+    await api.put(RETURN_APPROVE_PATH, { assignmentSeq: 601, approved: false })
+
+    expect(await returns()).toEqual([])
+    const row = (await historyOf('out')).items.find((item) => item.assignmentSeq === 601)
+    expect(row?.statusName).toBe('배치중')
   })
 
-  it('거부 사유가 공백이면 400 이다 (가정)', async () => {
-    await expect(
-      api.post('/api/v1/Deployment/W/sign/RejectDeploymentRequest', {
-        requestSeq: 502,
-        rejectReason: '   ',
-      })
-    ).rejects.toBeTruthy()
+  it('이미 처리된 배치를 다시 처리하면 400 · 없는 배치는 404 (실측 문구)', async () => {
+    await api.put(APPROVE_PATH, { assignmentSeq: 501, approved: true })
+    await expect(api.put(APPROVE_PATH, { assignmentSeq: 501, approved: true })).rejects.toThrow(
+      '이미 승인 또는 반려 처리된 배치입니다.'
+    )
+    await expect(api.put(APPROVE_PATH, { assignmentSeq: 9999, approved: true })).rejects.toThrow(
+      '배치 정보를 찾을 수 없습니다.'
+    )
   })
 })

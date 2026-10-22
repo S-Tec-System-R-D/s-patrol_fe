@@ -1,43 +1,53 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { notify } from '@/lib/notify'
-import { approveDeploymentRequest } from '../api/approveDeploymentRequest'
-import { approveReturnRequest } from '../api/approveReturnRequest'
+import { approveAssignment } from '../api/approveAssignment'
+import { approveAssignmentReturn } from '../api/approveAssignmentReturn'
 import { deploymentKeys } from '../queryKeys'
 import type { RequestKind } from '../types/deployment'
 
 /**
- * 배치 요청 승인 (`spec 039` T642~T644) — 🔴 A급이라 세 단계를 나눠 적는다.
+ * 배치·복귀 요청 승인/반려 (`spec 039` T642~T644 → `spec 042` T706) — 🔴 A급이라 세 단계를 나눠 적는다.
  *
- * **① 제출(T642)** — 🔴 **비옵티미스틱**(023 승계). 승인은 다른 사업장 사람의 소속을 바꾸는 일이라
+ * **① 제출** — 🔴 **비옵티미스틱**(023 승계). 승인은 다른 사업장 사람의 소속을 바꾸는 일이라
  * 먼저 지웠다가 실패로 되살리면 "방금 승인한 사람이 다시 나타나는" 화면이 된다. 처리 중에는 호출부가
  * `isPending` 으로 그 행의 두 버튼을 막는다(연타 방지).
  *
- * **② 성공 갱신(T643)** — `deploymentKeys.all(siteSeq)` 무효화로 **요약 · 요청 · 이력을 한 번에**
- * 다시 받는다(승인 1번이 셋을 다 바꾼다). 사이드바 뱃지도 같은 요약 쿼리라 함께 줄어든다.
+ * **② 성공 갱신** — `deploymentKeys.all(siteSeq)` 무효화로 **요약 · 요청 · 이력을 한 번에**, `user()` 로
+ * 근무자 상세의 배치 이력까지 다시 받는다. 사이드바 뱃지도 같은 요약 쿼리라 함께 줄어든다.
  *
- * **③ 실패(T644)** — 🔴 **토스트는 여기서 띄우지 않는다** — 전역 `MutationCache.onError`(`queryClient.ts`)가
- * 서버 메시지로 이미 띄운다. 여기서 또 띄우면 두 번 뜬다. 대신 **목록을 다시 받는다** — "이미 처리된
- * 요청" 이면 그 행이 서버에서 사라졌을 것이고, 재조회해야 화면에서도 정리된다.
+ * **③ 실패** — 🔴 **토스트는 여기서 띄우지 않는다** — 전역 `MutationCache.onError`(`queryClient.ts`)가
+ * 서버 메시지로 이미 띄운다. 대신 **목록을 다시 받는다** — "이미 처리된 배치" 면 그 행이 서버에서 사라졌다.
+ *
+ * 🔴 **승인·반려가 같은 API** 다(`approved`, 실측) — 039 의 승인·거부 훅 둘을 하나로 합쳤다.
+ * 🔴 `approved` 를 **항상** 보낸다 — 빼면 서버가 반려로 처리한다(B-48).
  */
 export const REQUEST_KIND_LABEL: Record<RequestKind, string> = { deploy: '배치', return: '복귀' }
 
-/**
- * 🔴 **배치·복귀가 같은 훅이다**(T659) — 승인 규약(비옵티미스틱 · 무효화 · 전역 오류 토스트)이 같고 API 만
- * 다르다. 두 벌로 복사하면 한쪽만 고쳐진다.
- */
+export interface ProcessAssignmentVariables {
+  assignmentSeq: number
+  userName: string
+  approved: boolean
+}
+
 export const useApproveDeployment = (siteSeq: number, kind: RequestKind = 'deploy') => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ requestSeq }: { requestSeq: number; userName: string }) =>
+    mutationFn: ({ assignmentSeq, approved }: ProcessAssignmentVariables) =>
       kind === 'return'
-        ? approveReturnRequest({ requestSeq })
-        : approveDeploymentRequest({ requestSeq }),
-    onSuccess: (_data, { userName }) => {
-      notify.success(`${userName}님의 ${REQUEST_KIND_LABEL[kind]} 요청을 승인했습니다.`)
+        ? approveAssignmentReturn({ assignmentSeq, approved })
+        : approveAssignment({ assignmentSeq, approved }),
+    onSuccess: (_data, { userName, approved }) => {
+      notify.success(
+        `${userName}님의 ${REQUEST_KIND_LABEL[kind]} 요청을 ${approved ? '승인' : '반려'}했습니다.`
+      )
     },
-    // 성공·실패 모두 서버 상태를 다시 받는다(①은 반영, ③은 정리)
-    onSettled: () => queryClient.invalidateQueries({ queryKey: deploymentKeys.all(siteSeq) }),
+    // 성공·실패 모두 서버 상태를 다시 받는다(②는 반영, ③은 정리)
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: deploymentKeys.all(siteSeq) }),
+        queryClient.invalidateQueries({ queryKey: deploymentKeys.user() }),
+      ]),
   })
 }

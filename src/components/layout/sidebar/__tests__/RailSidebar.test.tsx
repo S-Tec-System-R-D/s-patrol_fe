@@ -52,7 +52,7 @@ describe('RailSidebar', () => {
 
   it('요약 조회가 실패하면 뱃지를 그리지 않는다 — 숫자를 지어내지 않는다', async () => {
     server.use(
-      http.get('/api/v1/Deployment/W/sign/GetDeploymentSummary', () =>
+      http.get('/api/v1/Assignment/W/sign/GetAssignmentCount', () =>
         HttpResponse.json({ message: 'x' }, { status: 500 })
       )
     )
