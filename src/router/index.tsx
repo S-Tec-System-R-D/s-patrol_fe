@@ -18,7 +18,7 @@ import UserDetailPage from '@/pages/service/users/UserDetailPage'
 import DeploymentsPage from '@/pages/service/deployments/DeploymentsPage'
 import NoticeListPage from '@/pages/service/notice/NoticeListPage'
 import NoticeDetailPage from '@/pages/service/notice/NoticeDetailPage'
-import AdminPlaceholderPage from '@/pages/admin/AdminPlaceholderPage'
+import AdminsPage from '@/pages/admin/admins/AdminsPage'
 import LocationDetailPage from '@/pages/admin/locations/LocationDetailPage'
 import LocationsPage from '@/pages/admin/locations/LocationsPage'
 import { ForbiddenPage, NotFoundPage } from '@/pages/errors'
@@ -154,12 +154,12 @@ export const router = createBrowserRouter([
             ),
             errorElement: <PageErrorFallback />,
           },
-          // 레일에 메뉴가 있으니 라우트를 먼저 둔다(눌러서 404 가 나면 안 된다). 화면은 045
+          // 관리자 목록 · 상세 모달(`spec 045`)
           {
             path: paths.admin.admins,
             element: (
               <RequireRoute roles={['SYSTEM', 'MASTER', 'MANAGER']}>
-                <AdminPlaceholderPage />
+                <AdminsPage />
               </RequireRoute>
             ),
             errorElement: <PageErrorFallback />,
