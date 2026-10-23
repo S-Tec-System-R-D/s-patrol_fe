@@ -41,7 +41,7 @@ const resolveMe = (token: string | null, siteName: string | null): UseMeResult =
   if (!claims) return FAILED
 
   const role = toRole(claims)
-  // 미실측 role(Master·Manager·근무자)은 매핑이 없어 null이 된다. 토큰은 유효하지만
+  // 매핑 밖 role(근무자 `FieldWorker` 등)은 null이 된다. 토큰은 유효하지만
   // 권한을 특정할 수 없으므로 통과시키지 않는다 — spec 020 §3 규칙 6.
   if (!role) return FAILED
 

@@ -10,4 +10,6 @@ export const groupKeys = {
   tree: ['group-tree'] as const,
   list: ['group-list'] as const,
   admins: (groupSeq: number) => ['group-admins', groupSeq] as const,
+  /** 모든 그룹의 할당 — 관리자 담당 그룹 변경(`spec 045`)이 무효화한다 */
+  adminsAll: ['group-admins'] as const,
 }

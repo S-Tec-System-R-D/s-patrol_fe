@@ -67,14 +67,13 @@ describe('toRole', () => {
    * 미실측 role 을 추측으로 매핑하지 않았다는 계약.
    * 넣어두면 서버가 다른 문자열을 쓸 때 엉뚱한 권한으로 통과시키는 사고가 된다.
    *
-   * 🔴 022 Phase 8 R1 에서 `'Master'` 가 **실측**되어 이 목록에서 빠졌다(위 매핑 테스트로
-   * 이동). 남은 것:
-   * - `'Manager'` — code 103 계정이 없어 여전히 미실측
+   * 🔴 022 Phase 8 R1 에서 `'Master'`, 045 WF-1-0(2026-10-23)에서 `'Manager'` 가 **실측**되어
+   * 이 목록에서 빠졌다. 남은 것:
    * - `'FieldWorker'` — **실측됐지만 의도적으로 매핑하지 않는다.** `AuthGuard` 는 "매핑되면
    *   통과" 라서 넣으면 근무자가 WEB 을 통과한다(근무자는 APP 전용 — `CLAUDE.md` B1)
    * - `'Worker'` — 020 당시의 추측값. 서버는 `'FieldWorker'` 를 쓴다
    */
-  it.each(['Manager', 'Worker', 'FieldWorker', '', 'FIELD_MANAGER'])(
+  it.each(['Worker', 'FieldWorker', '', 'FIELD_MANAGER'])(
     '매핑에 없는 role(%s)은 null이다 — 권한 없음 처리',
     (jwtRole) => {
       const claims = decodeAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: jwtRole }))

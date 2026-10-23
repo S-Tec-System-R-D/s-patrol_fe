@@ -96,10 +96,10 @@ describe('AuthGuard', () => {
 
   // 토큰 자체는 멀쩡한데 role 문자열이 미실측 값인 경우(OQ-D). 권한을 특정할 수 없으므로
   // 통과시키지 않는다 — spec 020 §3 규칙 6.
-  // 🔴 예시를 `'Master'` → `'Manager'` 로 바꿨다. Master 는 022 Phase 8 R1 에서 실측되어
-  // 매핑에 들어갔고, code 103(Manager) 계정이 없어 그쪽이 미실측으로 남았다.
+  // 🔴 예시가 `'Master'` → `'Manager'` → `'Worker'` 로 바뀌었다. 둘 다 실측되어 매핑에 들어갔다
+  // (022 Phase 8 R1 · 045 WF-1-0). `'Worker'` 는 020 당시 추측값이고 서버는 쓰지 않는다.
   it('매핑에 없는 role 클레임 → 로그인으로 Navigate', async () => {
-    setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: 'Manager' }))
+    setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: 'Worker' }))
 
     renderAt('/zones')
     await waitFor(() => expect(screen.getByText('SERVICE_LOGIN')).toBeInTheDocument())

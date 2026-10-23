@@ -42,7 +42,8 @@ export interface UserDetail {
   phone: string
   /** 🔴 **소속지**다 — 배치된 사람은 지금 보고 있는 사업장이 아니라 원래 소속을 준다(실측) */
   siteSeq: number
-  siteName: string
+  /** 🔴 본사 관리자는 `null`(`siteSeq: 0`) — 실측 2026-10-23(`spec 045`) */
+  siteName: string | null
   workYn: boolean
   /** `'0'` — 문자열, 의미 불명(OQ-6). 🔴 앱을 깔지 않은 새 계정은 `null`(실측 2026-10-21) */
   deviceType: string | null

@@ -57,7 +57,7 @@ export interface AccessTokenClaims {
  *   로그인에 성공해도 `toRole` 이 `null` 이라 `useMe` 가 실패를 반환하고 `AuthGuard` 가
  *   로그인 화면으로 되돌렸다** — 들어갈 수 없었다. 020 spec §4 가 "OQ-D 해소까지 의도된
  *   동작" 으로 적어 둔 상태이며, 실측된 지금 해소한다
- * - `Manager`(code 103) — **여전히 미실측.** 해당 계정이 없다
+ * - **`Manager`(code 103)** — 임시 계정으로 실측(2026-10-23, `spec 045` WF-1-0). Master 와 같은 이유로 지금 넣는다
  *
  * 🔴 **`FieldWorker`(code 202, 근무자)는 실측됐지만 의도적으로 넣지 않는다.**
  * `AuthGuard` 는 role 값으로 분기하지 않고 **"매핑되면 통과"** 이므로, 넣는 순간 근무자가
@@ -69,6 +69,7 @@ const JWT_ROLE_TO_ROLE: Record<string, Role> = {
   FieldManager: 'FIELD_MANAGER',
   SystemManager: 'SYSTEM',
   Master: 'MASTER',
+  Manager: 'MANAGER',
 }
 
 /** 클레임의 role 문자열을 앱 `Role`로. 매핑에 없으면 `null`(= 권한 없음 처리). */

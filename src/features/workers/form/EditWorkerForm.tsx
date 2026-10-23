@@ -81,7 +81,7 @@ const EditWorkerForm = ({ user, onSuccess }: EditWorkerFormProps) => {
         error={errors.phone?.message}
         {...register('phone')}
       />
-      <AppInput label="소속 사업장" value={user.siteName} disabled readOnly />
+      <AppInput label="소속 사업장" value={user.siteName ?? ''} disabled readOnly />
       <AppButton size="full" type="submit" disabled={mutation.isPending}>
         저장
       </AppButton>

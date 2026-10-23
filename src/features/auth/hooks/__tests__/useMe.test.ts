@@ -94,9 +94,17 @@ describe('useMe', () => {
     expect(result.current.data?.role).toBe('MASTER')
   })
 
-  // 토큰은 멀쩡하지만 role 문자열이 미실측이거나(Manager) 의도적으로 매핑하지 않은
+  it('Manager 클레임 → MANAGER(실측 2026-10-23, spec 045)', () => {
+    setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: 'Manager' }))
+
+    const { result } = renderHook(() => useMe())
+
+    expect(result.current.data?.role).toBe('MANAGER')
+  })
+
+  // 토큰은 멀쩡하지만 role 문자열이 추측값이거나(Worker) 의도적으로 매핑하지 않은
   // 값(FieldWorker — 근무자는 WEB 접근 불가)인 경우. 권한을 특정할 수 없으므로 통과 금지.
-  it.each(['Manager', 'Worker', 'FieldWorker'])(
+  it.each(['Worker', 'FieldWorker'])(
     '매핑에 없는 role(%s)은 isError — 권한 없음 처리',
     (jwtRole) => {
       setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: jwtRole }))

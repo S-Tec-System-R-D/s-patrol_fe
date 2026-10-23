@@ -21,20 +21,20 @@ import { makeAccessToken } from '@/test/jwt'
  * dev 로그인 계정. **사번으로 권한을 고른다** — `dev.role` 스왑을 대체한다.
  * 사번은 백엔드 테스트 서버의 실측 계정과 맞췄다(`api-spec.md` 수집 정보).
  *
- * Master·Manager 계정이 없는 이유: JWT `role` 문자열이 미실측이다(OQ-D).
- * 추측한 문자열을 넣으면 mock에서는 통과하고 실 서버에서는 막히는, 가장 나쁜 종류의
- * 불일치가 된다. 실측 후 추가한다.
+ * 🔴 JWT `role` 문자열은 **실측값만** 넣는다 — 추측값은 mock 에서는 통과하고 실 서버에서는 막히는, 가장 나쁜
+ * 종류의 불일치가 된다. Master(022)·Manager(045, 2026-10-23) 모두 실측됐다.
+ * `userSeq` 는 본사 관리자 mock(`groups.ts` `ADMINS`)과 맞춘다 — 관리자 화면의 "본인" 판정이 이 값을 쓴다(`spec 045`).
  */
-const DEV_ACCOUNTS: Record<string, { code: number; jwtRole: string; userName: string }> = {
+const DEV_ACCOUNTS: Record<string, { code: number; jwtRole: string; userName: string; userSeq?: string }> = {
   '000000': { code: LOGIN_CODE.SYSTEM, jwtRole: 'SystemManager', userName: '시스템관리자' },
   '333333': { code: LOGIN_CODE.FIELD_MANAGER, jwtRole: 'FieldManager', userName: '홍길동' },
   // 근무자 차단(US3)을 dev에서 직접 눌러보기 위한 계정. 서버는 토큰을 주지만 프론트가 막는다.
   // 🔴 `jwtRole` 을 추측값 `'Worker'` 에서 실측값 `'FieldWorker'` 로 교정했다(Phase 8 R1).
   '222222': { code: LOGIN_CODE.WORKER, jwtRole: 'FieldWorker', userName: '김근무' },
   // Master 권한을 dev에서 눌러보기 위한 본사 계정. `'Master'` 는 **실측값**이다(Phase 8 R1).
-  // Manager(code 103)는 해당 계정이 없어 role 문자열이 미실측이라 넣지 않는다 — 추측값을
-  // 넣으면 mock 에서는 통과하고 실 서버에서는 막히는 가장 나쁜 불일치가 된다.
-  '111111': { code: LOGIN_CODE.MASTER, jwtRole: 'Master', userName: '마스터' },
+  '111111': { code: LOGIN_CODE.MASTER, jwtRole: 'Master', userName: '김용우', userSeq: '3' },
+  // Manager 권한(할당 조작 숨김 — `spec 045`)을 dev에서 눌러보기 위한 계정. `'Manager'` 는 실측값(2026-10-23)
+  '777777': { code: LOGIN_CODE.MANAGER, jwtRole: 'Manager', userName: '테스트', userSeq: '6' },
   // 021 사업장 선택 0/1/N 분기를 dev에서 직접 눌러보기 위한 현장 계정 2종.
   // 권한은 333333과 같고 **소속 사업장 수만 다르다**(아래 DEV_SITES).
   '444444': { code: LOGIN_CODE.FIELD_MANAGER, jwtRole: 'FieldManager', userName: '단일소속' },
@@ -123,6 +123,7 @@ export const authHandlers = [
           // 심지 않으면 모든 계정이 같은 사번으로 디코딩돼 `UserSiteSelect` 분기가 망가진다.
           loginId: body?.loginId ?? '',
           userName: account.userName,
+          ...(account.userSeq && { userSeq: account.userSeq }),
           [MS_ROLE_CLAIM]: account.jwtRole,
         }),
         refreshToken: `mock-refresh-${account.jwtRole}`,

@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import type { UserDetail, UserRow } from '@/features/workers/types/user'
+import { findMockAdminDetail } from './groups'
 
 /**
  * MSW 근무자 핸들러 (`spec 038` T604).
@@ -199,6 +200,11 @@ export const userHandlers = [
   http.get(GET_USER_DETAIL_PATH, ({ request }) => {
     const userId = Number(new URL(request.url).searchParams.get('userId'))
     const found = store.find((item) => item.userSeq === userId)
+    // 본사 관리자는 그룹 핸들러가 들고 있다(`spec 045` T819 — 한 출처)
+    const admin = found ? null : findMockAdminDetail(userId)
+    if (admin) {
+      return HttpResponse.json({ message: '요청이 정상 처리되었습니다.', code: 200, data: admin })
+    }
     if (!found) {
       return HttpResponse.json(
         { message: '사용자를 찾을 수 없습니다.', data: null, code: 404 },

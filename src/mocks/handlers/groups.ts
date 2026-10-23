@@ -9,6 +9,7 @@ import type {
   UpdateGroupRequest,
 } from '@/features/groups/types/group'
 import type { ExceptionTime, SiteDetail, UpdateSiteRequest } from '@/features/sites/types/site'
+import type { UserDetail } from '@/features/workers/types/user'
 
 /**
  * MSW 관리그룹 · 사업장 핸들러 (`spec 043` T740 · `spec 044` T785) — 🔴 **상태를 보유한다.**
@@ -162,6 +163,40 @@ const ADMINS: Omit<GroupAdminRow, 'isInclude'>[] = [
   { userSeq: 6, codeSeq: 4, codeName: '매니저', userName: '테스트' },
   { userSeq: 12, codeSeq: 3, codeName: '관리자', userName: 'test' },
 ]
+
+/**
+ * 관리자 `UserDetail` 에만 있는 값(`spec 045` T819). 사번은 실측, 연락처는 가짜(실데이터는 개인 번호다).
+ * 🔴 관리자는 `siteSeq: 0` · `siteName: null` 이다(실측 2026-10-23).
+ */
+const ADMIN_ACCOUNTS: Record<number, { loginId: string; phone: string }> = {
+  1: { loginId: '000000', phone: '01000000001' },
+  3: { loginId: '232727', phone: '01000000003' },
+  4: { loginId: '232728', phone: '01000000004' },
+  6: { loginId: '111111', phone: '01000000006' },
+  12: { loginId: '222222', phone: '01012345678' },
+}
+
+/** 관리자 상세 — 근무자 핸들러(`users.ts`)가 자기 저장소에 없을 때 여기서 찾는다(한 출처) */
+export const findMockAdminDetail = (userSeq: number): UserDetail | null => {
+  const admin = ADMINS.find((row) => row.userSeq === userSeq)
+  if (!admin) return null
+  return {
+    userSeq: admin.userSeq,
+    loginId: ADMIN_ACCOUNTS[userSeq].loginId,
+    userName: admin.userName,
+    phone: ADMIN_ACCOUNTS[userSeq].phone,
+    siteSeq: 0,
+    siteName: null,
+    workYn: false,
+    deviceType: '0',
+    codeName: admin.codeName,
+    fcmToken: false,
+    voipToken: false,
+    imagePath: null,
+    imageName: null,
+    imageExt: null,
+  }
+}
 
 /**
  * 그룹별 할당 — 🔴 한 사람이 여러 그룹에 있다(user 3 = g2 · g4 · g6, 실측).
