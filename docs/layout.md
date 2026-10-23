@@ -5,8 +5,8 @@
 >
 > **리디자인 반영 상태 (2026-07-23~)**
 > - 현장 사이트: 컴팩트 아이콘 레일 + **TopNav 삭제**로 전환. 아래 §0·§2·§3 참조.
-> - `/admin/*` 본사 사이트: 이번 라운드 미적용 → 기존 스펙(사이드바 w-70 + TopNav) 유지.
-> - 두 사이트가 서로 다른 셸을 갖는 것이 정상. `AppLayout`은 영역별 분기.
+> - `/admin/*` 본사 사이트: **`spec 043`(2026-10-23)에서 같은 레일 셸로 전환**. 옛 셸(사이드바 w-70 + TopNav) 파일은 삭제했다.
+> - 두 사이트는 **같은 `RailSidebar`** 를 쓰고 메뉴·태그만 다르다. 셸은 라우터 브랜치별(`ServiceLayout` / `AdminLayout`).
 
 ---
 
@@ -35,26 +35,13 @@
 - **페이지 자연 스크롤**: 리디자인은 `.app-shell`의 `overflow:hidden` 정책을 폐기하고 페이지 세로 스크롤을 허용. 뷰포트 제한 없는 실제 웹앱 환경을 반영.
 - 컨텐츠 영역 배경: `--bg`(연한 톤), 카드는 `--surface`(흰색).
 
-### 0-2. 본사 사이트 (`/admin/*`) — 기존 스펙 유지
+### 0-2. 본사 사이트 (`/admin/*`) — 레일 셸 (`spec 043`)
 
-```
-┌─────────────────────────────────────────────────┐
-│              .app-shell (전체 100vh)            │
-│ ┌─────────┬─────────────────────────────────┐   │
-│ │         │           TopNav                │   │
-│ │ Sidebar ├─────────────────────────────────┤   │
-│ │  w-70   │                                 │   │
-│ │         │   Contents (Outlet)             │   │
-│ │         │   bg-contents-background        │   │
-│ └─────────┴─────────────────────────────────┘   │
-└─────────────────────────────────────────────────┘
-```
+현장(§0-1)과 같은 구조다 — 68px 다크 레일 + TopNav 없음 + 페이지 자연 스크롤 + 페이지가 자기 헤더(`AppPageHeader`)를 그린다.
 
-- `.app-shell` 유틸 = `display:flex; height:100vh; overflow:hidden;` (`src/index.css` 정의)
-- 사이드바: 고정 폭 `w-70`
-- 우측 컬럼: `flex flex-col min-h-0 flex-1` → TopNav + Contents(`flex-1 overflow-hidden`)
-- 컨텐츠 영역은 자체 스크롤. 페이지 단위 패딩(보통 `p-8`)은 각 페이지가 결정.
-- 본사 사이트의 리디자인은 추후 별도 라운드로 이월.
+- 레일 차이: 로고 아래 **`ADMIN` 태그** · 메뉴 2개(사업장 · 관리자) · 뱃지 없음.
+- 🔴 본사 셸은 배치 요약(`GetAssignmentCount`)을 부르지 않는다 — 뱃지 훅은 `ServiceLayout` 이 부른다.
+- 본사 → 현장 이동 링크는 **없다**(사용자 결정 2026-10-23). 본사 3종은 로그인하면 사업장 선택 없이 본사 화면으로 간다(`flow.md` §2).
 
 ---
 
@@ -68,7 +55,7 @@
 // 인증 성공 → AuthGuard(Outlet) → 영역별 라우터 브랜치 → 셸(ServiceLayout | AdminLayout) → 페이지(Outlet)
 <AuthGuard>              {/* <Outlet/> */}
   <ServiceLayout />       {/* 현장(/*) 브랜치의 셸 — RailSidebar + 자연 스크롤 */}
-  <AdminLayout />         {/* 본사(/admin/*) 브랜치의 셸 — Sidebar w-70 + TopNav */}
+  <AdminLayout />         {/* 본사(/admin/*) 브랜치의 셸 — RailSidebar(ADMIN) + 자연 스크롤 */}
 </AuthGuard>
 ```
 
@@ -76,16 +63,15 @@
 
 - **영역 분기**: 라우터가 현장 라우트는 `ServiceLayout` 자식으로, 본사 라우트는 `AdminLayout` 자식으로 각각 묶는다. 단일 컴포넌트 내부 조건분기가 아니라 **라우터 노드 자체가 분리**되어 있다.
   - `ServiceLayout`(현장, `/*`): `RailSidebar`(68px 컴팩트 아이콘 레일) + TopNav 없음 + 페이지 자연 스크롤.
-  - `AdminLayout`(본사, `/admin/*`): `Sidebar` w-70 + `TopNav` + 컨텐츠 자체 스크롤(`.app-shell`).
-- **현장**: 페이지가 **자체 페이지 헤더**(제목 + 서브텍스트 + 우측 액션)를 그린다. TopNav 없음.
-- **본사**: 페이지가 자체 헤더를 그리지 않는다(헤더는 TopNav가 담당).
+  - `AdminLayout`(본사, `/admin/*`): 같은 `RailSidebar`(`tag="ADMIN"`, `AdminMenus`) + TopNav 없음 + 페이지 자연 스크롤(`spec 043`).
+- **두 사이트 모두** 페이지가 **자체 페이지 헤더**(제목 + 서브텍스트 + 우측 액션)를 그린다. TopNav 없음.
 - 페이지는 `<Outlet>` 안에서 `flex-1` 또는 그에 준하는 레이아웃을 가정한다.
 
 ---
 
 ## 2. Sidebar
 
-`src/components/layout/sidebar/Sidebar.tsx` + `SidebarItem`, `sidebar.config.ts`
+`src/components/layout/sidebar/RailSidebar.tsx` + `sidebar.config.ts` — 현장·본사 공용(`spec 043`, props: `menus` · `tag?` · `badges?`)
 
 ### 2-A. 현장 사이트 (리디자인 반영)
 
@@ -115,42 +101,38 @@
 - 배치관리 아이콘에 **대기 요청 수 뱃지** 표시(우상단 붉은 dot + 숫자).
 - 접기 기능 없음(이미 최소폭).
 
-### 2-B. 본사 사이트 (기존 스펙 유지)
+### 2-B. 본사 사이트 (`spec 043` — 레일 공용)
 
 ```
-┌─────────────────┐
-│ [🛡] PATROL     │  ← 헤더 (로고 + 사이트 뱃지)
-├─────────────────┤
-│   본사 관리     │  ← 그룹 헤더
-│   ◯ 사업장 관리 │
-│   ◯ 관리자 관리 │
-├─────────────────┤
-│ [<] 접기        │  ← SidebarToggle (좌측 하단, 미권장)
-└─────────────────┘
+┌────┐
+│ SP │  ← 로고
+│ADMIN│ ← 사이트 태그
+├────┤
+│ ▓  │  ← 사업장 (/admin/locations)
+│ ◯  │  ← 관리자 (/admin/admins)
+│    │
+│ ⋮  │  ← (예약: 알림 버튼 슬롯)
+│ 👤 │  ← 프로필 아바타
+└────┘
 ```
 
-- 폭 `w-70`, 텍스트 메뉴 유지.
-- 활성: 좌측 보더 `border-l-2 border-primary` + `bg-sidebar-accent` + `text-sidebar-accent-foreground`.
+- 치수·활성 스타일·툴팁은 §2-A 와 같다. 뱃지 없음.
+- 옛 텍스트 사이드바(`Sidebar` · `SidebarGroup` · `SidebarItem` · `SidebarToggle` · `MobileSidebar` · `menu-lookup`)는 **삭제**했다.
 
 ### 2-1. 메뉴 정의 (`sidebar.config.ts`)
 
 ```ts
 export interface MenuItemType {
   icon: LucideIcon
-  title: string           // 툴팁 라벨(현장) / 인라인 라벨(본사)
+  title: string           // 툴팁 라벨
   url: string
   activeUrl?: string[]    // 동일 영역의 여러 라우트를 한 메뉴로 묶을 때
-  badge?: () => number    // 대기 요청 수 등 동적 뱃지 (현장 사이드바 전용)
-}
-export interface MenuGroupType {
-  title: string
-  groups: MenuItemType[]
+  badge?: 'deploymentPending'  // 뱃지 종류(키). 숫자는 레이아웃이 훅으로 세서 `badges` 로 넘긴다
 }
 ```
 
-- **현장 사이트 메뉴** (4개, flat): `순찰이력` / `코스/지점` / `근무자` / `배치관리`.
-- **본사 사이트 메뉴**: `본사 관리 > 사업장 관리 / 관리자 관리`.
-- 현장 사이드바에서는 `MenuGroupType`을 사용하지 않는다(그룹 헤더 없음).
+- **현장 사이트 메뉴** (`ServiceMenus`, flat 5개): `순찰이력` / `코스/지점` / `근무자` / `배치관리` / `공지사항`.
+- **본사 사이트 메뉴** (`AdminMenus`, flat 2개): `사업장` / `관리자`. 그룹 헤더(`MenuGroupType`)는 폐기했다.
 
 ### 2-2. 활성 판단 규칙 (공통)
 
@@ -161,13 +143,12 @@ export interface MenuGroupType {
 ### 2-3. 활성 스타일
 
 - **현장(레일)**: 배경 `bg-rail-2` + 좌측 `border-l-2 border-accent` + 아이콘 색상 승격.
-- **본사**: 기존과 동일 (`border-l-2 border-primary` + `bg-sidebar-accent`).
+- **본사**: 현장과 같다(레일 공용).
 - 아이콘: stroke 1.5.
 
 ### 2-4. 접기/펼치기
 
-- **본사 사이드바**: 접기 기능 미권장. `SidebarToggle`은 남아 있으나 사용 금지.
-- **현장 사이드바(레일)**: 이미 최소폭이므로 접기 개념 없음.
+- 두 사이트 모두 레일이라 접기 개념 없음(`SidebarToggle` 삭제).
 - 모바일 분할화면 대응은 §5-6에서 별도 처리.
 
 ---
@@ -182,28 +163,11 @@ export interface MenuGroupType {
 - 프로필 드롭다운은 **사이드바 하단 아바타**로 이동.
 - 향후 알림 기능 추가 시 **사이드바 하단 프로필 위 슬롯**(§2-A)에 알림 버튼 배치.
 
-`TopNav.tsx` / `AlarmSheet.tsx` 파일은 본사 사이트에서 계속 사용되므로 삭제하지 않는다. 현장 셸에서만 렌더링하지 않는다.
+`TopNav.tsx` / `AlarmSheet.tsx` 는 본사도 레일로 바뀌면서 **삭제**했다(`spec 043`). `ProfileBadge` 는 레일 하단 아바타로 남는다.
 
-### 3-B. 본사 사이트 — 기존 유지
+### 3-B. 본사 사이트 — **삭제** (`spec 043`)
 
-`src/components/layout/topnav/TopNav.tsx` + `ProfileBadge`, `AlarmSheet`
-
-```
-┌─────────────────────────────────────────────────┐
-│ 현재 메뉴명                  [🔔] [👤 프로필]    │
-└─────────────────────────────────────────────────┘
-```
-
-| 요소 | 역할 |
-|---|---|
-| 좌측 라벨 | 현재 진입한 메뉴 이름 (`menu-lookup.ts` 자동 도출) |
-| `AlarmSheet` | 알림 아이콘 → 우측 `Sheet` 패널 (본문 미구현) |
-| `ProfileBadge` | 사용자 아바타 + 드롭다운(내 정보 · 로그아웃) |
-
-**규칙 (본사)**
-- 페이지가 자체 헤더를 그리지 않는다. 페이지명·브레드크럼·필터는 컨텐츠 내부에서 처리.
-- 알림은 `Sheet`로 우측에서 슬라이드.
-- 프로필 뱃지는 둥근 아바타(목업 기준 그라데이션 또는 이니셜).
+현장과 같은 이유로 제거했다. 페이지명은 각 페이지의 `AppPageHeader` 가 그린다.
 
 ---
 
@@ -250,18 +214,22 @@ export interface MenuGroupType {
 └──────────────────────────────────────┘
 ```
 
-### 4-4. 좌측 트리 + 우측 테이블 (본사 사업장 관리)
+### 4-4. 좌측 관리그룹 트리 + 우측 본문 (본사 사업장 · 관리자, `spec 043`)
 
 ```
 ┌──────────────┬───────────────────────┐
-│ 관리그룹     │  사업장 테이블        │
-│ 트리         │  (검색바 + 행)        │
-│              │                       │
+│ 관리그룹 [✎] │  본문(사업장 목록 등) │
+│ ▾ 회사       │                       │
+│   ▾ 🏢 본부  │                       │
+│       ■ 지사 │                       │
 └──────────────┴───────────────────────┘
 ```
 
-- 트리는 `features/zone/components/zone-tree/*` 패턴 참고.
-- 사업장 행 클릭 → `/admin/locations/:id` 상세 페이지로 라우팅(브레드크럼 표시).
+- **XL(1280px) 이상**: 248px 고정 패널(`GroupFilterPanel`, 페이지 래퍼에 `sticky top-6`). **미만**: 본문 위 경로 버튼(`GroupFilterButton`) → 좌측 시트(같은 트리, 44px 행). 시트를 연 채 XL 로 커지면 닫힌다.
+- 선택 그룹은 URL `?group` — 없거나 잘못되면 루트.
+- 트리는 처음에 전부 펼친다. 단계 구분: 하위 있는 그룹 = 펼침 화살표, 본부 = 건물 아이콘, 지사 = 네모 닷 + 글자 굵기(회사 굵게 · 본부 중간 · 지사 보통). 개수는 지사 행에만 "N개".
+- 트리 머리의 편집 아이콘 버튼(시스템관리자 · Master 만) → **관리그룹 편집 모달**(`components.md` 관리그룹 절).
+- 컴포넌트: `features/groups/components/{GroupTree,GroupFilterPanel,GroupFilterButton,GroupEditTrigger,GroupEditDialog}.tsx`.
 
 ---
 
@@ -351,6 +319,6 @@ export interface MenuGroupType {
 - [x] **ProfileBadge 메뉴** — **해소(006)**: shadcn `dropdown-menu` 기반 드롭다운. 사용자명(useMe) + 내 정보(placeholder) + 로그아웃(토큰 clear + invalidate + 영역별 로그인 이동). **007 갱신**: `side`/`align` prop 추가로 현장 레일 하단(우측 오픈)에서도 재사용.
 - [x] **현장 사이트 셸 전환** — **해소(리디자인)**: 컴팩트 아이콘 레일(68px) + TopNav 삭제 + 페이지 자연 스크롤로 결정. 본사 사이트는 기존 유지.
 - [x] **현장 알림 위치** — **해소(리디자인)**: 알림 기능 자체가 아직 없어 제거. 추후 추가 시 사이드바 하단 프로필 위 슬롯 사용.
-- [ ] **알림 시트 본문** — 본사 사이트에서만 사용. 알림 목록 형태(읽음/안읽음·시간) 정의 필요. **Phase 2 공용 컴포넌트 확충**으로 이월.
+- [x] ~~**알림 시트 본문**~~ — **소멸(`spec 043`)**: 본사 TopNav 와 함께 `AlarmSheet` 삭제. 알림 기능이 생기면 레일 하단 예약 슬롯에서 다시 정한다.
 - [x] **`AppLayout` 영역 분기 구현 방식** — **해소(007)**: 별도 `ServiceLayout`/`AdminLayout` 라우터 노드로 분리 확정(`useLocation` 조건분기 아님). `AuthGuard`는 인증만 담당하고 `<Outlet/>`만 렌더 — 셸은 `router/index.tsx`에서 `AuthGuard` 하위 두 브랜치(`ServiceLayout` 자식 = 현장 라우트, `AdminLayout` 자식 = 본사 라우트)가 담당. 구 `AppLayout.tsx`는 제거.
-- [ ] **본사 사이트 리디자인** — 추후 별도 라운드로 이월. 현장과 통일 vs 두 사이트가 다른 셸을 갖는 채로 유지 결정 필요.
+- [x] **본사 사이트 리디자인** — **해소(`spec 043`, 2026-10-23)**: 현장과 **통일** — 같은 `RailSidebar` 셸. 본문 화면은 044(사업장) · 045(관리자).

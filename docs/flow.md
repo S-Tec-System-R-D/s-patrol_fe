@@ -48,8 +48,6 @@ flowchart LR
     SiteCount -- "0개 · 조회 실패 · 403" --> SiteDeny["토큰 삭제<br/>안내 후 중단"]
     SitePick --> SiteSave["siteSeq · siteName 저장"]
     SiteSave --> ServiceHome
-
-    AdminHome <-->|좌측 하단 '현장 사이트로 이동'| ServiceHome
 ```
 
 **규칙**
@@ -62,7 +60,7 @@ flowchart LR
 - 🔴 **근무자 차단은 로그인 응답 시점**이다(020 실구현). 가드가 아니라 로그인 화면이 막는다 — 서버는 근무자에게도 토큰을 발급하므로(`code: 202`) **토큰을 저장하지 않고** 안내 후 중단한다. 저장 후 가드로 막으면 새로고침 시 통과할 여지가 생긴다.
 - **착지 사이트는 응답 `code`가 정한다**(`1xx` 본사 / `2xx` 현장). 로그인 화면이 어느 쪽이었는지와 무관하다 — `/admin/login`에서 현장 계정으로 들어오면 현장 홈으로 간다. 로그인 엔드포인트는 `Login/W/Login` **하나뿐**이다(`api-spec.md` §1-1).
 - **권한 판단은 JWT `role`**이 하고, `code`는 저장하지 않는다(`CLAUDE.md` B4). JWT `role`이 매핑 밖 값이면(미실측 3종) 권한을 특정할 수 없어 가드가 로그인으로 보낸다.
-- Admin 3종은 양쪽 사이트 모두 진입 가능(단, 시작은 `code`가 정한 사이트). 본사 사이트 좌측 하단 "현장 사이트로 이동" 링크로 횡단.
+- 🔴 **Admin 3종(`1xx`)은 무조건 본사 화면**(`/admin/locations`)으로 간다 — 사업장 선택 없음. 사업장 선택은 **현장관리자만**(소속 2개 이상일 때) 한다. 본사 → 현장 이동 링크도 없다(사용자 결정 2026-10-23, `spec 043` US4 철회).
 - 현장관리자는 `/*`만. `/admin/*` 접근 시 403 또는 본인 영역 홈 리다이렉트(정책 미정).
 
 > **해소(020, 2026-10-06)**: 로그인 직후 첫 화면은 **현장 `/zones` · 본사 `/admin/locations`**다(`homePath()`·`paths`와 일치). 당초 현장 홈을 사이드바 첫 메뉴인 `/patrol/zones`로 잠정 가정했으나 코드는 `/zones`(순찰코스 관리)였고, 코드 쪽을 유지하기로 결정했다.
@@ -71,7 +69,7 @@ flowchart LR
 >
 > - **라우트가 아니라 로그인 카드 안의 단계**다. 선택 중에도 주소는 `/login` 그대로다 — 선택 확정 API가 없어 이 단계는 "목록 1회 조회 + 로컬 저장"뿐이라 라우트·가드를 둘 무게가 아니었다.
 > - 현장은 **1개면 자동 진입**(선택 UI 스킵, 저장은 그대로), 2개 이상이면 선택. **0개·조회 실패·403은 토큰을 지우고 중단**한다.
-> - **본사는 선택 단계가 없다**(현행 유지). 본사 홈이 아직 placeholder라 `siteSeq` 소비처가 0개이고, `AdminSiteSelect` 평면 배열 응답이 미실측이다 → Phase 5에서 추가(`api-spec.md` OQ-1B).
+> - **본사는 선택 단계가 없다** — 🔴 **확정(사용자 결정 2026-10-23)**. `spec 043` 에서 넣었다가(US4) 철회했다. `AdminSiteSelect` 는 관리그룹 트리 출처로만 쓴다.
 > - `UserSiteSelect`는 `sign` 엔드포인트라 **토큰 저장이 호출보다 먼저**다. 그래서 "토큰 있음 + `siteSeq` 없음" 중간 상태가 생기고, **`AuthGuard`가 현장 영역에서 그 상태를 로그인으로 되돌린다**(본사 영역은 제외).
 
 ---
@@ -269,18 +267,17 @@ flowchart TB
 
     subgraph Admin["/admin/* (본사)"]
         direction TB
-        ASB([사이드바])
+        ASB([레일 — ADMIN])
         ASB --> Loc["/admin/locations<br/>사업장 관리"]
         ASB --> Adm["/admin/admins<br/>관리자 관리"]
 
-        Loc --> LocList["목록: 좌측 그룹 트리<br/>+ 우측 사업장 테이블"]
+        Loc --> LocList["목록: 좌측 관리그룹 트리<br/>+ 우측 사업장 테이블(044)"]
         Loc --> LocDet["/admin/locations/:id<br/>사업장 상세"]
         LocDet --> TabBasic[기본정보 탭]
         LocDet --> TabHealth["헬스체크 탭<br/>+ 비상연락망"]
     end
 
     AdminLogin -- 인증 성공 --> ASB
-    Admin -. 좌측 하단 링크 .-> Svc["/* (현장 사이트로 이동)"]
 ```
 
 ### 2-2. 화면 간 이동 (모달·액션 포함)
@@ -288,10 +285,10 @@ flowchart TB
 ```mermaid
 %%{init: {'theme':'dark'}}%%
 flowchart LR
-    LL["/admin/locations"] -- "트리 노드 '+'" --> GAdd[(그룹 추가 모달)]
-    LL -- "트리 노드 '…'" --> GMenu{그룹 메뉴}
-    GMenu -- 수정 --> GEdit[(그룹 수정 모달)]
-    GMenu -- 삭제 --> GDel[(그룹 삭제 확인)]
+    LL["/admin/locations"] -- "트리 머리 편집 버튼" --> GEditM[(관리그룹 편집 모달)]
+    GEditM -- "+ 본부 추가 · + 지사 추가" --> GAdd[(그룹명 입력)]
+    GEditM -- "이름 변경" --> GEdit[(그룹명 입력)]
+    GEditM -- "삭제" --> GDel[("단계그룹 삭제 확인<br/>하위·사업장 연쇄")]
 
     LL -- "사업장 추가" --> SAdd[(사업장 폼)]
     LL -- 사업장 행 클릭 --> LD["/admin/locations/:id<br/>상세"]
@@ -322,7 +319,7 @@ flowchart LR
 ```mermaid
 %%{init: {'theme':'dark'}}%%
 flowchart LR
-    A["/admin/locations"] -- "트리에서 부모 그룹 '+'" --> B[(그룹 추가)]
+    A["/admin/locations"] -- "편집 모달에서 '+ 지사 추가'" --> B[(그룹 추가)]
     B --> A
     A -- "사업장 추가" --> C[(사업장 폼)]
     C -- 등록 --> D[사업장 상세 기본정보]

@@ -302,6 +302,7 @@ import AppDialog from '@/components/app/AppDialog'
 | `trigger` | `ReactNode` | 비제어형. `asChild`로 감쌈 |
 | `open` / `onOpenChange` | `boolean` / `(o: boolean) => void` | 제어형 |
 | `children` | `ReactNode` | 본문(폼) |
+| `contentClassName` | `string` | 선택(`spec 043`). 기본 폭 `sm:max-w-sm` 을 덮을 때 — **같은 접두사**로 준다(예: `sm:max-w-[600px]`). `cn` 병합이라 접두사가 다르면 안 덮인다 |
 
 **규칙**
 
@@ -865,3 +866,25 @@ App* 컴포넌트로 커버되지 않는 경우만 shadcn 원시를 **직접** �
 7. **툴팁은 기본 제공한다**(마크보다 큰 히트 영역). 숫자는 **계열 색이 아니라 본문 잉크**로
    쓴다 — 색은 막대가 들고 있다.
 8. **이중 축(y축 2개)을 만들지 않는다.** 단위가 다른 두 값은 차트를 나눈다.
+
+---
+
+## 관리그룹 트리 · 편집 모달 (`features/groups`) — `spec 043` 2026-10-23
+
+본사 사업장(044)·관리자(045) 화면 좌측에 공용으로 들어간다. 데이터는 `useGroupTree()`(= `AdminSiteSelect`, 키 `['group-tree']`).
+
+| 컴포넌트 | 역할 |
+|---|---|
+| `GroupTree` | 조회·필터용 트리. 처음 전부 펼침, 접은 노드만 기억. `count(group)` 로 행 오른쪽 개수(화면이 정한다 — 사업장 화면은 `branchSiteCount` = 지사만 "N개"). `large` = 시트용 44px 행 |
+| `GroupFilterPanel` | XL 이상 248px 카드(머리: "관리그룹" + `{unitLabel} 수` + `headerAction`). sticky 는 **페이지 래퍼**에 건다 |
+| `GroupFilterButton` | XL 미만 경로 버튼 → 좌측 시트(`data-[side=left]:w-80`). XL 로 커지면 닫힌다(matchMedia) |
+| `GroupEditTrigger` | 트리 머리 편집 아이콘 버튼(`AppIconButton` + `SquarePenIcon`). 🔴 시스템관리자·Master 에게만 그린다(허용 목록) |
+| `GroupEditDialog` | 관리그룹 편집 모달(600px) — 회사 머리 줄(`+ 본부 추가`) · 본부 카드(본부 아이콘 · 수정/삭제 · `+ 지사 추가`) · 지사 행(네모 닷 · "사업장 N개" · 수정/삭제). 이름 입력은 400px 작은 모달(`GroupNameForm`) |
+
+**규칙**
+
+- 단계 기호는 트리·모달이 같다 — 본부 = `BuildingIcon`, 지사 = 포인트색 네모 닷(`size-1.5 rounded-[1px] bg-point`). 글자 굵기 회사 bold · 본부 semibold · 지사 normal.
+- 지사(`layer 2`) 아래로는 추가 버튼이 없다 — 3단계 제한은 화면이 지킨다(서버는 막지 않는다, B-49).
+- 이름 변경은 `GetGroupAdminList` → `isInclude` 인 `userSeq` 를 그대로 실어 `UpdateGroup`(생략하면 할당이 지워진다, B-50). 그 조회가 실패하면 저장하지 않는다.
+- 삭제 확인(`AppAlertDialog`) 제목은 `{단계}그룹 삭제`(본부그룹 삭제 · 지사그룹 삭제), 설명에 함께 지워지는 하위 그룹·사업장 수(B-51).
+- 409(같은 이름)는 전역 토스트 + 입력 모달 유지. 선택 중이던 그룹(또는 조상)을 지우면 `?group` 을 걷는다(루트).

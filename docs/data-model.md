@@ -315,14 +315,23 @@ export interface WorkerRef { id: string; name: string; phone: string }
 ### 3-2. 조직 (그룹 / 사업장)
 
 ```ts
-// 관리그룹 트리 — /admin/locations 좌측 트리
-export interface ManagementGroupNode {
-  id: string
-  name: string
-  level: 1 | 2 | 3
-  parentId: string | null
-  locationCount: number            // 트리 노드 옆 카운트
-  children: ManagementGroupNode[]
+// 관리그룹 트리 — /admin/locations 좌측 트리 · 편집 모달
+// 🔴 서버 기준(`spec 043`, `api-spec.md` §2-2 · §5-1-B). 출처 = `AdminSiteSelect`(GetGroupList 는 500, B-1).
+// 옛 설계 `ManagementGroupNode`(id/name/level/locationCount)는 폐기 — 개수는 화면이 `sites` 로 센다.
+export interface SiteNode {
+  siteSeq: number
+  siteName: string
+  parentSiteSeq: number | null
+  children: SiteNode[]             // 사업장도 하위 사업장을 갖는다
+}
+export interface GroupNode {
+  groupSeq: number
+  groupName: string
+  parentGroupSeq: number | null    // 루트는 null
+  layer: number                    // 0 회사 · 1 본부 · 2 지사 (화면이 3단계까지만 만든다 — 서버는 막지 않는다, B-49)
+  depth: number
+  sites: SiteNode[]
+  children: GroupNode[]
 }
 
 // 사업장 — /admin/locations 우측 테이블 + 상세
@@ -587,7 +596,8 @@ export interface Keyword {
 |---|---|---|
 | 관리자 목록 | `GET /api/admin/admins` | `ApiListResponse<AdminSummary>` |
 | 관리자 상세 | `GET /api/admin/admins/:id` | `ApiDetailResponse<Admin>` |
-| 관리그룹 트리 | `GET /api/admin/groups/tree` | `ApiDetailResponse<ManagementGroupNode>` (루트 1개) |
+| 관리그룹 트리 | ✅ `GET Login/W/sign/AdminSiteSelect`(`spec 043`) | `ApiDetailResponse<GroupNode>` (루트 1개) |
+| 그룹 할당 관리자 | ✅ `GET Group/W/sign/GetGroupAdminList?groupSeq` | `GroupAdminRow[]`(`isInclude`) — 이름 변경 전 할당 보존용 |
 | 사업장 목록 | `GET /api/admin/locations?groupId={id}` | `ApiListResponse<LocationSummary>` |
 | 사업장 상세 — 기본정보 | `GET /api/admin/locations/:id` | `ApiDetailResponse<Location>` |
 | 사업장 상세 — 헬스체크 | `GET /api/admin/locations/:id/health` | `ApiDetailResponse<{ setting: HealthCheckSetting; roster: EmergencyContactRoster }>` |
@@ -680,12 +690,19 @@ export interface AssignLocationsToAdminRequest {
   locationIds: string[]            // 다중 선택
 }
 
-export interface CreateManagementGroupRequest {
-  parentId: string                 // 부모 그룹 id
-  name: string
+// 관리그룹 — ✅ 서버 기준(`spec 043`, `features/groups/types/group.ts`)
+export interface AddGroupRequest {            // POST Group/W/sign/AddGroup
+  parentGroupSeq: number                     // 🔴 생략하면 고아 그룹이 생겨 트리에 안 보인다(B-49)
+  groupName: string                          // 같은 이름 → 409
+  userSeq: number[]                          // 그룹 단위 관리자 할당. 새 그룹은 []
 }
-export interface UpdateManagementGroupRequest { id: string; name: string }
-export interface DeleteManagementGroupRequest { id: string }
+export interface UpdateGroupRequest {         // PUT Group/W/sign/UpdateGroup
+  groupSeq: number
+  parentGroupSeq: number | null
+  groupName: string
+  userSeq: number[]                          // 🔴 교체 — 생략·[] 면 할당이 지워진다(B-50). 현재 isInclude 를 그대로 싣는다
+}
+// DELETE Group/W/sign/DeleteGroup?groupSeq — 🔴 하위 그룹·소속 사업장까지 연쇄 삭제(B-51)
 
 export interface CreateLocationRequest {
   name: string
