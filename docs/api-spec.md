@@ -483,7 +483,7 @@ HTTP 400 · Content-Type: application/json; charset=utf-8
 | 2 | `Login/W/sign/RefreshToken` | `{accessToken, refreshToken}` | 200 | — |
 | 3 | `Login/W/sign/AdminSiteSelect` | `GroupNode` (재귀 트리) | **403** | 200 |
 | 4 | `Login/W/sign/UserSiteSelect` | `UserSiteSelectData` | 200 | **403** |
-| 5 | `Group/W/sign/GetGroupList` | — | **403** | **500** 🔴 |
+| 5 | `Group/W/sign/GetGroupList` | `GroupListNode` (재귀 트리) | **403** | 200 ✅ (2026-10-23 수정) |
 | 6 | `Group/W/sign/GetGroupAdminList` | `GroupAdminRow[]` | **403** | 200 |
 | 7 | `Site/W/sign/GetSiteDetail` | `SiteDetail` | **403** | 200 |
 | 8 | `User/W/sign/UserList` | `PagedData<UserRow>` | **403** | 200 |
@@ -703,7 +703,7 @@ HTTP 400 · Content-Type: application/json; charset=utf-8
 - `GetGroupAdminList?groupSeq` 는 **본사 관리자 전원**(`codeSeq` 2·3·4)을 주고 그 그룹에 할당됐는지를 `isInclude` 로 표시한다. 그룹마다 행 집합이 같다.
 - 🔴 **한 관리자가 여러 그룹에 할당된다** — 실데이터: user 3 이 g2·g4·g6. 목업의 "소속 그룹 1개" 와 다르다(045 판정).
 - 🔴 `GetGroupAdminList` 는 **없는 `groupSeq` 에도 200**(전원 `isInclude: false`) — 존재 확인용으로 못 쓴다.
-- 🔴 `GetGroupList` 는 **여전히 500**(B-1, 재확인 2026-10-22) — 트리 출처는 `AdminSiteSelect`(§5-2 `GroupNode`)다.
+- ~~🔴 `GetGroupList` 는 **여전히 500**(B-1, 재확인 2026-10-22) — 트리 출처는 `AdminSiteSelect`(§5-2 `GroupNode`)다.~~ ✅ **2026-10-23 수정** — 200 + 사업장 목록 필드 포함(§5-2 `GroupListNode`). `spec 043` 의 트리는 `AdminSiteSelect` 그대로 둔다(교체는 `spec 044` 에서 판단).
 
 **오류 응답 (관리그룹)**
 
@@ -740,6 +740,7 @@ HTTP 400 · Content-Type: application/json; charset=utf-8
 | 없는 `detailSeq` | 400 래퍼 `"예외시간 정보가 존재하지 않습니다."` · 아무것도 바뀌지 않음 |
 | 시작 > 종료 · 겹치는 두 구간 · 헬스체크 시간대 밖 | 🔴 **전부 200 으로 저장된다**(B-53) |
 | `healthCheckYn false` 사업장에 추가 | 200 으로 저장된다 |
+| ✅ 최소 바디로 만든 사업장에 `healthCheckYn: true` + 5개 값 + 예외 2개를 **한 번에** | 200 · 전부 저장된다(2026-10-23 확인 — "생성 시 헬스체크 없이 → 상세에서 켜기" 흐름의 근거) |
 
 **헬스체크 검증 (`AddSite`·`UpdateSite` 공통)**
 
@@ -1048,6 +1049,34 @@ interface GroupNode {
 }
 // 루트 1개 객체로 내려옴(배열 아님). groupSeq=1 '에스텍시스템' 고정
 
+// ── 5. GetGroupList : 본사 전용. AdminSiteSelect 와 같은 이중 재귀 + 목록용 필드 ──
+// ✅ 실측 2026-10-23(B-1 수정 직후, `spec 044`). 파라미터 없음 — `?groupSeq` 를 줘도 무시하고 전체 트리를 준다
+interface GroupListSite {
+  siteSeq: number
+  siteName: string
+  siteGroupSeq: number        // 소속 그룹 — 하위 사업장도 모 사업장과 같은 값
+  siteGroupName: string
+  address: string | null
+  tel: string | null
+  healthCheckYn: boolean      // 🔴 항상 false — 상세가 true 인 사업장(3·4·12)도 false. 켠 직후에도 false(B-55). 쓰지 않는다
+  userCount: number           // 근무자 수 — GetSiteDetail.userCount 와 11곳 전부 일치
+  count: number               // 하위 사업장 수(= children.length)
+  parentSiteSeq: number | null
+  children: GroupListSite[]
+}
+interface GroupListNode {
+  groupSeq: number
+  groupName: string
+  parentGroupSeq: number | null
+  layer: number               // 0 회사 · 1 본부 · 2 지사
+  depth: number               // 🔴 layer 와 다를 수 있다 — G6 은 layer 1 · depth 0(AdminSiteSelect 는 depth 1). layer 를 쓴다
+  count: number               // 자손 그룹 포함 사업장 수(하위 사업장 포함) — 루트 11 = 전체
+  sites: GroupListSite[]
+  children: GroupListNode[]
+}
+// 🔴 코스·지점 수(courseCount · pointCount) 는 없다 — GetSiteDetail 에만 있다
+// 🔴 형제 그룹 순서가 AdminSiteSelect 와 다르다(G6 · G2 · G4 vs G2 · G4 · G6) — 순서에 의미를 두지 않는다
+
 // ── 4. UserSiteSelect : 현장계정 전용. 필드명이 Admin쪽과 다르다 ──
 /**
  * 루트 = 소속 지사·상위 조직 → **선택 대상 아님**.
@@ -1081,9 +1110,9 @@ interface SiteDetail {
   healthCheckYn: boolean
   healthCheckInterval: number     // 분
   healthCheckTimeout: number
-  healthCheckRetry: number
-  healthCheckStartTime: string    // 'HH:mm:ss' (예 '08:00:00')
-  healthCheckEndTime: string      // 'HH:mm:ss' (예 '00:00:00')
+  healthCheckRetry: number | null       // 🔴 최소 생성 사업장은 null(실측 2026-10-23)
+  healthCheckStartTime: string | null   // 'HH:mm:ss' (예 '08:00:00') · 최소 생성 시 null
+  healthCheckEndTime: string | null     // 'HH:mm:ss' (예 '00:00:00') · 최소 생성 시 null
   exceptionTime: {
     detailSeq: number
     exceptionStartTime: string    // 'HH:mm:ss'
@@ -1470,7 +1499,7 @@ interface NoticeAttach {
 
 | # | 내용 | 심각도 |
 |---|---|---|
-| B-1 | `GetGroupList` admin 계정 **HTTP 500**(ProblemDetails). 그룹 관리 화면 전체가 막힘. **재확인 2026-10-22 — 여전히 500.** 트리는 `AdminSiteSelect` 로 대체 가능(`spec 043`) | 🔴 |
+| B-1 | ✅ **해소(2026-10-23)** — `GetGroupList` admin 계정 **HTTP 500**(ProblemDetails)이었다. 2026-10-22·23 재확인에서도 500(파라미터 8조합) → 백엔드 수정 → **같은 날 200**. 응답은 그룹 트리 + 사업장 목록 필드(주소·연락처·근무자 수·하위 수)다(§5-2 `GroupListNode`). 남은 결함은 B-55 | ✅ |
 | B-2 | **403/401이 빈 body** 반환 — 래퍼 미적용. 프론트에서 메시지 표시 불가 | 🔴 |
 | B-3 | 유효성 오류(400)·서버 오류(500)가 **ProblemDetails**로 빠져나감 — 래퍼 미적용 | 🔴 |
 | B-4 | 필드명 불일치: 목록 `pointName` ↔ 상세 `name` / `overtimeYn` ↔ `overTimeYn`(엔드포인트마다 뒤섞임) | 🟡 |
@@ -1524,6 +1553,9 @@ interface NoticeAttach {
 | B-52 | 🔴 **`AddSite` 가 `exceptionTime` 을 저장하지 않는다**(실측 2026-10-23, `spec 044`) — swagger 에 필드가 있고 200 을 주지만 상세는 항상 `[]`. `UpdateSite` 로는 저장된다. 생성 응답이 ID 를 주지 않으므로, 추가 폼에서 예외시간을 받으려면 **추가 → 트리에서 seq 찾기 → `UpdateSite`** 로 요청이 3번 든다. **요청**: `AddSite` 에서도 저장 | 🔴 |
 | B-53 | 🟡 **헬스체크 입력 검증이 비어 있거나 형태가 다르다**(실측 2026-10-23) — ① 필수값 누락이 **JSON 문자열 body**(§3 (D))로 온다 — 래퍼가 아니라 프론트가 문구를 못 읽는다 ② `"25:00:00"` 이 **25일(`25.00:00:00`)로 저장된다** ③ 예외시간의 **시작 > 종료 · 구간 겹침 · 헬스체크 시간대 밖**이 전부 200 으로 저장된다. 프론트는 입력 단계에서 막는다. **요청**: ① 래퍼로 통일 ② 24시간 미만만 허용 ③ 예외시간 검증 | 🟡 |
 | B-54 | 🔴 **`DeleteSite` 가 하위 사업장과 소속 지점을 확인 없이 함께 지운다**(실측 2026-10-23) — B-51 과 같은 종류. 코스·순찰 이력·근무자 영향은 미실측. 프론트는 삭제 확인에 **하위 사업장 수 · `userCount`/`courseCount`/`pointCount`** 를 띄운다. **요청(확인)**: 의도된 연쇄 삭제인지, 데이터가 있으면 막아야 하는지 | 🔴 |
+| B-55 | 🟡 **`GetGroupList` 사업장 행의 `healthCheckYn` 이 항상 `false` 다**(실측 2026-10-23) — 상세가 `true` 인 사업장(3·4·12)도 `false` 이고, 새 사업장을 만들어 헬스체크를 켠 직후에도 목록은 `false`(상세는 `true`). 또 그룹 `depth` 가 `layer` 와 어긋난다(G6: layer 1 · depth 0). 프론트는 목록에서 헬스체크 값을 **쓰지 않고**, 단계는 `layer` 로 판단한다. **요청**: `healthCheckYn` 을 실제 값으로 · `depth` 정정(또는 제거) · 목록에 `courseCount`/`pointCount` 추가(목업 목록 열 "코스 · 지점") | 🟡 |
+| B-56 | 🟡 **사업장 운영 상태(운영중/중지)와 계약 기간이 서버에 없다**(swagger · `SiteDetail` · `GetGroupList` 확인 2026-10-23, `spec 044`) — 목업은 목록 열 · 상태 필터 · 상세 [운영 중지/재개] · 추가/수정 폼의 계약 시작/종료일을 갖는다. 화면은 자리만 두고 막았다(사용자 결정 2026-10-23). **요청**: 필드 + 변경 수단(운영 상태 토글은 별도 액션이 필요한지) · 중지 사업장에서 앱·현장 사이트가 어떻게 동작하는지 정의 | 🟡 |
+| B-57 | 🟡 **비상연락망 API 가 없다**(2026-10-23, `spec 044`) — 헬스체크 이상 시 알림 대상(요일별 담당자 다중 + 사업장별 담당자 풀: 이름 · 역할 · 연락처). 헬스체크는 설정할 수 있는데 **알림 받을 사람을 지정할 수 없어** 기능이 반쪽이다. 화면은 자리만 두고 막았다. **요청**: 담당자 풀 CRUD + 요일별 지정 조회·저장 | 🟡 |
 
 ### 6-1-A. 🔴 백엔드 전달용 — 우선순위 (2026-10-10 기준)
 

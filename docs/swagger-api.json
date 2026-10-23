@@ -204,6 +204,14 @@
             }
           },
           {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
             "name": "pageNumber",
             "in": "query",
             "schema": {
@@ -248,6 +256,14 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
@@ -298,6 +314,14 @@
             }
           },
           {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
             "name": "pageNumber",
             "in": "query",
             "schema": {
@@ -326,7 +350,7 @@
     "/api/v1/Assignment/W/sign/GetAssignmentCount": {
       "get": {
         "tags": ["Assignment"],
-        "summary": "해당 사업장 배치 현황 건수 조회 (배치 나간 인원 / 배치 온 인원 / 대기중인 배치요청)",
+        "summary": "해당 사업장 배치 현황 건수 조회 (배치 나간 인원 / 배치 온 인원 / 대기중인 배치요청 / 대기중인 복귀요청)",
         "parameters": [
           {
             "name": "siteSeq",
