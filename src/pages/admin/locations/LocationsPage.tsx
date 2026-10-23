@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2Icon, FilterXIcon, PowerIcon, TriangleAlertIcon } from 'lucide-react'
+import { Building2Icon, FilterXIcon, PlusIcon, TriangleAlertIcon } from 'lucide-react'
 
 import AppButton from '@/components/app/AppButton'
+import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
 import AppInput from '@/components/app/AppInput'
 import AppPageHeader from '@/components/app/AppPageHeader'
-import AppSelect from '@/components/app/AppSelect'
 import AppTable from '@/components/AppTable'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { GroupEditTrigger } from '@/features/groups/components/GroupEditTrigger'
 import { GroupFilterButton } from '@/features/groups/components/GroupFilterButton'
 import { GroupFilterPanel } from '@/features/groups/components/GroupFilterPanel'
@@ -17,10 +16,12 @@ import { useGroupParam } from '@/features/groups/hooks/useGroupParam'
 import { useGroupTree } from '@/features/groups/hooks/useGroupTree'
 import { branchSiteCount } from '@/features/groups/lib/groupTree'
 import { siteColumns } from '@/features/sites/components/SiteColumns'
-import { collectSiteRows } from '@/features/sites/lib/siteList'
+import SiteForm from '@/features/sites/form/SiteForm'
+import { toAddSiteRequest } from '@/features/sites/form/schema'
+import { useAddSite } from '@/features/sites/hooks/useSiteMutations'
+import { collectSiteRows, findListGroup, groupOptions, isBranch } from '@/features/sites/lib/siteList'
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback'
 import { useQueryParams } from '@/hooks/useQueryParams'
-import { ALL_VALUE } from '@/lib/listQuery'
 import { paths } from '@/router/paths'
 
 /**
@@ -31,22 +32,18 @@ import { paths } from '@/router/paths'
  * 🔴 **트리가 둘이다** — 좌측 패널과 `?group` 은 043 그대로 `AdminSiteSelect`, 목록은 `GetGroupList`
  * (주소 등 목록 필드가 거기에만 있다). 패널을 바꾸지 않는다(사용자 결정 2026-10-23). 같은 `groupSeq` 로 잇는다.
  * 🔴 **서버 필터 · 페이지네이션 없음** — 응답이 전체 트리이고 지사당 사업장이 적다(사용자 판단 2026-10-23).
+ * 🔴 **추가 후에는 목록에 머문다** — 서버가 새 `siteSeq` 를 주지 않는다. 최상위 사업장만 만든다(사용자 결정 2026-10-23).
  */
 
 const SEARCH_DEBOUNCE_MS = 300
-
-/** 🔴 운영 상태는 서버에 없다(B-56) — 자리만 두고 막는다 */
-const STATUS_OPTIONS = [
-  { value: ALL_VALUE, label: '운영 상태' },
-  { value: 'running', label: '운영중' },
-  { value: 'stopped', label: '중지' },
-]
 
 const LocationsPage = () => {
   const navigate = useNavigate()
   const tree = useGroupTree()
   const { selected } = useGroupParam(tree.data)
   const list = useGroupList()
+  const addSite = useAddSite()
+  const [addOpen, setAddOpen] = useState(false)
 
   const [params, setParams] = useQueryParams<'q'>()
 
@@ -77,6 +74,11 @@ const LocationsPage = () => {
   )
   /** 🔴 메모이즈한다 — 렌더마다 만들면 행이 리마운트된다(027) */
   const columns = useMemo(() => siteColumns(), [])
+  /** 🔴 소속 그룹은 지사만(OQ-043-E) — 서버는 막지 않는다 */
+  const options = useMemo(() => (list.data ? groupOptions(list.data) : []), [list.data])
+  /** 지금 보고 있는 그룹이 지사면 그 지사를 기본값으로 */
+  const selectedListGroup = list.data && groupSeq !== null ? findListGroup(list.data, groupSeq) : null
+  const defaultGroupSeq = selectedListGroup && isBranch(selectedListGroup) ? String(selectedListGroup.groupSeq) : ''
 
   const filterProps = { unitLabel: '사업장', count: branchSiteCount, headerAction: <GroupEditTrigger /> }
   const subtitle = selected && list.data ? `${selected.groupName} 하위 사업장 ${scopedRows.length}개` : undefined
@@ -104,23 +106,37 @@ const LocationsPage = () => {
                 pushKeyword(event.target.value)
               }}
             />
-            {/* 🔴 disabled 트리거는 포인터 이벤트가 없어 툴팁이 안 뜬다 — 감싼 span 에 건다 */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span tabIndex={0}>
-                  <AppSelect
-                    aria-label="운영 상태"
-                    icon={PowerIcon}
-                    options={STATUS_OPTIONS}
-                    value={ALL_VALUE}
-                    onChange={() => undefined}
-                    disabled
-                    className="w-auto"
-                  />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>운영 상태는 아직 지원되지 않습니다</TooltipContent>
-            </Tooltip>
+            <div className="flex-1" />
+            {/* 다른 목록 화면과 같이 필터 줄 끝에 둔다(`UsersPage` 승계) */}
+            <AppDialog
+              title="사업장 추가"
+              description="새 사업장을 등록합니다."
+              open={addOpen}
+              onOpenChange={setAddOpen}
+              contentClassName="sm:max-w-[520px]"
+              trigger={
+                /* 🔴 `xl` 미만에서는 아이콘만 — `aria-label` 로 이름을 유지한다 */
+                <AppButton
+                  icon={PlusIcon}
+                  iconSize={14}
+                  aria-label="사업장 추가"
+                  // 선택지가 목록 응답에서 나온다 — 받기 전에는 열지 않는다
+                  disabled={!list.data}
+                  className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
+                >
+                  <span className="hidden xl:inline">사업장 추가</span>
+                </AppButton>
+              }
+            >
+              <SiteForm
+                options={options}
+                defaultValues={{ groupSeq: defaultGroupSeq }}
+                submitLabel="등록"
+                pending={addSite.isPending}
+                onSubmit={(data) => addSite.mutate(toAddSiteRequest(data), { onSuccess: () => setAddOpen(false) })}
+                onCancel={() => setAddOpen(false)}
+              />
+            </AppDialog>
           </div>
 
           {list.isError ? (

@@ -3,20 +3,13 @@ import type { ColumnDef } from '@tanstack/react-table'
 import type { SiteRow } from '../lib/siteList'
 
 /**
- * 사업장 목록 컬럼 (`spec 044` T789) — 목업 v2 `SitesPage` 의 6열.
+ * 사업장 목록 컬럼 (`spec 044` T789) — 목업 v2 `SitesPage` 에서 4열.
  *
- * 🔴 **코스·지점 · 담당 관리자 · 운영 상태는 고정 `—`** — 서버에 값이 없다(B-55 · B-56 · OQ-044-D).
- * 자리는 목업대로 두고 막는다(사용자 결정 2026-10-23). 백엔드가 채워 주면 값으로 바꾼다.
+ * 🔴 목업의 코스·지점 · 운영 상태 열은 **뺐다** — 사업장 개념에 없다(사용자 결정 2026-10-23).
+ * 🔴 **담당 관리자는 고정 `—`** — 서버에 값이 없다. 사용자가 백엔드에 요청 중이라 자리를 둔다(OQ-044-D).
  */
 
 const EMPTY = '—'
-
-/** 서버 값이 없는 열 — 같은 모양 3개 */
-const emptyColumn = (id: string, header: string): ColumnDef<SiteRow> => ({
-  id,
-  header,
-  cell: () => <span className="text-muted-foreground">{EMPTY}</span>,
-})
 
 /** 🔴 정렬을 끈다 — 하위 사업장이 모 사업장 바로 아래 있어야 한다(응답 순서) */
 export const siteColumns = (): ColumnDef<SiteRow>[] => {
@@ -50,9 +43,11 @@ export const siteColumns = (): ColumnDef<SiteRow>[] => {
       meta: { className: 'hidden xl:table-cell' },
       cell: ({ row }) => <span className="text-muted-foreground">{row.original.site.address ?? EMPTY}</span>,
     },
-    emptyColumn('coursePoint', '코스 · 지점'),
-    emptyColumn('managers', '담당 관리자'),
-    emptyColumn('status', '운영 상태'),
+    {
+      id: 'managers',
+      header: '담당 관리자',
+      cell: () => <span className="text-muted-foreground">{EMPTY}</span>,
+    },
   ]
   return columns.map((column) => ({ ...column, enableSorting: false }))
 }

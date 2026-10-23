@@ -31,29 +31,29 @@
 
 > **독립 테스트 기준**: MSW 로 `/admin/locations?group=3` → 강동지사 사업장 + 하위 들여쓰기 · `?q=` 검색 · 행 클릭 → 상세 경로.
 
-- [x] T789 [US1] 목록 열 in src/features/sites/components/SiteColumns.tsx(표는 기존 `AppTable` — 파일명 변경, 사용자 승인 2026-10-23) — 열 6개(코스·지점 · 담당 관리자 · 운영 상태 `—`) · XL 미만 주소 보조 줄 · 하위 사업장 `└` 들여쓰기 · 행 클릭 · "총 N개" · 빈 상태 2종 · 로딩 스켈레톤 · 실패 + 다시 시도
-- [x] T790 [US1] 필터 줄 — 🔴 별도 파일 없이 LocationsPage.tsx 안에(`UsersPage` 패턴, 사용자 승인 2026-10-23) — 검색(`?q=`, 이름·주소, 300ms 디바운스) · 운영 상태 `AppSelect` **disabled** + 툴팁(목업 세그먼트 대신 기존 필터 컴포넌트)
+- [x] T789 [US1] 목록 열 in src/features/sites/components/SiteColumns.tsx(표는 기존 `AppTable` — 파일명 변경, 사용자 승인 2026-10-23) — 열 4개(담당 관리자 `—` — 🔄 2026-10-23 재결정으로 코스·지점 · 운영 상태 열 제거) · XL 미만 주소 보조 줄 · 하위 사업장 `└` 들여쓰기 · 행 클릭 · "총 N개" · 빈 상태 2종 · 로딩 스켈레톤 · 실패 + 다시 시도
+- [x] T790 [US1] 필터 줄 — 🔴 별도 파일 없이 LocationsPage.tsx 안에(`UsersPage` 패턴, 사용자 승인 2026-10-23) — 검색(`?q=`, 이름·주소, 300ms 디바운스) · ~~운영 상태 필터~~(🔄 재결정 2026-10-23 — 제거)
 - [x] T791 [US1] 페이지 in src/pages/admin/locations/LocationsPage.tsx — 빈 본문 → 필터 줄 + 표 · 부제 "{그룹명} 하위 사업장 N개" · [사업장 추가] 는 T795 에서
-- [x] T792 [US1] [P] 테스트 in src/pages/admin/locations/__tests__/LocationsPage.test.tsx — 그룹 범위 · 하위 들여쓰기 · 검색 · `—` 열 · 빈 상태 · 행 클릭 이동
+- [x] T792 [US1] [P] 테스트 in src/pages/admin/locations/__tests__/LocationsPage.test.tsx — 그룹 범위 · 하위 들여쓰기 · 검색 · 담당 관리자 `—` · 없는 열 · 빈 상태 · 행 클릭 이동
 
 ## Phase 4: US2 — 사업장 추가
 
 > **독립 테스트 기준**: MSW 로 추가 → 바디에 헬스체크·`exceptionTime`·`parentSiteSeq` 없음 · 목록에 새 행 · 409 면 모달 유지.
 
-- [ ] T793 [US2] 폼 스키마 in src/features/sites/form/siteFormSchema.ts — 이름(trim · 필수) · 소속 그룹(필수) · 주소(trim · 필수) · 연락처(선택)
-- [ ] T794 [US2] 폼 모달 in src/features/sites/form/SiteFormDialog.tsx — 추가/수정 겸용 520px · 소속 그룹 `AppSelect`(**지사만**, `본부 › 지사` 표기) · 계약 시작/종료 **disabled** · 지사 0개 안내 + [등록] disabled · 처리 중 비활성
-- [ ] T795 [US2] 추가 제출 in src/pages/admin/locations/LocationsPage.tsx — 기본 그룹 = 현재 `?group` 이 지사면 그것 · 바디 `{ groupSeq, siteName, address, tel? }`(빈 연락처 생략) · 성공 토스트 + 닫기 · 409 모달 유지
-- [ ] T796 [US2] [P] 테스트 in src/features/sites/form/__tests__/SiteFormDialog.test.tsx — 지사만 선택지 · 기본값 · 필수 검증 · 추가 바디 · 409 유지 · 계약기간 disabled
+- [x] T793 [US2] 폼 스키마 in src/features/sites/form/schema.ts(기존 `form/schema.ts` 관례) — 이름(trim · 필수) · 소속 그룹(필수) · 주소(trim · 필수) · 연락처(선택)
+- [x] T794 [US2] 폼 in src/features/sites/form/SiteForm.tsx — 추가/수정 겸용 · 🔴 **필드·검증만, 제출은 호출부**(`useAddSite`/`useUpdateSiteInfo` — 사용자 승인 2026-10-23) · 모달은 호출부 `AppDialog`(520px) · 소속 그룹 `AppSelect`(**지사만**, `본부 › 지사` 표기) · 계약 기간 칸 없음(재결정) · 지사 0개 안내 + [등록] disabled · 처리 중 비활성
+- [x] T795 [US2] 추가 제출 in src/pages/admin/locations/LocationsPage.tsx — 기본 그룹 = 현재 `?group` 이 지사면 그것 · 바디 `{ groupSeq, siteName, address, tel? }`(빈 연락처 생략) · 성공 토스트 + 닫기 · 409 모달 유지
+- [x] T796 [US2] [P] 테스트 in src/features/sites/form/__tests__/SiteForm.test.tsx(폼 단위) + LocationsPage.test.tsx(MSW 바디 · 새 행 · 409) — 지사만 선택지 · 기본값 · 필수 검증 · 추가 바디 · 409 유지
 
 ## Phase 5: US3 — 상세 · 정보 수정 · 삭제
 
-> **독립 테스트 기준**: MSW 로 `/admin/locations/3` → 요약 6칸 · 담당 관리자 탭 · 수정 바디(`tel: ""`) · 삭제 문구 · 없는 사업장 = 찾을 수 없음(로딩 중에는 아님).
+> **독립 테스트 기준**: MSW 로 `/admin/locations/3` → 요약 5칸 · 담당 관리자 탭 · 수정 바디(`tel: ""`) · 삭제 문구 · 없는 사업장 = 찾을 수 없음(로딩 중에는 아님).
 
 - [ ] T797 [US3] 라우트 in src/router/index.tsx — `paths.adminLocationDetail` → 상세 페이지(Admin 3종)
-- [ ] T798 [US3] 상세 페이지 골격 in src/pages/admin/locations/LocationDetailPage.tsx — 뒤로(`?group` 보존) · 이름 · 부제 그룹 경로 · 액션(운영 중지 **disabled** · 정보 수정 · 삭제) · 탭 `?tab=health` · 🔴 로딩 / 찾을 수 없음(숫자 아님 · 400) 구분
-- [ ] T799 [US3] 요약 in src/features/sites/components/SiteSummary.tsx — 6칸(소속 그룹 · 주소 · 연락처 · 계약 기간 `—` · 코스·지점 · 헬스체크 뱃지) · 목록 노드 없으면 그룹 `—`
+- [ ] T798 [US3] 상세 페이지 골격 in src/pages/admin/locations/LocationDetailPage.tsx — 뒤로(`?group` 보존) · 이름 · 부제 그룹 경로 · 액션(정보 수정 · 삭제) · 탭 `?tab=health` · 🔴 로딩 / 찾을 수 없음(숫자 아님 · 400) 구분
+- [ ] T799 [US3] 요약 in src/features/sites/components/SiteSummary.tsx — 5칸(소속 그룹 · 주소 · 연락처 · 코스·지점 · 헬스체크 뱃지) · 목록 노드 없으면 그룹 `—`
 - [ ] T800 [US3] 담당 관리자 탭 in src/features/sites/components/SiteManagersTab.tsx — `GetGroupAdminList`(소속 그룹) `isInclude` 행 · 이름 · 권한 · [관리자 지정] **disabled** + 툴팁 · 빈 상태
-- [ ] T801 [US3] 🔴 정보 수정 in src/features/sites/form/SiteFormDialog.tsx(수정 모드) + LocationDetailPage.tsx — 초기값(상세 + 목록 노드의 그룹) · **연락처 지우면 `tel: ""`** · 하위 사업장이면 그룹 disabled + 도움말 · 하위 있으면 "하위 N개도 함께 이동" · 지사 아닌 현재 그룹을 선택지에 유지 · 400 "사업장이 존재하지 않습니다." → 목록으로
+- [ ] T801 [US3] 🔴 정보 수정 in src/features/sites/form/SiteForm.tsx(수정 모드) + LocationDetailPage.tsx — 초기값(상세 + 목록 노드의 그룹) · **연락처 지우면 `tel: ""`** · 하위 사업장이면 그룹 disabled + 도움말 · 하위 있으면 "하위 N개도 함께 이동" · 지사 아닌 현재 그룹을 선택지에 유지 · 400 "사업장이 존재하지 않습니다." → 목록으로
 - [ ] T802 [US3] 🔴 삭제 확인 in src/features/sites/components/SiteDeleteDialog.tsx — `AppAlertDialog` · 하위·코스·지점·근무자 수 문구(0 생략 · "영향이 있습니다") · 성공 → 토스트 + 목록(`?group` 보존)
 - [ ] T803 [US3] [P] 테스트 in src/pages/admin/locations/__tests__/LocationDetailPage.test.tsx — 요약 · 탭 URL · 담당 관리자 · 수정 바디 3종(`tel: ""` · 하위 그룹 disabled · 비지사 유지) · 삭제 문구 · 없는 사업장 · 로딩 중 빈 상태 안 뜸
 
