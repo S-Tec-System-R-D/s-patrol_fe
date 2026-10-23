@@ -53,6 +53,13 @@ const seedGroups: StoredGroup[] = [
   { groupSeq: 3, groupName: '강동지사', parentGroupSeq: 2 },
   { groupSeq: 4, groupName: 'test', parentGroupSeq: 1 },
   { groupSeq: 6, groupName: '테스트그룹', parentGroupSeq: 1 },
+  // 🔴 사업장은 지사(layer 2)에만 둔다(사용자 결정 2026-10-23). 실서버는 회사·본부에도 사업장이 있어
+  // 그 사업장을 `본부할당 사업장` 지사로 옮겼다 — 7~11 은 실서버에 없는 그룹이다.
+  { groupSeq: 7, groupName: '본부할당 사업장', parentGroupSeq: 2 },
+  { groupSeq: 8, groupName: '본부할당 사업장', parentGroupSeq: 4 },
+  { groupSeq: 9, groupName: '본부할당 사업장', parentGroupSeq: 6 },
+  { groupSeq: 10, groupName: '본사 직할', parentGroupSeq: 1 },
+  { groupSeq: 11, groupName: '본부할당 사업장', parentGroupSeq: 10 },
 ]
 
 /** 헬스체크를 한 번도 설정하지 않은 사업장의 값(최소 생성과 같다 — 실측) */
@@ -74,12 +81,12 @@ const exception = (detailSeq: number, start: string, end: string): ExceptionTime
 /** 실서버 사업장 11곳(`GetSiteDetail` 실측 2026-10-23) */
 const seedSites: StoredSite[] = [
   {
-    siteSeq: 1, siteName: '강남우체국', groupSeq: 1, parentSiteSeq: null,
+    siteSeq: 1, siteName: '강남우체국', groupSeq: 11, parentSiteSeq: null,
     tel: '333', address: '서울시 강남구 개포로619', ...NO_HEALTH_CHECK,
     exceptionTime: [], userCount: 0, courseCount: 0, pointCount: 0,
   },
   {
-    siteSeq: 2, siteName: '테스트사업장', groupSeq: 2, parentSiteSeq: null,
+    siteSeq: 2, siteName: '테스트사업장', groupSeq: 7, parentSiteSeq: null,
     tel: null, address: null, ...NO_HEALTH_CHECK,
     exceptionTime: [exception(1, '14:00:00', '14:10:00')], userCount: 1, courseCount: 3, pointCount: 4,
   },
@@ -110,14 +117,14 @@ const seedSites: StoredSite[] = [
     exceptionTime: [], userCount: 4, courseCount: 2, pointCount: 5,
   },
   {
-    siteSeq: 5, siteName: '테스트 사업장', groupSeq: 4, parentSiteSeq: null,
+    siteSeq: 5, siteName: '테스트 사업장', groupSeq: 8, parentSiteSeq: null,
     tel: '0212345678', address: '개포로 619',
     healthCheckYn: false, healthCheckInterval: 1, healthCheckTimeout: 10, healthCheckRetry: 2,
     healthCheckStartTime: '09:00:00', healthCheckEndTime: '09:30:00',
     exceptionTime: [exception(3, '17:00:00', '17:33:00')], userCount: 0, courseCount: 0, pointCount: 0,
   },
   {
-    siteSeq: 6, siteName: '테스트 사업장2', groupSeq: 4, parentSiteSeq: null,
+    siteSeq: 6, siteName: '테스트 사업장2', groupSeq: 8, parentSiteSeq: null,
     tel: '0212345678', address: '개포로 619',
     healthCheckYn: false, healthCheckInterval: 60, healthCheckTimeout: 20, healthCheckRetry: 2,
     healthCheckStartTime: '08:00:00', healthCheckEndTime: '00:00:00',
@@ -125,21 +132,21 @@ const seedSites: StoredSite[] = [
     userCount: 5, courseCount: 7, pointCount: 16,
   },
   {
-    siteSeq: 7, siteName: '테스트 사업장2-1', groupSeq: 4, parentSiteSeq: 6,
+    siteSeq: 7, siteName: '테스트 사업장2-1', groupSeq: 8, parentSiteSeq: 6,
     tel: '0212345678', address: '개포로 123',
     healthCheckYn: false, healthCheckInterval: 1, healthCheckTimeout: 10, healthCheckRetry: 2,
     healthCheckStartTime: '09:00:00', healthCheckEndTime: '09:30:00',
     exceptionTime: [], userCount: 0, courseCount: 8, pointCount: 7,
   },
   {
-    siteSeq: 8, siteName: '테스트 사업장2-2', groupSeq: 4, parentSiteSeq: 6,
+    siteSeq: 8, siteName: '테스트 사업장2-2', groupSeq: 8, parentSiteSeq: 6,
     tel: '0212345678', address: '개포로45677',
     healthCheckYn: false, healthCheckInterval: 1, healthCheckTimeout: 10, healthCheckRetry: 2,
     healthCheckStartTime: '09:00:00', healthCheckEndTime: '09:30:00',
     exceptionTime: [], userCount: 0, courseCount: 0, pointCount: 0,
   },
   {
-    siteSeq: 12, siteName: '수정사업장됨', groupSeq: 6, parentSiteSeq: null,
+    siteSeq: 12, siteName: '수정사업장됨', groupSeq: 9, parentSiteSeq: null,
     tel: 'string', address: '테스트주소',
     healthCheckYn: true, healthCheckInterval: 33, healthCheckTimeout: 22, healthCheckRetry: 2,
     healthCheckStartTime: '11:00:00', healthCheckEndTime: '11:20:00',
@@ -163,7 +170,7 @@ let groups: StoredGroup[] = []
 let sites: StoredSite[] = []
 let assignments = new Map<number, number[]>()
 /** 실서버 identity 를 흉내 — 시드 최대 seq 다음부터 */
-let nextGroupSeq = 7
+let nextGroupSeq = 12
 let nextSiteSeq = 13
 let nextDetailSeq = 6
 
@@ -175,7 +182,7 @@ export const resetGroupStore = (): void => {
   groups = seedGroups.map((group) => ({ ...group }))
   sites = seedSites.map((site) => ({ ...site, exceptionTime: site.exceptionTime.map((row) => ({ ...row })) }))
   assignments = new Map(Object.entries(seedAssignments).map(([seq, users]) => [Number(seq), [...users]]))
-  nextGroupSeq = 7
+  nextGroupSeq = 12
   nextSiteSeq = 13
   nextDetailSeq = 6
 }

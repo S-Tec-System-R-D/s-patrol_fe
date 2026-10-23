@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { MS_ROLE_CLAIM } from '@/features/auth/types/claims'
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
+import { addGroup } from '@/features/groups/api/addGroup'
 import { resetGroupStore } from '@/mocks/handlers/groups'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
@@ -15,6 +16,7 @@ import { GroupEditTrigger } from '../GroupEditTrigger'
 /**
  * 관리그룹 편집 (`spec 043` T758). 시드 = 실서버 트리:
  * 1 에스텍시스템(루트) ─ 2 테스트사업장(수정) ─ 3 강동지사(지사, 사업장 4) / 4 test / 6 테스트그룹.
+ * 사업장은 지사에만 있다 — 회사·본부 사업장은 `본부할당 사업장` 지사(7 · 8 · 9 · 11, 10 = 본사 직할 본부)로 옮긴 mock 시드.
  */
 
 const ADD_PATH = '/api/v1/Group/W/sign/AddGroup'
@@ -56,6 +58,7 @@ const rowOf = (list: HTMLElement, name: string) =>
 
 describe('GroupEditDialog', () => {
   it('🔴 구조 — 회사 머리 줄(+ 본부 추가 · 변경/삭제 없음) · 본부 카드 · 지사 행(사업장 N개) · 지사 아래로는 추가 없음', async () => {
+    await addGroup({ parentGroupSeq: 1, groupName: '빈본부', userSeq: [] })
     const list = await openEditor()
 
     // 회사는 목록 밖 머리 줄
@@ -81,7 +84,7 @@ describe('GroupEditDialog', () => {
     expect(screen.queryByLabelText('강동지사 하위 그룹 추가')).not.toBeInTheDocument()
 
     // 지사 없는 본부
-    expect(within(rowOf(list, 'test')).getByText('지사가 없습니다')).toBeInTheDocument()
+    expect(within(rowOf(list, '빈본부')).getByText('지사가 없습니다')).toBeInTheDocument()
     expect(screen.queryByText(/관리자 \d/)).not.toBeInTheDocument()
   })
 
@@ -137,7 +140,7 @@ describe('GroupEditDialog', () => {
     expect(within(alert).getByText('본부그룹 삭제')).toBeInTheDocument()
     expect(
       within(alert).getByText(
-        "'테스트사업장(수정)' 그룹을 삭제합니다. 하위 그룹 1개와 소속 사업장 5개도 함께 삭제됩니다. 삭제된 데이터는 복구할 수 없습니다."
+        "'테스트사업장(수정)' 그룹을 삭제합니다. 하위 그룹 2개와 소속 사업장 5개도 함께 삭제됩니다. 삭제된 데이터는 복구할 수 없습니다."
       )
     ).toBeInTheDocument()
     await userEvent.click(within(alert).getByRole('button', { name: '삭제' }))

@@ -31,10 +31,10 @@
 
 > **독립 테스트 기준**: MSW 로 `/admin/locations?group=3` → 강동지사 사업장 + 하위 들여쓰기 · `?q=` 검색 · 행 클릭 → 상세 경로.
 
-- [ ] T789 [US1] 목록 표 in src/features/sites/components/SiteTable.tsx — 열 6개(코스·지점 · 담당 관리자 · 운영 상태 `—`) · XL 미만 주소 보조 줄 · 하위 사업장 `└` 들여쓰기 · 행 클릭 · "총 N개" · 빈 상태 2종 · 로딩 스켈레톤 · 실패 + 다시 시도
-- [ ] T790 [US1] 필터 줄 in src/features/sites/components/SiteFilterBar.tsx — 검색(`?q=`, 이름·주소) · 운영 상태 세그먼트 **disabled** + 툴팁
-- [ ] T791 [US1] 페이지 in src/pages/admin/locations/LocationsPage.tsx — 빈 본문 → 필터 줄 + 표 · 부제 "{그룹명} 하위 사업장 N개" · [사업장 추가] 자리(T795 에서 연결)
-- [ ] T792 [US1] [P] 테스트 in src/pages/admin/locations/__tests__/LocationsPage.test.tsx — 그룹 범위 · 하위 들여쓰기 · 검색 · `—` 열 · 빈 상태 · 행 클릭 이동
+- [x] T789 [US1] 목록 열 in src/features/sites/components/SiteColumns.tsx(표는 기존 `AppTable` — 파일명 변경, 사용자 승인 2026-10-23) — 열 6개(코스·지점 · 담당 관리자 · 운영 상태 `—`) · XL 미만 주소 보조 줄 · 하위 사업장 `└` 들여쓰기 · 행 클릭 · "총 N개" · 빈 상태 2종 · 로딩 스켈레톤 · 실패 + 다시 시도
+- [x] T790 [US1] 필터 줄 — 🔴 별도 파일 없이 LocationsPage.tsx 안에(`UsersPage` 패턴, 사용자 승인 2026-10-23) — 검색(`?q=`, 이름·주소, 300ms 디바운스) · 운영 상태 `AppSelect` **disabled** + 툴팁(목업 세그먼트 대신 기존 필터 컴포넌트)
+- [x] T791 [US1] 페이지 in src/pages/admin/locations/LocationsPage.tsx — 빈 본문 → 필터 줄 + 표 · 부제 "{그룹명} 하위 사업장 N개" · [사업장 추가] 는 T795 에서
+- [x] T792 [US1] [P] 테스트 in src/pages/admin/locations/__tests__/LocationsPage.test.tsx — 그룹 범위 · 하위 들여쓰기 · 검색 · `—` 열 · 빈 상태 · 행 클릭 이동
 
 ## Phase 4: US2 — 사업장 추가
 

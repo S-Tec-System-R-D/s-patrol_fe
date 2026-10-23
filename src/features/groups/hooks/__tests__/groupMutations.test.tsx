@@ -20,6 +20,7 @@ import { useGroupTree } from '../useGroupTree'
  *
  * 시드 = 실서버 트리(실측 2026-10-22): 1 에스텍시스템 ─ 2 테스트사업장(수정) ─ 3 강동지사 / 4 test / 6 테스트그룹.
  * 할당: g2 = [3, 4] · g6 = [1, 3, 4].
+ * 사업장은 지사에만 있다 — 회사·본부 사업장은 `본부할당 사업장` 지사(7 · 8 · 9 · 11, 10 = 본사 직할 본부)로 옮긴 mock 시드.
  */
 
 const UPDATE_PATH = '/api/v1/Group/W/sign/UpdateGroup'
@@ -81,6 +82,7 @@ describe('추가', () => {
 
     await waitFor(() =>
       expect(findGroup(result.current.tree.data!, 6)!.children.map((g) => g.groupName)).toEqual([
+        '본부할당 사업장',
         '신규지사',
       ])
     )
