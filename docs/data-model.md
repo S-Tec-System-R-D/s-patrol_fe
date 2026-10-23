@@ -207,6 +207,10 @@ export type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN'
 
 ```ts
 // 본사 관리자(시스템관리자/Master/Manager) — /admin/admins
+// 🔴 `spec 045` 에서 **화면은 서버 타입으로 옮겼다** — 관리자 목록 API 가 없어(B-61) 행 = `GroupAdminRow`
+//    (`features/groups/types/group.ts`), 담당 = 그룹마다 `isInclude`, 사번 · 연락처 = `UserDetail`(관리자는 `siteSeq: 0`).
+//    아래 `Admin`·`AdminSummary` 는 **설계 의도 기록**으로 남긴다. 서버에 없는 것: 소속 그룹(→ 담당 그룹 여러 개로 합침) ·
+//    상태(넣지 않음) · 등록일 · 목록 연락처(B-61) · 담당 사업장(그룹 단위만 — B-58)
 export interface Admin {
   id: string
   name: string
@@ -598,8 +602,9 @@ export interface Keyword {
 
 | 화면 | 엔드포인트(예상) | 응답 형태 |
 |---|---|---|
-| 관리자 목록 | `GET /api/admin/admins` | `ApiListResponse<AdminSummary>` |
-| 관리자 상세 | `GET /api/admin/admins/:id` | `ApiDetailResponse<Admin>` |
+| 관리자 목록 | ✅ 트리의 그룹마다 `GET Group/W/sign/GetGroupAdminList?groupSeq`(`spec 045` — 목록 API 없음, B-61) | `GroupAdminRow[]` × 그룹 수 → 행 = 루트 응답 · 담당 그룹 = `isInclude` |
+| 관리자 상세(모달) | ✅ `GET User/W/sign/UserDetail?userId` | `ApiDetailResponse<UserDetail>` — 사번 · 연락처만 쓴다(`siteSeq: 0` · `siteName: null`) |
+| 관리자 담당 그룹 변경 | ✅ `PUT Group/W/sign/UpdateGroup` | `true` — `userSeq` 교체(B-50), PUT 직전 재조회 |
 | 관리그룹 트리 | ✅ `GET Login/W/sign/AdminSiteSelect`(`spec 043`) | `ApiDetailResponse<GroupNode>` (루트 1개) |
 | 그룹 할당 관리자 | ✅ `GET Group/W/sign/GetGroupAdminList?groupSeq` | `GroupAdminRow[]`(`isInclude`) — 이름 변경 전 할당 보존용 |
 | 사업장 목록 | ✅ `GET Group/W/sign/GetGroupList`(`spec 044`) | `ApiDetailResponse<GroupListNode>`(루트 1개 · 클라이언트가 그룹 범위 · 검색) |
@@ -676,6 +681,9 @@ export interface LoginRequest {
 ```
 
 ### 5-2. 본사 — 관리자 / 그룹 / 사업장
+
+> 🔴 관리자 `Create`·`Update`·`AssignLocations` 는 **설계 의도 기록**이다 — 관리자 API 가 없다(B-59, `spec 045`). 할당은
+> `UpdateGroupRequest.userSeq`(그룹 단위)로 한다.
 
 ```ts
 export interface CreateAdminRequest {
