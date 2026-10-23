@@ -50,6 +50,15 @@ export const scopeAdminRows = (rows: AdminRow[], selected: GroupNode): AdminRow[
 /** 트리 옆 수 — 범위와 같은 규칙(한 사람이 여러 자손 그룹에 있어도 1명) */
 export const countAdmins = (rows: AdminRow[], group: GroupNode): number => scopeAdminRows(rows, group).length
 
+/**
+ * 담당 그룹으로 고를 수 있는 그룹 — 트리 순서(`spec 045` T841). 🔴 **회사(루트)는 뺀다** — 루트 할당 변경은 미실측(OQ-045-A).
+ * Master 의 트리는 자기 할당 그룹만이라(실측) 선택지도 자연히 그 안이다.
+ */
+export const groupChoices = (root: GroupNode, exclude: GroupNode[] = []): GroupNode[] => {
+  const excluded = new Set(exclude.map((group) => group.groupSeq))
+  return walkGroups(root).filter((group) => !isTopGroup(group) && !excluded.has(group.groupSeq))
+}
+
 /** URL `?role=` 값 — 목업 세그먼트 "전체 / 마스터 / 매니저" */
 const ROLE_FILTER: Record<string, number> = { master: ADMIN_CODE.MASTER, manager: ADMIN_CODE.MANAGER }
 

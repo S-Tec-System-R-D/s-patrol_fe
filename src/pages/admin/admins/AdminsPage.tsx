@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { FilterXIcon, PlusIcon, ShieldIcon, TriangleAlertIcon, UsersIcon } from 'lucide-react'
 
 import AppButton from '@/components/app/AppButton'
+import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
 import AppInput from '@/components/app/AppInput'
 import AppPageHeader from '@/components/app/AppPageHeader'
@@ -9,10 +10,16 @@ import AppSelect from '@/components/app/AppSelect'
 import AppTable from '@/components/AppTable'
 import { adminColumns } from '@/features/admins/components/AdminColumns'
 import AdminDetailDialog from '@/features/admins/components/AdminDetailDialog'
-import LockedAccountButton from '@/features/admins/components/LockedAccountButton'
+import AddAdminForm from '@/features/admins/form/AddAdminForm'
 import { useAdminAssignments } from '@/features/admins/hooks/useAdminAssignments'
 import { countAdmins, filterAdminRows, scopeAdminRows } from '@/features/admins/lib/adminList'
-import { adminRoleFilterOptions } from '@/features/admins/lib/adminRole'
+import {
+  ADMIN_CODE,
+  adminRoleFilterOptions,
+  adminRoleLabel,
+  creatableAdminCode,
+} from '@/features/admins/lib/adminRole'
+import { useMe } from '@/features/auth/hooks/useMe'
 import type { GroupNode } from '@/features/auth/types/site'
 import { GroupEditTrigger } from '@/features/groups/components/GroupEditTrigger'
 import { GroupFilterButton } from '@/features/groups/components/GroupFilterButton'
@@ -29,7 +36,7 @@ import { ALL_VALUE } from '@/lib/listQuery'
  *
  * 🔴 **관리자 목록 API 가 없다**(B-61) — 트리의 그룹마다 `GetGroupAdminList` 를 불러 행 · 담당 그룹을 만든다
  * (`useAdminAssignments`). 전부 받기 전에는 표를 그리지 않는다.
- * 🔴 **[관리자 추가] 는 막는다**(B-59) — 관리자 생성 API 가 없다.
+ * 🔴 **[관리자 추가] 는 UI 만**(B-59 — 관리자 생성 API 가 없다) — 검증 후 안내 토스트(`AddAdminForm`, 045 후속).
  * 🔴 서버 필터 · 페이지네이션 없음 — 관리자는 수 명이다.
  */
 
@@ -40,6 +47,10 @@ const AdminsPage = () => {
   const { selected } = useGroupParam(assignments.root)
   const [params, setParams] = useQueryParams<'q' | 'role'>()
   const [selectedUserSeq, setSelectedUserSeq] = useState<number | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
+  const me = useMe().data
+  /** 로그인 권한이 만들 권한을 정한다(고정 — 사용자 결정 2026-10-23). 매니저는 `null` */
+  const createCode = creatableAdminCode(me?.role)
 
   /** 🔴 입력은 로컬 state, URL 은 디바운스 뒤에. URL 이 밖에서 바뀌면 입력창을 맞춘다(`LocationsPage` 승계) */
   const [keywordDraft, setKeywordDraft] = useState(params.q ?? '')
@@ -70,7 +81,7 @@ const AdminsPage = () => {
 
   /** 할당 조회가 끝나기 전에는 수를 그리지 않는다 — 틀린 0 보다 빈칸이 낫다 */
   const count = (group: GroupNode) => (allRows ? countAdmins(allRows, group) : null)
-  const filterProps = { unitLabel: '관리자', count, headerAction: <GroupEditTrigger /> }
+  const filterProps = { unitLabel: '관리자', count, countUnit: '명', headerAction: <GroupEditTrigger /> }
 
   return (
     <div className="flex flex-col gap-4 p-8">
@@ -105,8 +116,28 @@ const AdminsPage = () => {
               className="w-auto"
             />
             <div className="flex-1" />
-            {/* 다른 목록 화면과 같이 필터 줄 끝 — 🔴 막혀 있다(B-59) */}
-            <LockedAccountButton icon={PlusIcon} label="관리자 추가" variant="default" />
+            {/* 다른 목록 화면과 같이 필터 줄 끝 · 🔴 매니저는 만들 권한이 없어 그리지 않는다 */}
+            {createCode !== null && root && (
+              <AppDialog
+                title="관리자 추가"
+                description="새 본사 관리자를 등록합니다."
+                open={addOpen}
+                onOpenChange={setAddOpen}
+                contentClassName="sm:max-w-[520px]"
+                trigger={
+                  <AppButton icon={PlusIcon} iconSize={14}>
+                    관리자 추가
+                  </AppButton>
+                }
+              >
+                <AddAdminForm
+                  codeSeq={createCode}
+                  myRoleLabel={adminRoleLabel(me?.role === 'SYSTEM' ? ADMIN_CODE.SYSTEM : ADMIN_CODE.MASTER, '')}
+                  root={root}
+                  onCancel={() => setAddOpen(false)}
+                />
+              </AppDialog>
+            )}
           </div>
 
           {assignments.isError ? (

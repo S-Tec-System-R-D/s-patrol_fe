@@ -12,6 +12,7 @@ import { GroupTreeHeader, GroupTreeStatus } from './GroupFilterPanel'
 interface GroupFilterButtonProps {
   unitLabel: string
   count?: (group: GroupNode) => number | null
+  countUnit?: string
   headerAction?: ReactNode
 }
 
@@ -24,7 +25,7 @@ const XL_QUERY = '(min-width: 1280px)'
  * - 경로는 루트를 빼고 `본부 › 지사`, 마지막만 굵게(루트를 고르면 루트 이름).
  * - 고르면 닫힌다. 🔴 **열린 채로 XL 이상으로 넓어지면 닫는다** — 버튼은 CSS 로 숨지만 시트는 포털이라 남는다.
  */
-export const GroupFilterButton = ({ unitLabel, count, headerAction }: GroupFilterButtonProps) => {
+export const GroupFilterButton = ({ unitLabel, count, countUnit, headerAction }: GroupFilterButtonProps) => {
   const tree = useGroupTree()
   const { selected, selectGroup } = useGroupParam(tree.data)
   const [open, setOpen] = useState(false)
@@ -74,6 +75,7 @@ export const GroupFilterButton = ({ unitLabel, count, headerAction }: GroupFilte
                 root={tree.data}
                 selectedSeq={selected?.groupSeq}
                 count={count}
+                countUnit={countUnit}
                 onSelect={(groupSeq) => {
                   selectGroup(groupSeq)
                   setOpen(false)

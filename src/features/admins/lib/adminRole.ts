@@ -1,5 +1,6 @@
 import type { AppSelectOption } from '@/components/app/AppSelect'
 import { ALL_VALUE } from '@/lib/listQuery'
+import type { Role } from '@/types/enum'
 
 /**
  * 본사 관리자 권한 (`spec 045` T816) — `codeSeq` 실측 값(`api-spec.md` §4).
@@ -32,6 +33,13 @@ export const adminRoleFilterOptions: AppSelectOption[] = [
   { value: 'master', label: '마스터' },
   { value: 'manager', label: '매니저' },
 ]
+
+/**
+ * 로그인 권한이 만들 수 있는 권한 — 목업 `CREATABLE_ROLE`(사용자 결정 2026-10-23: 고정, 고르지 않는다).
+ * 시스템관리자 → 마스터 · 마스터 → 매니저 · 매니저 → 없음([관리자 추가] 를 그리지 않는다). 🔴 서버는 검사하지 않는다(B-60).
+ */
+export const creatableAdminCode = (role: Role | undefined): number | null =>
+  role === 'SYSTEM' ? ADMIN_CODE.MASTER : role === 'MASTER' ? ADMIN_CODE.MANAGER : null
 
 /** 시스템 구축 시 만든 계정 — 수정 · 삭제할 수 없다(목업 잠금 안내) */
 export const isSystemAdmin = (codeSeq: number): boolean => codeSeq === ADMIN_CODE.SYSTEM

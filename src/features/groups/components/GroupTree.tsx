@@ -13,6 +13,8 @@ interface GroupTreeProps {
   onSelect: (groupSeq: number) => void
   /** 행 오른쪽 개수 — 화면이 정한다(사업장 화면 = `branchSiteCount`). `null` 이면 그 행은 비운다 */
   count?: (group: GroupNode) => number | null
+  /** 수 뒤 단위 — 사업장 `개` · 관리자 `명`(`spec 045` 후속) */
+  countUnit?: string
   /** 시트용 큰 행(44px) */
   large?: boolean
 }
@@ -24,7 +26,7 @@ interface GroupTreeProps {
  * 🔴 단계 구분(사용자 결정 2026-10-23, T774): 하위가 있는 그룹은 **펼침 화살표만**, 본부는 **본부 아이콘**,
  * 지사는 화살표 자리에 **네모 닷** + **글자 굵기**(회사 굵게 · 본부 중간 · 지사 보통). 선택은 배경·글자색으로만.
  */
-export const GroupTree = ({ root, selectedSeq, onSelect, count, large }: GroupTreeProps) => {
+export const GroupTree = ({ root, selectedSeq, onSelect, count, countUnit = '개', large }: GroupTreeProps) => {
   const [collapsed, setCollapsed] = useState<Set<number>>(() => new Set())
 
   const toggle = (groupSeq: number) =>
@@ -104,7 +106,8 @@ export const GroupTree = ({ root, selectedSeq, onSelect, count, large }: GroupTr
                 active ? 'text-point-foreground' : 'text-muted-foreground'
               )}
             >
-              {shownCount}개
+              {shownCount}
+              {countUnit}
             </span>
           )}
         </div>

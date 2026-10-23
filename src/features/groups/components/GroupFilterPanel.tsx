@@ -9,6 +9,8 @@ interface GroupFilterProps {
   /** 숫자 단위 캡션 — `사업장` · `관리자` */
   unitLabel: string
   count?: (group: GroupNode) => number | null
+  /** 수 뒤 단위 — 기본 `개`(`GroupTree`) */
+  countUnit?: string
   /** 머리 오른쪽 — 편집 버튼(`GroupEditTrigger`) */
   headerAction?: ReactNode
 }
@@ -30,7 +32,7 @@ export const GroupTreeStatus = ({ isError, onRetry }: { isError: boolean; onRetr
     </div>
   )
 
-export const GroupTreeHeader = ({ unitLabel, headerAction }: Omit<GroupFilterProps, 'count'>) => (
+export const GroupTreeHeader = ({ unitLabel, headerAction }: Pick<GroupFilterProps, 'unitLabel' | 'headerAction'>) => (
   // 제목은 카드 제목 크기(14px) — 10.5px 은 너무 작았다(사용자 지적 2026-10-22)
   <div className="flex items-center justify-between gap-2 px-3.5 pt-3 pb-2">
     <span className="flex items-baseline gap-1.5">
@@ -46,7 +48,7 @@ export const GroupTreeHeader = ({ unitLabel, headerAction }: Omit<GroupFilterPro
  * sticky 는 **감싸는 쪽(페이지)** 이 건다 — 자기 높이만 한 래퍼 안에서 걸면 붙지 않는다.
  * 선택은 `?group`(`useGroupParam`). 트리가 실패해도 본문은 그대로 그린다(패널만 실패 표시).
  */
-export const GroupFilterPanel = ({ unitLabel, count, headerAction }: GroupFilterProps) => {
+export const GroupFilterPanel = ({ unitLabel, count, countUnit, headerAction }: GroupFilterProps) => {
   const tree = useGroupTree()
   const { selected, selectGroup } = useGroupParam(tree.data)
 
@@ -59,6 +61,7 @@ export const GroupFilterPanel = ({ unitLabel, count, headerAction }: GroupFilter
           selectedSeq={selected?.groupSeq}
           onSelect={selectGroup}
           count={count}
+          countUnit={countUnit}
         />
       ) : (
         <GroupTreeStatus isError={tree.isError} onRetry={() => tree.refetch()} />

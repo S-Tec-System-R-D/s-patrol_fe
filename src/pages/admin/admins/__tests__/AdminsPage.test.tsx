@@ -3,10 +3,12 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ADD_ADMIN_UNSUPPORTED } from '@/features/admins/form/AddAdminForm'
 import { MS_ROLE_CLAIM } from '@/features/auth/types/claims'
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
+import { notify } from '@/lib/notify'
 import { resetGroupStore } from '@/mocks/handlers/groups'
 import { resetUserStore } from '@/mocks/handlers/users'
 import { server } from '@/mocks/server'
@@ -75,7 +77,24 @@ const record = () => {
 const openAdmin = async (name: string) => {
   await screen.findByRole('table')
   await userEvent.click(table().getAllByText(name)[0])
-  return screen.findByRole('dialog', { name })
+  return screen.findByRole('dialog', { name: DETAIL_TITLE })
+}
+
+/** 상세 모달 제목 — 이름은 프로필 머리에 있다(045 후속 T845 시안 A) */
+const DETAIL_TITLE = '관리자 상세'
+
+/** 🔴 `AppInput` 은 라벨이 입력칸에 연결돼 있지 않다(OQ-F) — 근무자 폼 테스트처럼 placeholder 로 찾는다 */
+const VALID_ADMIN: Record<string, string> = {
+  홍길동: '홍길동',
+  '010-0000-0000': '010-1234-5678',
+  '로그인에 쓰는 사번(8자리 이하)': '9904501',
+  '8자리 이상, 영문·숫자·특수문자 포함': 'Wf0test12!',
+  '비밀번호를 한 번 더 입력해주세요': 'Wf0test12!',
+}
+const fillAdminForm = async (form: ReturnType<typeof within>) => {
+  for (const [placeholder, value] of Object.entries(VALID_ADMIN)) {
+    await userEvent.type(form.getByPlaceholderText(placeholder), value)
+  }
 }
 
 beforeEach(() => {
@@ -100,6 +119,15 @@ describe('AdminsPage — 목록 (US1)', () => {
     ])
     const headers = table().getAllByRole('columnheader').map((th) => th.textContent)
     expect(headers).toEqual(['이름', '권한', '담당 그룹'])
+  })
+
+  it('트리 수는 명 단위 — 그룹 + 자손 할당', async () => {
+    renderPage()
+    await totalLine(5)
+    const rootItem = screen.getAllByRole('treeitem').find((item) => item.textContent?.includes('에스텍시스템'))
+    expect(rootItem?.textContent).toContain('5명')
+    const hqItem = screen.getAllByRole('treeitem').find((item) => item.textContent?.startsWith('test'))
+    expect(hqItem?.textContent).toContain('2명')
   })
 
   it('본부는 자기 + 자손 지사 할당', async () => {
@@ -148,15 +176,21 @@ describe('AdminsPage — 목록 (US1)', () => {
 })
 
 describe('AdminsPage — 상세 모달 (US2)', () => {
-  it('사번 · 연락처 · 담당 그룹 목록', async () => {
+  it('머리(이름 · 권한) · 기본 정보 row(사번 · 연락처) · 담당 그룹 본부별 "전체" 줄 · 아바타 없음', async () => {
     renderPage()
     const dialog = within(await openAdmin('김용우'))
-    expect(await dialog.findByText('232727')).toBeInTheDocument()
-    expect(dialog.getByText('010-0000-0003')).toBeInTheDocument()
+    const head = within(dialog.getByRole('region', { name: '기본 정보' }))
+    expect(head.getByText('김용우')).toBeInTheDocument()
+    expect(head.getByText('마스터')).toBeInTheDocument()
+    expect(await head.findByText('232727')).toBeInTheDocument()
+    expect(head.getByText('010-0000-0003')).toBeInTheDocument()
+    expect(head.getByText('사번')).toBeInTheDocument()
+    expect(dialog.queryByRole('img')).not.toBeInTheDocument()
+
+    // 🔴 g4(본부) 가 맡겨져 g8(그 지사) 개별 할당은 본부 줄에 포함된다 · 사업장 수는 자손 포함
     const groups = within(dialog.getByRole('region', { name: '담당 그룹' }))
-    expect(groups.getByText('테스트사업장(수정)')).toBeInTheDocument()
-    expect(groups.getByText('test › 본부할당 사업장')).toBeInTheDocument()
-    expect(groups.getByText('테스트그룹')).toBeInTheDocument()
+    const lines = groups.getAllByRole('listitem').map((item) => item.textContent)
+    expect(lines).toEqual(['테스트사업장(수정)본부 전체5개', 'test본부 전체4개', '테스트그룹본부 전체1개'])
   })
 
   it('🔴 시스템관리자 = 잠금 안내 + 닫기 · 계정 버튼 없음', async () => {
@@ -175,16 +209,94 @@ describe('AdminsPage — 상세 모달 (US2)', () => {
     )
     renderPage()
     const dialog = within(await openAdmin('김용우'))
-    expect(await dialog.findByText(/정보를 불러오지 못했습니다/)).toBeInTheDocument()
+    expect(await dialog.findAllByText('불러오지 못했습니다')).toHaveLength(2)
+    expect(dialog.getByRole('button', { name: '정보 다시 불러오기' })).toBeInTheDocument()
     expect(dialog.getByText('테스트그룹')).toBeInTheDocument()
   })
 })
 
-describe('AdminsPage — 계정 관리 자리 (US3)', () => {
-  it('🔴 추가 · 수정 · 비밀번호 · 삭제 disabled · 활성화 없음 · User 변경 요청 0건', async () => {
+describe('AdminsPage — 관리자 추가 UI (045 후속 T843 · T844)', () => {
+  const openAddForm = async () => {
+    await userEvent.click(await screen.findByRole('button', { name: '관리자 추가' }))
+    return within(await screen.findByRole('dialog', { name: '관리자 추가' }))
+  }
+
+  it('시스템관리자 → 마스터 고정 · 담당 그룹 칸 없음', async () => {
+    renderPage()
+    const form = await openAddForm()
+    expect(form.getByText('시스템관리자는 마스터 계정만 생성할 수 있습니다.')).toBeInTheDocument()
+    expect(form.queryByRole('list', { name: '그룹 선택' })).not.toBeInTheDocument()
+  })
+
+  it('필수 · 형식 검증', async () => {
+    renderPage()
+    const form = await openAddForm()
+    await userEvent.click(form.getByRole('button', { name: '등록' }))
+    expect(await form.findByText('사번을 입력해주세요.')).toBeInTheDocument()
+    expect(form.getByText('010-0000-0000 형식으로 입력해주세요.')).toBeInTheDocument()
+    expect(form.getByText('한 번 더 입력해주세요.')).toBeInTheDocument()
+  })
+
+  it('비밀번호 확인이 다르면 막는다', async () => {
+    const info = vi.spyOn(notify, 'info')
+    renderPage()
+    const form = await openAddForm()
+    await fillAdminForm(form)
+    const confirm = form.getByPlaceholderText('비밀번호를 한 번 더 입력해주세요')
+    await userEvent.clear(confirm)
+    await userEvent.type(confirm, 'Wf0test99!')
+    await userEvent.click(form.getByRole('button', { name: '등록' }))
+    expect(await form.findByText('비밀번호가 일치하지 않습니다.')).toBeInTheDocument()
+    expect(info).not.toHaveBeenCalled()
+    info.mockRestore()
+  })
+
+  it('🔴 검증을 통과해도 요청 0건 · 안내 토스트 · 모달 유지(B-59)', async () => {
+    const info = vi.spyOn(notify, 'info')
     const requests = record()
     renderPage()
-    expect(screen.getByRole('button', { name: '관리자 추가' })).toBeDisabled()
+    const form = await openAddForm()
+    await fillAdminForm(form)
+    await userEvent.click(form.getByRole('button', { name: '등록' }))
+
+    await waitFor(() => expect(info).toHaveBeenCalledWith(ADD_ADMIN_UNSUPPORTED))
+    expect(screen.getByRole('dialog', { name: '관리자 추가' })).toBeInTheDocument()
+    expect(requests.filter((r) => r.method !== 'GET')).toEqual([])
+    info.mockRestore()
+  })
+
+  it('🔴 마스터 → 매니저 고정 · 담당 그룹 필수(회사 제외)', async () => {
+    loginAs('Master', '3')
+    const info = vi.spyOn(notify, 'info')
+    renderPage()
+    const form = await openAddForm()
+    expect(form.getByText('마스터는 매니저 계정만 생성할 수 있습니다.')).toBeInTheDocument()
+    const picker = within(form.getByRole('list', { name: '그룹 선택' }))
+    expect(picker.queryByText('에스텍시스템')).not.toBeInTheDocument()
+
+    await fillAdminForm(form)
+    await userEvent.click(form.getByRole('button', { name: '등록' }))
+    expect(await form.findByText('담당 그룹을 하나 이상 선택해주세요.')).toBeInTheDocument()
+    expect(info).not.toHaveBeenCalled()
+
+    await userEvent.click(picker.getByLabelText('강동지사'))
+    await userEvent.click(form.getByRole('button', { name: '등록' }))
+    await waitFor(() => expect(info).toHaveBeenCalledWith(ADD_ADMIN_UNSUPPORTED))
+    info.mockRestore()
+  })
+
+  it('매니저에게는 [관리자 추가] 가 없다', async () => {
+    loginAs('Manager', '6')
+    renderPage()
+    await totalLine(5)
+    expect(screen.queryByRole('button', { name: '관리자 추가' })).not.toBeInTheDocument()
+  })
+})
+
+describe('AdminsPage — 계정 관리 자리 (US3)', () => {
+  it('🔴 수정 · 비밀번호 · 삭제 disabled · 활성화 없음 · User 변경 요청 0건', async () => {
+    const requests = record()
+    renderPage()
 
     const dialog = within(await openAdmin('김용우'))
     for (const name of ['삭제', '비밀번호', '수정']) {
@@ -196,32 +308,65 @@ describe('AdminsPage — 계정 관리 자리 (US3)', () => {
 })
 
 describe('AdminsPage — 담당 그룹 (US4)', () => {
-  it('🔴 추가: 선택지에 회사 · 이미 맡은 그룹 없음 · 그룹마다 읽기 → PUT(현재 ∪ 대상) · 트리 순서', async () => {
+  const openAssign = async (name: string) => {
+    const dialog = within(await openAdmin(name))
+    await userEvent.click(dialog.getByRole('button', { name: '그룹 추가' }))
+    return within(await screen.findByRole('dialog', { name: '담당 그룹 추가' }))
+  }
+
+  it('🔴 추가(본부 여러 개): 회사 없음 · 그룹마다 읽기 → PUT(현재 ∪ 대상) · 트리 순서 · "본부 전체" 로 보인다', async () => {
     const requests = record()
     renderPage()
-    const dialog = within(await openAdmin('테스트'))
-    await userEvent.click(dialog.getByRole('button', { name: '그룹 추가' }))
-
-    const picker = within(await screen.findByRole('dialog', { name: '담당 그룹 추가' }))
+    const picker = await openAssign('테스트')
     expect(picker.queryByText('에스텍시스템')).not.toBeInTheDocument()
-    // 선택 순서와 반대로 눌러도 트리 순서(3 → 4)로 보낸다
+    // 선택 순서와 반대로 눌러도 트리 순서(4 → 6)로 보낸다
+    await userEvent.click(picker.getByLabelText('테스트그룹'))
     await userEvent.click(picker.getByLabelText('test'))
-    await userEvent.click(picker.getByLabelText('강동지사'))
+    expect(within(picker.getByLabelText('선택한 그룹')).getByText('test 전체')).toBeInTheDocument()
     await userEvent.click(picker.getByRole('button', { name: '추가 (2)' }))
 
     await waitFor(() => expect(screen.queryByRole('dialog', { name: '담당 그룹 추가' })).not.toBeInTheDocument())
     const puts = requests.filter((r) => r.path === UPDATE_GROUP_PATH)
-    expect(puts.map((r) => r.body?.groupSeq)).toEqual([3, 4])
-    expect(puts.map((r) => r.body?.userSeq)).toEqual([[6], [3, 12, 6]])
+    expect(puts.map((r) => r.body?.groupSeq)).toEqual([4, 6])
+    expect(puts.map((r) => r.body?.userSeq)).toEqual([[3, 12, 6], [1, 3, 4, 6]])
     // 🔴 각 PUT 바로 앞에 그 그룹의 현재 할당 읽기(B-50)
     const sequence = requests
-      .filter((r) => r.method === 'PUT' || r.groupSeq === '3' || r.groupSeq === '4')
+      .filter((r) => r.method === 'PUT' || r.groupSeq === '4' || r.groupSeq === '6')
       .map((r) => (r.method === 'PUT' ? 'PUT' : `GET${r.groupSeq}`))
-    expect(sequence.join(' ')).toContain('GET3 PUT GET4 PUT')
+    expect(sequence.join(' ')).toContain('GET4 PUT GET6 PUT')
 
-    const groups = within(within(await screen.findByRole('dialog', { name: '테스트' })).getByRole('region', { name: '담당 그룹' }))
-    expect(await groups.findByText('테스트사업장(수정) › 강동지사')).toBeInTheDocument()
-    expect(groups.getByText('test')).toBeInTheDocument()
+    const groups = within(within(await screen.findByRole('dialog', { name: DETAIL_TITLE })).getByRole('region', { name: '담당 그룹' }))
+    await waitFor(() => expect(groups.getAllByText('본부 전체')).toHaveLength(2))
+  })
+
+  it('🔴 규칙: 본부를 고르면 지사가 체크 · 잠금 / 지사를 고르면 다른 본부가 막힌다', async () => {
+    renderPage()
+    const picker = await openAssign('테스트')
+
+    await userEvent.click(picker.getByLabelText('테스트사업장(수정)'))
+    expect(picker.getByLabelText('강동지사')).toBeChecked()
+    expect(picker.getByLabelText('강동지사')).toBeDisabled()
+    expect(picker.getByLabelText('test')).toBeEnabled()
+
+    await userEvent.click(picker.getByLabelText('테스트사업장(수정)'))
+    await userEvent.click(picker.getByLabelText('강동지사'))
+    expect(picker.getByLabelText('test')).toBeDisabled()
+    expect(picker.getByLabelText('테스트그룹')).toBeDisabled()
+    expect(picker.getByLabelText('테스트사업장(수정)')).toBeEnabled()
+  })
+
+  it('지사만 맡기면 본부 아래 지사 칩으로 보인다 · 검색은 맞은 그룹 + 그 본부', async () => {
+    renderPage()
+    const picker = await openAssign('테스트')
+    await userEvent.type(picker.getByLabelText('그룹 검색'), '강동')
+    const list = within(picker.getByRole('list', { name: '그룹 선택' }))
+    expect(list.getAllByRole('checkbox')).toHaveLength(2) // 본부(맥락) + 강동지사
+    await userEvent.click(list.getByLabelText('강동지사'))
+    await userEvent.click(picker.getByRole('button', { name: '추가 (1)' }))
+
+    const groups = within(within(await screen.findByRole('dialog', { name: DETAIL_TITLE })).getByRole('region', { name: '담당 그룹' }))
+    const branches = within(await groups.findByRole('list', { name: '테스트사업장(수정) 지사' }))
+    expect(branches.getByText('강동지사')).toBeInTheDocument()
   })
 
   it('🔴 해제: PUT(현재 − 대상) · 회사 행엔 해제 없음', async () => {

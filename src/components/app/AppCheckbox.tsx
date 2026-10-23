@@ -3,7 +3,8 @@ import { cn } from '@/lib/utils'
 import { CheckIcon } from 'lucide-react'
 
 interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
-  label?: string
+  /** 글자 외 노드도 받는다 — 검색 강조(`spec 045` 담당 그룹 고르기) */
+  label?: React.ReactNode
   error?: string
 }
 
