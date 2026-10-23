@@ -19,6 +19,7 @@ import DeploymentsPage from '@/pages/service/deployments/DeploymentsPage'
 import NoticeListPage from '@/pages/service/notice/NoticeListPage'
 import NoticeDetailPage from '@/pages/service/notice/NoticeDetailPage'
 import AdminPlaceholderPage from '@/pages/admin/AdminPlaceholderPage'
+import LocationDetailPage from '@/pages/admin/locations/LocationDetailPage'
 import LocationsPage from '@/pages/admin/locations/LocationsPage'
 import { ForbiddenPage, NotFoundPage } from '@/pages/errors'
 import { RequireRoute } from '@/features/auth/components/RequireRoute'
@@ -139,6 +140,16 @@ export const router = createBrowserRouter([
             element: (
               <RequireRoute roles={['SYSTEM', 'MASTER', 'MANAGER']}>
                 <LocationsPage />
+              </RequireRoute>
+            ),
+            errorElement: <PageErrorFallback />,
+          },
+          // 사업장 상세(`spec 044` US3)
+          {
+            path: pathPatterns.adminLocationDetail,
+            element: (
+              <RequireRoute roles={['SYSTEM', 'MASTER', 'MANAGER']}>
+                <LocationDetailPage />
               </RequireRoute>
             ),
             errorElement: <PageErrorFallback />,

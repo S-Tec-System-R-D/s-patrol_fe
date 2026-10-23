@@ -1,6 +1,6 @@
 import z from 'zod'
 
-import type { AddSiteRequest } from '../types/site'
+import type { AddSiteRequest, UpdateSiteRequest } from '../types/site'
 
 /**
  * 사업장 추가 · 정보 수정 (`spec 044` T793).
@@ -24,4 +24,16 @@ export const toAddSiteRequest = (data: SiteFormData): AddSiteRequest => ({
   siteName: data.siteName,
   address: data.address,
   ...(data.tel ? { tel: data.tel } : {}),
+})
+
+/**
+ * 정보 수정 바디 — 🔴 **연락처는 늘 싣는다**: 지웠으면 `""` 라야 지워진다(생략·`null` 은 유지, 실측).
+ * 🔴 하위 사업장은 `groupSeq` 를 싣지 않는다 — 바꿀 수 없다(서버 400).
+ */
+export const toUpdateSiteRequest = (siteSeq: number, data: SiteFormData, canMove: boolean): UpdateSiteRequest => ({
+  siteSeq,
+  siteName: data.siteName,
+  address: data.address,
+  tel: data.tel,
+  ...(canMove ? { groupSeq: Number(data.groupSeq) } : {}),
 })

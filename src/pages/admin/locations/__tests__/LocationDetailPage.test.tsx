@@ -1,0 +1,225 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+
+import { addSite } from '@/features/sites/api/addSite'
+import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
+import { resetGroupStore } from '@/mocks/handlers/groups'
+import { server } from '@/mocks/server'
+import { makeAccessToken } from '@/test/jwt'
+import LocationDetailPage from '../LocationDetailPage'
+
+/**
+ * `/admin/locations/:id` 사업장 상세 (`spec 044` T803).
+ *
+ * 시드: 3 테테테(수정)1(강동지사 · 하위 4 · 헬스체크 사용 30분 · 코스 13 · 지점 15)
+ * / 6 테스트 사업장2(지사 8 · 하위 7·8 · 코스 7 · 지점 16 · 근무자 5) / 9 강동지사_추가사업장(전부 0).
+ * 지사 8 할당 = 김용우 · test.
+ */
+
+const UPDATE_PATH = '/api/v1/Site/W/sign/UpdateSite'
+
+const UrlProbe = () => {
+  const { pathname, search } = useLocation()
+  return <div data-testid="url">{pathname + search}</div>
+}
+
+const renderPage = (initialEntry: string) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+  })
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <UrlProbe />
+        <Routes>
+          <Route path="/admin/locations" element={<div>LIST_ROUTE</div>} />
+          <Route path="/admin/locations/:id" element={<LocationDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
+  )
+}
+
+const url = () => screen.getByTestId('url').textContent ?? ''
+
+const captureUpdates = () => {
+  const bodies: unknown[] = []
+  server.events.on('request:start', async ({ request }) => {
+    if (new URL(request.url).pathname === UPDATE_PATH) bodies.push(await request.clone().json())
+  })
+  return bodies
+}
+
+/** 정보 수정 모달을 연다 — 목록 노드를 찾아야 버튼이 열린다 */
+const openEdit = async (user: ReturnType<typeof userEvent.setup>) => {
+  const button = await screen.findByRole('button', { name: '정보 수정' })
+  await waitFor(() => expect(button).toBeEnabled())
+  await user.click(button)
+  return within(await screen.findByRole('dialog'))
+}
+
+beforeEach(() => {
+  clearTokens()
+  setAccessToken(makeAccessToken())
+  resetGroupStore()
+})
+
+afterEach(() => server.events.removeAllListeners())
+
+describe('LocationDetailPage — 머리 · 기본정보 · 담당 관리자', () => {
+  it('머리(경로 · 이름) · 기본정보 카드 · 헬스체크 뱃지 · 탭 · 운영 중지 · 계약 기간 없음', async () => {
+    renderPage('/admin/locations/3')
+    expect(await screen.findByRole('heading', { name: '테테테(수정)1' })).toBeInTheDocument()
+    expect(await screen.findAllByText('테스트사업장(수정) › 강동지사')).toHaveLength(2) // 머리 경로 + 소속 그룹 행
+    expect(screen.getByText('서울시')).toBeInTheDocument()
+    expect(screen.getByText('0123125165')).toBeInTheDocument()
+    expect(screen.getByText('13개 · 15개')).toBeInTheDocument()
+    expect(screen.getByText('1개')).toBeInTheDocument() // 하위 사업장
+    expect(screen.getByText('사용 · 30분')).toBeInTheDocument()
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument()
+    expect(screen.queryByText(/운영 중지|계약 기간/)).not.toBeInTheDocument()
+  })
+
+  it('하위 사업장이 없으면 그 행을 두지 않는다', async () => {
+    renderPage('/admin/locations/9')
+    await screen.findByText('경기도~~')
+    expect(screen.queryByText('하위 사업장')).not.toBeInTheDocument()
+  })
+
+  it('🔴 담당 관리자 = 소속 지사 그룹의 isInclude · 인원 수 · [관리자 지정] disabled', async () => {
+    renderPage('/admin/locations/6')
+    const list = await screen.findByRole('list', { name: '담당 관리자' })
+    expect(within(list).getAllByRole('listitem').map((item) => item.textContent)).toEqual(['김용우관리자', 'test관리자'])
+    expect(screen.getByText('2명')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '관리자 지정' })).toBeDisabled()
+  })
+
+  it('할당이 없으면 빈 상태', async () => {
+    renderPage('/admin/locations/3')
+    expect(await screen.findByText('지정된 담당 관리자가 없습니다.')).toBeInTheDocument()
+  })
+
+  it('뒤로 → 이 사업장의 지사를 고른 목록', async () => {
+    const user = userEvent.setup()
+    renderPage('/admin/locations/6')
+    await screen.findByRole('list', { name: '담당 관리자' })
+    await user.click(screen.getByRole('link', { name: '사업장 목록으로' }))
+    expect(url()).toBe('/admin/locations?group=8')
+  })
+})
+
+describe('LocationDetailPage — 정보 수정', () => {
+  it('🔴 연락처를 지우면 tel: "" · 최상위는 groupSeq 를 싣는다 → 닫히고 반영', async () => {
+    const user = userEvent.setup()
+    const bodies = captureUpdates()
+    renderPage('/admin/locations/9')
+    const dialog = await openEdit(user)
+
+    expect(dialog.getByLabelText('대표 연락처')).toHaveValue('02-1234-5677')
+    await user.clear(dialog.getByLabelText('대표 연락처'))
+    await user.clear(dialog.getByLabelText('사업장명'))
+    await user.type(dialog.getByLabelText('사업장명'), '강동 새이름')
+    await user.click(dialog.getByRole('button', { name: '저장' }))
+
+    expect(await screen.findByRole('heading', { name: '강동 새이름' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(bodies).toEqual([
+      { siteSeq: 9, siteName: '강동 새이름', address: '경기도~~', tel: '', groupSeq: 3 },
+    ])
+  })
+
+  it('🔴 하위 사업장은 그룹 disabled + 이유 · 바디에 groupSeq 없음', async () => {
+    const user = userEvent.setup()
+    const bodies = captureUpdates()
+    renderPage('/admin/locations/4')
+    const dialog = await openEdit(user)
+
+    expect(dialog.getByRole('combobox', { name: '소속 그룹' })).toBeDisabled()
+    expect(dialog.getByText('하위 사업장은 관리그룹을 변경할 수 없습니다. 모 사업장을 이동해주세요.')).toBeInTheDocument()
+    await user.click(dialog.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    expect(bodies[0]).not.toHaveProperty('groupSeq')
+  })
+
+  it('하위 사업장이 있으면 함께 이동한다고 알린다', async () => {
+    const user = userEvent.setup()
+    renderPage('/admin/locations/3')
+    const dialog = await openEdit(user)
+    expect(dialog.getByText('하위 사업장 1개도 함께 이동합니다.')).toBeInTheDocument()
+  })
+
+  it('🔴 지사가 아닌 현재 그룹(실서버 데이터)도 그대로 저장할 수 있다', async () => {
+    const user = userEvent.setup()
+    const bodies = captureUpdates()
+    await addSite({ groupSeq: 2, siteName: '본부소속', address: '서울' }) // 서버는 단계를 막지 않는다 — seq 13
+    renderPage('/admin/locations/13')
+    const dialog = await openEdit(user)
+
+    expect(dialog.getByRole('combobox', { name: '소속 그룹' })).toHaveTextContent('테스트사업장(수정)')
+    await user.click(dialog.getByRole('button', { name: '저장' }))
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    expect(bodies[0]).toMatchObject({ groupSeq: 2 })
+  })
+
+  it('🔴 같은 이름(409) → 모달과 입력값이 남는다', async () => {
+    const user = userEvent.setup()
+    renderPage('/admin/locations/9')
+    const dialog = await openEdit(user)
+    await user.clear(dialog.getByLabelText('사업장명'))
+    await user.type(dialog.getByLabelText('사업장명'), '지가사업장')
+    await user.click(dialog.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(dialog.getByRole('button', { name: '저장' })).toBeEnabled())
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(dialog.getByLabelText('사업장명')).toHaveValue('지가사업장')
+  })
+})
+
+describe('LocationDetailPage — 삭제', () => {
+  it('🔴 문구에 하위 · 코스 · 지점 · 근무자 수 → 삭제 후 지사 목록으로', async () => {
+    const user = userEvent.setup()
+    renderPage('/admin/locations/6')
+    await screen.findByRole('list', { name: '담당 관리자' })
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+
+    const alert = await screen.findByRole('alertdialog')
+    expect(
+      within(alert).getByText(
+        "'테스트 사업장2' 사업장을 삭제합니다. 하위 사업장 2개 · 순찰 코스 7개 · 지점 16개 · 근무자 5명 정보에 영향이 있습니다. 삭제된 데이터는 복구할 수 없습니다."
+      )
+    ).toBeInTheDocument()
+    await user.click(within(alert).getByRole('button', { name: '삭제' }))
+
+    expect(await screen.findByText('LIST_ROUTE')).toBeInTheDocument()
+    expect(url()).toBe('/admin/locations?group=8')
+  })
+
+  it('0 인 항목은 뺀다', async () => {
+    const user = userEvent.setup()
+    renderPage('/admin/locations/9')
+    await user.click(await screen.findByRole('button', { name: '삭제' }))
+    expect(
+      await screen.findByText("'강동지사_추가사업장' 사업장을 삭제합니다. 삭제된 데이터는 복구할 수 없습니다.")
+    ).toBeInTheDocument()
+  })
+})
+
+describe('LocationDetailPage — 없음 · 주소 오류', () => {
+  it('🔴 없는 사업장 → 불러오지 못함(조회 중에는 뜨지 않는다)', async () => {
+    renderPage('/admin/locations/999')
+    expect(screen.getByLabelText('사업장 불러오는 중')).toBeInTheDocument()
+    expect(screen.queryByText('사업장을 불러오지 못했습니다')).not.toBeInTheDocument()
+    expect(await screen.findByText('사업장을 불러오지 못했습니다')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '다시 시도' })).toBeInTheDocument()
+  })
+
+  it('숫자가 아닌 주소 → 요청 없이 안내 · 다시 시도 없음', () => {
+    renderPage('/admin/locations/abc')
+    expect(screen.getByText('주소가 올바르지 않습니다.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '다시 시도' })).not.toBeInTheDocument()
+  })
+})

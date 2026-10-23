@@ -16,6 +16,7 @@ import { siteSchema, type SiteFormData } from './schema'
  * - 🔴 **닫는 것은 호출부가 성공한 뒤에** — 같은 이름 409 는 전역 토스트가 서버 문구를 띄우고 입력값은 남는다(043 규약).
  * - 소속 그룹 선택지는 호출부가 준다(`groupOptions` — 지사만). 0개면 안내하고 제출을 막는다.
  * - 목업의 계약 기간은 **없다** — 사업장 개념에 없다(사용자 결정 2026-10-23).
+ * - 수정 모드(T801): 하위 사업장은 그룹을 바꿀 수 없어(서버 400) `groupDisabled` · 이유와 이동 영향은 `groupHint`.
  */
 
 const EMPTY_VALUES: SiteFormData = { siteName: '', groupSeq: '', address: '', tel: '' }
@@ -23,13 +24,24 @@ const EMPTY_VALUES: SiteFormData = { siteName: '', groupSeq: '', address: '', te
 interface SiteFormProps {
   options: GroupOption[]
   defaultValues?: Partial<SiteFormData>
+  groupDisabled?: boolean
+  groupHint?: string
   submitLabel: string
   pending: boolean
   onSubmit: (data: SiteFormData) => void
   onCancel: () => void
 }
 
-const SiteForm = ({ options, defaultValues, submitLabel, pending, onSubmit, onCancel }: SiteFormProps) => {
+const SiteForm = ({
+  options,
+  defaultValues,
+  groupDisabled,
+  groupHint,
+  submitLabel,
+  pending,
+  onSubmit,
+  onCancel,
+}: SiteFormProps) => {
   const {
     register,
     handleSubmit,
@@ -57,7 +69,7 @@ const SiteForm = ({ options, defaultValues, submitLabel, pending, onSubmit, onCa
         label="소속 그룹"
         required
         error={errors.groupSeq?.message}
-        hint={noBranch ? '지사가 없습니다. 관리그룹 편집에서 지사를 먼저 추가해주세요.' : undefined}
+        hint={noBranch ? '지사가 없습니다. 관리그룹 편집에서 지사를 먼저 추가해주세요.' : groupHint}
       >
         <Controller
           control={control}
@@ -69,7 +81,7 @@ const SiteForm = ({ options, defaultValues, submitLabel, pending, onSubmit, onCa
               options={options.map((option) => ({ value: String(option.groupSeq), label: option.label }))}
               value={field.value || undefined}
               onChange={field.onChange}
-              disabled={noBranch}
+              disabled={noBranch || groupDisabled}
               className="w-full"
             />
           )}

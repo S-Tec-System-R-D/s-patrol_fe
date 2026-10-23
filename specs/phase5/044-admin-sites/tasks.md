@@ -47,17 +47,17 @@
 
 ## Phase 5: US3 — 상세 · 정보 수정 · 삭제
 
-> **독립 테스트 기준**: MSW 로 `/admin/locations/3` → 요약 5칸 · 담당 관리자 탭 · 수정 바디(`tel: ""`) · 삭제 문구 · 없는 사업장 = 찾을 수 없음(로딩 중에는 아님).
+> **독립 테스트 기준**: MSW 로 `/admin/locations/3` → 기본정보 카드 · 담당 관리자 카드 · 수정 바디(`tel: ""`) · 삭제 문구 · 없는 사업장 = 찾을 수 없음(로딩 중에는 아님).
 
-- [ ] T797 [US3] 라우트 in src/router/index.tsx — `paths.adminLocationDetail` → 상세 페이지(Admin 3종)
-- [ ] T798 [US3] 상세 페이지 골격 in src/pages/admin/locations/LocationDetailPage.tsx — 뒤로(`?group` 보존) · 이름 · 부제 그룹 경로 · 액션(정보 수정 · 삭제) · 탭 `?tab=health` · 🔴 로딩 / 찾을 수 없음(숫자 아님 · 400) 구분
-- [ ] T799 [US3] 요약 in src/features/sites/components/SiteSummary.tsx — 5칸(소속 그룹 · 주소 · 연락처 · 코스·지점 · 헬스체크 뱃지) · 목록 노드 없으면 그룹 `—`
-- [ ] T800 [US3] 담당 관리자 탭 in src/features/sites/components/SiteManagersTab.tsx — `GetGroupAdminList`(소속 그룹) `isInclude` 행 · 이름 · 권한 · [관리자 지정] **disabled** + 툴팁 · 빈 상태
-- [ ] T801 [US3] 🔴 정보 수정 in src/features/sites/form/SiteForm.tsx(수정 모드) + LocationDetailPage.tsx — 초기값(상세 + 목록 노드의 그룹) · **연락처 지우면 `tel: ""`** · 하위 사업장이면 그룹 disabled + 도움말 · 하위 있으면 "하위 N개도 함께 이동" · 지사 아닌 현재 그룹을 선택지에 유지 · 400 "사업장이 존재하지 않습니다." → 목록으로
-- [ ] T802 [US3] 🔴 삭제 확인 in src/features/sites/components/SiteDeleteDialog.tsx — `AppAlertDialog` · 하위·코스·지점·근무자 수 문구(0 생략 · "영향이 있습니다") · 성공 → 토스트 + 목록(`?group` 보존)
-- [ ] T803 [US3] [P] 테스트 in src/pages/admin/locations/__tests__/LocationDetailPage.test.tsx — 요약 · 탭 URL · 담당 관리자 · 수정 바디 3종(`tel: ""` · 하위 그룹 disabled · 비지사 유지) · 삭제 문구 · 없는 사업장 · 로딩 중 빈 상태 안 뜸
+- [x] T797 [US3] 라우트 in src/router/index.tsx — `pathPatterns.adminLocationDetail` → 상세 페이지(Admin 3종)
+- [x] T798 [US3] 상세 페이지 골격 in src/pages/admin/locations/LocationDetailPage.tsx — 뒤로(`?group` 보존) · 이름 · 부제 그룹 경로 · 🔄 좌우 구조(재결정 2026-10-23 — 탭 · KPI형 요약 제거, 액션은 기본정보 카드 아래) · 🔴 로딩 / 찾을 수 없음(숫자 아님 · 400) 구분
+- [x] T799 [US3] 기본정보 카드 in src/features/sites/components/SiteInfoCard.tsx(🔄 `SiteSummary` 대체) — 소속 그룹 · 주소 · 연락처 · 코스·지점 · 하위 사업장(있을 때) · 목록 노드 없으면 그룹 `—`
+- [x] T800 [US3] 담당 관리자 카드 in src/features/sites/components/SiteManagersCard.tsx(🔄 탭 → 카드) + 훅 src/features/groups/hooks/useGroupAdminList.ts(`groupKeys.admins`) — 🔴 사업장 단위는 서버에 없어(B-58) **소속 지사 그룹 할당**으로 채운다(사용자 승인 2026-10-23) · `GetGroupAdminList`(소속 그룹) `isInclude` 행 · 이름 · 권한 · [관리자 지정] **disabled** + 툴팁 · 빈 상태
+- [x] T801 [US3] 🔴 정보 수정 in src/features/sites/form/SiteForm.tsx(수정 모드) + LocationDetailPage.tsx — 초기값(상세 + 목록 노드의 그룹) · **연락처 지우면 `tel: ""`** · 하위 사업장이면 그룹 disabled + 도움말 · 하위 있으면 "하위 N개도 함께 이동" · 지사 아닌 현재 그룹을 선택지에 유지 · 400 "사업장이 존재하지 않습니다." → 목록으로
+- [x] T802 [US3] 🔴 삭제 확인 in src/features/sites/components/SiteDeleteDialog.tsx — `AppAlertDialog` · 하위·코스·지점·근무자 수 문구(0 생략 · "영향이 있습니다") · 성공 → 토스트 + 목록(`?group` 보존)
+- [x] T803 [US3] [P] 테스트 in src/pages/admin/locations/__tests__/LocationDetailPage.test.tsx — 기본정보 · 담당 관리자 · 수정 바디 3종(`tel: ""` · 하위 그룹 disabled · 비지사 유지) · 삭제 문구 · 없는 사업장 · 로딩 중 빈 상태 안 뜸
 
-## Phase 6: US4 — 헬스체크 탭
+## Phase 6: US4 — 헬스체크 · 비상연락망 카드(상세 우측)
 
 > **독립 테스트 기준**: MSW 로 값 없는 사업장 토글 ON → 모달 · 저장 바디(시각 `HH:mm:00` · 예외 `detailSeq` 유지/0) · OFF 는 `healthCheckYn` 만 · (D) 문구 토스트.
 
@@ -66,7 +66,7 @@
 - [ ] T806 [US4] 폼 스키마 in src/features/sites/form/healthCheckSchema.ts — 시각 필수 · 시작≠종료 · 주기·타임아웃 ≥1 정수 · 반복 ≥0 정수 · 예외 행 시작≠종료
 - [ ] T807 [US4] 설정 모달 in src/features/sites/form/HealthCheckDialog.tsx — 500px · `<input type="time">` · 예외 행 추가/삭제(`useFieldArray`) · 저장 바디(`healthCheckYn: true` + 5개 + 예외 전체) · 실패 시 모달 유지
 - [ ] T808 [US4] 비상연락망 자리 in src/features/sites/components/EmergencyContactCard.tsx — 요일 7행(주말 구분) `미지정` · [지정] · 담당자 풀 [+] 전부 disabled · 안내 "비상연락망은 아직 지원되지 않습니다"
-- [ ] T809 [US4] 탭 조립 in LocationDetailPage.tsx — 헬스체크 카드 + 비상연락망 카드
+- [ ] T809 [US4] 조립 in LocationDetailPage.tsx — 우측 담당 관리자 카드 아래에 헬스체크 카드(Phase 5 자리 교체) + 비상연락망 카드
 - [ ] T810 [US4] [P] 테스트 in src/features/sites/components/__tests__/HealthCheckCard.test.tsx · form/__tests__/HealthCheckDialog.test.tsx — 토글 3경로 · 검증 · 예외 바디(기존 유지 · 새 0 · 전부 삭제 `[]`) · (D) 문구 토스트
 
 ## Phase 7: 검증 · 문서

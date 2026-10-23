@@ -163,8 +163,11 @@ const ADMINS: Omit<GroupAdminRow, 'isInclude'>[] = [
   { userSeq: 12, codeSeq: 3, codeName: '관리자', userName: 'test' },
 ]
 
-/** 그룹별 할당 — 🔴 한 사람이 여러 그룹에 있다(user 3 = g2 · g4 · g6, 실측) */
-const seedAssignments: Record<number, number[]> = { 1: [1], 2: [3, 4], 4: [3, 12], 6: [1, 3, 4] }
+/**
+ * 그룹별 할당 — 🔴 한 사람이 여러 그룹에 있다(user 3 = g2 · g4 · g6, 실측).
+ * 8 은 mock 전용 지사 — 사업장 상세 담당 관리자 탭(`spec 044`)이 보일 거리가 있게 본부 4 와 같게 둔다.
+ */
+const seedAssignments: Record<number, number[]> = { 1: [1], 2: [3, 4], 4: [3, 12], 6: [1, 3, 4], 8: [3, 12] }
 
 let groups: StoredGroup[] = []
 let sites: StoredSite[] = []
