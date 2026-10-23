@@ -82,8 +82,8 @@ export const LoginForm = ({ title, description }: LoginFormProps) => {
       setAccessToken(accessToken)
       setRefreshToken(refreshToken)
 
-      // 본사(1xx)는 사업장 선택이 없다. 본사 홈이 아직 placeholder라 siteSeq 소비처가
-      // 0개이고, AdminSiteSelect 응답 형태도 미실측이다 → Phase 5(spec 021 §1).
+      // 본사(1xx)는 사업장 선택 없이 본사 화면으로 간다 — 사업장 선택은 현장관리자만 한다
+      // (사용자 결정 2026-10-23, spec 043 US4 철회).
       if (!isServiceLoginCode(code)) {
         navigate(outcome.landing, { replace: true })
         return

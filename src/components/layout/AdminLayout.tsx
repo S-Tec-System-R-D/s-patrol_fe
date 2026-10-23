@@ -1,26 +1,20 @@
 import { Outlet } from 'react-router-dom'
-import { Sidebar } from './sidebar'
-import { TopNav } from './topnav'
+import { RailSidebar } from './sidebar/RailSidebar'
+import { AdminMenus } from './sidebar/sidebar.config'
 
 /**
- * 본사 사이트(`/admin/*`) 셸. 리디자인 미적용 — 기존 스펙(006) 구조 그대로.
- * 구조 (PC, lg 이상)
- * SideBar | TopNav
- *         | Contents
- *
- * lg 미만(<1024px): Sidebar는 hidden, MobileSidebar(TopNav 좌측 햄버거 + Sheet)로 대체.
+ * 본사 사이트(`/admin/*`) 셸 — 현장과 같은 68px 레일(`spec 043` US1).
+ * - TopNav 없음 · 페이지 자연 스크롤 · 페이지가 자기 헤더를 그린다(현장과 같은 규칙).
+ * - 레일: `ADMIN` 태그 · 메뉴 2개. 본사 계정은 현장 사이트로 이동하지 않는다(사용자 결정 2026-10-23 — US4 철회).
+ * - 🔴 배치 대기 뱃지 훅을 부르지 않는다 — 본사에서 `GetAssignmentCount` 가 나가면 안 된다.
+ * layout.md §0-2
  */
 const AdminLayout = () => {
   return (
-    <div className="app-shell">
-      <div className="hidden lg:flex">
-        <Sidebar />
-      </div>
-      <div className="flex flex-col min-h-0 flex-1">
-        <TopNav />
-        <div className="flex flex-1  bg-contents-background overflow-hidden">
-          <Outlet />
-        </div>
+    <div className="flex">
+      <RailSidebar menus={AdminMenus} tag="ADMIN" />
+      <div className="flex-1 min-w-0 bg-contents-background">
+        <Outlet />
       </div>
     </div>
   )

@@ -351,7 +351,7 @@ describe('LoginPage — 사업장 선택 (US1, US2)', () => {
     expect(screen.getByRole('button', { name: '테스트 사업장2' })).toBeInTheDocument()
   })
 
-  /** 본사는 선택 단계가 없다 — siteSeq 소비처가 0개이고 응답 형태도 미실측(Phase 5) */
+  /** 본사는 선택 단계가 없다 — 사업장 선택은 현장관리자만(사용자 결정 2026-10-23, spec 043 US4 철회) */
   it('본사 계정은 사업장 선택 없이 본사 홈으로 간다', async () => {
     server.use(http.post(LOGIN_PATH, () => loginOk(101)))
 

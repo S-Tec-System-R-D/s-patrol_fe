@@ -44,11 +44,44 @@ export interface UserSiteChild {
 }
 
 /**
+ * `GET /api/v1/Login/W/sign/AdminSiteSelect` 의 사업장 노드. **본사 계정 전용**이다.
+ *
+ * 🔴 **사업장도 자기 트리를 갖는다**(`children` 재귀) — 현장쪽 `UserSiteChild` 와 달리 1단으로 끝나지 않는다.
+ * 실측 2026-10-22: `테테테(수정)1`(3) 아래 `수정사업장테테`(4).
+ */
+export interface SiteNode {
+  siteSeq: number
+  siteName: string
+  /** 최상위 사업장은 `null` */
+  parentSiteSeq: number | null
+  children: SiteNode[]
+}
+
+/**
+ * `AdminSiteSelect` 응답 = **관리그룹 트리 루트 1개**(배열 아님). 그룹과 사업장의 **이중 재귀**다.
+ * 출처: `api-spec.md` §2-2 · §5-2(실측 2026-10-19 · 재확인 2026-10-22).
+ *
+ * 🔴 **관리그룹 트리의 유일한 출처다**(`spec 043`) — `GetGroupList` 는 500 이다(B-1). 로그인 사업장 선택과
+ * 본사 관리그룹 트리가 이 응답 하나를 같이 쓴다.
+ */
+export interface GroupNode {
+  groupSeq: number
+  groupName: string
+  /** 루트는 `null`. 루트는 `groupSeq 1 '에스텍시스템'` 고정 */
+  parentGroupSeq: number | null
+  /** 0 회사 · 1 본부 · 2 지사. `depth` 와 값이 같게 관측됐다 */
+  layer: number
+  depth: number
+  /** 이 그룹에 **직접** 속한 사업장. 하위 그룹의 사업장은 `children` 쪽에 있다 */
+  sites: SiteNode[]
+  children: GroupNode[]
+}
+
+/**
  * 선택 UI·저장이 쓰는 공용 형태.
  *
- * 현장(`UserSiteSelect`)과 본사(`AdminSiteSelect`)의 필드명이 서로 다르므로 한 형태로
- * 모은다. 본사 선택은 `spec 021` 범위 외(Phase 5)지만, 그때 어댑터 1개만 추가하면
- * 선택 UI를 그대로 쓸 수 있도록 타입을 사이트 중립으로 둔다.
+ * 현장(`UserSiteSelect`)과 본사(`AdminSiteSelect`)의 필드명·모양이 서로 다르므로 한 형태로
+ * 모은다. 사이트별 어댑터는 `lib/siteOptions.ts`.
  */
 export interface SiteOption {
   siteSeq: number

@@ -34,7 +34,7 @@ const AuthGuard = () => {
   // 여기서 막지 않는 한 홈이 siteSeq 없이 조회를 날리고, 그 응답은 403이 아니라
   // 200 + 빈 목록이라(api-spec.md:211) **정상 응답인 빈 화면**으로 그려진다.
   //
-  // 🔴 본사는 제외한다. 본사는 아직 선택 단계가 없어(siteSeq 소비처 0개, Phase 5)
+  // 🔴 본사는 제외한다. 본사 계정은 사업장을 고르지 않는다(사용자 결정 2026-10-23, spec 043 US4 철회) —
   // 요구하면 본사 로그인이 그 자리에서 막힌다.
   if (!isAdmin && getSiteSeq() === null) {
     const target = `${paths.serviceLogin}?redirect=${encodeURIComponent(location.pathname)}`

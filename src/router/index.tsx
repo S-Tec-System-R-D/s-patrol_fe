@@ -19,6 +19,7 @@ import DeploymentsPage from '@/pages/service/deployments/DeploymentsPage'
 import NoticeListPage from '@/pages/service/notice/NoticeListPage'
 import NoticeDetailPage from '@/pages/service/notice/NoticeDetailPage'
 import AdminPlaceholderPage from '@/pages/admin/AdminPlaceholderPage'
+import LocationsPage from '@/pages/admin/locations/LocationsPage'
 import { ForbiddenPage, NotFoundPage } from '@/pages/errors'
 import { RequireRoute } from '@/features/auth/components/RequireRoute'
 import { paths, pathPatterns } from './paths'
@@ -127,14 +128,24 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      // 본사 사이트 (`/admin/*`) — 기존 셸(w-70 Sidebar + TopNav) 유지, 리디자인 미적용
+      // 본사 사이트 (`/admin/*`) — 현장과 같은 레일 셸(`spec 043`)
       {
         element: <AdminLayout />,
         errorElement: <PageErrorFallback />,
         children: [
-          // RequireRoute 적용 (005에서 Admin 3종만 허용. Phase 5에서 실 화면 교체)
+          // RequireRoute 적용 (005에서 Admin 3종만 허용). 사업장 목록 본문은 044
           {
             path: paths.admin.locations,
+            element: (
+              <RequireRoute roles={['SYSTEM', 'MASTER', 'MANAGER']}>
+                <LocationsPage />
+              </RequireRoute>
+            ),
+            errorElement: <PageErrorFallback />,
+          },
+          // 레일에 메뉴가 있으니 라우트를 먼저 둔다(눌러서 404 가 나면 안 된다). 화면은 045
+          {
+            path: paths.admin.admins,
             element: (
               <RequireRoute roles={['SYSTEM', 'MASTER', 'MANAGER']}>
                 <AdminPlaceholderPage />

@@ -4,6 +4,7 @@ import {
   ClockAlertIcon,
   MapPinIcon,
   MegaphoneIcon,
+  ShieldUserIcon,
   UsersIcon,
   type LucideIcon,
 } from 'lucide-react'
@@ -23,11 +24,6 @@ export interface MenuItemType {
    * config(모듈 상수)에서는 **훅을 부를 수 없다**. 무엇을 셀지만 적고, 세는 일은 컴포넌트가 한다.
    */
   badge?: 'deploymentPending'
-}
-
-export interface MenuGroupType {
-  title: string
-  groups: MenuItemType[]
 }
 
 /**
@@ -66,27 +62,18 @@ export const ServiceMenus: MenuItemType[] = [
 ]
 
 /**
- * 본사 사이트 메뉴 (`/admin/*`).
- * 라우트 인벤토리 출처: docs/screens.md §4
- * - `/admin/locations` — 사업장 관리
- * - `/admin/admins` — 관리자 관리
+ * 본사 레일 메뉴 (`/admin/*`) — flat 2개, 현장 `ServiceMenus` 와 같은 모양(`spec 043` T742).
+ * 순서·아이콘은 목업 v2(`docs/ui-mock/본사관리자/S-Patrol-Admin v2 (standalone).html`) 그대로.
  */
-export const AdminMenus: MenuGroupType[] = [
+export const AdminMenus: MenuItemType[] = [
   {
-    title: '본사 관리',
-    groups: [
-      {
-        icon: Building2Icon,
-        title: '사업장 관리',
-        url: paths.admin.locations,
-        activeUrl: [paths.admin.locations],
-      },
-      {
-        icon: UsersIcon,
-        title: '관리자 관리',
-        url: paths.admin.admins,
-        activeUrl: [paths.admin.admins],
-      },
-    ],
+    icon: Building2Icon,
+    title: '사업장',
+    url: paths.admin.locations,
+  },
+  {
+    icon: ShieldUserIcon,
+    title: '관리자',
+    url: paths.admin.admins,
   },
 ]

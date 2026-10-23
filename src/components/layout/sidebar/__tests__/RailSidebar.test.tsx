@@ -8,7 +8,11 @@ import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
 import { resetDeploymentStore } from '@/mocks/handlers/deployments'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
-import { RailSidebar } from '../RailSidebar'
+import ServiceLayout from '../../ServiceLayout'
+
+/**
+ * 현장 레일 — `ServiceLayout` 으로 렌더한다(`spec 043` T743). 배치 대기 뱃지 숫자는 레이아웃이 세서 레일에 넘긴다.
+ */
 
 beforeEach(() => {
   clearTokens()
@@ -22,13 +26,13 @@ const renderRail = (initialPath: string) => {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialPath]}>
-        <RailSidebar />
+        <ServiceLayout />
       </MemoryRouter>
     </QueryClientProvider>
   )
 }
 
-describe('RailSidebar', () => {
+describe('RailSidebar (현장)', () => {
   it('5개 메뉴 아이콘 flat 렌더(순찰이력·코스/지점·근무자·배치관리·공지사항)', () => {
     renderRail('/zones')
     expect(screen.getByLabelText('순찰이력')).toBeInTheDocument()
@@ -61,6 +65,11 @@ describe('RailSidebar', () => {
     // 실패가 반영될 시간을 준 뒤에도 숫자가 없다
     await new Promise((resolve) => setTimeout(resolve, 50))
     expect(within(screen.getByLabelText('배치관리')).queryByText(/\d/)).not.toBeInTheDocument()
+  })
+
+  it('현장 레일에는 사이트 태그가 없다', () => {
+    renderRail('/zones')
+    expect(screen.queryByText('ADMIN')).not.toBeInTheDocument()
   })
 
   it('프로필 아바타 트리거 렌더', () => {
