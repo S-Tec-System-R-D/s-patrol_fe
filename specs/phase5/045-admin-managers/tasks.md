@@ -68,7 +68,43 @@
 - [x] T838 [P] 문서 — `screens.md` §2-1(진행도 · 할당 = 그룹 단위 · 추가 막힘) · `flow.md` §2 · `data-model.md`(관리자 부분 서버 기준) · `components.md`(신설 공용이 있으면) · `roadmap.md` §9-0(판정 표 · 045 행) · **Phase 5 종료**
 - [x] T839 DoD 점검 + `## 다음 spec으로 이월`
 
+## Phase 7: 후속 — 사용자 확인 뒤 요청(2026-10-23)
+
+> 사용자 요청 3건: ① 트리 수 단위 `개` → `명` ② **관리자 추가 UI 만**(API 없음 — B-59) ③ 상세 디자인 변경.
+> 결정(사용자 2026-10-23): 생성 권한은 **로그인 권한으로 고정**(시스템관리자 → 마스터 · 마스터 → 매니저 · 매니저는 [관리자 추가] 없음) ·
+> [등록] 은 **검증만 하고 안내 토스트**(요청 0건 · 모달 유지) · 상세는 **시안 A — 프로필 머리 + 세로 섹션**(담당 그룹 표에 사업장 수).
+> **독립 테스트 기준**: 관리자 트리 수 `N명` · 사업장 트리는 `N개` 그대로 · 시스템관리자 = 마스터 폼(담당 그룹 칸 없음) · 마스터 = 매니저 폼(담당 그룹 필수) · 매니저 = 버튼 없음 · 등록 시 요청 0건 · 상세 머리(아바타 · 이름 · 권한 · 사번 · 연락처) · 담당 그룹 표(경로 · 사업장 수 · 해제).
+
+- [x] T840 [P] 트리 수 단위 in src/features/groups/components/GroupTree.tsx · GroupFilterPanel.tsx · GroupFilterButton.tsx — `countUnit`(기본 `개`) 전달 · 관리자 화면 `명`
+- [x] T841 [P] 담당 그룹 체크 목록 공용화 in src/features/admins/components/GroupCheckList.tsx — `AssignGroupDialog` 의 목록(회사 · 제외 그룹 빼기 · 단계 들여쓰기 · 다중)을 뽑아 추가 폼과 함께 쓴다(2곳)
+- [x] T842 추가 폼 스키마 in src/features/admins/form/schema.ts — 이름 · 사번 · 연락처 · 초기 비밀번호(근무자 `addWorkerSchema` 규칙 재사용) + 매니저일 때 담당 그룹 ≥ 1
+- [x] T843 추가 폼 in src/features/admins/form/AddAdminForm.tsx — 만들 권한 = 로그인 권한으로 고정(뱃지 + 안내 "{내 권한}는 {권한} 계정만 생성할 수 있습니다.") · 매니저면 담당 그룹(T841) · 🔴 제출 = 검증 통과 시 안내 토스트만(요청 0건 · 모달 유지)
+- [x] T844 추가 진입 in src/pages/admin/admins/AdminsPage.tsx — 막힌 버튼 → `AppDialog` 520px "관리자 추가" · 매니저 로그인이면 버튼 없음
+- [x] T845 상세 재디자인 in src/features/admins/components/AdminDetailDialog.tsx — 시안 A: 머리(아바타 `WorkerAvatar` · 이름 · 권한 · `사번 · 연락처` 한 줄) → 담당 그룹 표(그룹 경로 · 사업장 수 `countSites` · [해제]) + [+ 그룹 추가] → 하단 액션(시스템관리자는 잠금 안내 + 닫기)
+- [x] T846 [P] 테스트 in src/pages/admin/admins/__tests__/AdminsPage.test.tsx · src/features/groups/components/__tests__/(트리 단위) — 위 독립 테스트 기준
+
 ---
+
+## Phase 8: 후속 2차 — 브라우저 확인 뒤 요청(2026-10-23)
+
+> ① dev:real 에서 트리 수가 여전히 `개` — 🔴 **코드 결함이 아니었다**: 연달아 저장한 사이 사용자 Vite 서버가 `GroupFilterPanel.tsx` 변경을 놓쳐 옛 모듈을 내보냈다(`countUnit` 전달 없음). `touch` 로 다시 읽혀 해소, 서버 모듈 = 디스크 확인.
+> ② 담당 그룹 규칙(사용자): **본부 = 지사 전부**(일부 제외 없음) · **지사를 고르면 다른 본부 불가** · 본부끼리는 여러 개(사용자 선택) · 추가 폼과 [담당 그룹 추가] 모달 **둘 다** 적용. 고르기 UI = **검색 + 트리 체크 + 선택 칩**(시안 A).
+> ③ 상세: **아바타 제거 · 이름 크게(페이지 제목) · 사번 · 연락처 row** · 담당 그룹 **본부별 묶음**(회사 · 본부 = "전체" 한 줄, 지사만 = 본부 아래 지사 칩).
+
+- [x] T847 선택 규칙 순수 함수 in src/features/admins/lib/groupSelection.ts — `pickState`(포함 · 잠금 · 충돌) · `togglePick`(본부 선택 시 그 지사 합침) · `pickChips` · `searchChoices`(맞은 그룹 + 그 본부, 대소문자 무시) · `assignmentSections`(본부가 맡겨진 지사 할당은 본부 줄에 포함). 본부를 고르면 **본부 그룹만** 저장
+- [x] T848 고르기 UI in src/features/admins/components/GroupPicker.tsx(🔄 `GroupCheckList` 대체 · 삭제) — 칩(× 빼기) · 검색(강조 = 028 `splitByKeyword`) · 트리 체크 · 단계 라벨 · 이미 맡은 그룹 `fixed`(체크 · 잠금 · 규칙 포함). `AppCheckbox.label` 을 `ReactNode` 로(강조용, 기존 사용처 무변경)
+- [x] T849 연결 in src/features/admins/components/AssignGroupDialog.tsx · src/features/admins/form/AddAdminForm.tsx
+- [x] T850 상세 재디자인 2 in src/features/admins/components/AdminDetailDialog.tsx — 아바타 · 사진 제거 · 이름 `text-page-title` · `AppDetailRow fixed` 2행(조회 중 · 실패는 칸 안 + "정보 다시 불러오기") · 담당 그룹 본부별 묶음(전체 줄 = 범위 표시 · 사업장 수 · 해제 / 지사 칩 = 칩마다 해제)
+- [x] T851 [P] 테스트 in src/features/admins/lib/__tests__/groupSelection.test.ts(신설) · src/pages/admin/admins/__tests__/AdminsPage.test.tsx(규칙 · 검색 · 본부별 표시 · 본부 여러 개 추가) — 전체 **1411 passed**(124 files)
+
+## Phase 9: 후속 3차 — 다듬기(2026-10-23)
+
+- [x] T852 상세 — 사번 · 연락처 `text-section-title`(14px) · 담당 그룹 테두리 · 구분선 제거 → 행 앞 단계 아이콘으로 구분 in src/features/admins/components/AdminDetailDialog.tsx
+- [x] T853 단계 아이콘 공용 in src/features/admins/components/GroupLayerMark.tsx — 회사 큰 건물 · 본부 건물 · 지사 네모 닷(관리그룹 트리와 같다). 상세 · 고르기 공용
+- [x] T854 고르기 — 체크된 행 배경(직접 고름 진하게 · 딸려 옴/이미 맡음 옅게) + 단계 아이콘 in src/features/admins/components/GroupPicker.tsx
+- [x] T855 🔴 추가 폼 하단 잘림 in src/features/admins/form/AddAdminForm.tsx — `AppDialog` 가 80vh 에서 넘침을 자른다 → 입력 칸만 스크롤 · 버튼 줄 고정. 전체 **1411 passed**
+- [x] T856 상세 버튼 통일 in src/features/admins/components/AdminDetailDialog.tsx — [그룹 추가] = 관리그룹 편집 모달 [+ 본부 추가] 링크 모양 · 해제 = 휴지통 아이콘(hover 빨강, 지사 칩 포함)
+- [x] T857 추가 폼 in src/features/admins/form/AddAdminForm.tsx · schema.ts — 🔴 스크롤 영역 아래 여유(마지막 칸 아래 테두리가 잘렸다) · **비밀번호 확인** 칸(불일치 문구 = 041 `passwordSchema`) · 비밀번호 두 칸을 **사번 바로 아래**로(사용자 요청 2026-10-23)
 
 ## Dependencies & Execution Order
 
