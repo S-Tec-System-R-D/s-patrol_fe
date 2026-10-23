@@ -10,22 +10,22 @@
 
 > **독립 테스트 기준**: `lib` 단위 테스트 green · MSW 로 목록·상세·변경 3종 응답이 실측 모양 그대로 온다(문자열 (D) · 409 · 연쇄 삭제 포함).
 
-- [ ] T778 타입 in src/features/sites/types/site.ts — `SiteDetail`(재시도·시각 `null` 허용) · `ExceptionTime` · `AddSiteRequest` · `UpdateSiteRequest`(전부 선택 + `siteSeq`) · `UpdateExceptionTime`(`detailSeq` 0 = 새 행) — `api-spec.md` §5-2 그대로 전량
-- [ ] T779 [P] `GetGroupList` 조회 · 타입 in src/features/groups/api/getGroupList.ts · types/group.ts(`GroupListNode` · `GroupListSite`) — 파라미터 없음 · 루트 1개 객체
-- [ ] T780 [P] 사업장 API in src/features/sites/api/ — `getSiteDetail`(`?siteSeq`) · `addSite`(POST) · `updateSite`(PUT) · `deleteSite`(DELETE `?siteSeq`). 주석에 실측 규칙(ID 미반환 · 부분 갱신 · `""` 지우기 · 예외시간 통째 교체)
-- [ ] T781 [P] 🔴 목록 순수 함수 in src/features/sites/lib/siteList.ts — 선택 그룹 + 자손 그룹 사업장 모으기(응답 순서) · **하위 사업장 평탄화(깊이 표기)** · 검색(이름·주소, 하위만 맞으면 **모 사업장 동반**) · `siteSeq` 로 노드·소속 그룹 찾기 · 그룹 경로(`본부 › 지사`) · 지사(`layer 2`) 선택지 목록. 🔴 단계는 `layer` 로만(B-55 `depth` 불일치)
-- [ ] T782 [P] 헬스체크 순수 함수 in src/features/sites/lib/healthCheck.ts — "값이 비었나"(`Interval` 0 또는 시각 `null`) · `HH:mm:ss` ↔ `HH:mm` · 예외시간 폼 행 → 요청(기존 `detailSeq` 유지 · 새 행 0)
-- [ ] T783 쿼리 키 · 훅 in src/features/sites/queryKeys.ts · hooks/useSiteList.ts · hooks/useSiteDetail.ts · hooks/useSiteMutations.ts — 목록·상세 쿼리 · 변경 훅(추가 · 정보 수정 · 헬스체크 저장 · 토글 · 삭제). 🔴 성공 시 **목록 · 상세 · 좌측 트리(`groupKeys.tree`) 모두 무효화** · 실패 토스트는 전역(043 규약)
-- [ ] T784 043 무효화 확장 in src/features/groups/hooks/useGroupMutations.ts — 그룹 변경 성공 시 `GetGroupList` 키도 무효화(연쇄 삭제 B-51 이 목록에 반영돼야 한다)
-- [ ] T785 🔴 **상태 보유 MSW** in src/mocks/handlers/groups.ts(043 저장소 확장 — 한 출처) — `GetGroupList`(실측 모양 · `healthCheckYn` 항상 `false` · 그룹 `count` · 사업장 `count`) · `GetSiteDetail`(없으면 400 "잘못된 요청입니다." `data: null`) · `AddSite`(빈 이름 ProblemDetails · 없는 그룹 400 · 409 · 부모 규칙 · **`exceptionTime` 버림**) · `UpdateSite`(생략·`null` 유지 · `""` 지움 · 예외 교체 규칙 · 없는 `detailSeq` 400 · 하위 사업장 그룹 변경 400 · 그룹 이동 시 하위 동반 · 409) · 헬스체크 검증(필수 누락 = **(D) 문자열** · 0 이하 래퍼 · 시작=종료 래퍼) · `DeleteSite`(하위 연쇄 · 없음 400) · 043 그룹 연쇄 삭제가 사업장에도 반영 · reset. `handlers/index.ts` 등록
-- [ ] T786 [P] 테스트 in src/features/sites/lib/__tests__/siteList.test.ts · healthCheck.test.ts — 범위 · 평탄화 · 모 사업장 동반 검색 · 경로 · 지사 선택지 · 빈 값 판정 · 예외시간 바디
+- [x] T778 타입 in src/features/sites/types/site.ts — `SiteDetail`(재시도·시각 `null` 허용) · `ExceptionTime` · `AddSiteRequest` · `UpdateSiteRequest`(전부 선택 + `siteSeq`) · `UpdateExceptionTime`(`detailSeq` 0 = 새 행) — `api-spec.md` §5-2 그대로 전량
+- [x] T779 [P] `GetGroupList` 조회 · 타입 in src/features/groups/api/getGroupList.ts · types/group.ts(`GroupListNode` · `GroupListSite`) — 파라미터 없음 · 루트 1개 객체
+- [x] T780 [P] 사업장 API in src/features/sites/api/ — `getSiteDetail`(`?siteSeq`) · `addSite`(POST) · `updateSite`(PUT) · `deleteSite`(DELETE `?siteSeq`). 주석에 실측 규칙(ID 미반환 · 부분 갱신 · `""` 지우기 · 예외시간 통째 교체)
+- [x] T781 [P] 🔴 목록 순수 함수 in src/features/sites/lib/siteList.ts — 선택 그룹 + 자손 그룹 사업장 모으기(응답 순서) · **하위 사업장 평탄화(깊이 표기)** · 검색(이름·주소, 하위만 맞으면 **모 사업장 동반**) · `siteSeq` 로 노드·소속 그룹 찾기 · 그룹 경로(`본부 › 지사`) · 지사(`layer 2`) 선택지 목록. 🔴 단계는 `layer` 로만(B-55 `depth` 불일치)
+- [x] T782 [P] 헬스체크 순수 함수 in src/features/sites/lib/healthCheck.ts — "값이 비었나"(`Interval` 0 또는 시각 `null`) · `HH:mm:ss` ↔ `HH:mm` · 예외시간 폼 행 → 요청(기존 `detailSeq` 유지 · 새 행 0)
+- [x] T783 쿼리 키 · 훅 in src/features/sites/queryKeys.ts · hooks/useSiteDetail.ts · hooks/useSiteMutations.ts + 목록 훅은 src/features/groups/hooks/useGroupList.ts(조회 함수와 같은 곳 — 사용자 승인 2026-10-23) — 목록·상세 쿼리 · 변경 훅(추가 · 정보 수정 · 헬스체크 저장 · 토글 · 삭제). 🔴 성공 시 **목록 · 상세 · 좌측 트리(`groupKeys.tree`) 모두 무효화** · 실패 토스트는 전역(043 규약)
+- [x] T784 043 무효화 확장 in src/features/groups/hooks/useGroupMutations.ts — 그룹 변경 성공 시 `GetGroupList` 키도 무효화(연쇄 삭제 B-51 이 목록에 반영돼야 한다)
+- [x] T785 🔴 **상태 보유 MSW** in src/mocks/handlers/groups.ts(043 저장소 확장 — 한 출처) — `GetGroupList`(실측 모양 · `healthCheckYn` 항상 `false` · 그룹 `count` · 사업장 `count`) · `GetSiteDetail`(없으면 400 "잘못된 요청입니다." `data: null`) · `AddSite`(빈 이름 ProblemDetails · 없는 그룹 400 · 409 · 부모 규칙 · **`exceptionTime` 버림**) · `UpdateSite`(생략·`null` 유지 · `""` 지움 · 예외 교체 규칙 · 없는 `detailSeq` 400 · 하위 사업장 그룹 변경 400 · 그룹 이동 시 하위 동반 · 409) · 헬스체크 검증(필수 누락 = **(D) 문자열** · 0 이하 래퍼 · 시작=종료 래퍼) · `DeleteSite`(하위 연쇄 · 없음 400) · 043 그룹 연쇄 삭제가 사업장에도 반영 · reset(`groupHandlers` 에 합쳐 등록 변경 없음). ⚠️ 핸들러 전용 테스트는 두지 않았다 — Phase 3~6 화면 테스트가 검증한다
+- [x] T786 [P] 테스트 in src/features/sites/lib/__tests__/siteList.test.ts · healthCheck.test.ts — 범위 · 평탄화 · 모 사업장 동반 검색 · 경로 · 지사 선택지 · 빈 값 판정 · 예외시간 바디
 
 ## Phase 2: US5 — 에러 형태 (D)
 
 > **독립 테스트 기준**: 400 + body `"간격은 필수입니다."` → `ApiError.message` 가 그 문구 · body `""` → 기존대로 `empty`.
 
-- [ ] T787 [US5] 문자열 분기 in src/lib/api/normalizeError.ts — `kind: 'text'` 추가 · 순서 빈 body → 래퍼 → ProblemDetails → **비지 않은 문자열** → unknown · 머리 주석 "3가지" → 4가지
-- [ ] T788 [US5] [P] 테스트 in src/lib/api/__tests__/normalizeError.test.ts — 문자열 → 문구 · 빈 문자열은 `empty` · 공백만 문자열 처리(plan-first 에서 정한 대로)
+- [x] T787 [US5] 문자열 분기 in src/lib/api/normalizeError.ts — `kind: 'text'` 추가 · 순서 빈 body → 래퍼 → ProblemDetails → **비지 않은 문자열** → unknown · 머리 주석 "3가지" → 4가지
+- [x] T788 [US5] [P] 테스트 in src/lib/api/__tests__/normalizeError.test.ts — 문자열 → 문구 · 빈 문자열은 `empty` · 공백만 문자열 처리(plan-first 에서 정한 대로)
 
 ## Phase 3: US1 — 사업장 목록
 

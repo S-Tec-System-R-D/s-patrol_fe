@@ -3,10 +3,11 @@ import type { ApiResponse, ProblemDetails } from '@/types/api'
 /**
  * 응답 본문 형태 판별.
  *
- * 서버는 **3가지 형태**로 응답한다(docs/api-spec.md §3).
+ * 서버는 **4가지 형태**로 응답한다(docs/api-spec.md §3).
  * - (A) `ApiResponse` 래퍼 — 성공 전부 + 비즈니스 오류
  * - (B) ProblemDetails — 유효성 400, 서버 500. `message` 없음
  * - (C) 빈 body — 401(토큰 없음·무효), 403(권한 없음)
+ * - (D) JSON 문자열 — 판별 함수 없이 `normalizeError` 가 직접 본다(`typeof === 'string'`)
  *
  * 세 함수 모두 **어떤 입력에도 throw하지 않는다.** 빈 body를 파싱하려다
  * 터지는 것이 이 모듈이 막으려는 사고다.

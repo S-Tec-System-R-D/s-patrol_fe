@@ -6,7 +6,7 @@ import { isApiResponse, isEmptyBody, isProblemDetails } from '@/lib/api/response
 /**
  * 에러 응답 정규화.
  *
- * 서버가 **3가지 형태**로 에러를 주기 때문에(docs/api-spec.md §3) 호출부가
+ * 서버가 **4가지 형태**로 에러를 주기 때문에(docs/api-spec.md §3) 호출부가
  * 매번 형태를 따질 수 없다. 어떤 형태로 오든 `message` 하나를 뽑아 준다.
  *
  * 특히 401·403은 **body가 비어 있다.** 파싱을 시도하지 않는다.
@@ -21,6 +21,8 @@ export type ApiErrorKind =
   | 'problem'
   /** (C) 빈 body — 401·403 */
   | 'empty'
+  /** (D) JSON 문자열 body — 사업장 헬스체크 필수값 누락 등(`spec 044`) */
+  | 'text'
   /** 어느 형태도 아님 */
   | 'unknown'
 
@@ -86,6 +88,11 @@ export const normalizeError = (error: AxiosError): NormalizedApiError => {
 
   if (isProblemDetails(body)) {
     return { kind: 'problem', status, message: fromProblemDetails(body), raw: body }
+  }
+
+  // (D) body 전체가 문구 하나(`"간격은 필수입니다."`). 🔴 `<` 로 시작하면 게이트웨이 HTML 이라 문구로 쓰지 않는다
+  if (typeof body === 'string' && !body.trimStart().startsWith('<')) {
+    return { kind: 'text', status, message: body.trim(), raw: body }
   }
 
   return { kind: 'unknown', status, message: defaultMessage(status), raw: body }

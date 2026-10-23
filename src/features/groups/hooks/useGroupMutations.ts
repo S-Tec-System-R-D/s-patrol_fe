@@ -17,9 +17,14 @@ import { groupKeys } from '../queryKeys'
  *   그 문구 그대로다(사용자 결정 2026-10-22).
  */
 
+/** 🔴 사업장 목록(`list`)도 함께 — 그룹 삭제가 소속 사업장까지 지운다(B-51, `spec 044` T784) */
 const useInvalidateTree = () => {
   const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries({ queryKey: groupKeys.tree })
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: groupKeys.tree }),
+      queryClient.invalidateQueries({ queryKey: groupKeys.list }),
+    ])
 }
 
 export const useAddGroup = () => {

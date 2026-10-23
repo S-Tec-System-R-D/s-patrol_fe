@@ -98,6 +98,20 @@ describe('normalizeError — (C) 빈 body', () => {
   })
 })
 
+describe('normalizeError — (D) 문자열 body', () => {
+  it('JSON 문자열 body는 그 문자열을 문구로 쓴다', () => {
+    const result = normalizeError(errorWith(400, '간격은 필수입니다.'))
+    expect(result.kind).toBe('text')
+    expect(result.status).toBe(400)
+    expect(result.message).toBe('간격은 필수입니다.')
+  })
+
+  it('빈 문자열·공백만이면 여전히 빈 body다', () => {
+    expect(normalizeError(errorWith(403, '')).kind).toBe('empty')
+    expect(normalizeError(errorWith(400, '   ')).kind).toBe('empty')
+  })
+})
+
 describe('normalizeError — 네트워크 실패', () => {
   it('response가 없으면 network', () => {
     const result = normalizeError(networkError())
