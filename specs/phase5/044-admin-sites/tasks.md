@@ -71,10 +71,10 @@
 
 ## Phase 7: 검증 · 문서
 
-- [ ] T811 `npm run verify` + `npm run test` 병렬 green
-- [ ] T812 브라우저 확인 — mock(1280 이상·미만) + 🔴 dev:real(본사 계정 · `테스트그룹` 아래 임시 지사 → 추가 → 수정(연락처 지우기) → 헬스체크 켜기 + 예외 2개 → 예외 1개 삭제 → 끄기 → 삭제 → 끝에 임시 지사 삭제 · 트리 원상 확인)
-- [ ] T813 [P] 문서 — `CLAUDE.md` B4(에러 4종) · `screens.md` §2-2(진행도 · 삭제 비밀번호 없음) · `flow.md` §2 · `data-model.md`(사업장 부분 서버 기준) · `components.md`(신설 공용이 있으면) · `roadmap.md` §7-1 · §9-0
-- [ ] T814 DoD 점검 + `## 다음 spec으로 이월`
+- [x] T811 `npm run verify` + `npm run test` 병렬 green
+- [x] T812 브라우저 확인 — mock(1280 이상·미만) + 🔴 dev:real(본사 계정 · `테스트그룹` 아래 임시 지사 → 추가 → 수정(연락처 지우기) → 헬스체크 켜기 + 예외 2개 → 예외 1개 삭제 → 끄기 → 삭제 → 끝에 임시 지사 삭제 · 트리 원상 확인)
+- [x] T813 [P] 문서 — `CLAUDE.md` B4(에러 4종) · `screens.md` §2-2(진행도 · 삭제 비밀번호 없음) · `flow.md` §2 · `data-model.md`(사업장 부분 서버 기준) · `components.md`(신설 공용이 있으면) · `roadmap.md` §7-1 · §9-0
+- [x] T814 DoD 점검 + `## 다음 spec으로 이월`
 
 ---
 

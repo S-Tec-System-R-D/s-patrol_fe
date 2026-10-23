@@ -153,10 +153,11 @@ src/
   - 목록: `ApiListResponse<T>` (= `ApiResponse<PagedData<T>>`)
   - 상세: `ApiDetailResponse<T>` (= `ApiResponse<T>`)
 - `code` 필드는 **HTTP status code가 아니다.** 비즈니스/권한 코드다. 로그인 성공은 사이트+권한을 함께 나타낸다(본사 `101`/`102`/`103`, 현장 `201`/`202`), 일반 조회 성공은 `200`. — 실측 확정.
-- **에러 응답은 3종이 섞여 있다.** `message` 문자열이나 `code` 만으로 분기하면 안 된다.
+- **에러 응답은 4종이 섞여 있다.** `message` 문자열이나 `code` 만으로 분기하면 안 된다.
   - (A) `ApiResponse` 래퍼 — 비즈니스 오류(로그인 실패, 없는 ID 등)
   - (B) ASP.NET **ProblemDetails**(`errors`/`title`/`status`/`traceId`) — 유효성 400, 서버 500. `message` 필드 없음
   - (C) **빈 body** — 401(토큰 없음·무효), 403(권한 없음). 파싱하면 터진다. status code로만 분기
+  - (D) **JSON 문자열 body**(`"간격은 필수입니다."`) — 사업장 헬스체크 필수값 누락 등(B-53). 문자열 자체가 문구다. HTML(`<` 로 시작)은 해당 없음 — `normalizeError` 의 `kind: 'text'`
 - 페이지 번호: **1-based** (`?pageNumber=1`이 첫 페이지). 요청은 `pageNumber`, **응답 필드는 `page`**.
 - 인증: `accessToken`(수명 3시간) + `refreshToken`(**회전 없음**). 만료 시 axios 인터셉터가 자동으로 refresh 요청.
 - 사용자 정보 조회 엔드포인트는 **없다.** `accessToken` JWT 클레임을 디코딩해서 얻는다.

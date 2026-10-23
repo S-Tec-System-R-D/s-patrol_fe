@@ -82,7 +82,7 @@ flowchart LR
 | `Worker` | 현장관리자 + 근무자. role로 구분 |
 | `ManagementGroup` | Level 3 트리. Level1 = "에스텍시스템" 고정 |
 | `Location` | 사업장. 그룹 하위. 헬스체크/비상연락망 설정 보유 |
-| `HealthCheckSetting` | 사업장당 1개. 사용시간/예약시간/주기/반복 |
+| `HealthCheckSetting` | 사업장당 1개. 🔄 서버는 별도 엔티티 없이 `SiteDetail` 의 `healthCheck*` + 예외 시간(여러 개) — `spec 044` |
 | `EmergencyContact` | 사업장 + 요일 + 담당자 다중 |
 | `PatrolPoint` | 인증수단(QR/NFC). 사업장 소속 |
 | `PatrolCourse` | 순찰지점들의 순서 있는 묶음. 사업장 소속 |
@@ -170,8 +170,7 @@ export type UserStatus = 'ACTIVE' | 'INACTIVE'
 // 근무 상태 (근무자)
 export type WorkStatus = 'WORKING' | 'OFF_DUTY'   // 근무시작 / 근무종료
 
-// 사업장 운영 상태
-export type LocationStatus = 'OPERATING' | 'SUSPENDED' | 'TERMINATED'  // 운영중/중지/종료
+// (사업장 운영 상태 `LocationStatus` 는 폐기 — 서버에 없는 개념이고 필요 없다. 사용자 결정 2026-10-23, `spec 044` · B-56)
 
 // 배치 요청 상태
 export type DeploymentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
@@ -316,7 +315,7 @@ export interface WorkerRef { id: string; name: string; phone: string }
 
 ```ts
 // 관리그룹 트리 — /admin/locations 좌측 트리 · 편집 모달
-// 🔴 서버 기준(`spec 043`, `api-spec.md` §2-2 · §5-1-B). 출처 = `AdminSiteSelect`(GetGroupList 는 500, B-1).
+// 🔴 서버 기준(`spec 043`, `api-spec.md` §2-2 · §5-1-B). 출처 = `AdminSiteSelect`(목록은 `GetGroupList` — B-1 해소 2026-10-23, 아래 사업장).
 // 옛 설계 `ManagementGroupNode`(id/name/level/locationCount)는 폐기 — 개수는 화면이 `sites` 로 센다.
 export interface SiteNode {
   siteSeq: number
@@ -334,28 +333,42 @@ export interface GroupNode {
   children: GroupNode[]
 }
 
-// 사업장 — /admin/locations 우측 테이블 + 상세
-export interface Location {
-  id: string
-  name: string
-  groupId: string
-  groupPath: string                // 예: "에스텍시스템 > 서울본부 > 강동지사"
-  address: string
-  contact: string                  // 대표 연락처
-  status: LocationStatus
-  contractStartDate: string        // YYYY-MM-DD
-  contractEndDate: string
-  responsibleAdmins: AdminRef[]    // 담당 관리자 다중
+// 사업장 — /admin/locations 우측 목록 + 상세
+// ✅ 서버 기준(`spec 044`, `api-spec.md` §5-1-B "사업장 3종" · §5-2). 코드: `features/groups/types/group.ts`(목록) ·
+//   `features/sites/types/site.ts`(상세 · 요청). 옛 설계 `Location`/`LocationSummary` 는 폐기 —
+//   운영 상태 · 계약 기간은 서버에 없고 필요 없다(사용자 결정 2026-10-23), 담당 관리자는 사업장 단위가 없다(B-58).
+// 목록 = GET Group/W/sign/GetGroupList — 루트 1개 그룹 트리, 그룹마다 sites(하위 사업장 children 포함)
+export interface GroupListSite {
+  siteSeq: number
+  siteName: string
+  siteGroupSeq: number
+  siteGroupName: string
+  address: string | null
+  tel: string | null
+  healthCheckYn: boolean           // 🔴 항상 false(B-55) — 쓰지 않는다
+  userCount: number
+  count: number                    // 하위 사업장 수
+  parentSiteSeq: number | null
+  children: GroupListSite[]
 }
-
-export interface LocationSummary {
-  id: string
-  name: string
-  groupName: string
-  address: string
-  contact: string
-  status: LocationStatus
+// 상세 = GET Site/W/sign/GetSiteDetail?siteSeq — 🔴 소속 그룹 · 모 사업장이 없다(목록 노드에서 찾는다)
+export interface SiteDetail {
+  siteSeq: number
+  siteName: string
+  tel: string | null
+  address: string | null
+  healthCheckYn: boolean
+  healthCheckInterval: number      // 분. 최소 생성이면 0
+  healthCheckTimeout: number       // 단위 미확인(OQ-044-B)
+  healthCheckRetry: number | null
+  healthCheckStartTime: string | null   // "HH:mm:ss"
+  healthCheckEndTime: string | null
+  exceptionTime: { detailSeq: number; exceptionStartTime: string; exceptionEndTime: string }[]
+  userCount: number
+  courseCount: number
+  pointCount: number
 }
+// 🔴 사업장은 **지사(layer 2)에만** 둔다 — 서버는 강제하지 않고 화면이 소속 그룹 선택지를 지사로 막는다(OQ-043-E)
 
 export interface LocationRef { id: string; name: string; groupName: string }
 export interface AdminRef    { id: string; name: string; role: AdminRole; phone: string }
@@ -518,19 +531,10 @@ export interface NoticeAttach {
   attachExt: string                   // '.jpg'
 }
 
-// 사업장 헬스체크 설정
-export interface HealthCheckSetting {
-  locationId: string
-  enabled: boolean
-  usageTimeStart: string           // "HH:mm" — 사용시간
-  usageTimeEnd: string
-  reserveTimeStart: string         // "HH:mm" — 예약(체크) 시간
-  reserveTimeEnd: string
-  intervalMin: number              // 체크 주기(분)
-  repeatCount: number              // 반복 횟수
-}
+// 사업장 헬스체크 설정 — ✅ 별도 엔티티가 아니다. `SiteDetail` 의 `healthCheck*` · `exceptionTime` 이고 `UpdateSite` 로 저장한다(`spec 044`).
+//   옛 설계 `HealthCheckSetting`(예약시간 등)은 폐기 — 서버는 사용 시간 + 예외 시간(여러 개) + 주기 · 타임아웃 · 반복이다.
 
-// 비상연락망 — 요일별 담당자 다중
+// 비상연락망 — 요일별 담당자 다중. ⚠️ **설계안 그대로**(API 없음, B-57) — 044 는 자리 카드만 두었다
 export interface EmergencyContactRoster {
   locationId: string
   byDay: Record<DayOfWeek, EmergencyContactRef[]>
@@ -598,9 +602,10 @@ export interface Keyword {
 | 관리자 상세 | `GET /api/admin/admins/:id` | `ApiDetailResponse<Admin>` |
 | 관리그룹 트리 | ✅ `GET Login/W/sign/AdminSiteSelect`(`spec 043`) | `ApiDetailResponse<GroupNode>` (루트 1개) |
 | 그룹 할당 관리자 | ✅ `GET Group/W/sign/GetGroupAdminList?groupSeq` | `GroupAdminRow[]`(`isInclude`) — 이름 변경 전 할당 보존용 |
-| 사업장 목록 | `GET /api/admin/locations?groupId={id}` | `ApiListResponse<LocationSummary>` |
-| 사업장 상세 — 기본정보 | `GET /api/admin/locations/:id` | `ApiDetailResponse<Location>` |
-| 사업장 상세 — 헬스체크 | `GET /api/admin/locations/:id/health` | `ApiDetailResponse<{ setting: HealthCheckSetting; roster: EmergencyContactRoster }>` |
+| 사업장 목록 | ✅ `GET Group/W/sign/GetGroupList`(`spec 044`) | `ApiDetailResponse<GroupListNode>`(루트 1개 · 클라이언트가 그룹 범위 · 검색) |
+| 사업장 상세(기본정보 · 헬스체크) | ✅ `GET Site/W/sign/GetSiteDetail?siteSeq` | `ApiDetailResponse<SiteDetail>` — 없으면 400 "잘못된 요청입니다." |
+| 사업장 담당 관리자 | ✅ `GET Group/W/sign/GetGroupAdminList?groupSeq={소속 지사}` | `GroupAdminRow[]` 의 `isInclude` — 사업장 단위는 없다(B-58) |
+| 비상연락망 | ❌ 없음(B-57) | — |
 
 ### 4-3. 공통 — 인증 / 본인 정보
 
@@ -704,34 +709,32 @@ export interface UpdateGroupRequest {         // PUT Group/W/sign/UpdateGroup
 }
 // DELETE Group/W/sign/DeleteGroup?groupSeq — 🔴 하위 그룹·소속 사업장까지 연쇄 삭제(B-51)
 
-export interface CreateLocationRequest {
-  name: string
-  groupId: string
-  address: string
-  contact: string
-  contractStartDate: string        // YYYY-MM-DD
-  contractEndDate: string
+// 사업장 — ✅ 서버 기준(`spec 044`, `features/sites/types/site.ts`). 셋 다 성공 `data: true`(🔴 ID 미반환)
+export interface AddSiteRequest {            // POST Site/W/sign/AddSite
+  groupSeq: number                           // 🔴 서버는 단계를 검사 안 함 — 화면이 지사만
+  siteName: string                           // 같은 그룹 같은 이름 → 409
+  address: string                            // 화면 필수(서버는 선택)
+  tel?: string                               // 빈 값이면 싣지 않는다
+}                                            // 🔴 exceptionTime 은 보내도 버린다(B-52) — 헬스체크는 상세에서
+export interface UpdateSiteRequest {         // PUT Site/W/sign/UpdateSite — 🔴 PUT 이지만 부분 갱신
+  siteSeq: number
+  groupSeq?: number                          // 이동 = 하위 사업장도 함께. 하위 사업장 자신은 400
+  siteName?: string
+  tel?: string                               // 🔴 "" 를 보내야 지워진다(생략·null = 유지)
+  address?: string
+  healthCheckYn?: boolean                    // true 면 저장된 값까지 합쳐 필수 5개 검사 — 누락은 (D) 문자열 400
+  healthCheckInterval?: number
+  healthCheckTimeout?: number
+  healthCheckRetry?: number
+  healthCheckStartTime?: string              // "HH:mm:ss"
+  healthCheckEndTime?: string
+  exceptionTime?: { detailSeq: number; exceptionStartTime: string; exceptionEndTime: string }[]
+                                             // 🔴 통째 교체 — 기존 detailSeq 유지 · 새 행 0 · [] = 전부 삭제
 }
-export interface UpdateLocationRequest extends Partial<CreateLocationRequest> { id: string }
-export interface DeleteLocationRequest {
-  id: string
-  passwordConfirmation: string     // 패스워드 확인 필수
-}
-export interface ToggleLocationStatusRequest {
-  id: string
-  status: LocationStatus
-}
+// DELETE Site/W/sign/DeleteSite?siteSeq — 🔴 하위 사업장 · 지점 연쇄(B-54). 비밀번호 재확인 없음(검증 API 없음)
+// (운영 상태 토글 `ToggleLocationStatusRequest` · 계약 기간은 폐기 — 사용자 결정 2026-10-23)
 
-export interface UpdateHealthCheckRequest {
-  locationId: string
-  enabled: boolean
-  usageTimeStart: string
-  usageTimeEnd: string
-  reserveTimeStart: string
-  reserveTimeEnd: string
-  intervalMin: number
-  repeatCount: number
-}
+// ⚠️ 설계안 그대로(API 없음, B-57)
 export interface UpdateEmergencyContactRosterRequest {
   locationId: string
   byDay: Record<DayOfWeek, string[]>   // contactId 배열
