@@ -61,13 +61,13 @@
 
 > **독립 테스트 기준**: MSW 로 값 없는 사업장 토글 ON → 모달 · 저장 바디(시각 `HH:mm:00` · 예외 `detailSeq` 유지/0) · OFF 는 `healthCheckYn` 만 · (D) 문구 토스트.
 
-- [ ] T804 [US4] 헬스체크 카드 in src/features/sites/components/HealthCheckCard.tsx — 토글(`ui/switch`) · [수정](미사용 disabled) · 5칸(사용 시간 · 예외 여러 줄/없음 · 주기 · 타임아웃(단위 없음, OQ-044-B) · 반복) · 미사용 흐림
-- [ ] T805 [US4] 🔴 토글 동작 in HealthCheckCard.tsx — 값 비었으면 OFF→ON = 모달(취소 시 OFF 유지) · 값 있으면 `{ siteSeq, healthCheckYn: true }` · ON→OFF `{ healthCheckYn: false }` · 처리 중 비활성 · 비옵티미스틱
-- [ ] T806 [US4] 폼 스키마 in src/features/sites/form/healthCheckSchema.ts — 시각 필수 · 시작≠종료 · 주기·타임아웃 ≥1 정수 · 반복 ≥0 정수 · 예외 행 시작≠종료
-- [ ] T807 [US4] 설정 모달 in src/features/sites/form/HealthCheckDialog.tsx — 500px · `<input type="time">` · 예외 행 추가/삭제(`useFieldArray`) · 저장 바디(`healthCheckYn: true` + 5개 + 예외 전체) · 실패 시 모달 유지
-- [ ] T808 [US4] 비상연락망 자리 in src/features/sites/components/EmergencyContactCard.tsx — 요일 7행(주말 구분) `미지정` · [지정] · 담당자 풀 [+] 전부 disabled · 안내 "비상연락망은 아직 지원되지 않습니다"
-- [ ] T809 [US4] 조립 in LocationDetailPage.tsx — 우측 담당 관리자 카드 아래에 헬스체크 카드(Phase 5 자리 교체) + 비상연락망 카드
-- [ ] T810 [US4] [P] 테스트 in src/features/sites/components/__tests__/HealthCheckCard.test.tsx · form/__tests__/HealthCheckDialog.test.tsx — 토글 3경로 · 검증 · 예외 바디(기존 유지 · 새 0 · 전부 삭제 `[]`) · (D) 문구 토스트
+- [x] T804 [US4] 헬스체크 카드 in src/features/sites/components/HealthCheckCard.tsx — 🔄 토글 · [수정] 은 설명 줄 오른쪽(`AppDetailCard` 머리에 액션 없음 — 사용자 승인 2026-10-23) · 토글(`ui/switch`) · [수정](미사용 disabled) · 5칸(사용 시간 · 예외 여러 줄/없음 · 주기 · 타임아웃(단위 없음, OQ-044-B) · 반복) · 미사용 흐림
+- [x] T805 [US4] 🔴 토글 동작 in HealthCheckCard.tsx — 값 비었으면 OFF→ON = 모달(취소 시 OFF 유지) · 값 있으면 `{ siteSeq, healthCheckYn: true }` · ON→OFF `{ healthCheckYn: false }` · 처리 중 비활성 · 비옵티미스틱
+- [x] T806 [US4] 폼 스키마 in src/features/sites/form/healthCheckSchema.ts — 시각 필수 · 시작≠종료 · 주기·타임아웃 ≥1 정수 · 반복 ≥0 정수 · 예외 행 시작≠종료
+- [x] T807 [US4] 설정 폼 in src/features/sites/form/HealthCheckForm.tsx(필드·검증만, 모달 500px 은 카드의 `AppDialog` — `SiteForm` 규약) · `<input type="time">` · 예외 행 추가/삭제(`useFieldArray`) · 저장 바디(`healthCheckYn: true` + 5개 + 예외 전체) · 실패 시 모달 유지
+- [x] T808 [US4] 비상연락망 자리 in src/features/sites/components/EmergencyContactCard.tsx — 🔄 **간단한 자리 카드**(제목 · 설명 · 안내 "비상연락망은 아직 지원되지 않습니다") — 요일 7행 · 담당자 풀은 API(B-57)가 생기면 그 구조로(사용자 승인 2026-10-23, 결과 보고 조정)
+- [x] T809 [US4] 조립 in LocationDetailPage.tsx — 우측 담당 관리자 카드 아래에 헬스체크 카드(Phase 5 자리 교체) + 비상연락망 카드
+- [x] T810 [US4] [P] 테스트 in src/features/sites/components/__tests__/HealthCheckCard.test.tsx · (폼 검증 포함 — 별도 파일 없음) — 토글 3경로 · 검증 · 예외 바디(기존 유지 · 새 0 · 전부 삭제 `[]`) · (D) 문구 토스트
 
 ## Phase 7: 검증 · 문서
 

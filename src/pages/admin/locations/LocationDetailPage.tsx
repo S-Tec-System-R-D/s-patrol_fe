@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, HeartPulseIcon, SquarePenIcon, TriangleAlertIcon } from 'lucide-react'
+import { ArrowLeftIcon, SquarePenIcon, TriangleAlertIcon } from 'lucide-react'
 
-import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
-import AppDetailCard from '@/components/app/AppDetailCard'
 import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
 import { useGroupAdminList } from '@/features/groups/hooks/useGroupAdminList'
 import { useGroupList } from '@/features/groups/hooks/useGroupList'
+import EmergencyContactCard from '@/features/sites/components/EmergencyContactCard'
+import HealthCheckCard from '@/features/sites/components/HealthCheckCard'
 import SiteDeleteDialog from '@/features/sites/components/SiteDeleteDialog'
 import SiteInfoCard from '@/features/sites/components/SiteInfoCard'
 import SiteManagersCard from '@/features/sites/components/SiteManagersCard'
@@ -22,7 +22,7 @@ import { paths } from '@/router/paths'
 /**
  * 본사 사업장 상세 `/admin/locations/:id` (`spec 044` US3) — 목업 v2 `SiteDetail`.
  *
- * 머리(뒤로 · 그룹 경로 · 이름) → 좌 기본정보 + [정보 수정] [삭제] / 우 담당 관리자 · 헬스체크.
+ * 머리(뒤로 · 그룹 경로 · 이름) → 좌 기본정보 + [정보 수정] [삭제] / 우 담당 관리자 · 헬스체크 · 비상연락망.
  * 🔴 목업의 KPI형 요약 · 탭 · [운영 중지] · 계약 기간은 **없다** — 다른 상세와 같은 좌우 구조로 한 화면에 둔다(사용자 결정 2026-10-23).
  *
  * 🔴 **출처가 둘이다** — 값은 `GetSiteDetail`, 소속 그룹 · 모 사업장 · 하위 사업장은 `GetGroupList` 노드(상세에 없다).
@@ -195,20 +195,8 @@ const LocationDetailPage = () => {
             isError={admins.isError || list.isError}
             onRetry={() => void (list.isError ? list.refetch() : admins.refetch())}
           />
-          {/* 헬스체크 설정 · 비상연락망은 Phase 6(US4) */}
-          <AppDetailCard
-            icon={HeartPulseIcon}
-            title="헬스체크"
-            badge={
-              site.healthCheckYn ? (
-                <AppBadge variant="success">사용 · {site.healthCheckInterval}분</AppBadge>
-              ) : (
-                <AppBadge variant="muted">미사용</AppBadge>
-              )
-            }
-          >
-            <AppEmpty icon={HeartPulseIcon} title="헬스체크 설정을 준비 중입니다." />
-          </AppDetailCard>
+          <HealthCheckCard detail={site} />
+          <EmergencyContactCard />
         </div>
       </div>
     </div>
