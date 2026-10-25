@@ -65,6 +65,29 @@ describe('RequireRoute', () => {
     expect(screen.queryByText('PROTECTED')).not.toBeInTheDocument()
   })
 
+  /**
+   * 🔴 999 US2 — 본사 영역 권한 매트릭스. 라우터의 본사 라우트 3개(`/admin/locations` · `/admin/locations/:id` ·
+   * `/admin/admins`)는 모두 같은 `roles` 로 감싸져 있다(`router/index.tsx`) — 그 배열을 4권한으로 고정한다.
+   * 현장 영역의 본사 차단은 `AuthGuard` 테스트가 본다.
+   */
+  it.each([
+    ['SystemManager', 'PROTECTED'],
+    ['Master', 'PROTECTED'],
+    ['Manager', 'PROTECTED'],
+    ['FieldManager', 'FORBIDDEN_PAGE'],
+  ])('본사 영역 매트릭스 — %s → %s', async (jwtRole, expected) => {
+    setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: jwtRole }))
+
+    renderWithRouter(
+      '/admin/anything',
+      <RequireRoute roles={['SYSTEM', 'MASTER', 'MANAGER']}>
+        <div>PROTECTED</div>
+      </RequireRoute>
+    )
+
+    await waitFor(() => expect(screen.getByText(expected)).toBeInTheDocument())
+  })
+
   // 020: useMe 실패 = 토큰이 없거나 디코딩 불가. 네트워크 401이 아니다.
   it('미인증(토큰 없음) 시 /login으로 리다이렉트', async () => {
     renderWithRouter(

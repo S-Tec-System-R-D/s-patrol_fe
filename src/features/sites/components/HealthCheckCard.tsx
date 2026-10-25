@@ -26,7 +26,8 @@ import type { SiteDetail } from '../types/site'
  * - 끄면 `healthCheckYn: false` 만 보낸다 — 값은 서버에 남는다(실측). 그래서 미사용이어도 값을 흐리게 보여 준다.
  */
 
-const EMPTY = '—'
+/** 값 없음 — `design-system.md` §4-5A(999 T869 에서 `—` → `-`) */
+const EMPTY = '-'
 
 const timeRange = (start: string | null, end: string | null): string =>
   start === null || end === null ? EMPTY : `${toHHmm(start)} – ${toHHmm(end)}`

@@ -104,10 +104,10 @@ describe('adminGroupLabel · adminGroupSummary', () => {
     expect(adminGroupLabel(root, root)).toBe('회사')
   })
 
-  it('첫 그룹 + 외 N개 · 없으면 —', () => {
+  it('첫 그룹 + 외 N개 · 없으면 -', () => {
     expect(adminGroupSummary(root, [hqA, branch])).toBe('본부A 외 1개')
     expect(adminGroupSummary(root, [branch])).toBe('본부A › 지사A1')
-    expect(adminGroupSummary(root, [])).toBe('—')
+    expect(adminGroupSummary(root, [])).toBe('-')
   })
 
   it('Master 트리 안 경로 — 루트가 회사가 아니어도 그 그룹 이름이 나온다', () => {

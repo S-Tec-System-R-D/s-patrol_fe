@@ -82,9 +82,10 @@ export const adminGroupLabel = (root: GroupNode, group: GroupNode): string => {
   return shown.length > 0 ? shown.map((node) => node.groupName).join(' › ') : group.groupName
 }
 
-/** 목록 칸 — 첫 그룹 + `외 N개`, 없으면 `—` */
+/** 목록 칸 — 첫 그룹 + `외 N개`, 없으면 `-` */
 export const adminGroupSummary = (root: GroupNode, groups: GroupNode[]): string => {
-  if (groups.length === 0) return '—'
+  // 값 없음은 하이픈(`design-system.md` §4-5A — em dash 를 쓰지 않는다, 999 T869)
+  if (groups.length === 0) return '-'
   const first = adminGroupLabel(root, groups[0])
   return groups.length > 1 ? `${first} 외 ${groups.length - 1}개` : first
 }

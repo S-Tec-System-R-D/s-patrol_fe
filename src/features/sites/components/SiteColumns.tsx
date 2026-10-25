@@ -9,7 +9,8 @@ import type { SiteRow } from '../lib/siteList'
  * 🔴 **담당 관리자는 고정 `—`** — 서버에 값이 없다. 사용자가 백엔드에 요청 중이라 자리를 둔다(OQ-044-D).
  */
 
-const EMPTY = '—'
+/** 값 없음 — `design-system.md` §4-5A(999 T869 에서 `—` → `-`) */
+const EMPTY = '-'
 
 /** 🔴 정렬을 끈다 — 하위 사업장이 모 사업장 바로 아래 있어야 한다(응답 순서) */
 export const siteColumns = (): ColumnDef<SiteRow>[] => {

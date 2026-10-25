@@ -79,12 +79,12 @@ describe('HealthCheckCard — 표시', () => {
     expect(values.getByText('5회')).toBeInTheDocument()
   })
 
-  it('미사용이면 값을 흐리게 · [수정] 막힘 · 값 없는 칸은 —', async () => {
+  it('미사용이면 값을 흐리게 · [수정] 막힘 · 값 없는 칸은 -', async () => {
     renderCard(9)
     expect(await screen.findByText('미사용')).toBeInTheDocument()
     expect(screen.getByTestId('health-check-values')).toHaveClass('opacity-50')
     expect(screen.getByRole('button', { name: '수정' })).toBeDisabled()
-    expect(within(screen.getByTestId('health-check-values')).getAllByText('—')).toHaveLength(4)
+    expect(within(screen.getByTestId('health-check-values')).getAllByText('-')).toHaveLength(4)
   })
 })
 

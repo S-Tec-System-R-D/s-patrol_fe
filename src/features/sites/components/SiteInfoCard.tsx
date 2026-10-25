@@ -12,7 +12,8 @@ import type { SiteDetail } from '../types/site'
  * 코스 · 지점 수는 상세가 준다(목록에는 없다). 목업의 운영 상태 · 계약 기간은 없다(사용자 결정 2026-10-23).
  */
 
-const EMPTY = '—'
+/** 값 없음 — `design-system.md` §4-5A(999 T869 에서 `—` → `-`) */
+const EMPTY = '-'
 
 interface SiteInfoCardProps {
   detail: SiteDetail

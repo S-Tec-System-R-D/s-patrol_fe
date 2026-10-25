@@ -1,6 +1,7 @@
-import { forwardRef, useState } from 'react'
+import { forwardRef, useId, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { SearchIcon, EyeIcon, EyeOffIcon } from 'lucide-react'
+import { useFormFieldIds } from './formFieldContext'
 
 type InputVariant = 'default' | 'search' | 'password'
 
@@ -14,9 +15,21 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   variant?: InputVariant
 }
 
+/**
+ * 🔴 **라벨 ↔ 입력칸 연결**(`spec 999` US3 — OQ-F, 020 등재). 전에는 `<label>` 이 입력칸과 이어져 있지 않아
+ * 스크린리더가 칸 이름을 읽지 못했고 라벨을 눌러도 포커스가 가지 않았다(테스트도 placeholder 로 우회했다 — 045).
+ * - id: 호출부 `id` > `AppFormField` 컨텍스트 > `useId`
+ * - 에러가 있으면 `aria-invalid` + 에러 문구를 `aria-describedby` 로
+ * - 겉모습은 바꾸지 않는다 — 속성만 더했다(사용처 25파일 무변경)
+ */
 const AppInput = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, required, className, variant = 'default', type, ...props }, ref) => {
+  ({ label, error, required, className, variant = 'default', type, id: idProp, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false)
+    const field = useFormFieldIds()
+    const generatedId = useId()
+    const id = idProp ?? field?.id ?? generatedId
+    const errorId = `${id}-error`
+    const describedBy = [props['aria-describedby'], error ? errorId : field?.describedBy].filter(Boolean).join(' ')
 
     const isSearch = variant === 'search'
     const isPassword = variant === 'password'
@@ -27,7 +40,7 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1 w-full">
         {label && (
-          <label className="text-sm font-medium text-foreground">
+          <label htmlFor={id} className="text-sm font-medium text-foreground">
             {label}
             {required && <span className="text-danger ml-1">*</span>}
           </label>
@@ -44,6 +57,7 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
 
           <input
             ref={ref}
+            id={id}
             type={inputType}
             className={cn(
               'w-full rounded-sm border border-border bg-card px-3 py-2 text-sm text-foreground',
@@ -56,6 +70,8 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
               className
             )}
             {...props}
+            aria-invalid={error || field?.invalid ? true : props['aria-invalid']}
+            aria-describedby={describedBy || undefined}
           />
 
           {/* 패스워드 토글 버튼 */}
@@ -75,7 +91,11 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
-        {error && <p className="text-xs text-danger">{error}</p>}
+        {error && (
+          <p id={errorId} className="text-xs text-danger">
+            {error}
+          </p>
+        )}
       </div>
     )
   }

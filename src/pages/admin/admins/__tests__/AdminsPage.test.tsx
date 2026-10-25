@@ -83,17 +83,17 @@ const openAdmin = async (name: string) => {
 /** 상세 모달 제목 — 이름은 프로필 머리에 있다(045 후속 T845 시안 A) */
 const DETAIL_TITLE = '관리자 상세'
 
-/** 🔴 `AppInput` 은 라벨이 입력칸에 연결돼 있지 않다(OQ-F) — 근무자 폼 테스트처럼 placeholder 로 찾는다 */
+/** 라벨로 찾는다 — `AppInput` 라벨 연결(999 US3, OQ-F 해소) */
 const VALID_ADMIN: Record<string, string> = {
-  홍길동: '홍길동',
-  '010-0000-0000': '010-1234-5678',
-  '로그인에 쓰는 사번(8자리 이하)': '9904501',
-  '8자리 이상, 영문·숫자·특수문자 포함': 'Wf0test12!',
-  '비밀번호를 한 번 더 입력해주세요': 'Wf0test12!',
+  이름: '홍길동',
+  연락처: '010-1234-5678',
+  사번: '9904501',
+  '초기 비밀번호': 'Wf0test12!',
+  '비밀번호 확인': 'Wf0test12!',
 }
 const fillAdminForm = async (form: ReturnType<typeof within>) => {
-  for (const [placeholder, value] of Object.entries(VALID_ADMIN)) {
-    await userEvent.type(form.getByPlaceholderText(placeholder), value)
+  for (const [label, value] of Object.entries(VALID_ADMIN)) {
+    await userEvent.type(form.getByLabelText(new RegExp(`^${label}`)), value)
   }
 }
 
@@ -114,7 +114,7 @@ describe('AdminsPage — 목록 (US1)', () => {
       ['시스템관리자', '시스템관리자', '에스텍시스템 외 1개'],
       ['김용우', '마스터', '테스트사업장(수정) 외 3개'],
       ['이현성', '마스터', '테스트사업장(수정) 외 1개'],
-      ['테스트', '매니저', '—'],
+      ['테스트', '매니저', '-'],
       ['test', '마스터', 'test 외 1개'],
     ])
     const headers = table().getAllByRole('columnheader').map((th) => th.textContent)
@@ -242,7 +242,7 @@ describe('AdminsPage — 관리자 추가 UI (045 후속 T843 · T844)', () => {
     renderPage()
     const form = await openAddForm()
     await fillAdminForm(form)
-    const confirm = form.getByPlaceholderText('비밀번호를 한 번 더 입력해주세요')
+    const confirm = form.getByLabelText(/^비밀번호 확인/)
     await userEvent.clear(confirm)
     await userEvent.type(confirm, 'Wf0test99!')
     await userEvent.click(form.getByRole('button', { name: '등록' }))

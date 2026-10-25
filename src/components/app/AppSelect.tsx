@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useFormFieldIds } from './formFieldContext'
 
 export interface AppSelectOption {
   value: string
@@ -32,6 +33,7 @@ interface AppSelectProps {
 /**
  * 단일 선택 컨트롤.
  * - label / error / hint는 갖지 않는다 — `AppFormField` 책임 (design-system.md D9).
+ *   🔴 그 안에 있으면 트리거가 라벨 · 도움말과 이어진다(`spec 999` US3 — 컨텍스트 id).
  * - 다중 선택 미지원(017 결정). 필요해지면 기본값 false인 `multiple` prop으로 확장한다.
  * - `icon`·`active`는 목록 필터 트리거로 쓰일 때만 넘긴다(018). 둘 다 선택적이라
  *   폼 안에서 쓰는 기존 호출부는 외형이 변하지 않는다.
@@ -47,10 +49,14 @@ const AppSelect = ({
   active,
   'aria-label': ariaLabel,
 }: AppSelectProps) => {
+  const field = useFormFieldIds()
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger
+        id={field?.id}
         aria-label={ariaLabel}
+        aria-describedby={field?.describedBy}
+        aria-invalid={field?.invalid || undefined}
         data-active={active}
         className={cn(
           'bg-card focus-visible:border-point focus-visible:ring-point/20',

@@ -3,10 +3,14 @@ import { useMe } from '@/features/auth/hooks/useMe'
 import { getAccessToken } from '@/lib/auth/tokens'
 import { getSiteSeq } from '@/lib/auth/site'
 import { paths, isAdminArea } from '@/router/paths'
+import type { AdminRole, Role } from '@/types/enum'
+
+const ADMIN_ROLES: readonly Role[] = ['SYSTEM', 'MASTER', 'MANAGER'] satisfies readonly AdminRole[]
 
 /**
  * 보호 라우트 진입 가드.
  * - 토큰 없음 → 영역별 로그인 화면으로 Navigate(`?redirect=` 보존)
+ * - 🔴 토큰 있음 + 현장 영역 + **본사 계정** → 본사 홈으로 Navigate (999 US2 — 본사는 현장 화면에 들어가지 않는다)
  * - 토큰 있음 + 현장 영역 + 사업장 미선택 → 로그인으로 Navigate (021)
  * - 토큰 있음 + useMe 로딩 → null 렌더(깜빡임 방지)
  * - 토큰 있음 + useMe 실패 → 인터셉터 refresh도 실패한 상태. 안전을 위해 로그인으로 Navigate
@@ -25,6 +29,14 @@ const AuthGuard = () => {
     const loginPath = isAdmin ? paths.adminLogin : paths.serviceLogin
     const target = `${loginPath}?redirect=${encodeURIComponent(location.pathname)}`
     return <Navigate to={target} replace />
+  }
+
+  // 🔴 본사 계정은 현장 화면에 들어가지 않는다(사용자 결정 2026-10-23, spec 999 US2).
+  //
+  // 본사는 사업장을 고르지 않으므로(043) 아래 `siteSeq` 검사에 걸려 **현장 로그인으로 튕겼다** — 로그인된 사람에게
+  // 로그인 화면을 보여 주는 셈이었다. 🔴 `siteSeq` 검사보다 **먼저** 본다 — 예전에 남은 `siteSeq` 가 있어도 본사 홈이다.
+  if (!isAdmin && data && ADMIN_ROLES.includes(data.role)) {
+    return <Navigate to={paths.admin.locations} replace />
   }
 
   // 🔴 사업장 미선택 차단(spec 021 §3 규칙 6).

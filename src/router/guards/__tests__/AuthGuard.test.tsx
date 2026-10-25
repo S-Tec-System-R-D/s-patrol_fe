@@ -24,7 +24,7 @@ const renderAt = (initialPath: string) => {
             {/* 부모가 `/admin/*`이므로 자식은 **상대 경로**여야 한다. 021 이전에는
                 `admin/locations`(= /admin/admin/locations)로 잘못 중첩돼 있었는데,
                 본사 통과 케이스를 검사하는 테스트가 없어 드러나지 않았다. */}
-            <Route path="locations" element={<div>OUTLET_OK</div>} />
+            <Route path="locations" element={<div>ADMIN_OUTLET_OK</div>} />
           </Route>
           <Route path="/*" element={<AuthGuard />}>
             <Route path="zones" element={<div>OUTLET_OK</div>} />
@@ -82,7 +82,27 @@ describe('AuthGuard', () => {
     setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: 'SystemManager' }))
 
     renderAt('/admin/locations')
-    await waitFor(() => expect(screen.getByText('OUTLET_OK')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('ADMIN_OUTLET_OK')).toBeInTheDocument())
+  })
+
+  /**
+   * 🔴 999 US2 — 본사 계정은 현장 화면에 들어가지 않는다(사용자 결정 2026-10-23). 전에는 `siteSeq` 가 없어
+   * **현장 로그인으로** 튕겼다(로그인된 사람에게 로그인 화면).
+   */
+  it.each(['SystemManager', 'Master', 'Manager'])('본사 계정(%s) + 현장 URL → 본사 홈', async (jwtRole) => {
+    setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: jwtRole }))
+
+    renderAt('/zones')
+    await waitFor(() => expect(screen.getByText('ADMIN_OUTLET_OK')).toBeInTheDocument())
+    expect(screen.queryByText('SERVICE_LOGIN')).not.toBeInTheDocument()
+  })
+
+  it('🔴 본사 계정에 예전 siteSeq 가 남아 있어도 본사 홈(역할 판정이 먼저)', async () => {
+    setAccessToken(makeAccessToken({ [MS_ROLE_CLAIM]: 'SystemManager' }))
+    setSite(7, '강동 테크노타워')
+
+    renderAt('/zones')
+    await waitFor(() => expect(screen.getByText('ADMIN_OUTLET_OK')).toBeInTheDocument())
   })
 
   // 020: 디코딩 불가한 토큰은 "사용자를 특정할 수 없음" → 가드가 로그인으로 보낸다.

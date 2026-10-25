@@ -46,10 +46,11 @@ const fillAdd = async (
   over: Partial<Record<'name' | 'loginId' | 'phone' | 'loginPw', string>> = {}
 ) => {
   const v = { name: '새근무자', loginId: '990001', phone: '010-1234-5678', loginPw: 'Abcd123!', ...over }
-  await user.type(screen.getByPlaceholderText('이름을 입력해주세요'), v.name)
-  await user.type(screen.getByPlaceholderText('로그인에 쓰는 사번(8자리 이하)'), v.loginId)
-  await user.type(screen.getByPlaceholderText('010-0000-0000'), v.phone)
-  await user.type(screen.getByPlaceholderText('8자리 이상, 영문·숫자·특수문자 포함'), v.loginPw)
+  // 🔴 라벨로 찾는다 — `AppInput` 라벨 연결(999 US3) 전에는 placeholder 로 우회했다(OQ-F)
+  await user.type(screen.getByLabelText(/^이름/), v.name)
+  await user.type(screen.getByLabelText(/^사번/), v.loginId)
+  await user.type(screen.getByLabelText(/^연락처/), v.phone)
+  await user.type(screen.getByLabelText(/^초기비밀번호/), v.loginPw)
 }
 
 beforeEach(() => {
