@@ -144,7 +144,7 @@ Phase 1~5 를 거치며 문서와 코드가 어긋난 곳(진행도 · 권한 �
 
 | 항목 | 상태 · 넘길 곳 |
 |---|---|
-| **OQ-999-A** 표 행 키보드 접근 | 미수정 — `AppTable` `onRowClick` 행에 `tabIndex` · Enter/Space 가 없다(`a11y-check.md` §8). 공용 1곳 수정안 있음(036 `CheckDetailTable` 선례). 사용자 판단 대기 |
+| **OQ-999-A** 표 행 키보드 접근 | ✅ **해소 — `047-table-row-keyboard`(2026-10-26)**. `AppTable` 공용 1곳(036 `CheckDetailTable` 선례) |
 | 톤 B · C · E(호칭 "님" · 삭제 부연 · 빈 상태 다음 행동) | 사용자 결정으로 **고치지 않음**(T868) — `tone-check.md` 에 기록만 |
 | 랜딩 `/` | 미착수 — 지금 404. 착수 여부 결정 필요 |
 | 순찰이력 Export · 진행 중 순찰 · 키워드 · 비밀번호 찾기 | 막힘(API 없음 · 화면 미정 · 목업 없음 · 명세 없음) — `screens.md` 사유 칸 |

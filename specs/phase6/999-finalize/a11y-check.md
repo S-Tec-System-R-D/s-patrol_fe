@@ -17,6 +17,8 @@
 
 ## 8. 표 행 클릭 — 키보드로 열 수 없다
 
+> ✅ **해소(2026-10-26, `047-table-row-keyboard`)** — 아래 수정안 그대로 `AppTable` 에 반영했다. 아래는 당시 기록.
+
 - `AppTable` 의 `onRowClick` 은 `<tr onClick>` 만 건다(`src/components/AppTable.tsx:174`) — `tabIndex` · Enter/Space 처리가 없다.
 - → **키보드 사용자는 목록에서 상세로 갈 수 없다.** 좁은 폭 카드는 `button` 이라 괜찮다(같은 파일 207행 주석).
 - 영향: `onRowClick` 을 쓰는 목록 전부 — 사업장 · 관리자 · 근무자 · 지점 · 코스 · 순찰이력 2종 · 공지.

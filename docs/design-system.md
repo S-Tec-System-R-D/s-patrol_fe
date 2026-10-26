@@ -350,7 +350,7 @@ Tailwind 기본 스케일 그대로 사용(별도 커스텀 없음). 자주 쓰�
 - **명도 대비**: 시맨틱 트리오의 `-foreground`는 `-bg` 위에서 대비 충족하도록 설계됨. 다른 조합(예: `text-point on bg-warning`) 사용 시 대비 검증 필수.
 - **키보드 동선**: 사이드바·탭·다이얼로그는 shadcn(radix) 기본 키보드 처리 그대로 사용.
 - ✅ **폼 라벨 연결**(`spec 999` US3 — OQ-F 해소): `AppInput` 의 `label` · `AppFormField` 가 `useId` 로 입력칸(`AppSelect` 트리거 포함)과 이어진다. 에러는 `aria-invalid` + `aria-describedby`. 테스트는 **placeholder 가 아니라 라벨로** 찾는다.
-- ⚠️ **표 행 클릭의 키보드 접근**(`spec 999` 점검 — OQ-999-A): `AppTable` 의 `onRowClick` 은 `<tr onClick>` 만이라 키보드로 상세에 갈 수 없다. 점검 목록: `specs/phase6/999-finalize/a11y-check.md`.
+- ✅ **표 행 클릭의 키보드 접근**(OQ-999-A — `047` 에서 해소, 2026-10-26): `AppTable` 은 `onRowClick` 이 있을 때만 행에 `tabIndex={0}` · Enter/Space = 클릭 · `focus-visible` 윤곽을 건다. 행 안쪽 버튼 · 링크의 키는 행으로 처리하지 않는다. 행을 펼치는 표는 `CheckDetailTable`(036) 이 같은 방식이다.
 
 ---
 
