@@ -501,8 +501,8 @@ AlertDialog: 바뀌는 결과를 문장으로 설명
 
 ## 14. 반응형 목록 — 테이블 ↔ 카드 (2026-10-13, `spec 030`)
 
-> 구현: `components/AppTable.tsx` 의 `renderCard` · 사용처 4곳
-> (`/zones` · `/points` · `/patrol/zones` · `/patrol/points`)
+> 구현: `components/AppTable.tsx` 의 `renderCard` · 사용처 7곳
+> (`/zones` · `/points` · `/patrol/zones` · `/patrol/points` · `/users` · `/admin/locations` · `/admin/admins`)
 
 ### 왜 생겼나
 
@@ -538,6 +538,10 @@ AlertDialog: 바뀌는 결과를 문장으로 설명
    행 클릭이 **없어서** 가능했다 — 행 클릭이 생기면 그 버튼을 밖으로 빼야 한다.
 9. ⚠️ **테스트에서는 DOM 에 두 벌이 있다**(jsdom 에 Tailwind 가 없어 둘 다 조회된다).
    `within(screen.getByRole('table'))` 로 영역을 좁힌다. "테이블 1 + 카드 1 = 2" 가 **정상**이다.
+10. 🔴 **꺾쇠(›)는 "상세 페이지로 간다" 는 표시다**(`046` #2) — 표의 마지막 열(`id: 'open'`, 머리 빈칸)과 카드 꼬리에 둔다.
+    상세가 **모달**인 목록(`/admin/admins` · 배치)에는 두지 않는다.
+11. 들여쓰기가 있는 목록(사업장 — 하위 사업장)은 카드도 들여쓴다(`046` #18 A안). 카드 외곽은 `AppTable` 이 그리므로
+    `rowClassName` 으로 `ml-*` 를 준다 — 표의 `tr` 에는 margin 이 먹지 않아 카드에만 보인다.
 
 ### 하지 않은 것
 
@@ -557,6 +561,8 @@ AlertDialog: 바뀌는 결과를 문장으로 설명
 | `/points` | 5 | 지점명 + 사용·인증수단 / 소속 코스 / 최근 순찰 |
 | `/patrol/zones` | 4 | 코스명 + 결과 / 시작 · 종료 |
 | `/patrol/points` | 8 | 지점명 + 결과 / 일시 · 코스 · 순찰자 · 인증수단 (🔴 `spec 037` 에서 **034 타일 골격**으로 재작성 — 기록은 **아이콘**이고 카드 안에 **버튼을 두지 않는다**: 행 클릭이 생겨 카드가 `button` 이 됐다) |
+| `/admin/locations` | 5 | 사업장명(하위는 `└` + 들여쓰기) / 소속 그룹 · 주소 (`046`) |
+| `/admin/admins` | 3 | 이름 + 권한 / 담당 그룹 — 꺾쇠 없음(상세 = 모달) (`046`) |
 
 ---
 
