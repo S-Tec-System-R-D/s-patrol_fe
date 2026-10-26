@@ -5,6 +5,7 @@ import AppAlertDialog from '@/components/AppAlertDialog'
 import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
 import AppIconButton from '@/components/app/AppIconButton'
+import AppLinkButton from '@/components/app/AppLinkButton'
 import type { GroupNode } from '@/features/auth/types/site'
 import { cn } from '@/lib/utils'
 import GroupNameForm from '../form/GroupNameForm'
@@ -17,8 +18,6 @@ import { GroupTreeStatus } from './GroupFilterPanel'
 type SubDialog = { kind: 'add' | 'rename' | 'delete'; group: GroupNode } | null
 
 const iconButtonClass = 'border-0 p-1.5'
-const addLinkClass =
-  'inline-flex items-center gap-1 h-7 px-2 rounded-md text-meta font-semibold text-point-foreground hover:bg-point-bg'
 
 /**
  * 관리그룹 편집 모달 (`spec 043` T754 · T756 → 후속 T772, 참고 `ui-mock/본사관리자/사업장/관리그룹-편집모달1·2.png`).
@@ -84,15 +83,13 @@ export const GroupEditDialog = ({
   )
 
   const addLink = (parent: GroupNode, label: string) => (
-    <button
-      type="button"
+    <AppLinkButton
+      icon={PlusIcon}
       aria-label={`${parent.groupName} 하위 그룹 추가`}
-      className={addLinkClass}
       onClick={() => setSub({ kind: 'add', group: parent })}
     >
-      <PlusIcon size={13} />
       {label}
-    </button>
+    </AppLinkButton>
   )
 
   /** 지사 행 — 네모 닷(목록 트리와 같다) */

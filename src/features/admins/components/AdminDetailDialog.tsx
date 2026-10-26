@@ -7,6 +7,7 @@ import AppButton from '@/components/app/AppButton'
 import AppDetailRow from '@/components/app/AppDetailRow'
 import AppDialog from '@/components/app/AppDialog'
 import AppIconButton from '@/components/app/AppIconButton'
+import AppLinkButton from '@/components/app/AppLinkButton'
 import { useMe } from '@/features/auth/hooks/useMe'
 import type { GroupNode } from '@/features/auth/types/site'
 import { useUserDetail } from '@/features/workers/hooks/useUserDetail'
@@ -35,9 +36,7 @@ import LockedAccountButton from './LockedAccountButton'
  * - 🔴 Master 가 **자기 자신**을 해제하면 그 그룹 권한을 잃는다(트리에서 사라진다 — 실측) → 확인을 받는다.
  */
 
-/** 버튼 모양은 관리그룹 편집 모달(`GroupEditDialog`)과 같다 — [+ 본부 추가] 링크 · 휴지통 아이콘(사용자 요청 2026-10-23) */
-const addLinkClass =
-  'inline-flex items-center gap-1 h-7 px-2 rounded-md text-meta font-semibold text-point-foreground hover:bg-point-bg'
+/** 버튼 모양은 관리그룹 편집 모달(`GroupEditDialog`)과 같다 — [+ 본부 추가] 링크(`AppLinkButton`) · 휴지통 아이콘(사용자 요청 2026-10-23) */
 const removeButtonClass = 'border-0 p-1.5 hover:bg-danger-bg hover:text-danger'
 
 interface AdminDetailDialogProps {
@@ -118,10 +117,9 @@ const AdminDetailBody = ({ row, root, onClose }: { row: AdminRow; root: GroupNod
             담당 그룹 <span className="tabular-nums text-muted-foreground">{groups.length}</span>
           </h3>
           {canAssign && (
-            <button type="button" className={addLinkClass} onClick={() => setAssignOpen(true)}>
-              <PlusIcon size={13} />
+            <AppLinkButton icon={PlusIcon} onClick={() => setAssignOpen(true)}>
               그룹 추가
-            </button>
+            </AppLinkButton>
           )}
         </div>
         {sections.length === 0 ? (

@@ -1,7 +1,7 @@
 import { SquarePenIcon } from 'lucide-react'
 
 import AppDetailRow from '@/components/app/AppDetailRow'
-import AppIconButton from '@/components/app/AppIconButton'
+import AppLinkButton from '@/components/app/AppLinkButton'
 import { getSiteName } from '@/lib/auth/site'
 
 import ZoneRow from './ZoneRow'
@@ -58,13 +58,10 @@ const PointDetail = ({ point, onEdit }: { point: PointDetailData; onEdit?: () =>
           title="기본정보"
           action={
             onEdit && (
-              /* 코스 상세와 **같은 `SquarePen` 아이콘 전용 버튼** */
-              <AppIconButton
-                icon={SquarePenIcon}
-                aria-label="기본정보 수정"
-                title="수정"
-                onClick={onEdit}
-              />
+              /* 코스 상세와 같은 링크형 [수정](`048`, 사용자 결정 2026-10-26) */
+              <AppLinkButton icon={SquarePenIcon} aria-label="기본정보 수정" onClick={onEdit}>
+                수정
+              </AppLinkButton>
             )
           }
         >

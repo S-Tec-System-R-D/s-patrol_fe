@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { HeartPulseIcon, SquarePenIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
-import AppButton from '@/components/app/AppButton'
 import AppDetailCard from '@/components/app/AppDetailCard'
 import AppDetailRow from '@/components/app/AppDetailRow'
 import AppDialog from '@/components/app/AppDialog'
+import AppLinkButton from '@/components/app/AppLinkButton'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 
@@ -88,15 +88,10 @@ const HealthCheckCard = ({ detail }: { detail: SiteDetail }) => {
             contentClassName="sm:max-w-[500px]"
             trigger={
               // 미사용이면 막는다(목업) — 값이 빈 사업장은 토글이 모달을 연다
-              <AppButton
-                variant="sub"
-                icon={SquarePenIcon}
-                iconSize={14}
-                className="bg-card"
-                disabled={!on}
-              >
+              // 카드 안 버튼은 링크형(`048`)
+              <AppLinkButton icon={SquarePenIcon} disabled={!on}>
                 수정
-              </AppButton>
+              </AppLinkButton>
             }
           >
             <HealthCheckForm

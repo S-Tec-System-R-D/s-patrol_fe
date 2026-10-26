@@ -2,7 +2,7 @@ import { MapPinIcon, PlusIcon, SquarePenIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import AppBadge from '@/components/app/AppBadge'
-import AppIconButton from '@/components/app/AppIconButton'
+import AppLinkButton from '@/components/app/AppLinkButton'
 import AppEmpty from '@/components/app/AppEmpty'
 import { toAuthMethodLabel } from '@/features/points/lib/authMethod'
 import { paths } from '@/router/paths'
@@ -72,18 +72,14 @@ const CoursePointList = ({ points, onEdit }: CoursePointListProps) => {
 
         <div className="flex items-center gap-3">
           {onEdit && (
-            /* 🔴 **아이콘만 둔다**(사용자 결정 2026-10-12). 글자 버튼은 카드 머리에서
-               제목·건수와 무게를 다퉈 카드가 시끄러워졌다. 기본정보 카드와 **같은
-               `SquarePen`** 을 쓴다 — 두 버튼의 뜻이 "이 카드를 편집한다" 로 같고,
-               한 카드에 하나뿐이라 아이콘이 같아도 가리키는 대상이 섞이지 않는다.
-               🔴 **`aria-label` 과 `title` 로 이름을 남긴다** — 아이콘만 두면 글자가
-               사라지므로, 스크린리더와 마우스 양쪽에 같은 말을 준다 */
-            <AppIconButton
-              icon={SquarePenIcon}
-              aria-label="지점 편성 편집"
-              title="편성 편집"
-              onClick={onEdit}
-            />
+            /* 🔄 **링크형 + 글자**(`048`, 사용자 결정 2026-10-26 — 카드 안 버튼 = `AppLinkButton`).
+               10-12 에는 테두리 글자 버튼이 제목·건수와 무게를 다퉈 아이콘만 뒀는데, 링크형은
+               테두리가 없어 그 문제가 없고 아이콘만 두면 버튼으로 안 읽힌다.
+               기본정보 카드와 **같은 `SquarePen`** — 두 버튼의 뜻이 "이 카드를 편집한다" 로 같다.
+               `aria-label` 은 보이는 글자를 포함해 둔다(같은 화면의 다른 [수정] 과 구분) */
+            <AppLinkButton icon={SquarePenIcon} aria-label="지점 편성 편집" onClick={onEdit}>
+              편성 편집
+            </AppLinkButton>
           )}
         </div>
       </div>
