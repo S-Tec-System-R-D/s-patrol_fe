@@ -127,8 +127,9 @@ const PointLocationMapCard = ({ detail }: PointLocationMapCardProps) => {
           인증 시점 좌표
         </span>
       </div>
-      {/* 🔴 높이를 고정한다 — 지도는 자기 크기를 모른다(부모가 0이면 타일이 안 뜬다) */}
-      <div ref={containerRef} className="h-[220px] w-full rounded-sm" />
+      {/* 🔴 높이를 고정한다 — 지도는 자기 크기를 모른다(부모가 0이면 타일이 안 뜬다).
+          좌측 2/3 폭으로 옮기며 `HistoryMapCard`(036)와 같은 높이로 맞췄다(050) */}
+      <div ref={containerRef} className="h-[320px] w-full rounded-sm" />
     </div>
   )
 }

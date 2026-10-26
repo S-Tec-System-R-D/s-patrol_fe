@@ -112,14 +112,15 @@ const CourseInfo = ({ course, onRequestToggle, onEdit, isSaving }: CourseInfoPro
       {/* 🔴 **1열이다**(사용자 결정 2026-10-12). Phase 3 에서는 이 카드가 전체 폭의 1/3
           이 아니라 더 넓은 자리에 있어 `xl` 에서 2열이 유리했지만, A단에서 **우측 1/3
           칸**으로 들어가면서 2열이 되면 라벨·값이 둘 다 좁아져 값이 줄바꿈된다.
-          라벨 고정폭 + 값 한 줄이 좁은 칸에서 가장 빠르게 읽힌다 */}
+          라벨 고정폭 + 값 한 줄이 좁은 칸에서 가장 빠르게 읽힌다.
+          🔄 **행은 `between` 이다**(`spec 050`, 사용자 결정 2026-10-26) — 우측 1/3 칸이라
+          `fixed` 를 둔 이유(전체 폭에서 라벨·값이 멀어짐)가 없다. 다른 정보 카드와 같은 행 */}
       <div className="flex flex-col text-body">
         {/* 🔴 **코스명 행을 두지 않는다** — 페이지 제목이 이미 코스명이다. 같은 값이 한
             화면에 두 번 있으면 사용자는 둘이 다른 값인지 확인하려 눈을 왕복한다(설명도
             같은 이유로 제목 아래에서 뺐다). 수정 모달에는 당연히 들어간다 */}
-        <AppDetailRow variant="fixed" label="사업장" value={siteName ?? '-'} />
+        <AppDetailRow label="사업장" value={siteName ?? '-'} />
         <AppDetailRow
-          variant="fixed"
           label="설명"
           value={
             course.memo?.trim() ? (
@@ -131,12 +132,10 @@ const CourseInfo = ({ course, onRequestToggle, onEdit, isSaving }: CourseInfoPro
           }
         />
         <AppDetailRow
-          variant="fixed"
           label="총 소요시간"
           value={<span className="tabular-nums">{course.totalMin}분</span>}
         />
         <AppDetailRow
-          variant="fixed"
           label="교대 허용"
           value={
             <ToggleValue
@@ -150,7 +149,6 @@ const CourseInfo = ({ course, onRequestToggle, onEdit, isSaving }: CourseInfoPro
           }
         />
         <AppDetailRow
-          variant="fixed"
           label="코스 활성화"
           value={
             <ToggleValue

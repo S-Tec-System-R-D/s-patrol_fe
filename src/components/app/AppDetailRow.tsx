@@ -43,11 +43,18 @@ const AppDetailRow = ({ label, value, variant = 'between' }: AppDetailRowProps) 
      있지만(위 표), 구분선 유무는 근거가 없는 차이였다. 이제 **두 variant 가 같은 규칙**이다:
      행 사이에 선, **마지막 행은 선 없음**(`last:border-0`).
      ⚠️ 이력(8행)·근무자(5행)·공지(2행) 세 화면이 함께 바뀐다. 이력만 예외로 두면
-     variant 나 prop 이 또 늘어난다(A6). */
+     variant 나 prop 이 또 늘어난다(A6).
+     🔴 **`py-3` 다**(사용자 결정 2026-10-26, `spec 050`) — `py-1.5` 는 행 사이 12px 라
+     브라우저에서 빽빽했다(`py-2.5` 도 거쳐 봤다). 같은 이유로 between 을 쓰는 카드가 함께 넓어진다(코스·지점 기본정보 포함 7곳) */
   return (
-    <div className="flex items-center justify-between gap-4 border-b py-1.5 text-sm last:border-0">
-      <span className="text-body text-muted-foreground">{label}</span>
-      <span className="text-body font-bold text-foreground tabular-nums">{value}</span>
+    <div className="flex items-center justify-between gap-4 border-b py-3 text-sm last:border-0">
+      {/* 라벨은 줄지 않는다 — 긴 값이 오면 값 쪽이 접힌다 */}
+      <span className="shrink-0 text-body text-muted-foreground">{label}</span>
+      {/* 🔴 **긴 값은 칸 안에서 오른쪽 정렬로 접는다**(`spec 050`) — 코스·지점 `설명` 처럼
+          자유 입력 값이 들어오면서 생긴 규칙. `min-w-0` 이 없으면 긴 단어가 칸을 밀어낸다 */}
+      <span className="min-w-0 break-words text-right text-body font-bold text-foreground tabular-nums">
+        {value}
+      </span>
     </div>
   )
 }

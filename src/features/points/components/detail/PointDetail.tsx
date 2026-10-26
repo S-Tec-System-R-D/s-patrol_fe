@@ -73,27 +73,29 @@ const PointDetail = ({ point, onEdit }: { point: PointDetailData; onEdit?: () =>
                 철회한다** — 받을 자리를 없애 놓고 요청만 남겨 두지 않는다(B-34·B-29 선례)
               - `상세 위치` — **좌표로 대체한다.** 이건 서버에 **실제로 있는 값**이다
               이 카드는 **우측 1열**로 옮겨졌으므로 2열 그리드도 뺀다(좁은 칸에서 라벨·값이
-              둘 다 좁아져 줄바꿈된다 — 코스 `CourseInfo` 가 같은 이유로 1열이다) */}
+              둘 다 좁아져 줄바꿈된다 — 코스 `CourseInfo` 가 같은 이유로 1열이다).
+              🔄 **행은 `between` 이다**(`spec 050`) — 우측 1열이라 `fixed` 가 필요 없다.
+              ⚠️ 자격증명 카드의 `TAG ID` 는 이번 범위 밖이라 `fixed` 그대로다 */}
           <div className="flex flex-col">
             {/* 제목과 중복이지만 **의도적으로 둔다**(사용자 결정 2026-10-08) — 기본정보
                 블록만 따로 읽거나 캡쳐할 때 이름이 없으면 무엇의 정보인지 알 수 없다 */}
-            <AppDetailRow variant="fixed" label="지점명" value={point.name} />
+            <AppDetailRow label="지점명" value={point.name} />
 
             {/* 사업장명은 서버 응답이 아니라 **선택 결과**에서 온다(spec 021) */}
-            <AppDetailRow variant="fixed" label="사업장" value={getSiteName() ?? '-'} />
+            <AppDetailRow label="사업장" value={getSiteName() ?? '-'} />
 
             {/* 🔴 **좌표는 표시만 한다**(사용자 결정 2026-10-13, A안). 편집은 `spec 032`
                 (지도)에서 "좌표 없는 지점을 어떻게 다룰지" 와 **함께** 정한다 — 서버에
                 범위 검증이 없어(B-33, `lat: 123` 전례) 입력을 열면 프론트가 검사를
                 떠안아야 하고, 그 규칙은 지도 쪽 결정과 한 몸이다.
                 ⚠️ 실데이터에 **`null` 인 지점이 섞여 있다** — 없으면 `-` 다 */}
-            <AppDetailRow variant="fixed" label="좌표" value={formatCoords(point)} />
+            <AppDetailRow label="좌표" value={formatCoords(point)} />
 
-            <AppDetailRow variant="fixed" label="설명" value={point.memo?.trim() || '-'} />
+            <AppDetailRow label="설명" value={point.memo?.trim() || '-'} />
             {/* 🔴 인증 수단을 기본정보로 녹였다(사용자 결정 2026-10-10) — 값 하나뿐인
                 섹션을 따로 둘 이유가 없다. 우측 카드는 **수단별 자격증명**을 맡는다.
                 ⚠️ "최근 순찰" 은 통계 칸에 있어 여기서 뺐다(같은 값 두 번) */}
-            <AppDetailRow variant="fixed" label="인증수단" value={<AuthMethodDisplay value={method} />} />
+            <AppDetailRow label="인증수단" value={<AuthMethodDisplay value={method} />} />
           </div>
         </DetailSection>
       </Card>

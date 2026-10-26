@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -70,12 +70,8 @@ const renderPage = (entry = '/patrol/points/418') => {
   )
 }
 
-/**
- * 🔴 **요약은 DOM 에 두 벌이다**(`spec 030` 과 같은 구조) — 넓은 폭 **가로 스트립**과
- * 좁은 폭 **kv 카드**를 함께 렌더하고 CSS 로 숨긴다. jsdom 에는 스타일시트가 없어
- * **둘 다 조회되므로** 단언은 영역을 좁힌다.
- */
-const inSummary = () => within(screen.getByRole('group', { name: '인증 요약' }))
+/** 🔴 제목이 뜨면 상세가 도착한 것이다 — 순찰 상세(036)와 같은 머리(`spec 050`) */
+const waitDetail = () => screen.findByRole('heading', { level: 1, name: '정문 입구' })
 
 beforeEach(() => {
   clearTokens()
@@ -88,52 +84,39 @@ afterEach(() => {
 })
 
 describe('PatrolPointDetailPage — 인증 1건', () => {
-  it('🔴 페이지 타이틀 줄을 두지 않는다 — 스트립이 같은 말을 이미 한다', async () => {
+  it('🔴 순찰 상세와 같은 머리다 — 지점명 제목 + 결과 뱃지 + 부제 (사용자 결정 2026-10-26)', async () => {
     seed()
     renderPage()
 
-    await screen.findByRole('group', { name: '인증 요약' })
-    // 지점명·인증시각·결과가 스트립에 있어 제목이 반복이었다(사용자 요청 2026-10-20)
-    expect(screen.queryByText('정문 입구 · 2026-05-01 09:07')).not.toBeInTheDocument()
-    expect(screen.queryByText('이 인증 1건의 수행 내역입니다')).not.toBeInTheDocument()
+    await waitDetail()
+    expect(screen.getByText('이 인증 1건의 수행 내역입니다')).toBeInTheDocument()
+    // 🔴 지점명은 제목에서만 — 인증 정보 카드에 `순찰지점` 행이 없다
+    expect(screen.getAllByText('정문 입구')).toHaveLength(1)
+    expect(screen.queryByText('순찰지점')).not.toBeInTheDocument()
   })
 
-  it('요약 스트립이 값 7개를 요청 1개로 채운다', async () => {
+  it('인증 정보 카드가 값 5개를 요청 1개로 채운다', async () => {
     seed()
     renderPage()
 
-    expect(await screen.findByRole('group', { name: '인증 요약' })).toBeInTheDocument()
-    expect(inSummary().getByText('정문 입구')).toBeInTheDocument()
-    expect(inSummary().getByText('A동 순찰코스')).toBeInTheDocument()
-    expect(inSummary().getByText('김근무')).toBeInTheDocument()
-    // 🔴 **날짜와 시각이 두 줄이다** — 한 줄이면 칸 폭에서 말줄임돼 **초가 잘린다**
-    //    (캡쳐에서 발견 2026-10-20). 초는 같은 분에 연달아 찍힌 인증을 가르는 값이다
-    expect(inSummary().getByText('2026-05-01')).toBeInTheDocument()
-    expect(inSummary().getByText('09:07:00')).toBeInTheDocument()
-    // 🔴 `인증수단 · 구간` 을 한 칸에 합치지 않는다 — 구간은 의미 미확정이라(OQ-037-A)
-    //    인증수단 옆에 붙이면 그 부속처럼 읽힌다
-    expect(inSummary().getByText('인증수단')).toBeInTheDocument()
-    expect(inSummary().getByText('구간')).toBeInTheDocument()
-    expect(inSummary().getByText('7분')).toBeInTheDocument()
-  })
-
-  it('🔴 좁은 폭에서는 이전 kv 카드로 떨어진다 (사용자 결정 2026-10-20)', async () => {
-    seed()
-    renderPage()
-
-    await screen.findByRole('group', { name: '인증 요약' })
-    // 스트립을 2·4칸으로 접으면 라벨과 값이 격자 안에서 끊겨 어디까지가 한 값인지 흐려진다
-    // → `xl` 미만은 전에 쓰던 세로 kv 카드(`AppDetailCard`) 모양이다
+    await waitDetail()
     expect(screen.getByText('인증 정보')).toBeInTheDocument()
-    // 🔴 값은 한 번만 만든다 — 두 벌이 같은 값을 그린다
-    expect(screen.getAllByText('정문 입구')).toHaveLength(2)
+    expect(screen.getByText('A동 순찰코스')).toBeInTheDocument()
+    expect(screen.getByText('김근무')).toBeInTheDocument()
+    // 🔴 초를 버리지 않는다 — 같은 분에 연달아 찍힌 인증을 가르는 값이다(OQ-15)
+    expect(screen.getByText('2026-05-01 09:07:00')).toBeInTheDocument()
+    // 🔴 `인증수단 · 구간` 을 한 행에 합치지 않는다 — 구간은 의미 미확정이라(OQ-037-A)
+    //    인증수단 옆에 붙이면 그 부속처럼 읽힌다
+    expect(screen.getByText('인증수단')).toBeInTheDocument()
+    expect(screen.getByText('구간')).toBeInTheDocument()
+    expect(screen.getByText('7분')).toBeInTheDocument()
   })
 
   it('🔴 목업에 있지만 근거가 없는 3가지를 만들지 않는다', async () => {
     seed()
     renderPage()
 
-    await screen.findByRole('group', { name: '인증 요약' })
+    await waitDetail()
     // 오차·수신감도 필드가 서버에 없다 / ±5분 규칙을 모른다 / 첨부 URL 은 404 다(B-40)
     expect(screen.queryByText(/오차|수신감도/)).not.toBeInTheDocument()
     expect(screen.queryByText(/±5분|5분 이내/)).not.toBeInTheDocument()
@@ -179,8 +162,7 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     seed({ status: 3, statusName: '미완료', authMethod: null, authMethodName: 'Unknown' })
     renderPage()
 
-    // 🔴 결과 뱃지는 **헤더와 인증 정보 카드 양쪽에** 있다(의도) — 복수로 받는다
-    expect((await screen.findAllByText('미완료')).length).toBeGreaterThan(0)
+    expect(await screen.findByText('미완료')).toBeInTheDocument()
     expect(screen.queryByText('Unknown')).not.toBeInTheDocument()
   })
 
@@ -188,28 +170,25 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     seed({ status: 3, statusName: '미완료', authMethod: null, authMethodName: 'Unknown' })
     renderPage()
 
-    await screen.findByRole('group', { name: '인증 요약' })
-    // 🔴 **날짜와 시각이 두 줄이다** — 한 줄이면 칸 폭에서 말줄임돼 **초가 잘린다**
-    //    (캡쳐에서 발견 2026-10-20). 초는 같은 분에 연달아 찍힌 인증을 가르는 값이다
-    expect(inSummary().getByText('2026-05-01')).toBeInTheDocument()
-    expect(inSummary().getByText('09:07:00')).toBeInTheDocument()
+    await waitDetail()
+    expect(screen.getByText('2026-05-01 09:07:00')).toBeInTheDocument()
   })
 
   it('🔴 시간초과는 결과와 나란히 병기한다 — 상세는 소문자 t 다(B-4)', async () => {
     seed({ overtimeYn: true })
     renderPage()
 
-    expect((await screen.findAllByText('시간초과')).length).toBeGreaterThan(0)
+    expect(await screen.findByText('시간초과')).toBeInTheDocument()
     // 🔴 결과는 `이상없음` 이 아니라 **`순찰기록`** 이다 — 시드가 `hasMemo: true` 고,
     //    `완료`(4)는 메모 유무로 갈린다. 시간초과는 그와 **독립 축**이라 함께 뜬다
-    expect(screen.getAllByText('순찰기록').length).toBeGreaterThan(0)
+    expect(screen.getByText('순찰기록')).toBeInTheDocument()
   })
 
   it('🔴 US4 자리를 비워 두지 않는다 — historySeq 가 없어 만들 수 없는 것들', async () => {
     seed()
     renderPage()
 
-    await screen.findByRole('group', { name: '인증 요약' })
+    await waitDetail()
     // 빈 카드를 두면 "데이터가 없다" 로 읽힌다(036 이 지도에서 한 판단)
     expect(screen.queryByText('직전 지점 간격')).not.toBeInTheDocument()
     expect(screen.queryByText('코스 내 순서')).not.toBeInTheDocument()
@@ -220,7 +199,7 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     seed()
     renderPage()
 
-    await screen.findByRole('group', { name: '인증 요약' })
+    await waitDetail()
     expect(screen.queryByRole('button', { name: '확인 처리' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '기록 추가' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '원본 다운로드' })).not.toBeInTheDocument()
@@ -231,7 +210,7 @@ describe('PatrolPointDetailPage — KPI 섹션을 두지 않는다 (2026-10-20)'
   /**
    * 🔴 **KPI 행을 제거했다**(사용자 판단 2026-10-20). 인증 1건 상세는 **집계 단위가
    * 아니다** — 레코드 하나라 요약할 값이 없고, 남은 2칸은 전부 다른 영역의 재진술이었다:
-   * 결과는 헤더 뱃지·인증 정보 카드가(= **세 번째 반복**), 14일 집계는 최근 인증 카드가
+   * 결과는 헤더 뱃지가(= 반복), 14일 집계는 최근 인증 카드가
    * **문자열까지 똑같이** 말하고 있었다.
    *
    * ⚠️ 목업 `04` 의 KPI 4칸은 **회차 맥락 2칸**(직전 지점 간격·코스 내 순서)이 있어야
@@ -241,10 +220,11 @@ describe('PatrolPointDetailPage — KPI 섹션을 두지 않는다 (2026-10-20)'
     seed()
     renderPage()
 
-    await screen.findByRole('group', { name: '인증 요약' })
-    // 🔴 결과는 **스트립 끝 한 칸**에서만 말한다(전에는 헤더 뱃지 + kv 행 + KPI 였다).
+    await waitDetail()
+    // 🔴 결과는 **제목 옆 뱃지**에서만 말한다(`spec 050` — 인증 정보 카드에 결과 행이 없다).
     //    ⚠️ 시드가 `hasMemo: true` 라 `완료`(4)는 `순찰기록` 으로 갈린다
-    expect(inSummary().getAllByText('순찰기록')).toHaveLength(1)
+    expect(screen.getAllByText('순찰기록')).toHaveLength(1)
+    expect(screen.queryByText('결과')).not.toBeInTheDocument()
     expect(screen.queryByText('인증 결과')).not.toBeInTheDocument()
     expect(screen.queryByText('최근 14일 인증')).not.toBeInTheDocument()
   })
@@ -267,7 +247,7 @@ describe('PatrolPointDetailPage — KPI 섹션을 두지 않는다 (2026-10-20)'
 })
 
 describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
-  it('좌표가 있으면 인증 정보 아래에 지도를 그린다', async () => {
+  it('좌표가 있으면 좌측 맨 위에 지도를 그린다', async () => {
     seed()
     renderPage()
 
@@ -279,7 +259,7 @@ describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
     seed({ status: 3, statusName: '미완료', gpsLat: null, gpsLng: null })
     renderPage()
 
-    await screen.findByRole('group', { name: '인증 요약' })
+    await waitDetail()
     // "표시할 좌표가 없습니다" 박스를 띄우면 미완료마다 뜨는 안내가 된다(자리만 먹는다)
     expect(screen.queryByText('인증 위치')).not.toBeInTheDocument()
   })
@@ -288,7 +268,7 @@ describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
     seed({ gpsLat: 123, gpsLng: 57.22 })
     renderPage()
 
-    await screen.findByRole('group', { name: '인증 요약' })
+    await waitDetail()
     expect(screen.queryByText('인증 위치')).not.toBeInTheDocument()
   })
 

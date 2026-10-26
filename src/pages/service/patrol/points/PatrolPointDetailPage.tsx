@@ -1,11 +1,14 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, ChevronRightIcon, TriangleAlertIcon } from 'lucide-react'
+import { ArrowLeftIcon, ChevronRightIcon, HistoryIcon, TriangleAlertIcon } from 'lucide-react'
 
+import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
 import AppEmpty from '@/components/app/AppEmpty'
+import AppPageHeader from '@/components/app/AppPageHeader'
 import { usePointHistoryDetail } from '@/features/course-history/hooks/usePointHistoryDetail'
+import { overtimeBadge, pointCheckBadge } from '@/features/course-history/lib/historyBadge'
+import PointHistoryInfoCard from '@/features/patrol-points/components/detail/PointHistoryInfoCard'
 import PointHistoryMemoCard from '@/features/patrol-points/components/detail/PointHistoryMemoCard'
-import PointHistorySummaryBar from '@/features/patrol-points/components/detail/PointHistorySummaryBar'
 import PointHistoryRecentCard from '@/features/patrol-points/components/detail/PointHistoryRecentCard'
 import PointLocationMapCard from '@/features/patrol-points/components/detail/PointLocationMapCard'
 import { getSiteSeq } from '@/lib/auth/site'
@@ -130,34 +133,48 @@ const PatrolPointDetailPage = () => {
   }
 
   const data = detail.data
+  const result = pointCheckBadge(data.status, data.checkDt, data.hasMemo)
+  // 🔴 상세는 `overtimeYn`(**소문자 t**) 다 — 코스 상세와 다르다(B-4)
+  const overtime = overtimeBadge(data.overtimeYn)
 
   return (
     <div className="flex flex-col gap-4 p-8">
       {crumb}
 
-      {/* 🔴 **페이지 타이틀 줄이 없다**(사용자 요청 2026-10-20 + 목업 `제안1`).
-          지점명·인증시각·결과가 **아래 요약 스트립에 이미 있어** 제목이 같은 말을
-          반복했다 — 복귀는 브레드크럼이 맡는다. 설명 한 줄도 같은 이유로 뺐다
-          ("이 인증 1건의 수행 내역입니다" 는 화면을 보면 아는 것이다) */}
-      <PointHistorySummaryBar detail={data} />
+      {/* 🔴 **순찰 상세(036)와 같은 골격이다**(사용자 결정 2026-10-26 — 10-20 의 "타이틀 줄
+          없음 + 가로 요약 스트립" 을 뒤집었다). 두 상세가 달라 보였다.
+          🔴 **KPI 줄은 두지 않는다**(2026-10-20 판단 유지) — 인증 1건은 집계 단위가 아니다.
+          🔴 **결과는 제목 옆 뱃지에서만** 말한다 — 인증 정보 카드에 결과 행이 없다 */}
+      <AppPageHeader
+        icon={HistoryIcon}
+        title={data.pointName}
+        subtitle="이 인증 1건의 수행 내역입니다"
+        titleSuffix={
+          <div className="flex items-center gap-1">
+            <AppBadge variant={result.variant}>{result.label}</AppBadge>
+            {/* 🔴 시간초과는 결과와 **독립 축**이라 병기한다(목록과 같은 규칙) */}
+            {overtime && <AppBadge variant={overtime.variant}>{overtime.label}</AppBadge>}
+          </div>
+        }
+      />
 
-      {/* 🔴 **2열 골격**(목업 `제안1`) — 좌: 순찰 기록 → 최근 인증 / 우: **지도 전체**.
-          전에는 우측이 kv 카드 7행 + 220px 지도였는데, 값이 스트립으로 올라가면서
-          **지도가 우측을 통째로** 쓴다 — 220px 짜리는 "지도가 있다" 수준이라 주변
-          건물·도로가 안 보여 위치를 판단할 수 없었다.
+      {/* 🔴 **2열 골격**(순찰 상세와 같다) — 좌: 지도 → 순찰 기록 → 최근 인증 / 우: 인증 정보.
           🔴 **`items-start` 다** — 기본값 `stretch` 면 우측 카드가 좌측 높이만큼 늘어나
           아래에 큰 여백이 생긴다(036 브라우저 확인 2026-10-19에서 고친 자리) */}
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
-        <section className="flex flex-col gap-4 lg:col-span-2">
-          {/* 🔴 **순찰 기록(메모·사진)이 위다** — 이 인증 1건에 대해 사용자가 보러 온 것이
-              그것이다. 최근 이력은 "평소와 다른가" 를 가늠하는 **맥락**이라 그 다음이다 */}
+        {/* 🔴 **좁은 폭에서는 인증 정보가 먼저다**(순찰 상세와 같은 `order` 규칙) — 접히면
+            읽는 순서가 되고, "어떤 인증을 보고 있는지"(코스·순찰자·시각)가 맨 아래로 밀리면
+            안 된다. DOM 을 뒤집지 않는 이유는 `col-span-2` 가 먼저 와야 2칸을 먹어서다 */}
+        <section className="order-2 flex flex-col gap-4 lg:order-1 lg:col-span-2">
+          {/* 🔴 **지도가 위다**(순찰 상세와 같은 순서 — 사용자 결정 2026-10-26).
+              ⚠️ **좌표가 없으면 카드 자체가 없다**(미완료 인증은 좌표가 구조적으로 null —
+              실측 45/45). 그때는 순찰 기록이 맨 위로 올라온다 */}
+          <PointLocationMapCard detail={data} />
           <PointHistoryMemoCard detail={data} />
           <PointHistoryRecentCard detail={data} siteSeq={siteSeq} />
         </section>
-        <section>
-          {/* ⚠️ **좌표가 없으면 카드 자체가 없다**(미완료 인증은 좌표가 구조적으로 null —
-              실측 45/45). 그때는 이 컬럼이 비고 좌측이 2/3 폭 그대로 남는다 */}
-          <PointLocationMapCard detail={data} />
+        <section className="order-1 lg:order-2 lg:col-span-1">
+          <PointHistoryInfoCard detail={data} />
         </section>
       </div>
     </div>
