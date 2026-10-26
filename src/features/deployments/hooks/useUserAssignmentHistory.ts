@@ -9,4 +9,7 @@ export const useUserAssignmentHistory = (params: UserAssignmentHistoryParams) =>
   useQuery({
     queryKey: deploymentKeys.userHistory(params),
     queryFn: () => fetchUserAssignmentHistory(params),
+    // 🔴 [더보기]가 pageSize 를 키우는 동안 이미 보인 행을 유지한다(`spec 049`) — 다른 사람으로 바뀌면 버린다
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[2] === params.userSeq ? previous : undefined,
   })

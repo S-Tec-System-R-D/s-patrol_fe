@@ -230,7 +230,7 @@ describe('UserDetailPage — 최근 순찰 기록', () => {
     renderAt('101')
 
     await screen.findByText('최근 순찰 기록')
-    await screen.findAllByRole('link', { name: /\d{4}-\d{2}-\d{2}/ })
+    await screen.findAllByRole('link', { name: /\d{2}:\d{2}/ })
     const query = calls[calls.length - 1].searchParams
     expect(query.get('siteSeq')).toBe('7')
     expect(query.get('userSeq')).toBe('101')
@@ -240,7 +240,7 @@ describe('UserDetailPage — 최근 순찰 기록', () => {
   it('기록 행은 지점 인증 상세로 간다 · 전체 기록은 순찰자 필터를 건 목록으로 간다', async () => {
     renderAt('101')
 
-    const rows = await screen.findAllByRole('link', { name: /\d{4}-\d{2}-\d{2}/ })
+    const rows = await screen.findAllByRole('link', { name: /\d{2}:\d{2}/ })
     expect(rows.length).toBeGreaterThan(0)
     expect(rows.length).toBeLessThanOrEqual(8)
     expect(rows[0].getAttribute('href')).toMatch(/^\/patrol\/points\/\d+$/)
@@ -248,6 +248,18 @@ describe('UserDetailPage — 최근 순찰 기록', () => {
       'href',
       `/patrol/points?user=${encodeURIComponent('김민준')}`
     )
+  })
+
+  it('🔴 날짜별로 묶고 결과는 왼쪽 아이콘이 말한다 — 결과 글자 뱃지가 없다 (spec 049)', async () => {
+    renderAt('101')
+
+    await screen.findAllByRole('link', { name: /\d{2}:\d{2}/ })
+    expect(screen.getAllByRole('heading', { level: 4, name: /^\d+월 \d+일 \(.\)/ }).length).toBeGreaterThan(0)
+    // 시드 101: 미완료 · 완료(메모 없음) 행이 섞여 있다 — 5종 문구는 아이콘의 접근 이름으로 남는다
+    expect(screen.getAllByRole('img', { name: '미완료' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('img', { name: '이상없음' }).length).toBeGreaterThan(0)
+    expect(screen.queryByText('이상없음')).not.toBeInTheDocument()
+    expect(screen.queryByText('미완료')).not.toBeInTheDocument()
   })
 
   it('🔴 기록 조회 실패는 "기록 없음" 이 아니다 — 상세 본문은 그대로 있다', async () => {

@@ -244,7 +244,8 @@ const UserDetailPage = () => {
         {/* 🔴 우측 열에 **배치 이력**을 순찰 기록 아래로 쌓는다(`spec 042` T724) — 둘 다 "그 사람의 기록" 이다 */}
         <div className="flex flex-col gap-4 xl:col-span-2">
           <UserPatrolCard userSeq={user.userSeq} userName={user.userName} siteSeq={siteSeq} />
-          <UserAssignmentCard userSeq={user.userSeq} />
+          {/* 상세 `siteName` 은 소속지다(실측) — 배치 이력의 출발지로 쓴다(`spec 049`) */}
+          <UserAssignmentCard userSeq={user.userSeq} homeSiteName={user.siteName} />
         </div>
       </div>
     </div>

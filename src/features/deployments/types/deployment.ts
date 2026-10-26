@@ -42,7 +42,7 @@ export interface AssignmentHistoryBase {
   startDt: string
   endDt: string | null
   completeYn: boolean
-  /** ⚠️ 지금 값은 테스트 값이라 화면에 쓰지 않는다(OQ-042-E) */
+  /** 복귀 승인 시각 — 근무자 상세 배치 이력만 쓴다(OQ-042-E 해소, `spec 049`) */
   completeDt: string | null
   status: AssignmentStatusCode
   statusName: string
