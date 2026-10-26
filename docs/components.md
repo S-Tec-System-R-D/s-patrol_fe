@@ -16,6 +16,7 @@
 |---|---|---|---|
 | `AppButton` | `components/Button.tsx` | 기본 액션 버튼 | ✅ 표준 |
 | `AppIconButton` | `components/AppIconButton.tsx` | 아이콘 단독 버튼 | ✅ 표준 |
+| `AppLinkButton` | `components/app/AppLinkButton.tsx` | 카드 · 모달 안쪽 링크형 액션([그룹 추가] · [관리자 지정] 등, `048`) | ✅ 표준 |
 | `AppInput` | `components/app/AppInput.tsx` | 텍스트/검색/패스워드 인풋 | ✅ 표준 |
 | `AppSelect` | `components/app/AppSelect.tsx` | 단일 선택 드롭다운 | ✅ 표준 |
 | `AppDatePicker` | `components/app/AppDatePicker.tsx` | 날짜 **범위** 선택 | ✅ 표준 |
@@ -878,7 +879,7 @@ App* 컴포넌트로 커버되지 않는 경우만 shadcn 원시를 **직접** �
 | `GroupTree` | 조회·필터용 트리. 처음 전부 펼침, 접은 노드만 기억. `count(group)` 로 행 오른쪽 개수(화면이 정한다 — 사업장 화면은 `branchSiteCount` = 지사만 "N개"). `large` = 시트용 44px 행 |
 | `GroupFilterPanel` | XL 이상 248px 카드(머리: "관리그룹" + `{unitLabel} 수` + `headerAction`). sticky 는 **페이지 래퍼**에 건다 |
 | `GroupFilterButton` | XL 미만 경로 버튼 → 좌측 시트(`data-[side=left]:w-80`). XL 로 커지면 닫힌다(matchMedia) |
-| `GroupEditTrigger` | 트리 머리 편집 아이콘 버튼(`AppIconButton` + `SquarePenIcon`). 🔴 시스템관리자·Master 에게만 그린다(허용 목록) |
+| `GroupEditTrigger` | 트리 머리 [편집] 링크형 버튼(`AppLinkButton` + `SquarePenIcon`, `048` — 전에는 아이콘 전용). 🔴 시스템관리자·Master 에게만 그린다(허용 목록) |
 | `GroupEditDialog` | 관리그룹 편집 모달(600px) — 회사 머리 줄(`+ 본부 추가`) · 본부 카드(본부 아이콘 · 수정/삭제 · `+ 지사 추가`) · 지사 행(네모 닷 · "사업장 N개" · 수정/삭제). 이름 입력은 400px 작은 모달(`GroupNameForm`) |
 
 **규칙**
