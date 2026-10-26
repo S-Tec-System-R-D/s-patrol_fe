@@ -168,10 +168,23 @@ const AppTable = <TData,>({
           <tbody className="bg-card">
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
+                /* 🔴 **키보드로도 열려야 한다**(OQ-999-A, `047`) — `tabIndex` + Enter/Space. `CheckDetailTable`(036) 과 같다.
+                   `onRowClick` 이 없으면 아무것도 걸지 않는다(눌릴 것처럼 보이지 않게) */
                 <tr
                   key={row.id}
-                  className={`border-b last:border-0 hover:bg-muted/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''} ${rowClassName?.(row.original) ?? ''}`}
+                  className={`border-b last:border-0 hover:bg-muted/50 transition-colors ${onRowClick ? 'cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring' : ''} ${rowClassName?.(row.original) ?? ''}`}
                   onClick={() => onRowClick?.(row.original)}
+                  {...(onRowClick && {
+                    tabIndex: 0,
+                    onKeyDown: (event: React.KeyboardEvent<HTMLTableRowElement>) => {
+                      // 행 안쪽 버튼 · 링크에서 누른 키는 그쪽 몫이다
+                      if (event.target !== event.currentTarget) return
+                      if (event.key !== 'Enter' && event.key !== ' ') return
+                      // Space 는 페이지를 스크롤한다 — 행을 여는 동안은 막는다
+                      event.preventDefault()
+                      onRowClick(row.original)
+                    },
+                  })}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td

@@ -53,6 +53,45 @@ describe('AppTable 페이지네이션', () => {
  * ⚠️ 카드 모드에서는 **DOM 에 테이블과 카드가 둘 다 있다**(CSS 로 숨긴다). jsdom 에는
  * 미디어 쿼리가 없으므로 둘 다 조회된다 — 영역을 좁혀(`within`) 확인한다.
  */
+describe('AppTable 행 키보드 (047 · OQ-999-A)', () => {
+  it('🔴 Tab 으로 행에 가고 Enter · Space 로 연다', async () => {
+    const onRowClick = vi.fn()
+    render(<AppTable data={makeRows(2)} columns={columns} onRowClick={onRowClick} hidePagination />)
+
+    await userEvent.tab()
+    expect(screen.getAllByRole('row')[1]).toHaveFocus()
+    await userEvent.keyboard('{Enter}')
+    expect(onRowClick).toHaveBeenLastCalledWith({ id: 1, name: 'row-1' })
+
+    await userEvent.tab()
+    await userEvent.keyboard(' ')
+    expect(onRowClick).toHaveBeenLastCalledWith({ id: 2, name: 'row-2' })
+    expect(onRowClick).toHaveBeenCalledTimes(2)
+  })
+
+  it('🔴 onRowClick 이 없으면 행은 포커스를 받지 않는다 — 기존 소비처는 무변화다', () => {
+    render(<AppTable data={makeRows(1)} columns={columns} hidePagination />)
+
+    expect(screen.getAllByRole('row')[1]).not.toHaveAttribute('tabindex')
+  })
+
+  it('행 안쪽 버튼의 Enter 는 행 클릭이 아니다', async () => {
+    const onRowClick = vi.fn()
+    const onInner = vi.fn()
+    const withButton: ColumnDef<Row>[] = [
+      ...columns,
+      { id: 'action', header: '', cell: () => <button onClick={(e) => { e.stopPropagation(); onInner() }}>inner</button> },
+    ]
+    render(<AppTable data={makeRows(1)} columns={withButton} onRowClick={onRowClick} hidePagination />)
+
+    screen.getByRole('button', { name: 'inner' }).focus()
+    await userEvent.keyboard('{Enter}')
+
+    expect(onInner).toHaveBeenCalledTimes(1)
+    expect(onRowClick).not.toHaveBeenCalled()
+  })
+})
+
 describe('AppTable 카드 모드 (spec 030)', () => {
   const renderCard = (row: Row) => <span>카드 {row.name}</span>
 
@@ -103,7 +142,8 @@ describe('AppTable 카드 모드 (spec 030)', () => {
       <AppTable data={makeRows(1)} columns={columns} renderCard={renderCard} onRowClick={onRowClick} />
     )
 
-    await userEvent.tab()
+    // 표 행도 포커스를 받으므로(047) 카드에 직접 포커스한다
+    screen.getByRole('button', { name: '카드 row-1' }).focus()
     await userEvent.keyboard('{Enter}')
 
     expect(onRowClick).toHaveBeenCalledTimes(1)
