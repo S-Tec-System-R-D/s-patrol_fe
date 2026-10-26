@@ -240,7 +240,7 @@ const AdminDetailBody = ({ row, root, onClose }: { row: AdminRow; root: GroupNod
 
       <AppAlertDialog
         size="sm"
-        title="담당 그룹 해제"
+        title="담당 그룹을 해제하시겠습니까?"
         description={
           selfRemoval ? `'${selfRemoval.groupName}' 에서 해제하면 이 그룹을 더 이상 관리할 수 없습니다.` : undefined
         }

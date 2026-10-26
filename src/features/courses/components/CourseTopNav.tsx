@@ -82,6 +82,7 @@ const CourseTopNav = ({ search, onSearchChange, filters }: CourseTopNavProps) =>
         onOpenChange={setAddOpen}
         title="코스 생성"
         description="새 순찰코스를 생성합니다."
+        contentClassName="sm:max-w-[520px]"
         trigger={
           /**
            * 🔴 **아이콘 + 라벨. `xl` 미만에서는 아이콘만**(지점 목록 승계).
@@ -91,7 +92,7 @@ const CourseTopNav = ({ search, onSearchChange, filters }: CourseTopNavProps) =>
             icon={PlusIcon}
             iconSize={14}
             aria-label="코스 생성"
-            className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
+            className="h-9 px-3 xl:px-4"
           >
             <span className="hidden xl:inline">코스 생성</span>
           </AppButton>

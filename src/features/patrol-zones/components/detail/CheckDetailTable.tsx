@@ -73,7 +73,7 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
     return (
       <AppEmpty
         icon={MessageSquareTextIcon}
-        title="인증 내역이 없습니다."
+        title="인증 내역이 없습니다"
         description="이 회차에는 기록된 지점 인증이 없습니다."
       />
     )

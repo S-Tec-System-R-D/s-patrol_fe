@@ -21,7 +21,7 @@ const ServiceLayout = () => {
   return (
     <div className="flex">
       <RailSidebar menus={ServiceMenus} badges={{ deploymentPending }} />
-      <div className="flex-1 bg-contents-background">
+      <div className="flex-1 min-w-0 bg-contents-background">
         <Outlet />
       </div>
     </div>

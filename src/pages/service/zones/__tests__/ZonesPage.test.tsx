@@ -148,7 +148,7 @@ describe('ZonesPage — 빈 목록 · 실패 · 미선택', () => {
     setSite(999, '없는 사업장')
     renderPage()
 
-    expect(await screen.findByText('등록된 코스가 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('등록된 코스가 없습니다')).toBeInTheDocument()
   })
 
   it('🔴 목록 조회 실패는 빈 목록과 구분해 보여준다', async () => {
@@ -161,7 +161,7 @@ describe('ZonesPage — 빈 목록 · 실패 · 미선택', () => {
 
     expect(await screen.findByText('코스 목록을 불러오지 못했습니다')).toBeInTheDocument()
     expect(screen.getByText('다시 시도')).toBeInTheDocument()
-    expect(screen.queryByText('등록된 코스가 없습니다.')).not.toBeInTheDocument()
+    expect(screen.queryByText('등록된 코스가 없습니다')).not.toBeInTheDocument()
   })
 
   it('🔴 사업장이 선택되지 않았으면 조회를 시도하지 않는다', async () => {
@@ -195,9 +195,9 @@ describe('ZonesPage — 빈 목록 · 실패 · 미선택', () => {
 
     // 로딩 중 — 코스가 없다고 믿고 새로 만들게 하면 안 된다(027 T324 교훈)
     expect(screen.queryByText('데이터가 없습니다')).not.toBeInTheDocument()
-    expect(screen.queryByText('등록된 코스가 없습니다.')).not.toBeInTheDocument()
+    expect(screen.queryByText('등록된 코스가 없습니다')).not.toBeInTheDocument()
 
-    expect(await screen.findByText('등록된 코스가 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('등록된 코스가 없습니다')).toBeInTheDocument()
   })
 })
 
@@ -275,7 +275,7 @@ describe('ZonesPage — 검색·필터·페이지', () => {
     renderPage('/zones?search=존재하지않는코스명')
 
     expect(await screen.findByText('조건에 맞는 코스가 없습니다')).toBeInTheDocument()
-    expect(screen.queryByText('등록된 코스가 없습니다.')).not.toBeInTheDocument()
+    expect(screen.queryByText('등록된 코스가 없습니다')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '필터 초기화' })).toBeInTheDocument()
   })
 

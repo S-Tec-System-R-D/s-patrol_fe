@@ -61,7 +61,7 @@ const SiteManagersCard = ({ admins, isPending, isError, onRetry }: SiteManagersC
       ) : isPending ? (
         <div aria-label="담당 관리자 불러오는 중" className="h-14 animate-pulse rounded-md bg-muted" />
       ) : assigned.length === 0 ? (
-        <AppEmpty icon={ShieldCheckIcon} title="지정된 담당 관리자가 없습니다." />
+        <AppEmpty icon={ShieldCheckIcon} title="지정된 담당 관리자가 없습니다" />
       ) : (
         <ul aria-label="담당 관리자" className="flex flex-wrap gap-3">
           {assigned.map((admin) => (

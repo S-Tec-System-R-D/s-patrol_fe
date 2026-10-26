@@ -70,7 +70,7 @@ const PointHistoryMemoCard = ({ detail }: PointHistoryMemoCardProps) => {
            정상이고 대부분이다. 조회 실패는 페이지 단위로 따로 그린다 */
         <AppEmpty
           icon={MessageSquareOffIcon}
-          title="남긴 기록이 없습니다."
+          title="남긴 기록이 없습니다"
           description="순찰 중 메모나 사진을 남기면 여기에 표시됩니다."
         />
       )}

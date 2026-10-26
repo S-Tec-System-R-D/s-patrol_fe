@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react'
-import { FilterXIcon, PlusIcon, ShieldIcon, TriangleAlertIcon, UsersIcon } from 'lucide-react'
+import { FilterXIcon, PlusIcon, RotateCcwIcon, ShieldIcon, TriangleAlertIcon, UsersIcon } from 'lucide-react'
 
 import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
+import AppIconButton from '@/components/app/AppIconButton'
 import AppInput from '@/components/app/AppInput'
 import AppPageHeader from '@/components/app/AppPageHeader'
 import AppSelect from '@/components/app/AppSelect'
 import AppTable from '@/components/AppTable'
+import AdminCard from '@/features/admins/components/AdminCard'
 import { adminColumns } from '@/features/admins/components/AdminColumns'
 import AdminDetailDialog from '@/features/admins/components/AdminDetailDialog'
 import AddAdminForm from '@/features/admins/form/AddAdminForm'
@@ -83,9 +85,14 @@ const AdminsPage = () => {
   const count = (group: GroupNode) => (allRows ? countAdmins(allRows, group) : null)
   const filterProps = { unitLabel: '관리자', count, countUnit: '명', headerAction: <GroupEditTrigger /> }
 
+  const hasFilter = Boolean(params.q || params.role)
+  const resetFilters = () => setParams({ q: undefined, role: undefined })
+  /** 부제 — 범위 + 수(`layout.md` §5-1). 할당 조회 중에는 그룹 이름만 */
+  const subtitle = selected ? (allRows ? `${selected.groupName} 담당 관리자 ${scopedRows.length}명` : selected.groupName) : undefined
+
   return (
     <div className="flex flex-col gap-4 p-8">
-      <AppPageHeader title="관리자" subtitle="본사 직원 계정과 담당 그룹을 관리합니다" />
+      <AppPageHeader title="관리자" subtitle={subtitle} />
       <div className="flex gap-4 items-start">
         <div className="hidden xl:block shrink-0 sticky top-6 self-start">
           <GroupFilterPanel {...filterProps} />
@@ -99,22 +106,34 @@ const AdminsPage = () => {
               variant="search"
               placeholder="이름 검색"
               aria-label="이름 검색"
-              className="w-[220px]"
+              className="w-[260px]"
               value={keywordDraft}
               onChange={(event) => {
                 setKeywordDraft(event.target.value)
                 pushKeyword(event.target.value)
               }}
             />
-            <AppSelect
-              aria-label="권한"
-              icon={ShieldIcon}
-              options={adminRoleFilterOptions}
-              value={params.role ?? ALL_VALUE}
-              onChange={(value) => setParams({ role: value === ALL_VALUE ? undefined : value })}
-              active={Boolean(params.role)}
-              className="w-auto"
-            />
+            {/* 🔴 필터 영역에만 이름을 붙인다(`UsersPage` 승계) */}
+            <div role="group" aria-label="목록 필터" className="contents">
+              <AppSelect
+                aria-label="권한"
+                icon={ShieldIcon}
+                options={adminRoleFilterOptions}
+                value={params.role ?? ALL_VALUE}
+                onChange={(value) => setParams({ role: value === ALL_VALUE ? undefined : value })}
+                active={Boolean(params.role)}
+                className="w-auto"
+              />
+              {hasFilter && (
+                <AppIconButton
+                  icon={RotateCcwIcon}
+                  aria-label="필터 초기화"
+                  title="필터 초기화"
+                  onClick={resetFilters}
+                  className="bg-card"
+                />
+              )}
+            </div>
             <div className="flex-1" />
             {/* 다른 목록 화면과 같이 필터 줄 끝 · 🔴 매니저는 만들 권한이 없어 그리지 않는다 */}
             {createCode !== null && root && (
@@ -125,8 +144,9 @@ const AdminsPage = () => {
                 onOpenChange={setAddOpen}
                 contentClassName="sm:max-w-[520px]"
                 trigger={
-                  <AppButton icon={PlusIcon} iconSize={14}>
-                    관리자 추가
+                  /* 🔴 `xl` 미만에서는 아이콘만 — `aria-label` 로 이름을 유지한다(`LocationsPage` 와 같다) */
+                  <AppButton icon={PlusIcon} iconSize={14} aria-label="관리자 추가" className="h-9 px-3 xl:px-4">
+                    <span className="hidden xl:inline">관리자 추가</span>
                   </AppButton>
                 }
               >
@@ -165,9 +185,16 @@ const AdminsPage = () => {
             <div className="rounded-lg border border-border bg-card">
               {/* 🔴 범위가 비었으면 그것이 먼저다 — 검색어가 있어도 "검색 결과 없음" 이 아니다 */}
               {scopedRows.length === 0 ? (
-                <AppEmpty icon={UsersIcon} title="이 그룹에 할당된 관리자가 없습니다." />
+                <AppEmpty icon={UsersIcon} title="이 그룹에 할당된 관리자가 없습니다" />
               ) : (
-                <AppEmpty icon={FilterXIcon} title="검색 결과가 없습니다." description="검색어나 권한을 바꿔보세요." />
+                <>
+                  <AppEmpty icon={FilterXIcon} title="검색 결과가 없습니다" description="검색어나 권한을 바꿔보세요." />
+                  <div className="flex justify-center pb-6">
+                    <AppButton variant="sub" onClick={resetFilters}>
+                      필터 초기화
+                    </AppButton>
+                  </div>
+                </>
               )}
             </div>
           ) : (
@@ -176,6 +203,8 @@ const AdminsPage = () => {
                 columns={columns}
                 data={rows}
                 hidePagination
+                // 🔴 `xl` 미만에서는 카드로(046 #18)
+                renderCard={root ? (row) => <AdminCard row={row} root={root} /> : undefined}
                 onRowClick={(row) => setSelectedUserSeq(row.admin.userSeq)}
               />
               <p className="text-caption text-muted-foreground">

@@ -1,5 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { format, isValid, parseISO } from 'date-fns'
+import { ChevronRightIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 
@@ -101,5 +102,11 @@ export const courseColumns = (): ColumnDef<CourseRow>[] => [
       ) : (
         <AppBadge variant="muted">미사용</AppBadge>
       ),
+  },
+  {
+    id: 'open',
+    header: '',
+    // 링크가 아니라 꺾쇠만 — 이동은 행 클릭이 한다(꺾쇠 = 상세 페이지 이동, 046 T879)
+    cell: () => <ChevronRightIcon size={16} className="text-muted-foreground" aria-hidden />,
   },
 ]

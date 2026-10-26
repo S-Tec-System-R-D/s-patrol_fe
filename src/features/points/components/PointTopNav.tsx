@@ -79,7 +79,8 @@ const PointTopNav = ({ search, onSearchChange, filters }: PointTopNavProps) => {
         open={addOpen}
         onOpenChange={setAddOpen}
         title="지점 생성"
-        description="신규지점을 생성할 수 있습니다."
+        description="새 지점을 생성합니다."
+        contentClassName="sm:max-w-[520px]"
         trigger={
           /**
            * 🔴 **아이콘 + 라벨. `xl` 미만에서는 아이콘만**(사용자 결정 2026-10-08).
@@ -90,7 +91,7 @@ const PointTopNav = ({ search, onSearchChange, filters }: PointTopNavProps) => {
             icon={PlusIcon}
             iconSize={14}
             aria-label="지점 생성"
-            className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
+            className="h-9 px-3 xl:px-4"
           >
             <span className="hidden xl:inline">지점 생성</span>
           </AppButton>

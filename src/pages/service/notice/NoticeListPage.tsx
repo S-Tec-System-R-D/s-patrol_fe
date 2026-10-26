@@ -153,6 +153,7 @@ const NoticeListPage = () => {
         <AppDialog
           title="공지 작성"
           description="근무자에게 전달할 공지를 작성합니다."
+          contentClassName="sm:max-w-[520px]"
           open={createOpen}
           onOpenChange={setCreateOpen}
           trigger={
@@ -163,7 +164,7 @@ const NoticeListPage = () => {
               aria-label="공지 작성"
               // 사업장이 없으면 목록도 요청하지 않는다 — 같은 기준으로 막는다
               disabled={siteSeq === null}
-              className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
+              className="h-9 px-3 xl:px-4"
             >
               <span className="hidden xl:inline">공지 작성</span>
             </AppButton>
@@ -189,7 +190,7 @@ const NoticeListPage = () => {
         </div>
       ) : list.isPending ? (
         /* 🔴 로딩을 "데이터 없음" 으로 보여주지 않는다 */
-        <div className="rounded-sm border border-border bg-card">
+        <div aria-label="공지 불러오는 중" className="rounded-sm border border-border bg-card">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="border-b border-border/50 px-3 py-3 last:border-0">
               <div className="h-[22px] animate-pulse rounded-md bg-muted" />

@@ -287,7 +287,7 @@ const PatrolPointsPage = () => {
         /* 🔴 **로딩을 "데이터 없음" 으로 보여주지 않는다.** `AppTable` 은 행이 0개면
            "데이터가 없습니다" 를 그리는데, 조회 중에 그것이 뜨면 사용자는 순찰이 없었다고
            믿는다 */
-        <div className="rounded-sm border border-border bg-card">
+        <div aria-label="인증 기록 불러오는 중" className="rounded-sm border border-border bg-card">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="border-b border-border/50 px-3 py-3 last:border-0">
               <div className="h-[22px] animate-pulse rounded-md bg-muted" />
@@ -308,7 +308,7 @@ const PatrolPointsPage = () => {
                없었다" 가 아니라 **인증 기록이 아직 없다**가 사실이다 */
             <AppEmpty
               icon={HistoryIcon}
-              title="인증 기록이 없습니다."
+              title="인증 기록이 없습니다"
               description="지점 인증이 이뤄지면 여기에 기록됩니다."
             />
           )}

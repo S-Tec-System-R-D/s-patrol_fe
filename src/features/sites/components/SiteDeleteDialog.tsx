@@ -18,15 +18,16 @@ export interface DeleteImpact {
   users: number
 }
 
-const deleteSiteMessage = (siteName: string, impact: DeleteImpact): string => {
+const deleteSiteMessage = (impact: DeleteImpact): string => {
   const parts = [
     impact.childSites > 0 && `하위 사업장 ${impact.childSites}개`,
     impact.courses > 0 && `순찰 코스 ${impact.courses}개`,
     impact.points > 0 && `지점 ${impact.points}개`,
     impact.users > 0 && `근무자 ${impact.users}명`,
   ].filter(Boolean)
-  const effect = parts.length > 0 ? ` ${parts.join(' · ')} 정보에 영향이 있습니다.` : ''
-  return `'${siteName}' 사업장을 삭제합니다.${effect} 삭제된 데이터는 복구할 수 없습니다.`
+  // 대상은 제목이 말한다(질문형, 046 #16) — 설명은 영향만
+  const effect = parts.length > 0 ? `${parts.join(' · ')} 정보에 영향이 있습니다. ` : ''
+  return `${effect}삭제된 데이터는 복구할 수 없습니다.`
 }
 
 interface SiteDeleteDialogProps {
@@ -41,8 +42,8 @@ const SiteDeleteDialog = ({ siteName, impact, pending, onConfirm }: SiteDeleteDi
     size="sm"
     icon={Trash2Icon}
     variant="destructive"
-    title="사업장 삭제"
-    description={deleteSiteMessage(siteName, impact)}
+    title={`'${siteName}' 사업장을 삭제하시겠습니까?`}
+    description={deleteSiteMessage(impact)}
     actionLabel="삭제"
     onAction={onConfirm}
   >

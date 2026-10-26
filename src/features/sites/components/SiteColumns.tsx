@@ -1,4 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
+import { ChevronRightIcon } from 'lucide-react'
 
 import type { SiteRow } from '../lib/siteList'
 
@@ -48,6 +49,12 @@ export const siteColumns = (): ColumnDef<SiteRow>[] => {
       id: 'managers',
       header: '담당 관리자',
       cell: () => <span className="text-muted-foreground">{EMPTY}</span>,
+    },
+    {
+      id: 'open',
+      header: '',
+      // 링크가 아니라 꺾쇠만 — 이동은 행 클릭이 한다(꺾쇠 = 상세 페이지 이동, 046 T879)
+      cell: () => <ChevronRightIcon size={16} className="text-muted-foreground" aria-hidden />,
     },
   ]
   return columns.map((column) => ({ ...column, enableSorting: false }))

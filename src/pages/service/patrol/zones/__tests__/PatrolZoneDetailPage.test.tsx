@@ -124,7 +124,7 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
     renderPage(105)
 
     // 완료인데 checkedCount 0 인 이력이 실재한다
-    expect(await screen.findByText('인증 내역이 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('인증 내역이 없습니다')).toBeInTheDocument()
     expect(screen.queryByText('인증 내역을 불러오지 못했습니다')).not.toBeInTheDocument()
   })
 
@@ -133,7 +133,7 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
     renderPage(101)
 
     expect(await screen.findByText('인증 내역을 불러오지 못했습니다')).toBeInTheDocument()
-    expect(screen.queryByText('인증 내역이 없습니다.')).not.toBeInTheDocument()
+    expect(screen.queryByText('인증 내역이 없습니다')).not.toBeInTheDocument()
   })
 
   it('🔴 없는 회차를 "삭제됐다" 로 단정하지 않고 복귀 수단을 준다', async () => {

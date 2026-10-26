@@ -42,6 +42,8 @@ const renderPage = (initialEntry = '/admin/locations') => {
 
 const url = () => screen.getByTestId('url').textContent ?? ''
 const table = () => within(screen.getByRole('table'))
+/** 🔴 표 안에서 찾는다 — `xl` 미만 카드(046 #18)가 같은 이름을 한 번 더 그린다(jsdom 은 `hidden` 을 모른다) */
+const findInTable = async (text: string) => within(await screen.findByRole('table')).findByText(text)
 /** 본문 행(머리 행 제외)의 사업장명 칸 */
 const siteNames = () =>
   table()
@@ -64,7 +66,7 @@ afterEach(() => server.events.removeAllListeners())
 describe('LocationsPage — 범위 · 하위 사업장', () => {
   it('지사(3): 그 지사 사업장 + 하위는 └ 들여쓰기 · 부제 · 총 N개', async () => {
     renderPage('/admin/locations?group=3')
-    expect(await screen.findByText('강동지사_추가사업장')).toBeInTheDocument()
+    expect(await findInTable('강동지사_추가사업장')).toBeInTheDocument()
     expect(siteNames()).toEqual(['테테테(수정)1', '└수정사업장테테', '강동지사_추가사업장', '지가사업장'])
     expect(screen.getByText('강동지사 하위 사업장 4개')).toBeInTheDocument()
     expect(await totalLine(4)).toBeInTheDocument()
@@ -78,7 +80,7 @@ describe('LocationsPage — 범위 · 하위 사업장', () => {
 
   it('소속 그룹은 경로(회사 제외) · 주소 없으면 -', async () => {
     renderPage('/admin/locations?group=2')
-    const row = (await screen.findByText('테스트사업장')).closest('tr') as HTMLElement
+    const row = (await findInTable('테스트사업장')).closest('tr') as HTMLElement
     const cells = within(row).getAllByRole('cell')
     expect(cells[1]).toHaveTextContent('테스트사업장(수정)')
     expect(cells[2]).toHaveTextContent(/^-$/) // 사업장 2 는 주소 null(실측)
@@ -89,15 +91,27 @@ describe('LocationsPage — 범위 · 하위 사업장', () => {
 
   it('🔴 담당 관리자는 고정 — · 코스·지점 · 운영 상태는 없다', async () => {
     renderPage('/admin/locations?group=6')
-    const row = (await screen.findByText('수정사업장됨')).closest('tr') as HTMLElement
+    const row = (await findInTable('수정사업장됨')).closest('tr') as HTMLElement
     expect(within(row).getAllByRole('cell')[3]).toHaveTextContent(/^-$/)
     expect(table().getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual([
       '사업장명',
       '소속 그룹',
       '주소',
       '담당 관리자',
+      '', // 꺾쇠 — 상세 페이지 이동(046 #2)
     ])
     expect(screen.queryByRole('combobox', { name: '운영 상태' })).not.toBeInTheDocument()
+  })
+})
+
+describe('LocationsPage — 카드 (046 #18)', () => {
+  it('🔴 하위 사업장 카드는 들여쓴다(A안) — 최상위는 그대로', async () => {
+    renderPage('/admin/locations?group=3')
+    await findInTable('수정사업장테테')
+    const card = (name: string) =>
+      screen.getAllByRole('button').find((button) => button.textContent?.includes(name)) as HTMLElement
+    expect(card('수정사업장테테')).toHaveClass('ml-4')
+    expect(card('테테테(수정)1')).not.toHaveClass('ml-4')
   })
 })
 
@@ -105,7 +119,7 @@ describe('LocationsPage — 검색', () => {
   it('주소로 찾는다 · URL ?q= 보존', async () => {
     const user = userEvent.setup()
     renderPage()
-    await screen.findByText('강남우체국')
+    await findInTable('강남우체국')
     await user.type(screen.getByLabelText('사업장명·주소 검색'), '개포로45677')
     // 하위(8)만 맞아 모 사업장(6)과 함께 2행
     expect(await totalLine(2)).toBeInTheDocument()
@@ -114,19 +128,19 @@ describe('LocationsPage — 검색', () => {
 
   it('🔴 하위만 맞으면 모 사업장 행도 남는다', async () => {
     renderPage('/admin/locations?q=용인')
-    expect(await screen.findByText('수정사업장테테')).toBeInTheDocument()
+    expect(await findInTable('수정사업장테테')).toBeInTheDocument()
     expect(siteNames()).toEqual(['테테테(수정)1', '└수정사업장테테'])
   })
 
   it('검색 결과 0 과 빈 그룹을 구분한다', async () => {
     renderPage('/admin/locations?group=3&q=없는사업장')
-    expect(await screen.findByText('검색 결과가 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('검색 결과가 없습니다')).toBeInTheDocument()
   })
 
   it('사업장이 없는 그룹', async () => {
     await addGroup({ parentGroupSeq: 2, groupName: '빈지사', userSeq: [] }) // seq 12
     renderPage('/admin/locations?group=12')
-    expect(await screen.findByText('이 그룹에 등록된 사업장이 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('이 그룹에 등록된 사업장이 없습니다')).toBeInTheDocument()
   })
 })
 
@@ -139,13 +153,13 @@ describe('LocationsPage — 상태 · 이동', () => {
     renderPage()
     expect(await screen.findByText('사업장을 불러오지 못했습니다')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '다시 시도' }))
-    expect(await screen.findByText('강남우체국')).toBeInTheDocument()
+    expect(await findInTable('강남우체국')).toBeInTheDocument()
   })
 
   it('행 클릭 → 상세 경로', async () => {
     const user = userEvent.setup()
     renderPage('/admin/locations?group=4')
-    await user.click(await screen.findByText('테스트 사업장2-1'))
+    await user.click(await findInTable('테스트 사업장2-1'))
     expect(await screen.findByText('DETAIL_ROUTE')).toBeInTheDocument()
     expect(url()).toBe('/admin/locations/7')
   })
@@ -170,7 +184,7 @@ describe('LocationsPage — 추가 (US2)', () => {
   it('🔴 선택지는 지사만(본부 › 지사) · 지금 보는 지사가 기본값', async () => {
     const user = userEvent.setup()
     renderPage('/admin/locations?group=3')
-    await screen.findByText('강동지사_추가사업장')
+    await findInTable('강동지사_추가사업장')
     const dialog = await openAdd(user)
 
     const select = dialog.getByRole('combobox', { name: '소속 그룹' })
@@ -188,7 +202,7 @@ describe('LocationsPage — 추가 (US2)', () => {
   it('본부를 보고 있으면 기본값 없음', async () => {
     const user = userEvent.setup()
     renderPage('/admin/locations?group=2')
-    await screen.findByText('테스트사업장')
+    await findInTable('테스트사업장')
     const dialog = await openAdd(user)
     expect(dialog.getByRole('combobox', { name: '소속 그룹' })).toHaveTextContent('지사를 선택해주세요')
   })
@@ -197,14 +211,14 @@ describe('LocationsPage — 추가 (US2)', () => {
     const user = userEvent.setup()
     const bodies = captureAdds()
     renderPage('/admin/locations?group=3')
-    await screen.findByText('강동지사_추가사업장')
+    await findInTable('강동지사_추가사업장')
     const dialog = await openAdd(user)
 
     await user.type(dialog.getByLabelText('사업장명'), '신규사업장')
     await user.type(dialog.getByLabelText('주소'), '서울시 강동구')
     await user.click(dialog.getByRole('button', { name: '등록' }))
 
-    expect(await screen.findByText('신규사업장')).toBeInTheDocument()
+    expect(await findInTable('신규사업장')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(bodies).toEqual([{ groupSeq: 3, siteName: '신규사업장', address: '서울시 강동구' }])
     expect(screen.getByText('강동지사 하위 사업장 5개')).toBeInTheDocument()
@@ -213,7 +227,7 @@ describe('LocationsPage — 추가 (US2)', () => {
   it('🔴 같은 이름(409) → 모달과 입력값이 남는다', async () => {
     const user = userEvent.setup()
     renderPage('/admin/locations?group=3')
-    await screen.findByText('강동지사_추가사업장')
+    await findInTable('강동지사_추가사업장')
     const dialog = await openAdd(user)
 
     await user.type(dialog.getByLabelText('사업장명'), '지가사업장')

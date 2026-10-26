@@ -49,7 +49,7 @@ const Highlight = ({ text, keyword }: { text: string; keyword: string }) => (
 const GroupPicker = ({ root, options, selected, onChange, fixed = [], disabled, error }: GroupPickerProps) => {
   const [keyword, setKeyword] = useState('')
 
-  if (options.length === 0) return <AppEmpty icon={FolderTreeIcon} title="추가할 수 있는 그룹이 없습니다." />
+  if (options.length === 0) return <AppEmpty icon={FolderTreeIcon} title="추가할 수 있는 그룹이 없습니다" />
 
   const visible = searchChoices(root, options, keyword)
   const chips = pickChips(root, selected)

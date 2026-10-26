@@ -127,14 +127,14 @@ describe('PatrolPointsPage — 서버 목록', () => {
     renderPage()
 
     expect(await screen.findByText('순찰이력을 불러오지 못했습니다')).toBeInTheDocument()
-    expect(screen.queryByText('인증 기록이 없습니다.')).not.toBeInTheDocument()
+    expect(screen.queryByText('인증 기록이 없습니다')).not.toBeInTheDocument()
   })
 
   it('🔴 0건과 필터 0건을 다르게 그린다', async () => {
     renderPage('/patrol/points?user=없는사람')
 
     expect(await screen.findByText('조건에 맞는 인증 기록이 없습니다')).toBeInTheDocument()
-    expect(screen.queryByText('인증 기록이 없습니다.')).not.toBeInTheDocument()
+    expect(screen.queryByText('인증 기록이 없습니다')).not.toBeInTheDocument()
     // 🔴 빈 상태에 초기화 버튼을 두지 않는다 — 필터 바의 아이콘이 항상 보이는 자리에 있다
     expect(screen.getAllByLabelText('필터 초기화')).toHaveLength(1)
   })

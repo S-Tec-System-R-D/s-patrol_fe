@@ -135,7 +135,7 @@ const PointsPage = () => {
          *
          * 행 높이를 유지해 **로딩 → 목록 전환에서 레이아웃이 튀지 않게** 한다(022 선례).
          */
-        <div className="rounded-sm border border-border bg-card">
+        <div aria-label="지점 불러오는 중" className="rounded-sm border border-border bg-card">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="border-b border-border/50 px-3 py-3 last:border-0">
               <div className="h-[22px] animate-pulse rounded-md bg-muted" />
@@ -172,7 +172,7 @@ const PointsPage = () => {
           ) : (
             <AppEmpty
               icon={MapPinIcon}
-              title="등록된 지점이 없습니다."
+              title="등록된 지점이 없습니다"
               description="우측 상단 + 버튼으로 지점을 추가해주세요."
             />
           )}

@@ -15,6 +15,7 @@ import { useGroupList } from '@/features/groups/hooks/useGroupList'
 import { useGroupParam } from '@/features/groups/hooks/useGroupParam'
 import { useGroupTree } from '@/features/groups/hooks/useGroupTree'
 import { branchSiteCount } from '@/features/groups/lib/groupTree'
+import SiteCard from '@/features/sites/components/SiteCard'
 import { siteColumns } from '@/features/sites/components/SiteColumns'
 import SiteForm from '@/features/sites/form/SiteForm'
 import { toAddSiteRequest } from '@/features/sites/form/schema'
@@ -122,7 +123,7 @@ const LocationsPage = () => {
                   aria-label="사업장 추가"
                   // 선택지가 목록 응답에서 나온다 — 받기 전에는 열지 않는다
                   disabled={!list.data}
-                  className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
+                  className="h-9 px-3 xl:px-4"
                 >
                   <span className="hidden xl:inline">사업장 추가</span>
                 </AppButton>
@@ -167,11 +168,11 @@ const LocationsPage = () => {
               {scopedRows.length > 0 ? (
                 <AppEmpty
                   icon={FilterXIcon}
-                  title="검색 결과가 없습니다."
+                  title="검색 결과가 없습니다"
                   description="검색어를 바꿔보세요."
                 />
               ) : (
-                <AppEmpty icon={Building2Icon} title="이 그룹에 등록된 사업장이 없습니다." />
+                <AppEmpty icon={Building2Icon} title="이 그룹에 등록된 사업장이 없습니다" />
               )}
             </div>
           ) : (
@@ -181,6 +182,10 @@ const LocationsPage = () => {
                 data={rows}
                 // 🔴 `hidePagination` 은 `manualPagination` 을 함께 건다 — 전체를 한 번에 그린다
                 hidePagination
+                // 🔴 `xl` 미만에서는 카드로(046 #18)
+                renderCard={SiteCard}
+                // 🔴 하위 사업장 카드는 들여쓴다(A안, 사용자 결정 2026-10-26). 표의 `tr` 에는 margin 이 먹지 않아 카드에만 보인다
+                rowClassName={(row) => (row.depth === 0 ? '' : row.depth === 1 ? 'ml-4' : 'ml-8')}
                 onRowClick={(row) => navigate(paths.admin.locationDetail(String(row.site.siteSeq)))}
               />
               <p className="text-caption text-muted-foreground">

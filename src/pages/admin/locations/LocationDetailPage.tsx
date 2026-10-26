@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, SquarePenIcon, TriangleAlertIcon } from 'lucide-react'
+import { ArrowLeftIcon, ChevronRightIcon, SquarePenIcon, TriangleAlertIcon } from 'lucide-react'
 
 import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
@@ -31,6 +31,17 @@ import { paths } from '@/router/paths'
  */
 
 const CHILD_GROUP_HINT = '하위 사업장은 관리그룹을 변경할 수 없습니다. 모 사업장을 이동해주세요.'
+
+/** 현장 상세와 같은 머리(046 #3, 사용자 결정 2026-10-26 — 044 의 뒤로 버튼을 바꿨다). 목록은 이 사업장의 지사를 고른 채로 */
+const Breadcrumb = ({ listPath }: { listPath: string }) => (
+  <nav aria-label="현재 위치" className="flex items-center gap-1 text-caption">
+    <Link to={listPath} className="text-muted-foreground hover:text-foreground">
+      사업장
+    </Link>
+    <ChevronRightIcon size={13} className="text-muted-foreground/60" />
+    <span className="font-medium text-foreground">사업장 상세</span>
+  </nav>
+)
 
 /** 🔴 실패 화면에도 빠져나갈 길을 둔다(023) */
 const BackToList = () => (
@@ -65,6 +76,7 @@ const LocationDetailPage = () => {
   if (siteSeq === null || detail.isError) {
     return (
       <div className="flex flex-col gap-4 p-8">
+        <Breadcrumb listPath={listPath} />
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
             icon={TriangleAlertIcon}
@@ -88,6 +100,7 @@ const LocationDetailPage = () => {
   if (detail.isPending) {
     return (
       <div aria-label="사업장 불러오는 중" className="flex flex-col gap-4 p-8">
+        <Breadcrumb listPath={listPath} />
         <div className="h-12 w-80 animate-pulse rounded-md bg-muted" />
         <div className="h-24 animate-pulse rounded-lg bg-muted" />
       </div>
@@ -106,19 +119,12 @@ const LocationDetailPage = () => {
 
   return (
     <div className="flex flex-col gap-4 p-8">
-      {/* 머리 — 뒤로 · 경로 · 이름만. 🔴 액션은 기본정보 카드 아래(근무자 상세와 같다 — 사용자 결정 2026-10-23) */}
-      <div className="flex items-center gap-3">
-        <Link
-          to={listPath}
-          aria-label="사업장 목록으로"
-          className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeftIcon size={16} />
-        </Link>
-        <div className="flex min-w-0 flex-col">
-          {groupPath && <span className="text-caption text-muted-foreground">{groupPath}</span>}
-          <h1 className="truncate text-page-title font-bold text-foreground">{site.siteName}</h1>
-        </div>
+      <Breadcrumb listPath={listPath} />
+
+      {/* 머리 — 경로 · 이름만. 🔴 액션은 기본정보 카드 아래(근무자 상세와 같다 — 사용자 결정 2026-10-23) */}
+      <div className="flex min-w-0 flex-col">
+        {groupPath && <span className="text-caption text-muted-foreground">{groupPath}</span>}
+        <h1 className="truncate text-page-title font-bold text-foreground">{site.siteName}</h1>
       </div>
 
       {/* 좌 1/3 기본정보 + 액션 / 우 2/3 담당 관리자 · 헬스체크 — 근무자 · 지점 상세와 같은 구조(사용자 결정 2026-10-23).
@@ -128,7 +134,7 @@ const LocationDetailPage = () => {
           <SiteInfoCard detail={site} groupPath={groupPath} childCount={childCount} />
           <div className="flex gap-2">
             <AppDialog
-              title="사업장 정보 수정"
+              title="사업장 수정"
               description="사업장 정보를 수정합니다."
               open={editOpen}
               onOpenChange={setEditOpen}
@@ -138,10 +144,12 @@ const LocationDetailPage = () => {
                 <AppButton
                   icon={SquarePenIcon}
                   variant="sub"
+                  // 🔴 헬스체크 카드에도 [수정] 이 있다 — 이름으로 구분한다(보이는 글자를 포함한다)
+                  aria-label="사업장 수정"
                   className="flex-auto whitespace-nowrap bg-card"
                   disabled={!found}
                 >
-                  정보 수정
+                  수정
                 </AppButton>
               }
             >

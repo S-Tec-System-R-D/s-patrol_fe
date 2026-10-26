@@ -152,12 +152,12 @@ describe('AdminsPage — 목록 (US1)', () => {
 
   it('빈 상태 — 범위 0 이 검색 결과 없음보다 먼저', async () => {
     renderPage('/admin/admins?group=10&q=없는이름')
-    expect(await screen.findByText('이 그룹에 할당된 관리자가 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('이 그룹에 할당된 관리자가 없습니다')).toBeInTheDocument()
   })
 
   it('검색 결과 0', async () => {
     renderPage('/admin/admins?q=없는이름')
-    expect(await screen.findByText('검색 결과가 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('검색 결과가 없습니다')).toBeInTheDocument()
   })
 
   it('🔴 그룹별 조회 하나라도 실패하면 표 없이 실패 + 다시 시도', async () => {

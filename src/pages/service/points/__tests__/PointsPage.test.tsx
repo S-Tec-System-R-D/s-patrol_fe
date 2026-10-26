@@ -135,7 +135,7 @@ describe('PointsPage — 빈 목록 · 실패 · 미선택', () => {
     setSite(999, '없는 사업장')
     renderPage()
 
-    expect(await screen.findByText('등록된 지점이 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('등록된 지점이 없습니다')).toBeInTheDocument()
   })
 
   it('🔴 목록 조회 실패는 빈 목록과 구분해 보여준다', async () => {
@@ -148,7 +148,7 @@ describe('PointsPage — 빈 목록 · 실패 · 미선택', () => {
 
     expect(await screen.findByText('지점 목록을 불러오지 못했습니다')).toBeInTheDocument()
     expect(screen.getByText('다시 시도')).toBeInTheDocument()
-    expect(screen.queryByText('등록된 지점이 없습니다.')).not.toBeInTheDocument()
+    expect(screen.queryByText('등록된 지점이 없습니다')).not.toBeInTheDocument()
   })
 
   it('🔴 사업장이 선택되지 않았으면 조회를 시도하지 않는다', async () => {
@@ -241,7 +241,7 @@ describe('PointsPage — 검색·필터·페이지 (Phase 4)', () => {
 
     expect(await screen.findByText('조건에 맞는 지점이 없습니다')).toBeInTheDocument()
     // 이미 있는 지점을 또 만들게 하면 안 된다
-    expect(screen.queryByText('등록된 지점이 없습니다.')).not.toBeInTheDocument()
+    expect(screen.queryByText('등록된 지점이 없습니다')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '필터 초기화' })).toBeInTheDocument()
   })
 
@@ -281,9 +281,9 @@ describe('PointsPage — 로딩', () => {
 
     // 로딩 중 — 지점이 없다고 믿고 새로 만들게 하면 안 된다
     expect(screen.queryByText('데이터가 없습니다')).not.toBeInTheDocument()
-    expect(screen.queryByText('등록된 지점이 없습니다.')).not.toBeInTheDocument()
+    expect(screen.queryByText('등록된 지점이 없습니다')).not.toBeInTheDocument()
 
     // 응답 후에야 빈 목록 안내가 뜬다
-    expect(await screen.findByText('등록된 지점이 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('등록된 지점이 없습니다')).toBeInTheDocument()
   })
 })

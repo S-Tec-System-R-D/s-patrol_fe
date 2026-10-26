@@ -138,11 +138,12 @@ export const GroupEditDialog = ({
     if (!deleteTarget) return ''
     const kids = descendantGroups(deleteTarget).length
     const sites = countSites(deleteTarget)
+    // 대상은 제목이 말한다(질문형, 046 #16) — 설명은 영향만
     const cascade =
       kids > 0 || sites > 0
-        ? ` ${[kids > 0 && `하위 그룹 ${kids}개`, sites > 0 && `소속 사업장 ${sites}개`].filter(Boolean).join('와 ')}도 함께 삭제됩니다.`
+        ? `${[kids > 0 && `하위 그룹 ${kids}개`, sites > 0 && `소속 사업장 ${sites}개`].filter(Boolean).join('와 ')}도 함께 삭제됩니다. `
         : ''
-    return `'${deleteTarget.groupName}' 그룹을 삭제합니다.${cascade} 삭제된 데이터는 복구할 수 없습니다.`
+    return `${cascade}삭제된 데이터는 복구할 수 없습니다.`
   })()
 
   const nameTarget = sub && sub.kind !== 'delete' ? sub : null
@@ -237,7 +238,7 @@ export const GroupEditDialog = ({
         size="sm"
         icon={Trash2Icon}
         variant="destructive"
-        title={deleteTarget ? `${layerName(deleteTarget.layer)}그룹 삭제` : ''}
+        title={deleteTarget ? `'${deleteTarget.groupName}' ${layerName(deleteTarget.layer)}그룹을 삭제하시겠습니까?` : ''}
         description={deleteDescription}
         actionLabel="삭제"
         onAction={() => deleteTarget && handleDelete(deleteTarget)}

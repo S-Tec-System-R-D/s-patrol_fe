@@ -174,7 +174,8 @@ const UsersPage = () => {
         <div className="flex-1" />
         <AppDialog
           title="근무자 추가"
-          description="새 근무자를 등록할 수 있습니다."
+          description="새 근무자를 등록합니다."
+          contentClassName="sm:max-w-[520px]"
           open={addOpen}
           onOpenChange={setAddOpen}
           trigger={
@@ -185,7 +186,7 @@ const UsersPage = () => {
               aria-label="근무자 추가"
               // 사업장이 없으면 목록도 요청하지 않는다 — 같은 기준으로 막는다
               disabled={siteSeq === null}
-              className="h-9 px-3 xl:px-4 border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
+              className="h-9 px-3 xl:px-4"
             >
               <span className="hidden xl:inline">근무자 추가</span>
             </AppButton>
@@ -211,7 +212,7 @@ const UsersPage = () => {
         </div>
       ) : list.isPending ? (
         /* 🔴 로딩을 "데이터 없음" 으로 보여주지 않는다 */
-        <div className="rounded-sm border border-border bg-card">
+        <div aria-label="근무자 불러오는 중" className="rounded-sm border border-border bg-card">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="border-b border-border/50 px-3 py-3 last:border-0">
               <div className="h-[22px] animate-pulse rounded-md bg-muted" />

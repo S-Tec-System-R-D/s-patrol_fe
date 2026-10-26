@@ -53,9 +53,9 @@ const captureUpdates = () => {
   return bodies
 }
 
-/** 정보 수정 모달을 연다 — 목록 노드를 찾아야 버튼이 열린다 */
+/** 수정 모달을 연다 — 목록 노드를 찾아야 버튼이 열린다 */
 const openEdit = async (user: ReturnType<typeof userEvent.setup>) => {
-  const button = await screen.findByRole('button', { name: '정보 수정' })
+  const button = await screen.findByRole('button', { name: '사업장 수정' })
   await waitFor(() => expect(button).toBeEnabled())
   await user.click(button)
   return within(await screen.findByRole('dialog'))
@@ -99,14 +99,14 @@ describe('LocationDetailPage — 머리 · 기본정보 · 담당 관리자', ()
 
   it('할당이 없으면 빈 상태', async () => {
     renderPage('/admin/locations/3')
-    expect(await screen.findByText('지정된 담당 관리자가 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('지정된 담당 관리자가 없습니다')).toBeInTheDocument()
   })
 
-  it('뒤로 → 이 사업장의 지사를 고른 목록', async () => {
+  it('브레드크럼 → 이 사업장의 지사를 고른 목록(046 #3)', async () => {
     const user = userEvent.setup()
     renderPage('/admin/locations/6')
     await screen.findByRole('list', { name: '담당 관리자' })
-    await user.click(screen.getByRole('link', { name: '사업장 목록으로' }))
+    await user.click(within(screen.getByRole('navigation', { name: '현재 위치' })).getByRole('link', { name: '사업장' }))
     expect(url()).toBe('/admin/locations?group=8')
   })
 })
@@ -187,9 +187,11 @@ describe('LocationDetailPage — 삭제', () => {
     await user.click(screen.getByRole('button', { name: '삭제' }))
 
     const alert = await screen.findByRole('alertdialog')
+    // 🔴 대상은 질문형 제목이, 영향은 설명이 말한다(046 #16)
+    expect(within(alert).getByText("'테스트 사업장2' 사업장을 삭제하시겠습니까?")).toBeInTheDocument()
     expect(
       within(alert).getByText(
-        "'테스트 사업장2' 사업장을 삭제합니다. 하위 사업장 2개 · 순찰 코스 7개 · 지점 16개 · 근무자 5명 정보에 영향이 있습니다. 삭제된 데이터는 복구할 수 없습니다."
+        '하위 사업장 2개 · 순찰 코스 7개 · 지점 16개 · 근무자 5명 정보에 영향이 있습니다. 삭제된 데이터는 복구할 수 없습니다.'
       )
     ).toBeInTheDocument()
     await user.click(within(alert).getByRole('button', { name: '삭제' }))
@@ -202,9 +204,8 @@ describe('LocationDetailPage — 삭제', () => {
     const user = userEvent.setup()
     renderPage('/admin/locations/9')
     await user.click(await screen.findByRole('button', { name: '삭제' }))
-    expect(
-      await screen.findByText("'강동지사_추가사업장' 사업장을 삭제합니다. 삭제된 데이터는 복구할 수 없습니다.")
-    ).toBeInTheDocument()
+    expect(await screen.findByText("'강동지사_추가사업장' 사업장을 삭제하시겠습니까?")).toBeInTheDocument()
+    expect(screen.getByText('삭제된 데이터는 복구할 수 없습니다.')).toBeInTheDocument()
   })
 })
 

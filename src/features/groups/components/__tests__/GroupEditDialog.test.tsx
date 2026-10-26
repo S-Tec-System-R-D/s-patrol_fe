@@ -137,11 +137,10 @@ describe('GroupEditDialog', () => {
     await userEvent.click(within(list).getByLabelText('테스트사업장(수정) 삭제'))
 
     const alert = await screen.findByRole('alertdialog')
-    expect(within(alert).getByText('본부그룹 삭제')).toBeInTheDocument()
+    // 🔴 대상은 질문형 제목이, 영향은 설명이 말한다(046 #16)
+    expect(within(alert).getByText("'테스트사업장(수정)' 본부그룹을 삭제하시겠습니까?")).toBeInTheDocument()
     expect(
-      within(alert).getByText(
-        "'테스트사업장(수정)' 그룹을 삭제합니다. 하위 그룹 2개와 소속 사업장 5개도 함께 삭제됩니다. 삭제된 데이터는 복구할 수 없습니다."
-      )
+      within(alert).getByText('하위 그룹 2개와 소속 사업장 5개도 함께 삭제됩니다. 삭제된 데이터는 복구할 수 없습니다.')
     ).toBeInTheDocument()
     await userEvent.click(within(alert).getByRole('button', { name: '삭제' }))
 
@@ -162,10 +161,8 @@ describe('GroupEditDialog', () => {
     await userEvent.click(await within(list).findByLabelText('빈그룹 삭제'))
 
     const alert = await screen.findByRole('alertdialog')
-    expect(within(alert).getByText('지사그룹 삭제')).toBeInTheDocument()
-    expect(
-      within(alert).getByText("'빈그룹' 그룹을 삭제합니다. 삭제된 데이터는 복구할 수 없습니다.")
-    ).toBeInTheDocument()
+    expect(within(alert).getByText("'빈그룹' 지사그룹을 삭제하시겠습니까?")).toBeInTheDocument()
+    expect(within(alert).getByText('삭제된 데이터는 복구할 수 없습니다.')).toBeInTheDocument()
   })
 })
 

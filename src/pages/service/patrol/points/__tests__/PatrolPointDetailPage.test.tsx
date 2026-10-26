@@ -171,7 +171,7 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     seed({ hasMemo: false, memoList: [] })
     renderPage()
 
-    expect(await screen.findByText('남긴 기록이 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('남긴 기록이 없습니다')).toBeInTheDocument()
     expect(screen.queryByText('인증 상세를 불러오지 못했습니다')).not.toBeInTheDocument()
   })
 
@@ -261,7 +261,7 @@ describe('PatrolPointDetailPage — KPI 섹션을 두지 않는다 (2026-10-20)'
     seed({ hasMemo: false, memoList: [] })
     renderPage()
 
-    await screen.findByText('남긴 기록이 없습니다.')
+    await screen.findByText('남긴 기록이 없습니다')
     expect(screen.queryByText(/메모 0건/)).not.toBeInTheDocument()
   })
 })

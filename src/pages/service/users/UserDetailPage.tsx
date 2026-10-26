@@ -187,13 +187,15 @@ const UserDetailPage = () => {
             <AppDialog
               title="비밀번호 변경"
               description="근무자가 로그인에 쓸 새 비밀번호를 지정합니다."
+              contentClassName="sm:max-w-[520px]"
               open={passwordOpen}
               onOpenChange={setPasswordOpen}
               trigger={
                 <AppButton
                   icon={KeyRoundIcon}
-                  // 🔴 수정과 색을 달리한다(사용자 요청 2026-10-21) — 목록의 "추가" 버튼과 같은 point 연한 톤
-                  className="flex-auto whitespace-nowrap border-transparent bg-point-bg text-point-foreground hover:bg-point/20"
+                  // 수정과 같은 테두리 버튼 — 추가 버튼이 primary 로 바뀌며 point 연한 톤을 걷었다(046 #1-1, 사용자 결정 2026-10-26)
+                  variant="sub"
+                  className="flex-auto whitespace-nowrap bg-card"
                 >
                   비밀번호 변경
                 </AppButton>
@@ -203,7 +205,8 @@ const UserDetailPage = () => {
             </AppDialog>
             <AppDialog
               title="근무자 수정"
-              description="근무자 정보를 수정할 수 있습니다."
+              description="근무자 정보를 수정합니다."
+              contentClassName="sm:max-w-[520px]"
               open={editOpen}
               onOpenChange={setEditOpen}
               trigger={

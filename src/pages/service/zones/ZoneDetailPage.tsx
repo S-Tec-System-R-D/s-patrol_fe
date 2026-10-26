@@ -309,7 +309,8 @@ const ZoneDetailPage = () => {
             open={editOpen}
             onOpenChange={setEditOpen}
             title="코스 수정"
-            description="코스명과 설명을 수정할 수 있습니다."
+            description="코스명과 설명을 수정합니다."
+            contentClassName="sm:max-w-[520px]"
           >
             {/* 🔴 성공해야 닫는다 — 먼저 닫으면 실패 시 입력값이 사라진다 */}
             <EditCourseForm course={course} onSuccess={() => setEditOpen(false)} />

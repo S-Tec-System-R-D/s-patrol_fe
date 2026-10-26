@@ -130,14 +130,14 @@ describe('PatrolZonesPage — 서버 목록', () => {
     renderPage()
 
     expect(await screen.findByText('순찰이력을 불러오지 못했습니다')).toBeInTheDocument()
-    expect(screen.queryByText('순찰이력이 없습니다.')).not.toBeInTheDocument()
+    expect(screen.queryByText('순찰이력이 없습니다')).not.toBeInTheDocument()
   })
 
   it('🔴 0건과 필터 0건을 다르게 그린다', async () => {
     renderPage('/patrol/zones?result=1&user=없는사람')
 
     expect(await screen.findByText('조건에 맞는 순찰이력이 없습니다')).toBeInTheDocument()
-    expect(screen.queryByText('순찰이력이 없습니다.')).not.toBeInTheDocument()
+    expect(screen.queryByText('순찰이력이 없습니다')).not.toBeInTheDocument()
     // 🔴 **빈 상태에 초기화 버튼을 두지 않는다**(사용자 결정 2026-10-16) — 필터 바의
     //    아이콘 버튼이 **항상 보이는 자리**에 있어 같은 버튼이 두 개가 된다.
     //    ⚠️ 0개가 아니라 **1개**다 — 툴바의 것은 있어야 한다(023 은 그 아이콘이 없어서

@@ -171,7 +171,8 @@ const NoticeDetailPage = () => {
           <div className="flex items-center gap-2">
             <AppDialog
               title="공지 수정"
-              description="공지 내용을 수정할 수 있습니다."
+              description="공지 내용을 수정합니다."
+              contentClassName="sm:max-w-[520px]"
               open={editOpen}
               onOpenChange={setEditOpen}
               trigger={
