@@ -27,7 +27,7 @@ export const deploymentHistoryColumns = (siteName: string): ColumnDef<Assignment
       accessorKey: 'userName',
       header: '근무자',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <WorkerAvatar id={row.original.userName} name={row.original.userName} />
           <span className="font-medium">{row.original.userName}</span>
         </div>

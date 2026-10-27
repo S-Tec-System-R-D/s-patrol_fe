@@ -125,17 +125,17 @@ const UsersPage = () => {
     : undefined
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader title="근무자" subtitle={subtitle} />
 
       {/* 🔴 026 과 같은 한 줄 배치 — 검색 → 필터 → spacer → 생성 버튼(`PointTopNav` 모양).
           🔴 필터 영역에만 이름을 붙인다(`spec 030` — 카드 `button` 과 이름이 겹친다) */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap xl:flex-nowrap items-center gap-2">
         <AppInput
           variant="search"
           placeholder="이름·사번 검색"
           aria-label="이름·사번 검색"
-          className="w-[260px]"
+          className="w-full xl:w-[260px]"
           value={keywordDraft}
           onChange={(event) => {
             setKeywordDraft(event.target.value)

@@ -91,14 +91,14 @@ const AdminsPage = () => {
   const subtitle = selected ? (allRows ? `${selected.groupName} 담당 관리자 ${scopedRows.length}명` : selected.groupName) : undefined
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader title="관리자" subtitle={subtitle} />
       <div className="flex gap-4 items-start">
         <div className="hidden xl:block shrink-0 sticky top-6 self-start">
           <GroupFilterPanel {...filterProps} />
         </div>
         <div className="flex-1 min-w-0 flex flex-col gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap xl:flex-nowrap items-center gap-2">
             <div className="xl:hidden">
               <GroupFilterButton {...filterProps} />
             </div>
@@ -106,7 +106,7 @@ const AdminsPage = () => {
               variant="search"
               placeholder="이름 검색"
               aria-label="이름 검색"
-              className="w-[260px]"
+              className="w-full xl:w-[260px]"
               value={keywordDraft}
               onChange={(event) => {
                 setKeywordDraft(event.target.value)

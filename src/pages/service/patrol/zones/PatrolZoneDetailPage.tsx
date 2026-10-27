@@ -88,7 +88,7 @@ const PatrolZoneDetailPage = () => {
    */
   if (historySeq === null) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         {crumb}
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
@@ -114,7 +114,7 @@ const PatrolZoneDetailPage = () => {
 
   if (detail.isPending) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         {crumb}
         <div className="h-9 w-80 animate-pulse rounded-md bg-muted" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -129,7 +129,7 @@ const PatrolZoneDetailPage = () => {
 
   if (detail.isError || !detail.data) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         {crumb}
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
@@ -163,7 +163,7 @@ const PatrolZoneDetailPage = () => {
   const overtime = overtimeBadge(data.overTimeYn)
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       {crumb}
 
       <AppPageHeader

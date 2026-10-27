@@ -95,7 +95,7 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
     <div className="overflow-x-auto">
       <table className="w-full text-body">
         <thead className="border-b bg-muted">
-          <tr className="text-left text-xs font-medium text-muted-foreground">
+          <tr className="text-left text-xs font-medium text-muted-foreground whitespace-nowrap">
             <th className="px-3 py-3 w-12">순서</th>
             <th className="px-3 py-3">순찰지점</th>
             <th className="px-3 py-3 w-20">인증수단</th>
@@ -177,7 +177,7 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
                       {row.orderNo}
                     </span>
                   </td>
-                  <td className="px-3 py-3 font-medium">{row.pointName}</td>
+                  <td className="px-3 py-3 font-medium whitespace-nowrap">{row.pointName}</td>
                   <td className="px-3 py-3">
                     {/* 🔴 미인증·미완료 행은 `authMethod` 가 `null` 이다 — 빈 칸이 아니라 `—` */}
                     {row.authMethod === AUTH_METHOD.QR ? (

@@ -193,7 +193,7 @@ const PatrolPointsPage = () => {
   )
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader title="순찰이력" subtitle="코스·지점 단위 순찰 수행 이력을 확인합니다" />
 
       <PatrolHistoryTabs />
@@ -202,12 +202,12 @@ const PatrolPointsPage = () => {
           🔴 **필터 영역에만 이름을 붙인다**(`spec 030`) — 좁은 폭 카드가 `button` 이라
           접근성 이름에 행 내용이 전부 들어가고 필터 버튼과 이름이 겹친다.
           ⚠️ `contents` 라 그룹이 flex 줄을 끊지 않는다 */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap xl:flex-nowrap items-center gap-2">
         <AppInput
           variant="search"
           placeholder="순찰자 검색"
           aria-label="순찰자 검색"
-          className="w-[260px]"
+          className="w-full xl:w-[260px]"
           value={userDraft}
           onChange={(event) => {
             setUserDraft(event.target.value)

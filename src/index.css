@@ -378,3 +378,40 @@
 .bounce-anim {
   animation: bounce-y 1.5s ease-in-out infinite;
 }
+
+/*
+ * NOTE: 지도(Leaflet)를 자기 쌓임 맥락 안에 가둔다(`spec 053`).
+ * Leaflet 은 패널 400 · 컨트롤 1000 의 z-index 를 쓰는데, 컨테이너가 쌓임 맥락을 만들지 않아
+ * 하단 floating nav(`z-40`) 위로 확대/축소 버튼이 올라온다. 지도 카드 3곳이 공통이라 여기서 막는다.
+ */
+.leaflet-container {
+  isolation: isolate;
+}
+
+/*
+ * NOTE: 목록 카드의 메타 줄(`날짜 │ 사람 │ 건수`) — `spec 053`.
+ * 구분선을 항목 사이 별도 요소로 두면 줄바꿈될 때 `│` 가 줄 끝에 홀로 남는다. 구분선을 **뒤 항목의 앞머리**에
+ * 붙이고(`::before`), 줄 첫 항목의 구분선은 컨테이너 왼쪽 밖에 놓여 `overflow: hidden` 으로 잘린다.
+ * 열 간격 1.25rem 의 가운데에 구분선이 온다(전: `gap-x-2` + 구분선 + `gap-x-2`).
+ */
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 1.25rem;
+  row-gap: 0.125rem;
+  overflow: hidden;
+}
+
+.card-meta > * {
+  position: relative;
+}
+
+.card-meta > * + *::before {
+  content: '│';
+  position: absolute;
+  top: 50%;
+  left: -0.625rem;
+  transform: translate(-50%, -50%);
+  color: var(--color-border);
+}

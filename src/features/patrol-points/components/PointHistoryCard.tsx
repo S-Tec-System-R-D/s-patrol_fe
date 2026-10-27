@@ -64,19 +64,13 @@ const PointHistoryCard = (row: PointHistoryRow) => {
 
         {/* 지표 줄 — 034·036 과 같은 어휘(값 + 구분선).
             ⚠️ 넘치면 **줄바꿈**한다 — 잘리는 것보다 한 줄 더 쓰는 쪽이 낫다 */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted-foreground">
+        <div className="card-meta text-caption text-muted-foreground">
           {/* 🔴 **날짜를 자르지 않는다** — 여러 날에 걸친 목록이라 "언제" 가 가장 중요한
               선택 기준이다. 🔴 미완료 행도 **시각을 보여준다**(OQ-15 해소) */}
           <span className="tabular-nums">{formatDateTime(row.checkDt)}</span>
-          <span aria-hidden className="text-border">
-            │
-          </span>
           <span className="inline-flex min-w-0 items-center gap-1">
             <RouteIcon size={13} strokeWidth={1.75} className="shrink-0" />
             <span className="truncate">{row.courseName}</span>
-          </span>
-          <span aria-hidden className="text-border">
-            │
           </span>
           <span className="inline-flex min-w-0 items-center gap-1">
             <UserIcon size={13} strokeWidth={1.75} className="shrink-0" />
@@ -84,12 +78,7 @@ const PointHistoryCard = (row: PointHistoryRow) => {
             <span className="truncate">{row.userName ?? '-'}</span>
           </span>
           {hasAuth && (
-            <>
-              <span aria-hidden className="text-border">
-                │
-              </span>
-              <span>{row.authMethodName}</span>
-            </>
+            <span>{row.authMethodName}</span>
           )}
         </div>
       </div>

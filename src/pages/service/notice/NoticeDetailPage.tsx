@@ -95,7 +95,7 @@ const NoticeDetailPage = () => {
    */
   if (noticeSeq === null) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         <Breadcrumb />
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
@@ -114,7 +114,7 @@ const NoticeDetailPage = () => {
 
   if (detail.isPending) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         <Breadcrumb />
         <div className="h-9 w-80 animate-pulse rounded-md bg-muted" />
         <div className="h-64 animate-pulse rounded-lg bg-muted" />
@@ -124,7 +124,7 @@ const NoticeDetailPage = () => {
 
   if (detail.isError || !detail.data) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         <Breadcrumb />
         <div className="rounded-lg border border-border bg-card">
           {/* 🔴 **"삭제되었다" 고 단정하지 않는다** — 네트워크·권한·없는 번호가 모두 여기로 온다 */}
@@ -147,7 +147,7 @@ const NoticeDetailPage = () => {
   const notice = detail.data
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       <Breadcrumb />
 
       <AppPageHeader

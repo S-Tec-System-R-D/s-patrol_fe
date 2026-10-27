@@ -61,14 +61,11 @@ const CourseCard = (course: CourseRow) => (
       </div>
 
       {/* 지표 줄 — 아이콘 + 값을 구분선으로 나눈다 */}
-      <div className="flex items-center gap-2 text-caption text-muted-foreground">
+      <div className="card-meta text-caption text-muted-foreground">
         <span className="inline-flex items-center gap-1">
           <MapPinIcon size={13} strokeWidth={1.75} />
           {/* 🔴 0개도 그대로 보여준다 — 경고하지 않는다(`spec 023` 규칙 12) */}
           <span className="tabular-nums">지점 {course.pointCount}개</span>
-        </span>
-        <span aria-hidden className="text-border">
-          │
         </span>
         <span className="inline-flex items-center gap-1">
           <ClockIcon size={13} strokeWidth={1.75} />

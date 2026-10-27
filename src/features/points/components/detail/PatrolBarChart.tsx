@@ -34,6 +34,10 @@ import type { PatrolDayBucket } from '../../lib/patrolSummary'
  * **축** — 🔴 **모든 날짜를 라벨링한다**(사용자 결정 2026-10-10). 30일일 때는 다 못 붙여
  * 5개만 띄엄띄엄 찍었는데, 그러면 **어느 막대가 어느 날인지 읽을 수 없다** — 축이 있으나
  * 마나였다. 기간을 **2주로 줄여**(`SUMMARY_DAYS`) 14개를 전부 찍는다.
+ * 🔴 **라벨은 일(日)만, 월은 첫 칸 · 월이 바뀌는 칸 아래 둘째 줄에**(`spec 053` T969) —
+ * 14개를 전부 `MM.dd` 로 찍으면 좁은 폭(320px 에서 칸당 약 15px)에서 라벨이 붙어
+ * `10.1410.15…` 처럼 이어진 숫자로 읽혔다. 월을 같은 줄에 붙이면(`10.07`) 그 칸만 넓어
+ * 옆 칸과 다시 붙어서 둘째 줄로 내렸다. 전체 날짜는 툴팁이 맡는다.
  * y축은 정수 눈금만, 축선 없이 **뒤로 물린다**(grid·axes는 recessive).
  */
 
@@ -41,8 +45,36 @@ export interface PatrolBarChartProps {
   buckets: PatrolDayBucket[]
 }
 
-/** 'yyyy-MM-dd' → 'MM.dd' */
-const tickLabel = (date: string) => format(parseISO(date), 'MM.dd')
+/** x축 눈금 — 첫 줄 'dd', 첫 칸 · 월이 바뀌는 칸만 둘째 줄 'M월' */
+const DateTick = ({
+  x,
+  y,
+  payload,
+  buckets,
+}: {
+  x?: number
+  y?: number
+  payload?: { value: string; index: number }
+  buckets: PatrolDayBucket[]
+}) => {
+  if (!payload) return null
+  const date = parseISO(payload.value)
+  const prev = buckets[payload.index - 1]
+  const monthChanged = !prev || prev.date.slice(0, 7) !== payload.value.slice(0, 7)
+
+  return (
+    <text x={x} y={y} textAnchor="middle" fontSize={10} fill="var(--color-muted-foreground)">
+      <tspan x={x} dy="0.71em">
+        {format(date, 'dd')}
+      </tspan>
+      {monthChanged && (
+        <tspan x={x} dy="1.3em">
+          {format(date, 'M월')}
+        </tspan>
+      )}
+    </text>
+  )
+}
 
 const ChartTooltip = ({
   active,
@@ -65,20 +97,21 @@ const ChartTooltip = ({
 
 const PatrolBarChart = ({ buckets }: PatrolBarChartProps) => {
   return (
-    <div className="h-[140px] w-full">
+    <div className="h-[152px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={buckets} margin={{ top: 8, right: 8, bottom: 0, left: -24 }}>
           {/* 가로선만, 점선, 뒤로 물린다 */}
           <CartesianGrid vertical={false} stroke="var(--color-border)" strokeDasharray="2 4" />
           <XAxis
             dataKey="date"
-            tickFormatter={tickLabel}
             // 🔴 전부 찍는다 — recharts 가 자동으로 솎아내지 않게 명시한다
             interval={0}
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }}
+            tick={<DateTick buckets={buckets} />}
             tickMargin={8}
+            // 둘째 줄(월)만큼 축 높이를 늘린다 — 그만큼 차트 높이도 140 → 152
+            height={42}
           />
           <YAxis
             // 횟수는 정수다 — 0.5회 눈금이 생기면 안 된다

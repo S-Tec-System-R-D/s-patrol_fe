@@ -94,7 +94,7 @@ const PointsPage = () => {
   const hasFilter = Boolean(params.search || params.authMethod || params.useYn)
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader title="코스/지점" subtitle="순찰 코스와 지점을 구성하고 관리합니다" />
 
       <CourseTabs />

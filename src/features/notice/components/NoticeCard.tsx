@@ -24,28 +24,20 @@ const NoticeCard = (row: NoticeRow) => (
         <span className="truncate text-body font-semibold text-foreground">{row.title}</span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted-foreground">
+      <div className="card-meta text-caption text-muted-foreground">
         <span className="inline-flex items-center gap-1 tabular-nums">
           <CalendarIcon size={13} strokeWidth={1.75} className="shrink-0" />
           {formatDate(row.createDt)}
-        </span>
-        <span aria-hidden className="text-border">
-          │
         </span>
         <span className="inline-flex min-w-0 items-center gap-1">
           <UserIcon size={13} strokeWidth={1.75} className="shrink-0" />
           <span className="truncate">{row.userName}</span>
         </span>
         {row.attachCount > 0 && (
-          <>
-            <span aria-hidden className="text-border">
-              │
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <PaperclipIcon size={13} strokeWidth={1.75} className="shrink-0" />
-              첨부 {row.attachCount}
-            </span>
-          </>
+          <span className="inline-flex items-center gap-1">
+            <PaperclipIcon size={13} strokeWidth={1.75} className="shrink-0" />
+            첨부 {row.attachCount}
+          </span>
         )}
       </div>
     </div>

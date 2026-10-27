@@ -11,7 +11,7 @@ const DeploymentsPage = () => {
   const siteName = getSiteName()
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader
         title="배치관리"
         subtitle={

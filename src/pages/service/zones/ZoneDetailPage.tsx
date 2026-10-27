@@ -178,7 +178,7 @@ const ZoneDetailPage = () => {
   })
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       <Breadcrumb />
 
       {course ? (

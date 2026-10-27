@@ -108,17 +108,17 @@ const NoticeListPage = () => {
   )
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader title="공지사항" subtitle="근무자에게 전달할 공지를 관리합니다" />
 
       {/* 🔴 037 과 같은 한 줄 배치 — 검색이 맨 앞, 필터가 뒤, 남는 폭은 spacer.
           🔴 필터 영역에만 이름을 붙인다(`spec 030` — 카드 `button` 과 이름이 겹친다) */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap xl:flex-nowrap items-center gap-2">
         <AppInput
           variant="search"
           placeholder="제목·내용 검색"
           aria-label="제목·내용 검색"
-          className="w-[260px]"
+          className="w-full xl:w-[260px]"
           value={keywordDraft}
           onChange={(event) => {
             setKeywordDraft(event.target.value)

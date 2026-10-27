@@ -96,7 +96,7 @@ const UserDetailPage = () => {
   /** 🔴🔴 주소 오류를 로딩보다 먼저 분기한다 — `enabled: false` 는 영원히 `isPending` 이다(037 T557) */
   if (userSeq === null) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         <Breadcrumb />
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
@@ -115,7 +115,7 @@ const UserDetailPage = () => {
 
   if (detail.isPending) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         <Breadcrumb />
         <div className="h-12 w-80 animate-pulse rounded-md bg-muted" />
         <div className="h-48 animate-pulse rounded-lg bg-muted" />
@@ -125,7 +125,7 @@ const UserDetailPage = () => {
 
   if (detail.isError || !detail.data) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         <Breadcrumb />
         <div className="rounded-lg border border-border bg-card">
           {/* 🔴 "삭제되었다"·"권한이 없다" 고 단정하지 않는다 — 403(B-41)·네트워크·없는 번호가 모두 여기로 온다 */}
@@ -149,7 +149,7 @@ const UserDetailPage = () => {
   const isMe = me.data?.userSeq === user.userSeq
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       <Breadcrumb />
 
       {/* 머리 줄 — 식별(아바타·이름·근무 상태)만. `AppPageHeader` 는 아이콘 자리에 lucide 아이콘만 받아 아바타를 넣을 수 없다.

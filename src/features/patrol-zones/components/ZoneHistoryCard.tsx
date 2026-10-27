@@ -82,28 +82,19 @@ const ZoneHistoryCard = (row: CourseHistoryRow) => {
         {/* 지표 줄 — 034 와 같은 어휘(아이콘 + 값, 구분선).
             ⚠️ 넘치면 **줄바꿈**한다 — 이력은 값이 네 개라 360px 에서 한 줄에 안 들어갈 수
             있고, 넘쳐서 잘리는 것보다 한 줄 더 쓰는 쪽이 낫다 */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted-foreground">
+        <div className="card-meta text-caption text-muted-foreground">
           {/* 🔴 **날짜를 자르지 않는다** — 이력 목록은 여러 날에 걸쳐 있어 "언제" 가 가장
               중요한 선택 기준이다. 시:분만 두면 다른 날 회차와 구분되지 않는다 */}
           <span className="tabular-nums">{formatDateTime(row.startDt)}</span>
-          <span aria-hidden className="text-border">
-            │
-          </span>
           <span className="inline-flex min-w-0 items-center gap-1">
             <UserIcon size={13} strokeWidth={1.75} className="shrink-0" />
             <span className="truncate">{runnerLabel(row.userList)}</span>
-          </span>
-          <span aria-hidden className="text-border">
-            │
           </span>
           <span className="inline-flex items-center gap-1">
             <MapPinIcon size={13} strokeWidth={1.75} />
             <span className="tabular-nums">
               {row.checkedCount}/{row.pointCount} 인증
             </span>
-          </span>
-          <span aria-hidden className="text-border">
-            │
           </span>
           {/* 🔴 `'02:17:40'` 처럼 **시 단위가 온다** — 분으로 가정하면 2시간이 2분이 된다 */}
           <span className="tabular-nums">{formatElapsed(row.actualElapsedTime)}</span>

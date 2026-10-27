@@ -43,9 +43,9 @@ const AppPagination = ({
   const totalPages = pageSize > 0 ? Math.ceil(total / pageSize) : 0
 
   return (
-    <div className="flex items-center justify-between text-xs text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
       <div className="flex items-center gap-2">
-        <span>페이지당 행 수</span>
+        <span className="whitespace-nowrap">페이지당 행 수</span>
         <AppSelect
           aria-label="페이지당 행 수"
           options={pageSizeOptions.map((size) => ({ value: String(size), label: String(size) }))}
@@ -56,7 +56,7 @@ const AppPagination = ({
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="tabular-nums">
+        <span className="whitespace-nowrap tabular-nums">
           {start}–{end} / 전체 {total}개 항목
         </span>
         <div className="flex items-center gap-1">

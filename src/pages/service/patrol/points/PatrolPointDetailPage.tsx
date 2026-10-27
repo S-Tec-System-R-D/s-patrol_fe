@@ -65,7 +65,7 @@ const PatrolPointDetailPage = () => {
    */
   if (detailSeq === null) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         {crumb}
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
@@ -90,7 +90,7 @@ const PatrolPointDetailPage = () => {
 
   if (detail.isPending) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         {crumb}
         <div className="h-9 w-80 animate-pulse rounded-md bg-muted" />
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
@@ -103,7 +103,7 @@ const PatrolPointDetailPage = () => {
 
   if (detail.isError || !detail.data) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         {crumb}
         <div className="rounded-lg border border-border bg-card">
           {/* 🔴 **"삭제되었다" 고 단정하지 않는다** — 네트워크 실패·권한·잘못된 주소가 모두
@@ -138,7 +138,7 @@ const PatrolPointDetailPage = () => {
   const overtime = overtimeBadge(data.overtimeYn)
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       {crumb}
 
       {/* 🔴 **순찰 상세(036)와 같은 골격이다**(사용자 결정 2026-10-26 — 10-20 의 "타이틀 줄

@@ -95,7 +95,7 @@ const CoursePatrolLog = ({ rows, totalCount, isPending }: CoursePatrolLogProps) 
       <div className="overflow-x-auto">
         <table className="w-full text-body">
           <thead>
-            <tr className="border-b text-caption text-muted-foreground">
+            <tr className="border-b text-caption text-muted-foreground whitespace-nowrap">
               <th className="py-2 pr-3 text-left font-medium">시작</th>
               <th className="py-2 pr-3 text-left font-medium">근무자</th>
               <th className="py-2 pr-3 text-right font-medium">인증</th>
@@ -112,7 +112,7 @@ const CoursePatrolLog = ({ rows, totalCount, isPending }: CoursePatrolLogProps) 
                 <td className="py-2 pr-3 tabular-nums whitespace-nowrap">
                   {formatStartDt(row.startDt)}
                 </td>
-                <td className="py-2 pr-3">
+                <td className="py-2 pr-3 whitespace-nowrap">
                   {/* 🔴 빈 배열이 실존한다 — 아바타·이름을 항상 그릴 수 없다 */}
                   {row.userList.length === 0 ? (
                     <span className="text-muted-foreground">-</span>
@@ -120,7 +120,7 @@ const CoursePatrolLog = ({ rows, totalCount, isPending }: CoursePatrolLogProps) 
                     row.userList.map((user) => user.userName).join(', ')
                   )}
                 </td>
-                <td className="py-2 pr-3 text-right tabular-nums">
+                <td className="py-2 pr-3 text-right tabular-nums whitespace-nowrap">
                   {/* 🔴 상태와 **따로** 적는다 — 완료인데 0/3 인 행이 실존한다 */}
                   <span className={row.checkedCount < row.pointCount ? 'text-warning-foreground' : ''}>
                     {row.checkedCount}/{row.pointCount}

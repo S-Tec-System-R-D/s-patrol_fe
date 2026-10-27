@@ -75,7 +75,7 @@ const LocationDetailPage = () => {
   /** 🔴🔴 주소 오류를 로딩보다 먼저 분기한다 — `enabled: false` 는 영원히 `isPending` 이다(037 T557) */
   if (siteSeq === null || detail.isError) {
     return (
-      <div className="flex flex-col gap-4 p-8">
+      <div className="flex flex-col gap-4 p-4 xl:p-8">
         <Breadcrumb listPath={listPath} />
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
@@ -99,7 +99,7 @@ const LocationDetailPage = () => {
 
   if (detail.isPending) {
     return (
-      <div aria-label="사업장 불러오는 중" className="flex flex-col gap-4 p-8">
+      <div aria-label="사업장 불러오는 중" className="flex flex-col gap-4 p-4 xl:p-8">
         <Breadcrumb listPath={listPath} />
         <div className="h-12 w-80 animate-pulse rounded-md bg-muted" />
         <div className="h-24 animate-pulse rounded-lg bg-muted" />
@@ -122,7 +122,7 @@ const LocationDetailPage = () => {
       : undefined
 
   return (
-    <div className="flex flex-col gap-4 p-8">
+    <div className="flex flex-col gap-4 p-4 xl:p-8">
       <Breadcrumb listPath={listPath} />
 
       {/* 머리 — 경로 · 이름만. 🔴 액션은 기본정보 카드 아래(근무자 상세와 같다 — 사용자 결정 2026-10-23) */}

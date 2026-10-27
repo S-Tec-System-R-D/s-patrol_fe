@@ -28,7 +28,7 @@ export const deploymentRequestColumns = (siteSeq: number): ColumnDef<AssignmentR
       accessorKey: 'userName',
       header: '근무자',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 whitespace-nowrap">
           {/* 이력 표·근무자 목록과 같은 사람이면 같은 색 — 해시 키를 `userSeq` 로 맞춘다 */}
           <WorkerAvatar id={String(row.original.userSeq)} name={row.original.userName} />
           <span className="font-medium">{row.original.userName}</span>
@@ -64,7 +64,7 @@ export const deploymentRequestColumns = (siteSeq: number): ColumnDef<AssignmentR
       accessorKey: 'createDt',
       header: '요청일',
       cell: ({ getValue }) => (
-        <span className="tabular-nums text-muted-foreground">{formatDate(getValue<string>())}</span>
+        <span className="tabular-nums whitespace-nowrap text-muted-foreground">{formatDate(getValue<string>())}</span>
       ),
     },
     {
@@ -78,6 +78,6 @@ export const deploymentRequestColumns = (siteSeq: number): ColumnDef<AssignmentR
         />
       ),
       // 버튼 폭만큼만 — 남는 폭을 나눠 받으면 버튼이 표 가운데로 밀린다
-      meta: { className: 'w-px' },
+      meta: { className: 'w-px whitespace-nowrap' },
     },
   ])

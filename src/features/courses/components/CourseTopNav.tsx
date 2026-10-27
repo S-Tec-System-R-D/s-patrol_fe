@@ -57,11 +57,11 @@ const CourseTopNav = ({ search, onSearchChange, filters }: CourseTopNavProps) =>
   )
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap xl:flex-nowrap items-center gap-2">
       <AppInput
         variant="search"
         placeholder="코스 이름 검색"
-        className="w-[260px]"
+        className="w-full xl:w-[260px]"
         value={draft}
         onChange={(event) => {
           setDraft(event.target.value)

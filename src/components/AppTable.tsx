@@ -138,8 +138,10 @@ const AppTable = <TData,>({
       )}
 
       {/* 테이블 — 🔴 `renderCard` 를 받은 화면만 `xl` 이상으로 제한한다. 받지 않은
-          소비처는 **클래스조차 붙지 않아** 지금과 완전히 같다(`spec 030` 제약 2) */}
-      <div className={`border rounded-sm overflow-hidden ${renderCard ? 'hidden xl:block' : ''}`}>
+          소비처는 **클래스조차 붙지 않아** 지금과 완전히 같다(`spec 030` 제약 2).
+          🔴 `overflow-x-auto` — 카드가 없는 표가 좁은 폭에서 문서를 넓히지 않고 상자 안에서만 스크롤한다(`spec 053`).
+          `relative` 가 없으면 셀 안 `sr-only`(absolute)가 상자를 빠져나가 문서를 다시 넓힌다 */}
+      <div className={`relative border rounded-sm overflow-x-auto ${renderCard ? 'hidden xl:block' : ''}`}>
         <table className="w-full text-sm">
           <thead className="border-b bg-muted">
             {table.getHeaderGroups().map((headerGroup) => (

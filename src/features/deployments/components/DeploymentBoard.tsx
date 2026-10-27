@@ -186,7 +186,7 @@ const DeploymentBoard = () => {
       <div
         role="tablist"
         aria-label="배치 목록"
-        className="flex items-center gap-1 border-b border-border"
+        className="flex items-center gap-1 border-b border-border overflow-x-auto xl:overflow-visible"
       >
         {TABS.map(({ key, label, icon: Icon }) => {
           const selected = tab === key
@@ -205,7 +205,7 @@ const DeploymentBoard = () => {
               aria-selected={selected}
               onClick={() => selectTab(key)}
               className={cn(
-                '-mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-3 py-2 text-tab font-semibold text-muted-foreground transition-colors hover:text-foreground',
+                '-mb-px inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-tab font-semibold text-muted-foreground transition-colors hover:text-foreground',
                 selected && 'border-point font-bold text-foreground'
               )}
             >
@@ -227,12 +227,12 @@ const DeploymentBoard = () => {
       {/* 이력 탭의 필터 줄 — 🔴 **다른 목록 화면과 같은 마크업**(T658, 사용자 요청): 검색창(왼쪽) →
           `role="group"` 상태 필터 · 초기화 → spacer. 공지(026)·근무자(038)·지점 이력(037)과 같은 줄이다 */}
       {!isRequestTab(tab) && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap xl:flex-nowrap items-center gap-2">
           <AppInput
             variant="search"
             placeholder="이름 검색"
             aria-label="이름 검색"
-            className="w-[260px]"
+            className="w-full xl:w-[260px]"
             value={keywordDraft}
             onChange={(event) => {
               setKeywordDraft(event.target.value)

@@ -1,12 +1,15 @@
 import { Outlet } from 'react-router-dom'
 import { useDeploymentSummary } from '@/features/deployments/hooks/useDeploymentSummary'
 import { getSiteSeq } from '@/lib/auth/site'
+import { FloatingNav } from './sidebar/FloatingNav'
 import { RailSidebar } from './sidebar/RailSidebar'
 import { ServiceMenus } from './sidebar/sidebar.config'
 
 /**
  * 현장 사이트(`/*`) 셸. 리디자인(007) 반영.
- * - TopNav 없음. 68px `RailSidebar`만.
+ * - TopNav 없음. `xl` 이상 68px `RailSidebar` · 미만 하단 `FloatingNav`(`spec 053`).
+ * - 🔴 `xl` 미만 `pb-24` — floating nav 가 마지막 행 · 페이지네이션을 가리지 않게 스크롤 끝에 여백을 둔다.
+ *   `min-h-screen` — 레일이 사라지면 짧은 페이지 아래가 배경색 없이 비어 보인다.
  * - `.app-shell`(overflow:hidden) 미사용 — 페이지 자연 스크롤.
  * layout.md §0-1
  */
@@ -21,9 +24,10 @@ const ServiceLayout = () => {
   return (
     <div className="flex">
       <RailSidebar menus={ServiceMenus} badges={{ deploymentPending }} />
-      <div className="flex-1 min-w-0 bg-contents-background">
+      <div className="flex-1 min-w-0 min-h-screen pb-24 xl:pb-0 bg-contents-background">
         <Outlet />
       </div>
+      <FloatingNav menus={ServiceMenus} badges={{ deploymentPending }} />
     </div>
   )
 }

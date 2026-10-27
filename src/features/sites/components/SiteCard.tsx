@@ -22,21 +22,16 @@ const SiteCard = ({ site, depth, groupPath }: SiteRow) => (
         {site.siteName}
       </span>
 
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted-foreground">
+      <div className="card-meta text-caption text-muted-foreground">
         <span className="inline-flex items-center gap-1">
           <FolderTreeIcon size={13} strokeWidth={1.75} className="shrink-0" />
           {groupPath}
         </span>
         {site.address && (
-          <>
-            <span aria-hidden className="text-border">
-              │
-            </span>
-            <span className="inline-flex min-w-0 items-center gap-1">
-              <MapPinIcon size={13} strokeWidth={1.75} className="shrink-0" />
-              <span className="truncate">{site.address}</span>
-            </span>
-          </>
+          <span className="inline-flex min-w-0 items-center gap-1">
+            <MapPinIcon size={13} strokeWidth={1.75} className="shrink-0" />
+            <span className="truncate">{site.address}</span>
+          </span>
         )}
       </div>
     </div>

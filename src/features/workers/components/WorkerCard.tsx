@@ -32,13 +32,10 @@ const WorkerCard = (row: UserRow) => (
         </AppBadge>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted-foreground">
+      <div className="card-meta text-caption text-muted-foreground">
         <span className="inline-flex items-center gap-1 tabular-nums">
           <IdCardIcon size={13} strokeWidth={1.75} className="shrink-0" />
           {row.loginId}
-        </span>
-        <span aria-hidden className="text-border">
-          │
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span
@@ -47,9 +44,6 @@ const WorkerCard = (row: UserRow) => (
             }`}
           />
           {workLabel(row.workYn)}
-        </span>
-        <span aria-hidden className="text-border">
-          │
         </span>
         <span className="inline-flex items-center gap-1 tabular-nums">
           <CalendarIcon size={13} strokeWidth={1.75} className="shrink-0" />
