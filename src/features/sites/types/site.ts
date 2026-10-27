@@ -41,8 +41,8 @@ export interface SiteDetail {
 /**
  * `POST Site/W/sign/AddSite` — 성공 `data: true`, 🔴 **새 `siteSeq` 를 주지 않는다.**
  *
- * 화면은 이 4개만 보낸다. 🔴 swagger 의 헬스체크 · `exceptionTime` 은 싣지 않는다 — `exceptionTime` 은 보내도
- * **버린다**(B-52). 헬스체크는 상세에서 `UpdateSite` 로 켠다. `parentSiteSeq` 도 없다(최상위만 만든다).
+ * 화면은 이 5개만 보낸다. 🔴 swagger 의 헬스체크 · `exceptionTime` 은 싣지 않는다 — `exceptionTime` 은 보내도
+ * **버린다**(B-52). 헬스체크는 상세에서 `UpdateSite` 로 켠다.
  */
 export interface AddSiteRequest {
   /** 🔴 서버는 단계를 검사하지 않는다 — 지사만 고르게 하는 것은 화면 몫(OQ-043-E) */
@@ -51,6 +51,11 @@ export interface AddSiteRequest {
   address: string
   /** 빈 값이면 싣지 않는다(생략 = `null`) */
   tel?: string
+  /**
+   * 모 사업장 — 생략 = 최상위. 🔴 **같은 그룹의 사업장만**(아니면 400) · 만든 뒤 바꿀 수 없다(`UpdateSite` 에 없음).
+   * 화면은 그 지사의 최상위 사업장만 후보로 준다(`spec 051`).
+   */
+  parentSiteSeq?: number
 }
 
 /** `UpdateSite` 의 예외 시간 1행 — 🔴 `detailSeq: 0` = 새 행, 기존 값 = 그 행 수정 */

@@ -4,9 +4,12 @@ import type { GroupListNode, GroupListSite } from '@/features/groups/types/group
 import {
   collectSiteRows,
   countDescendantSites,
+  branchOptions,
   findSite,
-  groupOptions,
   groupPathText,
+  hqOf,
+  hqOptions,
+  parentSiteOptions,
 } from '../siteList'
 
 /**
@@ -121,12 +124,36 @@ describe('findSite · countDescendantSites · groupPathText', () => {
   })
 })
 
-describe('groupOptions — 소속 그룹 선택지', () => {
-  it('🔴 지사(layer 2)만', () => {
-    expect(groupOptions(ROOT)).toEqual([{ groupSeq: 3, label: '수도권본부 › 강동지사' }])
+describe('본부 · 지사 · 모 사업장 선택지 (spec 051)', () => {
+  it('본부 = layer 1 · 이름만', () => {
+    expect(hqOptions(ROOT)).toEqual([
+      { groupSeq: 2, label: '수도권본부' },
+      { groupSeq: 4, label: '부산본부' },
+    ])
   })
 
-  it('지사가 아닌 현재 그룹은 유지용으로 넣는다', () => {
-    expect(groupOptions(ROOT, 4).map((option) => option.groupSeq)).toEqual([3, 4])
+  it('🔴 지사는 본부 아래 layer 2 만 · null 이면 트리 전체', () => {
+    expect(branchOptions(ROOT, 2)).toEqual([{ groupSeq: 3, label: '강동지사' }])
+    expect(branchOptions(ROOT, 4)).toEqual([])
+    expect(branchOptions(ROOT, null).map((option) => option.groupSeq)).toEqual([3])
+    expect(branchOptions(ROOT, 999)).toEqual([])
+  })
+
+  it('지사의 본부 · 본부가 없으면 null', () => {
+    expect(hqOf(ROOT, 3)).toBe(2)
+    expect(hqOf(ROOT, 1)).toBeNull()
+  })
+
+  it('🔴 모 사업장 후보 = 그 지사의 최상위 사업장만(하위 4 는 없다)', () => {
+    expect(parentSiteOptions(ROOT, 3)).toEqual([
+      { siteSeq: 3, siteName: '그랜드타워' },
+      { siteSeq: 9, siteName: '센트럴플라자' },
+    ])
+  })
+
+  it('루트가 지사인 트리(할당 그룹만 받는 계정) → 본부 없음 · 지사는 루트', () => {
+    const branchRoot = group(3, '강동지사', 2, [site(3, '그랜드타워', null)])
+    expect(hqOptions(branchRoot)).toEqual([])
+    expect(branchOptions(branchRoot, null)).toEqual([{ groupSeq: 3, label: '강동지사' }])
   })
 })

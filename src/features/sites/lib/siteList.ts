@@ -7,6 +7,7 @@ import type { GroupListNode, GroupListSite } from '@/features/groups/types/group
  * 043 `groupTree.ts` 는 `AdminSiteSelect`(`GroupNode`) 용이라 여기서 같은 순회를 따로 둔다.
  */
 
+const HQ_LAYER = 1
 /** 지사 — 사업장은 지사 아래에만 놓인다(업무 규칙, OQ-043-E) */
 const BRANCH_LAYER = 2
 
@@ -97,19 +98,40 @@ export const findSite = (
 /** 하위 사업장 전부(자기 제외 · 손자 포함) — 🔴 삭제하면 함께 지워진다(B-54) */
 export const countDescendantSites = (site: GroupListSite): number => walkSites(site.children).length
 
-/** 소속 그룹 선택지 1개 */
+/** 본부 · 지사 선택지 1개 — 라벨은 그룹 이름만(단계를 나눠 고른다, `spec 051`) */
 export interface GroupOption {
   groupSeq: number
   label: string
 }
 
-/**
- * 소속 그룹 선택지 — 🔴 **지사만**(OQ-043-E — 서버는 막지 않는다).
- * `keepGroupSeq` 가 지사가 아니어도 선택지에 넣는다 — 이미 회사·본부에 있는 사업장이 **현재 그룹 그대로** 저장할 수 있게.
- */
-export const groupOptions = (root: GroupListNode, keepGroupSeq?: number): GroupOption[] =>
-  walkListGroups(root)
-    .filter((group) => group.layer === BRANCH_LAYER || group.groupSeq === keepGroupSeq)
-    .map((group) => ({ groupSeq: group.groupSeq, label: groupPathText(root, group.groupSeq) }))
-
 export const isBranch = (group: GroupListNode): boolean => group.layer === BRANCH_LAYER
+
+const toOption = (group: GroupListNode): GroupOption => ({ groupSeq: group.groupSeq, label: group.groupName })
+
+/** 본부 선택지(`layer 1`). 🔴 루트가 지사인 트리(할당 그룹만 받는 계정)면 빈 배열 — 본부 칸을 숨긴다 */
+export const hqOptions = (root: GroupListNode): GroupOption[] =>
+  walkListGroups(root)
+    .filter((group) => group.layer === HQ_LAYER)
+    .map(toOption)
+
+/**
+ * 지사 선택지 — 🔴 **지사만**(OQ-043-E — 서버는 막지 않는다). `hqSeq` 아래만, `null` 이면 트리 전체.
+ */
+export const branchOptions = (root: GroupListNode, hqSeq: number | null): GroupOption[] => {
+  const scope = hqSeq === null ? root : findListGroup(root, hqSeq)
+  return scope ? walkListGroups(scope).filter(isBranch).map(toOption) : []
+}
+
+/** 그룹이 속한 본부 — 없으면 `null` */
+export const hqOf = (root: GroupListNode, groupSeq: number): number | null =>
+  pathTo(root, groupSeq).find((group) => group.layer === HQ_LAYER)?.groupSeq ?? null
+
+/** 모 사업장 후보 1개 */
+export interface SiteOption {
+  siteSeq: number
+  siteName: string
+}
+
+/** 모 사업장 후보 — 🔴 그 지사의 **최상위 사업장만**(계층은 2단계까지, 사용자 결정 2026-10-26) */
+export const parentSiteOptions = (root: GroupListNode, branchSeq: number): SiteOption[] =>
+  (findListGroup(root, branchSeq)?.sites ?? []).map((site) => ({ siteSeq: site.siteSeq, siteName: site.siteName }))

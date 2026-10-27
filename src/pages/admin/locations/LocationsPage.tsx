@@ -20,7 +20,7 @@ import { siteColumns } from '@/features/sites/components/SiteColumns'
 import SiteForm from '@/features/sites/form/SiteForm'
 import { toAddSiteRequest } from '@/features/sites/form/schema'
 import { useAddSite } from '@/features/sites/hooks/useSiteMutations'
-import { collectSiteRows, findListGroup, groupOptions, isBranch } from '@/features/sites/lib/siteList'
+import { collectSiteRows, findListGroup, isBranch } from '@/features/sites/lib/siteList'
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback'
 import { useQueryParams } from '@/hooks/useQueryParams'
 import { paths } from '@/router/paths'
@@ -33,7 +33,7 @@ import { paths } from '@/router/paths'
  * 🔴 **트리가 둘이다** — 좌측 패널과 `?group` 은 043 그대로 `AdminSiteSelect`, 목록은 `GetGroupList`
  * (주소 등 목록 필드가 거기에만 있다). 패널을 바꾸지 않는다(사용자 결정 2026-10-23). 같은 `groupSeq` 로 잇는다.
  * 🔴 **서버 필터 · 페이지네이션 없음** — 응답이 전체 트리이고 지사당 사업장이 적다(사용자 판단 2026-10-23).
- * 🔴 **추가 후에는 목록에 머문다** — 서버가 새 `siteSeq` 를 주지 않는다. 최상위 사업장만 만든다(사용자 결정 2026-10-23).
+ * 🔴 **추가 후에는 목록에 머문다** — 서버가 새 `siteSeq` 를 주지 않는다. 모 사업장도 고를 수 있다(`spec 051` — 044 의 "최상위만" 을 뒤집음).
  */
 
 const SEARCH_DEBOUNCE_MS = 300
@@ -75,9 +75,7 @@ const LocationsPage = () => {
   )
   /** 🔴 메모이즈한다 — 렌더마다 만들면 행이 리마운트된다(027) */
   const columns = useMemo(() => siteColumns(), [])
-  /** 🔴 소속 그룹은 지사만(OQ-043-E) — 서버는 막지 않는다 */
-  const options = useMemo(() => (list.data ? groupOptions(list.data) : []), [list.data])
-  /** 지금 보고 있는 그룹이 지사면 그 지사를 기본값으로 */
+  /** 지금 보고 있는 그룹이 지사면 그 지사를 기본값으로(본부는 `SiteForm` 이 지사에서 찾는다) */
   const selectedListGroup = list.data && groupSeq !== null ? findListGroup(list.data, groupSeq) : null
   const defaultGroupSeq = selectedListGroup && isBranch(selectedListGroup) ? String(selectedListGroup.groupSeq) : ''
 
@@ -129,14 +127,16 @@ const LocationsPage = () => {
                 </AppButton>
               }
             >
-              <SiteForm
-                options={options}
-                defaultValues={{ groupSeq: defaultGroupSeq }}
-                submitLabel="등록"
-                pending={addSite.isPending}
-                onSubmit={(data) => addSite.mutate(toAddSiteRequest(data), { onSuccess: () => setAddOpen(false) })}
-                onCancel={() => setAddOpen(false)}
-              />
+              {list.data && (
+                <SiteForm
+                  root={list.data}
+                  defaultValues={{ groupSeq: defaultGroupSeq }}
+                  submitLabel="등록"
+                  pending={addSite.isPending}
+                  onSubmit={(data) => addSite.mutate(toAddSiteRequest(data), { onSuccess: () => setAddOpen(false) })}
+                  onCancel={() => setAddOpen(false)}
+                />
+              )}
             </AppDialog>
           </div>
 

@@ -131,13 +131,16 @@ describe('LocationDetailPage — 정보 수정', () => {
     ])
   })
 
-  it('🔴 하위 사업장은 그룹 disabled + 이유 · 바디에 groupSeq 없음', async () => {
+  it('🔴 하위 사업장은 본부 · 지사 · 모 사업장 disabled + 이유 · 바디에 groupSeq 없음', async () => {
     const user = userEvent.setup()
     const bodies = captureUpdates()
     renderPage('/admin/locations/4')
     const dialog = await openEdit(user)
 
-    expect(dialog.getByRole('combobox', { name: '소속 그룹' })).toBeDisabled()
+    expect(dialog.getByRole('combobox', { name: '본부' })).toBeDisabled()
+    expect(dialog.getByRole('combobox', { name: '지사' })).toBeDisabled()
+    expect(dialog.getByRole('combobox', { name: '모 사업장' })).toHaveTextContent('테테테(수정)1')
+    expect(dialog.getByRole('combobox', { name: '모 사업장' })).toBeDisabled()
     expect(dialog.getByText('하위 사업장은 관리그룹을 변경할 수 없습니다. 모 사업장을 이동해주세요.')).toBeInTheDocument()
     await user.click(dialog.getByRole('button', { name: '저장' }))
 
@@ -152,17 +155,38 @@ describe('LocationDetailPage — 정보 수정', () => {
     expect(dialog.getByText('하위 사업장 1개도 함께 이동합니다.')).toBeInTheDocument()
   })
 
-  it('🔴 지사가 아닌 현재 그룹(실서버 데이터)도 그대로 저장할 수 있다', async () => {
+  it('최상위 사업장 — 모 사업장 "없음" 읽기 전용 · 다른 본부의 지사로 옮긴다(spec 051)', async () => {
+    const user = userEvent.setup()
+    const bodies = captureUpdates()
+    renderPage('/admin/locations/9')
+    const dialog = await openEdit(user)
+
+    expect(dialog.getByRole('combobox', { name: '본부' })).toHaveTextContent('테스트사업장(수정)')
+    expect(dialog.getByRole('combobox', { name: '지사' })).toHaveTextContent('강동지사')
+    expect(dialog.getByRole('combobox', { name: '모 사업장' })).toHaveTextContent('없음 (최상위 사업장)')
+    expect(dialog.getByRole('combobox', { name: '모 사업장' })).toBeDisabled()
+
+    await user.click(dialog.getByRole('combobox', { name: '본부' }))
+    await user.click(screen.getByRole('option', { name: 'test' }))
+    await user.click(dialog.getByRole('combobox', { name: '지사' }))
+    await user.click(screen.getByRole('option', { name: '본부할당 사업장' }))
+    await user.click(dialog.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    expect(bodies[0]).toMatchObject({ groupSeq: 8 })
+  })
+
+  it('🔴 지사가 아닌 현재 그룹(실서버 데이터)이면 지사를 다시 골라야 저장된다', async () => {
     const user = userEvent.setup()
     const bodies = captureUpdates()
     await addSite({ groupSeq: 2, siteName: '본부소속', address: '서울' }) // 서버는 단계를 막지 않는다 — seq 13
     renderPage('/admin/locations/13')
     const dialog = await openEdit(user)
 
-    expect(dialog.getByRole('combobox', { name: '소속 그룹' })).toHaveTextContent('테스트사업장(수정)')
+    expect(dialog.getByRole('combobox', { name: '지사' })).toHaveTextContent('지사를 선택해주세요')
     await user.click(dialog.getByRole('button', { name: '저장' }))
-    await waitFor(() => expect(bodies).toHaveLength(1))
-    expect(bodies[0]).toMatchObject({ groupSeq: 2 })
+    expect(await dialog.findByText('지사를 선택해주세요.')).toBeInTheDocument()
+    expect(bodies).toHaveLength(0)
   })
 
   it('🔴 같은 이름(409) → 모달과 입력값이 남는다', async () => {

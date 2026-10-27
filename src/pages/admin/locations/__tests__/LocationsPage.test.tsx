@@ -181,22 +181,17 @@ describe('LocationsPage — 추가 (US2)', () => {
     return within(await screen.findByRole('dialog'))
   }
 
-  it('🔴 선택지는 지사만(본부 › 지사) · 지금 보는 지사가 기본값', async () => {
+  it('🔴 지금 보는 지사가 기본값(본부 · 지사) · 지사 선택지는 그 본부 아래만(spec 051)', async () => {
     const user = userEvent.setup()
     renderPage('/admin/locations?group=3')
     await findInTable('강동지사_추가사업장')
     const dialog = await openAdd(user)
 
-    const select = dialog.getByRole('combobox', { name: '소속 그룹' })
-    expect(select).toHaveTextContent('테스트사업장(수정) › 강동지사')
+    expect(dialog.getByRole('combobox', { name: '본부' })).toHaveTextContent('테스트사업장(수정)')
+    const select = dialog.getByRole('combobox', { name: '지사' })
+    expect(select).toHaveTextContent('강동지사')
     await user.click(select)
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
-      '테스트사업장(수정) › 강동지사',
-      '테스트사업장(수정) › 본부할당 사업장',
-      'test › 본부할당 사업장',
-      '테스트그룹 › 본부할당 사업장',
-      '본사 직할 › 본부할당 사업장',
-    ])
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['강동지사', '본부할당 사업장'])
   })
 
   it('본부를 보고 있으면 기본값 없음', async () => {
@@ -204,7 +199,32 @@ describe('LocationsPage — 추가 (US2)', () => {
     renderPage('/admin/locations?group=2')
     await findInTable('테스트사업장')
     const dialog = await openAdd(user)
-    expect(dialog.getByRole('combobox', { name: '소속 그룹' })).toHaveTextContent('지사를 선택해주세요')
+    expect(dialog.getByRole('combobox', { name: '지사' })).toHaveTextContent('지사를 선택해주세요')
+    expect(dialog.getByRole('combobox', { name: '지사' })).toBeDisabled()
+  })
+
+  it('🔴 모 사업장을 고르면 바디에 parentSiteSeq → 목록에서 그 아래 └ 행', async () => {
+    const user = userEvent.setup()
+    const bodies = captureAdds()
+    renderPage('/admin/locations?group=3')
+    await findInTable('강동지사_추가사업장')
+    const dialog = await openAdd(user)
+
+    await user.type(dialog.getByLabelText('사업장명'), '신규하위')
+    await user.click(dialog.getByRole('combobox', { name: '모 사업장' }))
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      '없음 (최상위 사업장)',
+      '테테테(수정)1',
+      '강동지사_추가사업장',
+      '지가사업장',
+    ])
+    await user.click(screen.getByRole('option', { name: '강동지사_추가사업장' }))
+    await user.type(dialog.getByLabelText('주소'), '서울시 강동구')
+    await user.click(dialog.getByRole('button', { name: '등록' }))
+
+    expect(await findInTable('신규하위')).toBeInTheDocument()
+    expect(bodies).toEqual([{ groupSeq: 3, siteName: '신규하위', address: '서울시 강동구', parentSiteSeq: 9 }])
+    expect(siteNames()).toEqual(['테테테(수정)1', '└수정사업장테테', '강동지사_추가사업장', '└신규하위', '지가사업장'])
   })
 
   it('🔴 바디 = 그룹 · 이름 · 주소만(빈 연락처 · 헬스체크 · 예외시간 · 부모 없음) → 닫히고 목록에 새 행', async () => {

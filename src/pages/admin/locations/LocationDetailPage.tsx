@@ -16,7 +16,7 @@ import SiteForm from '@/features/sites/form/SiteForm'
 import { toUpdateSiteRequest } from '@/features/sites/form/schema'
 import { useSiteDetail } from '@/features/sites/hooks/useSiteDetail'
 import { useDeleteSite, useUpdateSiteInfo } from '@/features/sites/hooks/useSiteMutations'
-import { countDescendantSites, findSite, groupOptions, groupPathText } from '@/features/sites/lib/siteList'
+import { countDescendantSites, findSite, groupPathText } from '@/features/sites/lib/siteList'
 import { paths } from '@/router/paths'
 
 /**
@@ -110,6 +110,10 @@ const LocationDetailPage = () => {
   const site = detail.data
   const groupPath = list.data && found ? groupPathText(list.data, found.group.groupSeq) : null
   const isChild = found ? found.site.parentSiteSeq !== null : false
+  const parentName =
+    list.data && found?.site.parentSiteSeq != null
+      ? findSite(list.data, found.site.parentSiteSeq)?.site.siteName
+      : undefined
   const childCount = found ? countDescendantSites(found.site) : 0
   const groupHint = isChild
     ? CHILD_GROUP_HINT
@@ -155,8 +159,7 @@ const LocationDetailPage = () => {
             >
               {found && list.data && (
                 <SiteForm
-                  // 🔴 지사가 아닌 현재 그룹(실서버의 회사·본부 소속)도 선택지에 남긴다 — 그대로 저장할 수 있게
-                  options={groupOptions(list.data, found.group.groupSeq)}
+                  root={list.data}
                   defaultValues={{
                     siteName: site.siteName,
                     groupSeq: String(found.group.groupSeq),
@@ -165,6 +168,9 @@ const LocationDetailPage = () => {
                   }}
                   groupDisabled={isChild}
                   groupHint={groupHint}
+                  // 🔴 모 사업장은 바꿀 수 없다(`UpdateSite` 에 없음) — 보여주기만
+                  parentLocked
+                  parentName={parentName}
                   submitLabel="저장"
                   pending={updateSite.isPending}
                   onSubmit={(data) =>
