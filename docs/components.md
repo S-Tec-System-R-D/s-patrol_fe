@@ -880,7 +880,7 @@ App* 컴포넌트로 커버되지 않는 경우만 shadcn 원시를 **직접** �
 | `GroupFilterPanel` | XL 이상 248px 카드(머리: "관리그룹" + `{unitLabel} 수` + `headerAction`). sticky 는 **페이지 래퍼**에 건다 |
 | `GroupFilterButton` | XL 미만 경로 버튼 → 좌측 시트(`data-[side=left]:w-80`). XL 로 커지면 닫힌다(matchMedia) |
 | `GroupEditTrigger` | 트리 머리 [편집] 링크형 버튼(`AppLinkButton` + `SquarePenIcon`, `048` — 전에는 아이콘 전용). 🔴 시스템관리자·Master 에게만 그린다(허용 목록) |
-| `GroupEditDialog` | 관리그룹 편집 모달(600px) — 회사 머리 줄(`+ 본부 추가`) · 본부 카드(본부 아이콘 · 수정/삭제 · `+ 지사 추가`) · 지사 행(네모 닷 · "사업장 N개" · 수정/삭제). 이름 입력은 400px 작은 모달(`GroupNameForm`) |
+| `GroupEditDialog` | 관리그룹 편집 모달(600px) — 회사 머리 줄(`+ 본부 추가`) · 본부 카드(본부 아이콘 · ⋮ 메뉴 · `+ 지사 추가`) · 지사 행(네모 닷 · "사업장 N개" · ⋮ 메뉴). ⋮ 메뉴 = DropdownMenu `이름 변경` / `삭제`(052). 이름 입력은 400px 작은 모달(`GroupNameForm`) |
 
 **규칙**
 
