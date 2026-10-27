@@ -307,7 +307,8 @@ import AppDialog from '@/components/app/AppDialog'
 
 **규칙**
 
-- 본문 최대 높이 `80vh`. 내부 스크롤 자동.
+- 본문 최대 높이 `80vh`. 넘치면 **본문 영역이 스크롤**된다(`overflow-y-auto`, `spec 054`) — 그 전에는 바깥 `overflow-hidden` 만 있어 낮은 화면에서 긴 폼이 저장 버튼째 잘렸다.
+- 버튼 줄을 고정하고 입력만 스크롤하려면 폼 안에 `min-h-0 flex-1 overflow-y-auto` 상자를 둔다(`AddAdminForm` · `GroupEditDialog`). 🔴 그 상자에는 **`-mx-1 p-1`** — 테두리 있는 자식이 가장자리에 붙으면 소수점 배율에서 선이 잘린다.
 - 위험 액션(삭제 등)에는 사용하지 않는다 → AppAlertDialog.
 
 ---

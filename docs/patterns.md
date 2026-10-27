@@ -176,6 +176,7 @@ AppAlertDialog(variant=destructive) 열림
   사라진다), 되돌리는 수단은 **취소 버튼**이다. 전량 전송이라 **부분 반영이 없다**는 점이 근거.
 - 드래그 중 시각 피드백: 카드 그림자 + 반투명.
 - **키보드 정렬을 지원한다** — `dnd-kit` 의 `KeyboardSensor` + `sortableKeyboardCoordinates`.
+- 🔴 **손잡이에 `touch-none`** — `PointerSensor` 는 `touch-action: none` 이 있어야 터치로 드래그가 시작된다. 없으면 브라우저가 스크롤로 먼저 가져가 휴대폰에서 순서를 못 바꾼다(`spec 054`).
 
 ### 사용 화면
 
