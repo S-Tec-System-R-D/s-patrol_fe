@@ -433,6 +433,8 @@ import { zoneColumns } from '@/features/patrol-zones/components/ZoneColumn'
   카드가 생긴다. 규칙 전문은 [`patterns.md`](./patterns.md) §14.
 - ⚠️ 카드 모드에서는 **DOM 에 테이블과 카드가 둘 다 있다**(CSS 로 숨긴다). 테스트는
   `within(screen.getByRole('table'))` 로 영역을 좁힌다.
+- 🔴 **표 상자는 `relative overflow-x-auto`**(`spec 053`) — 카드가 없는 표가 좁은 폭에서 문서를 넓히지 않고
+  상자 안에서만 가로 스크롤한다. `relative` 를 빼면 셀 안 `sr-only`(absolute)가 상자를 빠져나가 문서를 다시 넓힌다.
 - **`data` prop은 안정된 배열 참조로 전달할 것(`useMemo`)** — 014에서 확인된 이슈: 렌더마다 `.filter()`/`.map()`으로 새 배열을 만들어 그대로 넘기면(특히 `pagination`/`onPaginationChange`를 컨트롤드로 함께 쓸 때) 실 브라우저에서 무한 재렌더 루프가 발생할 수 있다(jsdom 테스트로는 재현 안 됨 — 브라우저에서만 확인 필요). 원본 배열이 아닌 파생 배열을 넘길 때는 반드시 `useMemo([원본, ...의존값])`로 감쌀 것.
 
 ---
@@ -460,6 +462,11 @@ import { PlusIcon } from 'lucide-react'
 | `title` | `string` | (필수) |
 | `subtitle` | `string` | — |
 | `action` | `ReactNode` | — (우측 정렬 슬롯, 보통 주요 액션 버튼) |
+| `icon` | `LucideIcon` | — (제목 좌측, 상세 페이지) |
+| `titleSuffix` | `ReactNode` | — (제목 우측 상태 뱃지 등) |
+
+- 🔴 좁은 폭(`spec 053`): 제목 줄은 `flex-wrap`(뱃지가 다음 줄로) · 제목은 `break-keep`(한글이 띄어쓰기에서만 꺾임).
+  전에는 320px 코스 상세에서 `A동 순찰코스` 가 한 글자씩 6줄로 섰다.
 
 ---
 
@@ -530,6 +537,7 @@ import AppPagination from '@/components/app/AppPagination'
 **규칙**
 
 - 페이지 번호 버튼 없음 — "a–b / 전체 N개 항목" 텍스트 + 화살표만.
+- 좁은 폭에서는 두 묶음(행 수 · 범위+화살표)이 줄바꿈된다(`flex-wrap`). 문구는 `whitespace-nowrap` — 글자 단위로 꺾이지 않는다(`spec 053`).
 - `pageSize` 변경 시 `pageIndex`를 0으로 리셋하는 책임은 **소비 측**에 있다(컴포넌트는 콜백만 발행).
 - 행 수 셀렉트는 `AppSelect` + `aria-label="페이지당 행 수"` + `className="h-7 w-auto text-xs"`(기본 `h-8 w-full text-sm`은 페이지네이션 밀도에 과함). 값은 `number` ↔ `string` 변환만 하고 계약(`pageSizeOptions: number[]`)은 그대로 유지한다.
 - `AppTable`에서 이 컴포넌트로 전환하려면 `<AppTable hidePagination>` + 페이지 상태를 직접 들고 `AppPagination`을 별도 렌더 (마이그레이션은 009~015 각 화면에서 개별 진행, `data-model.md` §2-1 1-based API 페이지 번호와 pageIndex(0-based) 변환 주의).
@@ -647,7 +655,7 @@ App* 컴포넌트로 커버되지 않는 경우만 shadcn 원시를 **직접** �
 
 | 컴포넌트 | 직접 사용 권장 시나리오 |
 |---|---|
-| `ui/sheet` | 우측 슬라이드 패널, 알림 시트(`AlarmSheet`), **모바일 사이드바**(layout.md §5-6), **우측 상세 패널 반응형 전환**(patterns.md §8) |
+| `ui/sheet` | 우측 슬라이드 패널, **우측 상세 패널 반응형 전환**(patterns.md §8). ~~알림 시트 · 모바일 사이드바~~ — 삭제됨(`spec 043` · `053` — 좁은 폭 내비는 하단 floating nav, layout.md §2-C) |
 | `ui/switch` | 토글 단독 사용 (운영중/중지, 코스 활성화 등) |
 | `ui/dropdown-menu` | 행 컨텍스트 메뉴, 트리 노드 메뉴 |
 | `ui/tabs` | 비-라우트 탭(URL과 무관한 단순 전환) |
