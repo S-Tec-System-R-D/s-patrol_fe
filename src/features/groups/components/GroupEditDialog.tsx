@@ -1,4 +1,4 @@
-import { BuildingIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { BuildingIcon, EllipsisVerticalIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
@@ -6,6 +6,13 @@ import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
 import AppIconButton from '@/components/app/AppIconButton'
 import AppLinkButton from '@/components/app/AppLinkButton'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { GroupNode } from '@/features/auth/types/site'
 import { cn } from '@/lib/utils'
 import GroupNameForm from '../form/GroupNameForm'
@@ -17,15 +24,13 @@ import { GroupTreeStatus } from './GroupFilterPanel'
 
 type SubDialog = { kind: 'add' | 'rename' | 'delete'; group: GroupNode } | null
 
-const iconButtonClass = 'border-0 p-1.5'
-
 /**
  * 관리그룹 편집 모달 (`spec 043` T754 · T756 → 후속 T772, 참고 `ui-mock/본사관리자/사업장/관리그룹-편집모달1·2.png`).
  *
  * 🔴 **구조가 곧 단계다**(사용자 결정 2026-10-22) — 회사는 머리 줄(`+ 본부 추가`), **본부마다 카드 1개**, 그 안에 지사.
  * 단계 표시(T774, 목록 트리와 같은 기호) — 본부 카드 머리는 **본부 아이콘**, 지사 행은 **네모 닷**(행 사이 간격, 배경 없음 T775). 단계 이름은 회색 작은 글씨(목업).
  * - 하위 추가는 각 단계의 `+ 본부 추가` / `+ 지사 추가` — 🔴 지사 아래로는 없다(서버는 깊이를 막지 않는다, B-49).
- * - 회사(루트)는 이름 변경·삭제가 없다.
+ * - 회사(루트)는 이름 변경·삭제가 없다. 본부·지사의 이름 변경·삭제는 행 끝 ⋮ 메뉴 안에(052 — 행마다 아이콘 2개가 반복돼 시끄러웠다).
  * - 사업장 개수는 **지사 행에만**(사업장은 지사 아래에만 놓인다). "관리자 M명" 은 없다(결정 (a)).
  * - 🔴 삭제는 **하위 그룹과 소속 사업장까지** 지운다(B-51) — 확인 문구에 그 수를 쓴다.
  * - ⚠️ 규칙을 어긴 4단계 이상 그룹(서버가 막지 않아 생길 수 있다)은 이 구조에 자리가 없어 그리지 않는다 — 실데이터에는 없다.
@@ -63,23 +68,33 @@ export const GroupEditDialog = ({
     </span>
   )
 
+  // modal={false} — 메뉴 항목에서 바로 삭제 확인(AlertDialog)을 열 때 body 의 pointer-events: none 이 남는 Radix 문제 회피
   const editActions = (group: GroupNode) => (
-    <span className="flex gap-0.5 shrink-0">
-      <AppIconButton
-        icon={PencilIcon}
-        iconSize={14}
-        aria-label={`${group.groupName} 이름 변경`}
-        className={iconButtonClass}
-        onClick={() => setSub({ kind: 'rename', group })}
-      />
-      <AppIconButton
-        icon={Trash2Icon}
-        iconSize={14}
-        aria-label={`${group.groupName} 삭제`}
-        className={`${iconButtonClass} hover:bg-danger-bg hover:text-danger`}
-        onClick={() => setSub({ kind: 'delete', group })}
-      />
-    </span>
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <AppIconButton
+          icon={EllipsisVerticalIcon}
+          iconSize={14}
+          aria-label={`${group.groupName} 메뉴`}
+          className="shrink-0 border-0 p-1.5"
+        />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-auto">
+        <DropdownMenuItem className="cursor-pointer" onSelect={() => setSub({ kind: 'rename', group })}>
+          <PencilIcon />
+          이름 변경
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          variant="destructive"
+          className="cursor-pointer"
+          onSelect={() => setSub({ kind: 'delete', group })}
+        >
+          <Trash2Icon />
+          삭제
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 
   const addLink = (parent: GroupNode, label: string) => (

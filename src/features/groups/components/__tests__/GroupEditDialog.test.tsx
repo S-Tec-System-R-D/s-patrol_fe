@@ -53,6 +53,12 @@ const openEditor = async (initialPath?: string) => {
   return list
 }
 
+/** 행 끝 ⋮ 메뉴를 열고 항목을 고른다(052) — 메뉴는 포털이라 `list` 밖에 뜬다 */
+const pickRowMenu = async (list: HTMLElement, name: string, item: '이름 변경' | '삭제') => {
+  await userEvent.click(within(list).getByLabelText(`${name} 메뉴`))
+  await userEvent.click(await screen.findByRole('menuitem', { name: item }))
+}
+
 const rowOf = (list: HTMLElement, name: string) =>
   within(list).getByText(name).closest('li') as HTMLElement
 
@@ -65,8 +71,7 @@ describe('GroupEditDialog', () => {
     expect(within(list).queryByText('에스텍시스템')).not.toBeInTheDocument()
     expect(screen.getByText('에스텍시스템')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '에스텍시스템 하위 그룹 추가' })).toHaveTextContent('본부 추가')
-    expect(screen.queryByLabelText('에스텍시스템 이름 변경')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('에스텍시스템 삭제')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('에스텍시스템 메뉴')).not.toBeInTheDocument()
 
     // 본부 카드: 단계 이름 · 지사 추가 · 개수 없음
     const hq = rowOf(list, '테스트사업장(수정)')
@@ -123,7 +128,7 @@ describe('GroupEditDialog', () => {
 
   it('이름 변경 → 현재 이름이 채워져 있고 저장하면 목록에 반영', async () => {
     const list = await openEditor()
-    await userEvent.click(within(list).getByLabelText('test 이름 변경'))
+    await pickRowMenu(list, 'test', '이름 변경')
     const input = screen.getByLabelText('그룹명')
     expect(input).toHaveValue('test')
 
@@ -134,7 +139,7 @@ describe('GroupEditDialog', () => {
 
   it('🔴 삭제 확인에 하위 그룹·사업장 수 → 삭제 후 자손까지 사라지고 선택 중이었으면 ?group 을 걷는다', async () => {
     const list = await openEditor('/admin/locations?group=3')
-    await userEvent.click(within(list).getByLabelText('테스트사업장(수정) 삭제'))
+    await pickRowMenu(list, '테스트사업장(수정)', '삭제')
 
     const alert = await screen.findByRole('alertdialog')
     // 🔴 대상은 질문형 제목이, 영향은 설명이 말한다(046 #16)
@@ -158,7 +163,8 @@ describe('GroupEditDialog', () => {
     const list = await openEditor()
     await userEvent.click(within(list).getByLabelText('테스트그룹 하위 그룹 추가'))
     await userEvent.type(screen.getByLabelText('그룹명'), '빈그룹{Enter}')
-    await userEvent.click(await within(list).findByLabelText('빈그룹 삭제'))
+    await within(list).findByLabelText('빈그룹 메뉴')
+    await pickRowMenu(list, '빈그룹', '삭제')
 
     const alert = await screen.findByRole('alertdialog')
     expect(within(alert).getByText("'빈그룹' 지사그룹을 삭제하시겠습니까?")).toBeInTheDocument()
