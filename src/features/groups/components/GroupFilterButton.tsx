@@ -20,7 +20,8 @@ interface GroupFilterButtonProps {
 const XL_QUERY = '(min-width: 1280px)'
 
 /**
- * XL 미만 관리그룹 선택 (`spec 043` T750, 목업 `GroupFilterButton`) — 경로 버튼 → 좌측 시트에 같은 트리.
+ * XL 미만 관리그룹 선택 (`spec 043` T750, 목업 `GroupFilterButton`) — 경로 버튼 → **아래 시트**에 같은 트리.
+ * 🔴 좌측 시트 → 아래 시트(`spec 055`, 사용자 결정 2026-10-27) — 하단 메뉴 바와 손 위치를 맞춘다.
  *
  * - 경로는 루트를 빼고 `본부 › 지사`, 마지막만 굵게(루트를 고르면 루트 이름).
  * - 고르면 닫힌다. 🔴 **열린 채로 XL 이상으로 넓어지면 닫는다** — 버튼은 CSS 로 숨지만 시트는 포털이라 남는다.
@@ -63,8 +64,8 @@ export const GroupFilterButton = ({ unitLabel, count, countUnit, headerAction }:
       </button>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        {/* 폭은 목업 320px — 기본 `data-[side=left]:w-3/4` 를 같은 선택자로 덮는다 */}
-        <SheetContent side="left" className="data-[side=left]:w-80 gap-0 p-0 pt-4">
+        {/* 높이는 내용만큼, 최대 80vh — 넘치면 아래 트리 상자가 스크롤된다 */}
+        <SheetContent side="bottom" className="max-h-[80vh] gap-0 rounded-t-2xl p-0 pt-4">
           <SheetTitle className="px-4 pb-3 text-section-title">관리그룹 선택</SheetTitle>
           <SheetDescription className="sr-only">범위로 볼 관리그룹을 고릅니다.</SheetDescription>
           <div className="flex-1 overflow-y-auto border-t border-border">

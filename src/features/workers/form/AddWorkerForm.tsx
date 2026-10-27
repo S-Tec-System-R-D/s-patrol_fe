@@ -10,7 +10,7 @@ import { notify } from '@/lib/notify'
 import { addUser } from '../api/addUser'
 import { USER_ROLE } from '../lib/userRole'
 import { userKeys } from '../queryKeys'
-import { addWorkerSchema, toPhoneDigits, type AddWorkerFormData } from './schema'
+import { addWorkerFormSchema, toPhoneDigits, type AddWorkerFormData } from './schema'
 
 /**
  * 근무자 추가 폼 (`spec 041` US1).
@@ -35,12 +35,13 @@ const AddWorkerForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     reset,
     formState: { errors },
   } = useForm<AddWorkerFormData>({
-    resolver: zodResolver(addWorkerSchema),
+    resolver: zodResolver(addWorkerFormSchema),
     defaultValues: {
       name: '',
       loginId: '',
       phone: '',
       loginPw: '',
+      loginPwConfirm: '',
     },
   })
 
@@ -69,13 +70,23 @@ const AddWorkerForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <AppInput
-        label="이름"
-        required
-        placeholder="이름을 입력해주세요"
-        error={errors.name?.message}
-        {...register('name')}
-      />
+      {/* 칸 순서 · 문구는 관리자 추가(`AddAdminForm`)와 같다(`spec 055`) */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <AppInput
+          label="이름"
+          required
+          placeholder="이름을 입력해주세요"
+          error={errors.name?.message}
+          {...register('name')}
+        />
+        <AppInput
+          label="연락처"
+          required
+          placeholder="010-0000-0000"
+          error={errors.phone?.message}
+          {...register('phone')}
+        />
+      </div>
       <AppInput
         label="사번"
         required
@@ -84,21 +95,22 @@ const AddWorkerForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         {...register('loginId')}
       />
       <AppInput
-        label="연락처"
-        required
-        placeholder="010-0000-0000"
-        error={errors.phone?.message}
-        {...register('phone')}
-      />
-      <AppInput label="소속 사업장" value={siteName ?? ''} disabled readOnly />
-      <AppInput
-        label="초기비밀번호"
+        label="초기 비밀번호"
         required
         variant="password"
         placeholder="8자리 이상, 영문·숫자·특수문자 포함"
         error={errors.loginPw?.message}
         {...register('loginPw')}
       />
+      <AppInput
+        label="비밀번호 확인"
+        required
+        variant="password"
+        placeholder="비밀번호를 한 번 더 입력해주세요"
+        error={errors.loginPwConfirm?.message}
+        {...register('loginPwConfirm')}
+      />
+      <AppInput label="소속 사업장" value={siteName ?? ''} disabled readOnly />
       <AppButton size="full" type="submit" disabled={mutation.isPending}>
         등록
       </AppButton>

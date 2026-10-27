@@ -120,6 +120,9 @@ describe('PointHistoryRecentCard', () => {
     const current = document.querySelectorAll('[aria-current="true"]')
     // 강조가 없으면 "어느 행을 보고 있는지" 를 날짜로 맞춰 봐야 한다
     expect(current).toHaveLength(1)
+    // 🔴 강조가 상태가 아니라 "지금 보는 인증" 임을 글로 말한다(spec 055)
+    expect(current[0]).toHaveTextContent('이 인증')
+    expect(screen.getAllByText('이 인증')).toHaveLength(1)
   })
 
   it('🔴 이번 인증이 14일 밖이면 그 사실을 적는다 — 빠진 것처럼 보이면 안 된다', async () => {

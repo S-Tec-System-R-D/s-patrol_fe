@@ -48,6 +48,21 @@ const renderBoard = (initialEntry = '/deployments') => {
 const search = () => screen.getByTestId('location-search').textContent ?? ''
 const inTable = () => within(screen.getByRole('table'))
 
+/**
+ * 🔴 **표(`xl` 이상) 안에서만 찾는다**(`spec 055`) — jsdom 은 미디어쿼리가 없어 `xl` 미만 카드도 함께 그려져
+ * 같은 이름 · 버튼이 두 벌이다.
+ */
+const tableEl = () => screen.queryByRole('table')
+const findInTable = (text: string, _?: unknown, options?: { timeout?: number }) =>
+  waitFor(() => within(screen.getByRole('table')).getByText(text), options)
+const getInTable = (text: string) => within(screen.getByRole('table')).getByText(text)
+const queryInTable = (text: string) => {
+  const table = tableEl()
+  return table ? within(table).queryByText(text) : null
+}
+const findButtonInTable = (name: string) =>
+  waitFor(() => within(screen.getByRole('table')).getByRole('button', { name }))
+
 /** 목록 API 호출 경로를 모은다 */
 const capturePaths = () => {
   const paths: string[] = []
@@ -124,8 +139,8 @@ describe('DeploymentBoard — 탭', () => {
     await user.click(screen.getByRole('tab', { name: /전출 이력/ }))
 
     await waitFor(() => expect(search()).toContain('tab=out'))
-    expect(await screen.findByText('장도윤')).toBeInTheDocument()
-    expect(screen.queryByText('오준혁')).not.toBeInTheDocument()
+    expect(await findInTable('장도윤')).toBeInTheDocument()
+    expect(queryInTable('오준혁')).not.toBeInTheDocument()
     expect(paths[paths.length - 1]).toBe(OUT_HISTORY_PATH)
   })
 
@@ -137,7 +152,7 @@ describe('DeploymentBoard — 탭', () => {
 
     await user.click(screen.getByRole('tab', { name: /전입 이력/ }))
 
-    expect(await screen.findByText('오준혁')).toBeInTheDocument()
+    expect(await findInTable('오준혁')).toBeInTheDocument()
     expect(paths[paths.length - 1]).toBe(IN_HISTORY_PATH)
   })
 
@@ -170,21 +185,21 @@ describe('DeploymentBoard — 요청 탭 클라이언트 페이징 (T716)', () =
     const user = userEvent.setup()
     renderBoard()
 
-    await screen.findByText('근무자1')
+    await findInTable('근무자1')
     expect(inTable().getAllByRole('row')).toHaveLength(11) // 헤더 + 10
-    expect(screen.queryByText('근무자11')).not.toBeInTheDocument()
+    expect(queryInTable('근무자11')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '2페이지' }))
 
     await waitFor(() => expect(search()).toContain('page=2'))
-    expect(await screen.findByText('근무자11')).toBeInTheDocument()
+    expect(await findInTable('근무자11')).toBeInTheDocument()
     expect(inTable().getAllByRole('row')).toHaveLength(3) // 헤더 + 2
   })
 
   it('🔴 현재 페이지가 비면 이전 페이지로 돌아간다', async () => {
     renderBoard('/deployments?page=2')
 
-    expect(await screen.findByText('최범수', undefined, { timeout: 3000 })).toBeInTheDocument()
+    expect(await findInTable('최범수', undefined, { timeout: 3000 })).toBeInTheDocument()
     expect(search()).not.toContain('page=')
   })
 })
@@ -211,7 +226,7 @@ describe('DeploymentBoard — 복귀 요청 (T713)', () => {
     })
     renderBoard('/deployments?tab=returns')
 
-    expect(await screen.findByText('장도윤')).toBeInTheDocument()
+    expect(await findInTable('장도윤')).toBeInTheDocument()
     const routeCell = inTable().getByText('강서 스퀘어타워').parentElement as HTMLElement
     // 도착(굵게) = 우리 사업장
     expect(routeCell.lastElementChild).toHaveTextContent('강동 테크노타워')
@@ -228,11 +243,11 @@ describe('DeploymentBoard — 복귀 요청 (T713)', () => {
     const user = userEvent.setup()
     renderBoard('/deployments?tab=returns')
 
-    await user.click(await screen.findByRole('button', { name: '장도윤 승인' }))
+    await user.click(await findButtonInTable('장도윤 승인'))
     expect(await screen.findByText('대기 중인 복귀 요청이 없습니다')).toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: /전출 이력/ }))
-    await screen.findByText('장도윤')
+    await findInTable('장도윤')
     expect(inTable().getAllByText('복귀완료')).toHaveLength(2)
   })
 })
@@ -241,7 +256,7 @@ describe('DeploymentBoard — 이력 (T721)', () => {
   it('🔴 이력 표 — 사유 칸이 없고 경로 한쪽은 선택 사업장 · 상태는 서버 이름', async () => {
     renderBoard('/deployments?tab=out')
 
-    await screen.findByText('장도윤')
+    await findInTable('장도윤')
     expect(inTable().queryByText('사유')).not.toBeInTheDocument()
     expect(inTable().getByText('기간')).toBeInTheDocument()
     expect(inTable().getByText('배치중')).toBeInTheDocument()
@@ -267,8 +282,8 @@ describe('DeploymentBoard — 이력 (T721)', () => {
 
     await waitFor(() => expect(search()).toContain('status=returned'))
     expect(search()).not.toContain('page=2')
-    expect(await screen.findByText('한지민')).toBeInTheDocument()
-    expect(screen.queryByText('오준혁')).not.toBeInTheDocument()
+    expect(await findInTable('한지민')).toBeInTheDocument()
+    expect(queryInTable('오준혁')).not.toBeInTheDocument()
     expect(statuses[statuses.length - 1]).toBe('2')
   })
 
@@ -276,11 +291,11 @@ describe('DeploymentBoard — 이력 (T721)', () => {
     const user = userEvent.setup()
     renderBoard('/deployments?tab=in&status=active')
 
-    expect(await screen.findByText('오준혁')).toBeInTheDocument()
-    expect(screen.queryByText('한지민')).not.toBeInTheDocument()
+    expect(await findInTable('오준혁')).toBeInTheDocument()
+    expect(queryInTable('한지민')).not.toBeInTheDocument()
     await user.click(screen.getByLabelText('필터 초기화'))
     await waitFor(() => expect(search()).not.toContain('status='))
-    expect(await screen.findByText('한지민')).toBeInTheDocument()
+    expect(await findInTable('한지민')).toBeInTheDocument()
 
     await user.click(screen.getByRole('combobox', { name: '상태' }))
     await user.click(await screen.findByRole('option', { name: '배치중' }))
@@ -293,8 +308,8 @@ describe('DeploymentBoard — 이력 (T721)', () => {
   it('깨진 ?status 는 전체로 본다 — 서버에 보내지 않는다', async () => {
     renderBoard('/deployments?tab=in&status=bogus')
 
-    expect(await screen.findByText('오준혁')).toBeInTheDocument()
-    expect(screen.getByText('한지민')).toBeInTheDocument()
+    expect(await findInTable('오준혁')).toBeInTheDocument()
+    expect(getInTable('한지민')).toBeInTheDocument()
   })
 
   it('🔴 입력하면 디바운스 뒤 ?q 와 서버 userName 으로 나가고 첫 페이지로 간다', async () => {
@@ -311,8 +326,8 @@ describe('DeploymentBoard — 이력 (T721)', () => {
     await waitFor(() => expect(search()).toContain('q=%EC%98%A4%EC%A4%80'))
     expect(search()).not.toContain('page=2')
     await waitFor(() => expect(names[names.length - 1]).toBe('오준'))
-    expect(await screen.findByText('오준혁')).toBeInTheDocument()
-    expect(screen.queryByText('한지민')).not.toBeInTheDocument()
+    expect(await findInTable('오준혁')).toBeInTheDocument()
+    expect(queryInTable('한지민')).not.toBeInTheDocument()
   })
 
   it('🔴 검색 0건은 "조건에 맞는 이력이 없습니다" · 초기화 · 탭을 바꾸면 검색어도 지운다', async () => {
@@ -348,7 +363,7 @@ describe('DeploymentBoard — 상태', () => {
     })
     renderBoard('/deployments?tab=in')
 
-    expect(await screen.findByText('최범수')).toBeInTheDocument()
+    expect(await findInTable('최범수')).toBeInTheDocument()
     expect(inTable().getAllByRole('row')).toHaveLength(4) // 헤더 + 3
   })
 

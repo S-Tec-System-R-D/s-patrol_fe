@@ -70,7 +70,8 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
     renderPage(103)
 
     // 103 시드: 무방문 1건(비상구 A) + 방문했으나 인증 실패 1건(로비 1층)
-    expect(await screen.findByText('비상구 A')).toBeInTheDocument()
+    await screen.findByRole('table')
+    expect(inCheckTable().getByText('비상구 A')).toBeInTheDocument()
     expect(inCheckTable().getByText('미인증')).toBeInTheDocument()
     expect(inCheckTable().getByText('미완료')).toBeInTheDocument()
   })
@@ -78,7 +79,7 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
   it('🔴 미완료 행의 checkDt 를 인증 시각으로 보여주지 않는다 (OQ-15)', async () => {
     renderPage(103)
 
-    await screen.findByText('로비 1층')
+    await screen.findByRole('table')
     // 시드의 미완료 행은 checkDt 가 있지만 authMethod 는 null 이다.
     // 의미가 확정되지 않아(코스 endDt 와 같은 것 12건 / 다른 것 33건) 숨긴다
     const row = inCheckTable().getByText('로비 1층').closest('tr')
@@ -90,7 +91,8 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
     renderPage(107)
 
     // 107 시드: status 0·1 이 checkDt·authMethod·좌표·순찰자·overtimeYn 전부 null
-    expect(await screen.findByText('대기중')).toBeInTheDocument()
+    await screen.findByRole('table')
+    expect(inCheckTable().getByText('대기중')).toBeInTheDocument()
     expect(inCheckTable().getByText('진행중')).toBeInTheDocument()
   })
 
@@ -174,7 +176,7 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
   it('🔴 순서는 orderNo 를 그대로 쓴다 — 배열 위치로 다시 매기지 않는다', async () => {
     renderPage(101)
 
-    await screen.findByText('정문 입구')
+    await screen.findByRole('table')
     const first = inCheckTable().getByText('정문 입구').closest('tr')
     // 같은 지점을 화면마다 다른 번호로 부르지 않는다(032 선례)
     expect(within(first as HTMLElement).getByText('1')).toBeInTheDocument()

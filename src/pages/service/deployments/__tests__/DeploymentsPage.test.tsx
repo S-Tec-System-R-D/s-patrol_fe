@@ -25,6 +25,26 @@ import DeploymentsPage from '../DeploymentsPage'
 const APPROVE_PATH = '/api/v1/Assignment/W/sign/AssignmentApprove'
 const LIST_PATH = '/api/v1/Assignment/W/sign/GetAssignmentList'
 
+/**
+ * 🔴 **표(`xl` 이상) 안에서만 찾는다**(`spec 055`) — jsdom 은 미디어쿼리가 없어 `xl` 미만 카드도 함께 그려져
+ * 같은 이름 · 버튼이 두 벌이다.
+ */
+const tableEl = () => screen.queryByRole('table')
+const findInTable = (text: string, _?: unknown, options?: { timeout?: number }) =>
+  waitFor(() => within(screen.getByRole('table')).getByText(text), options)
+const getInTable = (text: string) => within(screen.getByRole('table')).getByText(text)
+const queryInTable = (text: string) => {
+  const table = tableEl()
+  return table ? within(table).queryByText(text) : null
+}
+const findButtonInTable = (name: string) =>
+  waitFor(() => within(screen.getByRole('table')).getByRole('button', { name }))
+const getButtonInTable = (name: string) => within(screen.getByRole('table')).getByRole('button', { name })
+const queryButtonInTable = (name: string) => {
+  const table = tableEl()
+  return table ? within(table).queryByRole('button', { name }) : null
+}
+
 const renderPage = (initialEntry = '/deployments') => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
@@ -70,8 +90,8 @@ describe('DeploymentsPage — 요청 목록', () => {
   it('대기 중인 요청을 서버에서 받아 그린다 · 부제가 선택 사업장명이다', async () => {
     renderPage()
 
-    expect(await screen.findByText('최범수')).toBeInTheDocument()
-    expect(screen.getByText('배수진')).toBeInTheDocument()
+    expect(await findInTable('최범수')).toBeInTheDocument()
+    expect(getInTable('배수진')).toBeInTheDocument()
     expect(
       screen.getByText('강동 테크노타워 소속 근무자의 배치 이력과 요청을 확인합니다')
     ).toBeInTheDocument()
@@ -90,16 +110,16 @@ describe('DeploymentsPage — KPI → 탭', () => {
   it('🔴 KPI 카드를 누르면 해당 탭으로만 간다 — 상태 필터 없이 기록 전체', async () => {
     const user = userEvent.setup()
     renderPage()
-    await screen.findByText('최범수')
+    await findInTable('최범수')
 
     await user.click(screen.getByRole('button', { name: '전입 이력 보기' }))
-    expect(await screen.findByText('오준혁')).toBeInTheDocument()
+    expect(await findInTable('오준혁')).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /전입 이력/ })).toHaveAttribute('aria-selected', 'true')
     // 복귀완료한 한지민도 나온다 — KPI 클릭은 상태 필터를 비운다(숫자 = 배치예정 + 배치중)
-    expect(screen.getByText('한지민')).toBeInTheDocument()
+    expect(getInTable('한지민')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '배치 요청 보기' }))
-    expect(await screen.findByText('최범수')).toBeInTheDocument()
+    expect(await findInTable('최범수')).toBeInTheDocument()
   })
 })
 
@@ -110,9 +130,9 @@ describe('DeploymentsPage — 승인 (🔴 A급)', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(await screen.findByRole('button', { name: '배수진 승인' }))
+    await user.click(await findButtonInTable('배수진 승인'))
 
-    await waitFor(() => expect(screen.queryByText('배수진')).not.toBeInTheDocument())
+    await waitFor(() => expect(queryInTable('배수진')).not.toBeInTheDocument())
     expect(bodies).toEqual([{ assignmentSeq: 502, approved: true }])
     expect(success).toHaveBeenCalledWith('배수진님의 배치 요청을 승인했습니다.')
     await waitFor(() => expect(kpiValue('대기중인 배치요청').getByText('1')).toBeInTheDocument())
@@ -127,17 +147,17 @@ describe('DeploymentsPage — 승인 (🔴 A급)', () => {
     const user = userEvent.setup()
     renderPage()
 
-    const approve = await screen.findByRole('button', { name: '최범수 승인' })
+    const approve = await findButtonInTable('최범수 승인')
     await user.click(approve)
     // 처리 중 — 두 버튼 모두 막혀 있거나 행이 이미 사라졌다
-    const stillThere = screen.queryByRole('button', { name: '최범수 승인' })
+    const stillThere = queryButtonInTable('최범수 승인')
     if (stillThere) {
       expect(stillThere).toBeDisabled()
-      expect(screen.getByRole('button', { name: '최범수 반려' })).toBeDisabled()
+      expect(getButtonInTable('최범수 반려')).toBeDisabled()
       await user.click(stillThere)
     }
 
-    await waitFor(() => expect(screen.queryByText('최범수')).not.toBeInTheDocument())
+    await waitFor(() => expect(queryInTable('최범수')).not.toBeInTheDocument())
     expect(calls).toBe(1)
   })
 
@@ -146,19 +166,19 @@ describe('DeploymentsPage — 승인 (🔴 A급)', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await screen.findByText('최범수')
+    await findInTable('최범수')
     // 다른 관리자가 먼저 처리했다 — 서버에서만 사라진 상태를 만든다
     await fetch(APPROVE_PATH, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ assignmentSeq: 501, approved: true }),
     })
-    await user.click(screen.getByRole('button', { name: '최범수 승인' }))
+    await user.click(getButtonInTable('최범수 승인'))
 
     await waitFor(() =>
       expect(error).toHaveBeenCalledWith('이미 승인 또는 반려 처리된 배치입니다.')
     )
-    await waitFor(() => expect(screen.queryByText('최범수')).not.toBeInTheDocument())
+    await waitFor(() => expect(queryInTable('최범수')).not.toBeInTheDocument())
   })
 })
 
@@ -169,12 +189,12 @@ describe('DeploymentsPage — 반려 (🔴 A급)', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(await screen.findByRole('button', { name: '배수진 반려' }))
+    await user.click(await findButtonInTable('배수진 반려'))
     const dialog = await screen.findByRole('alertdialog')
     expect(within(dialog).queryByRole('textbox')).not.toBeInTheDocument()
     await user.click(within(dialog).getByRole('button', { name: '반려' }))
 
-    await waitFor(() => expect(screen.queryByText('배수진')).not.toBeInTheDocument())
+    await waitFor(() => expect(queryInTable('배수진')).not.toBeInTheDocument())
     expect(bodies).toEqual([{ assignmentSeq: 502, approved: false }])
     expect(success).toHaveBeenCalledWith('배수진님의 배치 요청을 반려했습니다.')
     await waitFor(() => expect(kpiValue('대기중인 배치요청').getByText('1')).toBeInTheDocument())
@@ -186,12 +206,12 @@ describe('DeploymentsPage — 반려 (🔴 A급)', () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(await screen.findByRole('button', { name: '배수진 반려' }))
+    await user.click(await findButtonInTable('배수진 반려'))
     const dialog = await screen.findByRole('alertdialog')
     await user.click(within(dialog).getByRole('button', { name: '취소' }))
 
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
-    expect(screen.getByText('배수진')).toBeInTheDocument()
+    expect(getInTable('배수진')).toBeInTheDocument()
     expect(bodies).toEqual([])
   })
 })

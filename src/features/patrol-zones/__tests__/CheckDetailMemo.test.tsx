@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
@@ -171,6 +171,10 @@ describe('CheckDetailMemo — 🔴 사진 폴백 (B-40)', () => {
   })
 })
 
+/** 표(`xl` 이상)만 본다 — jsdom 은 미디어쿼리가 없어 타임라인(`xl` 미만)도 함께 그려진다 */
+const inTable = () => within(screen.getByRole('table'))
+const inTimeline = () => within(screen.getByRole('list', { name: '지점 인증 내역' }))
+
 describe('CheckDetailTable — 기록 칸 건수 (2026-10-20)', () => {
   /**
    * 🔴 **아이콘이 아니라 건수다**(목업 `코스상세 - 지점인증내역 수정안`). 메시지 아이콘은
@@ -183,14 +187,14 @@ describe('CheckDetailTable — 기록 칸 건수 (2026-10-20)', () => {
     const memos = [memo({ attaches: [attach({ attachSeq: 1 }), attach({ attachSeq: 2 })] })]
     render(<CheckDetailTable rows={[row({ memos })]} />)
 
-    expect(screen.getByText(/사진 2 · 메모 1/)).toBeInTheDocument()
+    expect(inTable().getByText(/사진 2 · 메모 1/)).toBeInTheDocument()
   })
 
   /** 🔴 **`사진 0` 을 적지 않는다** — 첨부 없는 메모가 흔하고, `0` 은 빈 값이지 사실이 아니다 */
   it('🔴 사진이 없으면 메모 건수만 적는다', () => {
     render(<CheckDetailTable rows={[row({ memos: [memo({ attaches: null })] })]} />)
 
-    expect(screen.getByText(/메모 1/)).toBeInTheDocument()
+    expect(inTable().getByText(/메모 1/)).toBeInTheDocument()
     expect(screen.queryByText(/사진 0/)).not.toBeInTheDocument()
   })
 
@@ -202,7 +206,36 @@ describe('CheckDetailTable — 기록 칸 건수 (2026-10-20)', () => {
     ]
     render(<CheckDetailTable rows={[row({ memos })]} />)
 
-    expect(screen.getByText(/사진 1 · 메모 2/)).toBeInTheDocument()
+    expect(inTable().getByText(/사진 1 · 메모 2/)).toBeInTheDocument()
+  })
+})
+
+describe('CheckDetailTimeline — xl 미만 (spec 055)', () => {
+  it('orderNo 순서로 그리고 구간을 노드에 적는다', () => {
+    render(
+      <CheckDetailTable
+        rows={[
+          row({ detailSeq: 2, orderNo: 2, pointName: '로비', checkDt: '2026-05-01T10:18:00' }),
+          row({ detailSeq: 1, orderNo: 1, pointName: '정문', checkDt: '2026-05-01T10:06:00' }),
+        ]}
+      />
+    )
+
+    const items = inTimeline().getAllByRole('listitem')
+    expect(items.map((item) => within(item).getByText(/정문|로비/).textContent)).toEqual(['정문', '로비'])
+    expect(within(items[1]).getByText(/구간 \+/)).toBeInTheDocument()
+    expect(within(items[0]).queryByText(/구간/)).not.toBeInTheDocument()
+  })
+
+  it('기록 버튼으로 메모를 펼치고 접는다 — 행 전체가 아니라 버튼이다', async () => {
+    render(<CheckDetailTable rows={[row({ memos: [memo({ memo: '누수 발견' })] })]} />)
+    const user = userEvent.setup()
+
+    await user.click(inTimeline().getByRole('button', { name: '정문 기록 펼치기' }))
+    expect(inTimeline().getByText('누수 발견')).toBeInTheDocument()
+
+    await user.click(inTimeline().getByRole('button', { name: '정문 기록 접기' }))
+    expect(inTimeline().queryByText('누수 발견')).not.toBeInTheDocument()
   })
 })
 

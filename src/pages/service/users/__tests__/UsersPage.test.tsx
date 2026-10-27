@@ -234,6 +234,7 @@ describe('UsersPage — 추가 (spec 041 US1)', () => {
       within(dialog).getByPlaceholderText('8자리 이상, 영문·숫자·특수문자 포함'),
       'Abcd123!'
     )
+    await user.type(within(dialog).getByPlaceholderText('비밀번호를 한 번 더 입력해주세요'), 'Abcd123!')
     await user.click(within(dialog).getByRole('button', { name: '등록' }))
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())

@@ -20,9 +20,21 @@ export const addWorkerSchema = workerBaseSchema.extend({
   loginPw: loginSchema.shape.loginPw,
 })
 
+/**
+ * 근무자 추가 **화면** — 비밀번호 확인 칸(`spec 055` · 관리자 추가와 통일, 사용자 요청 2026-10-27).
+ * 🔴 `addWorkerSchema` 는 그대로 둔다 — `refine` 을 붙이면 `.extend` 가 안 되어 관리자 스키마가 쓸 수 없다.
+ * 확인 칸은 서버로 보내지 않는다.
+ */
+export const addWorkerFormSchema = addWorkerSchema
+  .extend({ loginPwConfirm: z.string().min(1, '한 번 더 입력해주세요.') })
+  .refine((data) => data.loginPw === data.loginPwConfirm, {
+    message: '비밀번호가 일치하지 않습니다.',
+    path: ['loginPwConfirm'],
+  })
+
 export const editWorkerSchema = workerBaseSchema
 
-export type AddWorkerFormData = z.infer<typeof addWorkerSchema>
+export type AddWorkerFormData = z.infer<typeof addWorkerFormSchema>
 export type EditWorkerFormData = z.infer<typeof editWorkerSchema>
 
 /** `010-1234-5678` → `01012345678` — 🔴 서버는 보낸 그대로 저장한다(B-45). 기존 데이터는 숫자만이다 */

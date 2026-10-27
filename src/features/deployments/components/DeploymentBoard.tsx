@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeftRightIcon,
   FilterIcon,
@@ -40,7 +40,9 @@ import {
   type DeploymentTab,
 } from '../lib/deploymentParams'
 import type { AssignmentRequestRow } from '../types/deployment'
+import DeploymentHistoryCard from './DeploymentHistoryCard'
 import { deploymentHistoryColumns } from './DeploymentHistoryColumns'
+import DeploymentRequestCard from './DeploymentRequestCard'
 import { deploymentRequestColumns } from './DeploymentRequestColumns'
 import { returnRequestColumns } from './ReturnRequestColumns'
 
@@ -170,6 +172,23 @@ const DeploymentBoard = () => {
     }
   }, [pageEmptied, pageNumber, setParams])
 
+  /**
+   * 🔴 **고른 탭이 탭 줄 밖에 있으면 탭 줄만 옆으로 넘긴다**(`spec 055`) — 좁은 폭에서 `?tab=out` 으로
+   * 들어오면 고른 탭이 오른쪽 밖에 숨고, 스크롤바도 숨겨 둬서 어느 탭인지 알 수 없었다.
+   * ⚠️ `scrollIntoView` 를 쓰지 않는다 — 탭 줄이 화면 아래에 있으면 **페이지까지** 내려간다.
+   * ⚠️ 대기 건수(`summary`)가 늦게 오면 앞 탭에 뱃지가 붙어 넓어진다 — 그때 다시 맞춘다.
+   */
+  const tabListRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const list = tabListRef.current
+    const selected = list?.querySelector<HTMLElement>('[aria-selected="true"]')
+    if (!list || !selected) return
+    const right = selected.offsetLeft + selected.offsetWidth
+    if (selected.offsetLeft < list.scrollLeft || right > list.scrollLeft + list.clientWidth) {
+      list.scrollLeft = right - list.clientWidth
+    }
+  }, [tab, summary.data])
+
   /** 🔴 탭을 바꾸면 페이지·검색·필터를 지운다 — 다른 탭에 끌고 가면 일부만 보이는 이유를 모른다 */
   const selectTab = (next: DeploymentTab) =>
     setParams({
@@ -182,11 +201,14 @@ const DeploymentBoard = () => {
   return (
     <div className="flex flex-col gap-4">
       {/* 페이지 탭 — 순찰이력(`PatrolHistoryTabs`)·코스/지점과 같은 밑줄형(사용자 결정 2026-10-21).
-          라우트가 아니라 쿼리(`?tab`)를 바꾸므로 링크가 아니라 **탭 버튼**이다 */}
+          라우트가 아니라 쿼리(`?tab`)를 바꾸므로 링크가 아니라 **탭 버튼**이다.
+          🔴 바닥선은 `border-b` 가 아니라 **안쪽 그림자**다(`spec 055`) — 탭이 `-mb-px` 로 바닥선을
+          덮으면 1px 이 아래로 넘쳐, `overflow-x-auto` 가 켠 세로 스크롤바가 보였다. 스크롤바는 숨긴다 */}
       <div
+        ref={tabListRef}
         role="tablist"
         aria-label="배치 목록"
-        className="flex items-center gap-1 border-b border-border overflow-x-auto xl:overflow-visible"
+        className="scrollbar-hidden relative flex items-center gap-1 overflow-x-auto overflow-y-hidden shadow-[inset_0_-1px_0_var(--color-border)] xl:overflow-visible"
       >
         {TABS.map(({ key, label, icon: Icon }) => {
           const selected = tab === key
@@ -205,7 +227,7 @@ const DeploymentBoard = () => {
               aria-selected={selected}
               onClick={() => selectTab(key)}
               className={cn(
-                '-mb-px inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-tab font-semibold text-muted-foreground transition-colors hover:text-foreground',
+                'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-tab font-semibold text-muted-foreground transition-colors hover:text-foreground',
                 selected && 'border-point font-bold text-foreground'
               )}
             >
@@ -307,11 +329,17 @@ const DeploymentBoard = () => {
         <>
           {/* 🔴 `hidePagination` 은 `manualPagination` 을 함께 건다 — 표 안의 페이징을 끄고 위에서 자른 행만 그린다.
               ⚠️ `key` 로 탭마다 표를 새로 만든다 — 컬럼 집합이 다른 표를 같은 인스턴스로 갈아 끼우지 않는다 */}
+          {/* 🔴 `xl` 미만은 카드(`spec 055`) — 목록 중 유일하게 표만 있던 화면이었다 */}
           {tab === 'requests' ? (
             <AppTable
               key="requests"
               columns={requestColumns}
               data={items as AssignmentRequestRow[]}
+              renderCard={
+                siteSeq === null
+                  ? undefined
+                  : (row) => <DeploymentRequestCard row={row} kind="deploy" siteSeq={siteSeq} />
+              }
               hidePagination
             />
           ) : tab === 'returns' ? (
@@ -319,6 +347,11 @@ const DeploymentBoard = () => {
               key="returns"
               columns={returnColumns}
               data={items as AssignmentRequestRow[]}
+              renderCard={
+                siteSeq === null
+                  ? undefined
+                  : (row) => <DeploymentRequestCard row={row} kind="return" siteSeq={siteSeq} />
+              }
               hidePagination
             />
           ) : (
@@ -326,6 +359,7 @@ const DeploymentBoard = () => {
               key={tab}
               columns={historyColumns}
               data={items as AssignmentHistoryRow[]}
+              renderCard={(row) => <DeploymentHistoryCard row={row} siteName={siteName} />}
               hidePagination
             />
           )}

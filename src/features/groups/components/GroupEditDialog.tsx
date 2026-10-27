@@ -2,7 +2,6 @@ import { BuildingIcon, EllipsisVerticalIcon, PencilIcon, PlusIcon, Trash2Icon } 
 import { useState } from 'react'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
-import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
 import AppIconButton from '@/components/app/AppIconButton'
 import AppLinkButton from '@/components/app/AppLinkButton'
@@ -169,6 +168,8 @@ export const GroupEditDialog = ({
         description="그룹은 회사 › 본부 › 지사 3단계까지 만들 수 있습니다."
         contentClassName="sm:max-w-[600px]"
       >
+        {/* 🔴 완료 버튼 없음(`spec 055`) — 추가 · 이름 변경 · 삭제는 각자의 확인에서 바로 저장된다.
+            닫기만 하는 버튼은 ✕ 와 같은 일이라 "눌러야 저장된다" 로 오해된다 */}
         <div className="flex flex-col gap-4 min-h-0">
           {/* `-mx-1 p-1` — 본부 카드 테두리가 스크롤 상자 가장자리에 붙으면 소수점 배율에서
               맨 아래 · 좌우 선이 잘린다(`AddAdminForm` 과 같은 처리) */}
@@ -195,9 +196,6 @@ export const GroupEditDialog = ({
                 <GroupTreeStatus isError={tree.isError} onRetry={() => tree.refetch()} />
               </div>
             )}
-          </div>
-          <div className="flex justify-end">
-            <AppButton onClick={() => onOpenChange(false)}>완료</AppButton>
           </div>
         </div>
       </AppDialog>

@@ -159,6 +159,11 @@ const PointHistoryRecentCard = ({ detail, siteSeq }: PointHistoryRecentCardProps
                       <span className="min-w-0 flex-1 truncate text-muted-foreground">
                         {row.courseName}
                       </span>
+                      {/* 🔴 강조가 **상태가 아니라 "지금 보고 있는 인증"** 임을 글로 말한다(`spec 055`) —
+                          색만으로는 "순찰기록이라 강조됐다" 로 읽혔다(사용자 질문 2026-10-27) */}
+                      {isCurrent && (
+                        <span className="shrink-0 text-caption font-semibold text-point">이 인증</span>
+                      )}
                       <span className="flex shrink-0 items-center gap-1">
                         <AppBadge variant={result.variant}>{result.label}</AppBadge>
                         {overtime && (

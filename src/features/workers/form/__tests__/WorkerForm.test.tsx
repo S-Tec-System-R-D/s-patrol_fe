@@ -43,14 +43,22 @@ const recordMultipart = (path: string) => {
 
 const fillAdd = async (
   user: ReturnType<typeof userEvent.setup>,
-  over: Partial<Record<'name' | 'loginId' | 'phone' | 'loginPw', string>> = {}
+  over: Partial<Record<'name' | 'loginId' | 'phone' | 'loginPw' | 'loginPwConfirm', string>> = {}
 ) => {
-  const v = { name: '새근무자', loginId: '990001', phone: '010-1234-5678', loginPw: 'Abcd123!', ...over }
+  const v = {
+    name: '새근무자',
+    loginId: '990001',
+    phone: '010-1234-5678',
+    loginPw: 'Abcd123!',
+    loginPwConfirm: over.loginPw ?? 'Abcd123!',
+    ...over,
+  }
   // 🔴 라벨로 찾는다 — `AppInput` 라벨 연결(999 US3) 전에는 placeholder 로 우회했다(OQ-F)
   await user.type(screen.getByLabelText(/^이름/), v.name)
   await user.type(screen.getByLabelText(/^사번/), v.loginId)
   await user.type(screen.getByLabelText(/^연락처/), v.phone)
-  await user.type(screen.getByLabelText(/^초기비밀번호/), v.loginPw)
+  await user.type(screen.getByLabelText(/^초기 비밀번호/), v.loginPw)
+  await user.type(screen.getByLabelText(/^비밀번호 확인/), v.loginPwConfirm)
 }
 
 beforeEach(() => {
@@ -71,6 +79,18 @@ describe('AddWorkerForm — 입력', () => {
     expect(await screen.findByText('사번을 입력해주세요.')).toBeInTheDocument()
     expect(await screen.findByText('010-0000-0000 형식으로 입력해주세요.')).toBeInTheDocument()
     expect(await screen.findByText('8자리 이상 입력해주세요.')).toBeInTheDocument()
+    expect(await screen.findByText('한 번 더 입력해주세요.')).toBeInTheDocument()
+  })
+
+  it('비밀번호 확인이 다르면 보내지 않는다 — 관리자 추가와 같은 문구(spec 055)', async () => {
+    const sent = recordMultipart(ADD_USER_PATH)
+    renderWithQuery(<AddWorkerForm />)
+    const user = userEvent.setup()
+    await fillAdd(user, { loginPwConfirm: 'Abcd123@' })
+    await user.click(screen.getByRole('button', { name: '등록' }))
+
+    expect(await screen.findByText('비밀번호가 일치하지 않습니다.')).toBeInTheDocument()
+    expect([...sent]).toEqual([])
   })
 
   it('🔴 사번·비밀번호는 로그인과 같은 규칙이다 — 서버는 검사하지 않는다(B-45)', async () => {
