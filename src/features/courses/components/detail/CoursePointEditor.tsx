@@ -104,12 +104,14 @@ const SortableRow = ({
       }`}
     >
       {/* 🔴 드래그 핸들은 **좌측 점 6개**(`patterns.md` §5). 행 전체를 드래그 대상으로
-          두면 구간시간 입력을 클릭할 때마다 드래그가 시작된다 */}
+          두면 구간시간 입력을 클릭할 때마다 드래그가 시작된다.
+          🔴 `touch-none` — 없으면 터치에서 브라우저가 스크롤로 먼저 가져가 드래그가 시작되지
+          않는다(`PointerSensor` 요구 사항) */}
       <button
         ref={setActivatorNodeRef}
         type="button"
         aria-label={`${draft.pointName} 순서 변경`}
-        className="cursor-grab rounded-sm p-1 text-muted-foreground hover:bg-muted active:cursor-grabbing"
+        className="touch-none cursor-grab rounded-sm p-1 text-muted-foreground hover:bg-muted active:cursor-grabbing"
         disabled={disabled}
         {...attributes}
         {...listeners}

@@ -46,7 +46,10 @@ const AppDialog = ({
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <div className="flex flex-col min-h-0 flex-1 p-4 pt-0 ">{children}</div>
+        {/* 🔴 `overflow-y-auto` — 바깥이 `max-h-[80vh] overflow-hidden` 이라 스크롤이 없으면
+            긴 폼(사업장 추가 · 근무자 추가 · 공지 수정)이 낮은 화면에서 저장 버튼째 잘린다.
+            안쪽 스크롤이 있는 모달(관리그룹 편집 · 관리자 추가)은 `min-h-0` 으로 줄어 그대로 */}
+        <div className="flex flex-col min-h-0 flex-1 overflow-y-auto p-4 pt-0">{children}</div>
       </DialogContent>
     </Dialog>
   )

@@ -170,7 +170,9 @@ export const GroupEditDialog = ({
         contentClassName="sm:max-w-[600px]"
       >
         <div className="flex flex-col gap-4 min-h-0">
-          <div className="min-h-0 overflow-y-auto">
+          {/* `-mx-1 p-1` — 본부 카드 테두리가 스크롤 상자 가장자리에 붙으면 소수점 배율에서
+              맨 아래 · 좌우 선이 잘린다(`AddAdminForm` 과 같은 처리) */}
+          <div className="-mx-1 min-h-0 overflow-y-auto p-1">
             {tree.data ? (
               <div className="flex flex-col gap-2.5">
                 {/* 회사 머리 줄 — 이름 변경·삭제 없음 */}
