@@ -52,8 +52,10 @@ const siteNames = () =>
     .map((row) => within(row).getAllByRole('cell')[0].querySelector('.font-medium')?.textContent ?? '')
 
 /** 표 아래 "총 N개" 줄 */
-const totalLine = (count: number) =>
-  screen.findByText((_, element) => element?.tagName === 'P' && element.textContent === `총 ${count}개`)
+const totalLine = (count: number, timeout?: number) =>
+  screen.findByText((_, element) => element?.tagName === 'P' && element.textContent === `총 ${count}개`, undefined, {
+    timeout,
+  })
 
 beforeEach(() => {
   clearTokens()
@@ -120,8 +122,10 @@ describe('LocationsPage — 검색', () => {
     renderPage()
     await findInTable('강남우체국')
     await user.type(screen.getByLabelText('사업장명·주소 검색'), '개포로45677')
-    // 하위(8)만 맞아 모 사업장(6)과 함께 2행
-    expect(await totalLine(2)).toBeInTheDocument()
+    // 하위(8)만 맞아 모 사업장(6)과 함께 2행.
+    // 🔴 3초 — 검색은 300ms 디바운스 뒤 URL 을 거쳐 걸러진다. 전체 실행 부하에서는 기본 1초를
+    // 넘겨 실패했다(059 OQ-059-E · `DeploymentBoard.test.tsx` 와 같은 처방)
+    expect(await totalLine(2, 3000)).toBeInTheDocument()
     expect(url()).toContain('q=')
   })
 

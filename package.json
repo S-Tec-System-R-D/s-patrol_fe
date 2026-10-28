@@ -13,7 +13,8 @@
     "verify": "npm run typecheck && npm run lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "capture": "playwright test"
+    "capture": "playwright test --project=capture",
+    "e2e": "playwright test --project=e2e-desktop --project=e2e-mobile"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
