@@ -19,8 +19,8 @@ import type { CourseToggleKind } from './CourseToggleDialog'
  * `pointCount`·`history`(최근 순찰). 상태는 **상세 응답에 없어** 제목 옆 뱃지를
  * `useYn` 으로만 만든다.
  *
- * 🔴 **`memo` 는 비어 있을 수 있다**(`null`). 지점과 달리 코스는 `UpdateCourse` 로
- * **실제로 비울 수 있다**(B-15 와 반대, 규칙 6) — 즉 빈 값은 정상 상태다.
+ * 🔴 **`memo` 는 비어 있을 수 있다**(`null`). 코스는 `UpdateCourse` 로
+ * **실제로 비울 수 있다**(규칙 6) — 즉 빈 값은 정상 상태다.
  *
  * 🔴 **총 소요시간은 입력값이 아니라 파생 값이다**(실측 B-31): 저장 시 `totalMin: null`
  * 을 보내면 서버가 **구간시간 합**으로 채운다. 그래서 여기도, 수정 모달에도 입력란이

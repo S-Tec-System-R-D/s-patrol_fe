@@ -72,8 +72,7 @@ export const toUpdateCoursePoints = (points: CourseDetailPoint[]): UpdateCourseP
  * 바꾸고 싶은 필드만 넘긴다. 넘기지 않은 것은 **현재 상세 값 그대로** 나간다.
  *
  * ⚠️ `memo` 는 `undefined`(안 바꿈)와 `null`(비움)을 구분해야 하므로 `??` 를 쓰지 않는다 —
- * 🔴 코스의 `memo: null` 은 **실제로 반영된다**(비워진다). 지점(`UpdatePoint`)은 `null`·
- * `''` 를 무시해 값을 비울 수 없는데(B-15) **코스는 반대다.**
+ * 🔴 코스의 `memo: null` 은 **실제로 반영된다**(비워진다).
  */
 export interface UpdateCourseOverrides {
   courseName?: string

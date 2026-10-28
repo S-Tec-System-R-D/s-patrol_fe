@@ -192,16 +192,14 @@ const businessError = (message: string, status = 400) =>
 const NOT_FOUND_MESSAGE = '잘못된 요청입니다.'
 
 /**
- * `UpdatePoint` 의 문자열 필드 반영 규칙 — **실측 동작 재현**(2026-10-08).
+ * `UpdatePoint` 의 문자열 필드 반영 규칙 — **실측 동작 재현**(재측정 2026-10-28).
  *
- * 서버는 `undefined`·`null`·`''` 를 전부 "변경하지 않음" 으로 보고, 내용이 있는 문자열만
- * 반영한다(공백만 있는 문자열은 trim 되어 결과적으로 빈 값이 된다). 즉 **빈 값으로
- * 되돌릴 수단이 공백 문자뿐**이고, 이것은 서버 버그에 가깝다(B-15).
+ * 생략(`undefined`)만 "변경하지 않음" 이고 `null`·`''` 은 **비운다**. 예전에는 서버가 `null`·`''`
+ * 를 무시해 비울 수 없었다(B-15 — 2026-10-28 해소 확인).
  */
 const patchText = (current: string | null, next: string | null | undefined): string | null => {
-  if (next === undefined || next === null || next === '') return current
-  const trimmed = next.trim()
-  return trimmed === '' ? null : trimmed
+  if (next === undefined) return current
+  return next?.trim() || null
 }
 
 const GET_POINT_LIST_PATH = '/api/v1/Point/W/sign/GetPointList'
@@ -234,6 +232,8 @@ const buildHistory = (point: MockPoint): PointHistoryRow[] => {
     day.setDate(day.getDate() - ago)
     const ymd = day.toISOString().slice(0, 10)
     const perDay = ago % 9 === 0 ? 2 : 1
+    // 실측: 미완료 행은 인증이 없다 — `authMethod: null` · `authMethodName: ''`(OQ-049-A)
+    const done = ago % 12 !== 0
 
     for (let n = 0; n < perDay; n += 1) {
       const course = courses[(ago + n) % courses.length]
@@ -247,10 +247,10 @@ const buildHistory = (point: MockPoint): PointHistoryRow[] => {
         checkDt: `${ymd}T${String(8 + n * 5 + (point.pointSeq % 3)).padStart(2, '0')}:${String((7 * point.pointSeq + ago * 3) % 60).padStart(2, '0')}:00`,
         userSeq: 100 + point.pointSeq,
         userName: n === 0 ? '김근무' : '박순찰',
-        authMethod: point.authMethod,
-        authMethodName: point.authMethod === 9 ? 'QR' : 'NFC',
-        status: ago % 12 === 0 ? 3 : 4, // 가끔 미완료를 섞는다
-        statusName: ago % 12 === 0 ? '미완료' : '완료',
+        authMethod: done ? point.authMethod : null,
+        authMethodName: done ? (point.authMethod === 9 ? 'QR' : 'NFC') : '',
+        status: done ? 4 : 3, // 가끔 미완료를 섞는다
+        statusName: done ? '완료' : '미완료',
         overTimeYn: ago % 15 === 0,
         hasMemo: ago % 6 === 0,
         pauseTime: '00:00:00',
@@ -380,16 +380,11 @@ export const pointHandlers = [
    * ✅ **실측 완료(2026-10-08).** 성공은 200 + `data: true`. 그리고 **진짜 부분 갱신이다** —
    * 생략한 필드는 기존 값이 **유지**된다(`pointSeq` + `name` 만 보내 확인).
    *
-   * 🔴🔴 **그런데 "값 비우기" 가 불가능하다.** 서버는 `null` 과 `''`(빈 문자열)을 **"값 없음
-   * = 변경하지 않음"** 으로 해석해 **무시**한다. 실측 결과:
-   * - `memo: null` → 무시(기존 값 유지) / `memo: ''` → 무시 / `memo: ' '`(공백 1칸) → **지워짐**
-   * - `nfcTagId` 는 `null`·`''`·`' '` **전부 무시** — 한 번 설정되면 지울 방법이 없었다
-   *
-   * 영향: ① 사용자가 **설명을 비워도 지워지지 않는다** ② NFC → QR 로 바꿔도 `nfcTagId` 가
-   * 남아 **인증수단과 어긋난 데이터**가 된다(화면에는 안 보인다 — `PointDetail` 이
-   * `method === 'NFC' && point.nfcTagId` 로 막는다). **백엔드 수정 요청 대상**(B-15).
-   * mock 은 **실측 동작을 그대로 재현**한다 — 서버보다 관대하게 만들면 우리 화면에서는
-   * 지워지는데 실 서버에서는 안 지워지는 불일치가 숨는다.
+   * ✅ **값 비우기가 된다**(B-15 해소 — 재측정 2026-10-28). `memo`·`nfcTagId` 모두 `null`·`''`
+   * 을 보내면 지워진다. 예전에는 무시돼 설명을 지울 수 없었다. mock 은 **실측 동작을 그대로
+   * 재현**한다 — 서버와 다르게 만들면 dev 와 실서버의 불일치가 숨는다.
+   * 프론트는 QR 로 바꿀 때 `nfcTagId` 를 보내지 않는다 — 남은 값은 다시 NFC 로 바꿀 때
+   * 수정 모달이 채워 둔다(`screens.md` §1-3).
    *
    * `reissueQrYn` 은 받아도 **쓰지 않는다** — QR 재발급은 범위 외(OQ-022-D)이고 프론트는
    * `false` 고정으로 보낸다. 🔴 **인증수단을 바꿔도 서버는 `qrCode` 를 지우지 않는다**(실측:
@@ -430,7 +425,7 @@ export const pointHandlers = [
     store[index] = {
       ...current,
       name: body.name ?? current.name,
-      // 🔴 실측 동작: `null`·`''` 은 "변경하지 않음". 공백만 있는 문자열은 지움(trim 후 저장)
+      // 실측 동작: 생략은 유지, `null`·`''`·공백은 비움(B-15 해소)
       memo: patchText(current.memo, body.memo),
       authMethod: body.authMethod ?? current.authMethod,
       nfcTagId: patchText(current.nfcTagId, body.nfcTagId),

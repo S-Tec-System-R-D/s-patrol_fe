@@ -66,8 +66,7 @@ export interface UpdateCoursePointRequest {
  * 저장하려다 **로그아웃되는** 증상이 된다. swagger 는 required 가 아니지만 **우리가 더
  * 엄격하게 간다.**
  *
- * 🔴 **`memo: null` 은 반영된다**(비워짐). 지점의 `UpdatePoint` 는 `null`·`''` 을 무시해
- * **값을 비울 수 없는데**(B-15) 코스는 비워진다 — 엔드포인트마다 다르다(규칙 6).
+ * 🔴 **`memo: null` 은 반영된다**(비워짐 — 규칙 6).
  */
 export interface UpdateCourseRequest {
   siteSeq: number

@@ -149,10 +149,10 @@ export const PointCourseList = ({ point }: { point: PointDetailData }) => (
  * | **QR** | QR 이미지·식별자 | ✅ **029 에서 실물로**(`qrCode` 가 서버에 있다) |
  * | 미실측 코드 | 안내 문구 | — |
  *
- * 🔴 **지금 쓰는 수단의 자격증명만 그린다.** 서버는 전환해도 반대쪽 값을 지우지 않는다
- * (QR→NFC 후에도 `qrCode` 가 남고, NFC→QR 후에도 `nfcTagId` 가 남는다 — B-15, 실측
- * 2026-10-13). **지울 수는 없으니 보여주지 않는다** — 쓰이지 않는 자격증명이 화면에
- * 있으면 "둘 다 되는 지점" 으로 읽힌다.
+ * 🔴 **지금 쓰는 수단의 자격증명만 그린다.** 전환해도 반대쪽 값이 남는다(QR→NFC 후에도
+ * `qrCode` 가 남고, NFC→QR 은 프론트가 `nfcTagId` 를 보내지 않아 남는다 — 실측 2026-10-13).
+ * **남은 값은 보여주지 않는다** — 쓰이지 않는 자격증명이 화면에 있으면 "둘 다 되는 지점"
+ * 으로 읽힌다.
  */
 export const PointCredentialCard = ({ point }: { point: PointDetailData }) => {
   const method = toAuthMethodLabel(point.authMethod)
