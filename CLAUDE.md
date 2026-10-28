@@ -53,6 +53,7 @@
 - 코드 변경 후 typecheck / lint 통과를 확인한다.
 - 통합 명령: `npm run verify` (= `npm run typecheck && npm run lint`).
 - `npm run verify`와 `npm run test`는 **병렬 실행**한다(`&` 또는 두 개의 `run_in_background` Bash). 둘은 독립적이라 직렬 실행은 wall-clock 낭비.
+- 화면 · 가드 · 쓰기 흐름 회귀: `npm run e2e`(Playwright · mock 위 · 1280px + 390px, 약 1분). `verify`/`test`에는 포함되지 않는다 — 여러 화면에 걸친 변경 · 가드 · 공용 레이아웃을 바꾸면 돌린다(`spec 059`).
 - UI 변경은 실제 동작(브라우저)에서 한 번 이상 확인하기를 권장한다.
 - 검증 실패 상태로 작업을 "완료"로 보고하지 않는다.
 

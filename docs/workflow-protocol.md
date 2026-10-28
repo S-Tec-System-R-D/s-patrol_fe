@@ -342,7 +342,7 @@ DoD 대조표 양식:
 | 항목 | 내용 |
 |---|---|
 | 범위 | 가드·라우터·세션·다중 화면 흐름·권한 매트릭스 |
-| 도구 | (현) `specs/.../manual-regression.md` 사용자 진입 검증 / (예정) Playwright (npm) / MCP |
+| 도구 | (현) **`npm run e2e`**(Playwright — 화면 열림 · 가드 · 기능 흐름, mock 위, `spec 059`) + 사용자 브라우저 확인 / (예정) 실서버 조회 e2e |
 | 검출 | E2E 흐름, role × screen 매트릭스, cross-screen 라우팅 회귀 |
 | 비용 | 사람 시간 또는 토큰 |
 | WF 매핑 | WF-4 — Spec 종료(통합 영향 시) / Phase 마감 |
