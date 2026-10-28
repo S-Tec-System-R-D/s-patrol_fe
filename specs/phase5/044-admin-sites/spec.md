@@ -3,6 +3,8 @@
 > 위험도: **A** (`screens.md` §2-2 — 사업장 추가/수정/삭제 · 상세 · 헬스체크 모두 A. 🔴 사업장 삭제는 하위 사업장·지점까지 함께 지운다 — B-54)
 > 관련 화면: 사업장 목록(`/admin/locations` 우측) · 사업장 추가/수정 모달 · 사업장 상세(`/admin/locations/:id`) · 삭제 확인
 > Phase: `roadmap.md` Phase 5 §9-0 — 3분할 중 두 번째(043 → **044** → 045)
+>
+> 🔄 **`spec 057` 에서 뒤집힘**(2026-10-28): 담당 관리자 카드 출처(소속 지사 그룹 `isInclude` → `GetSiteManagerList` 매니저만 · [관리자 지정] · 미지원 안내 삭제) · 비상연락망(자리 · 048 예시 → 실제 API · 담당자 풀 없음) · 목록 열(소속 그룹 한 칸 · 담당 관리자 `-` → 본부 · 지사 두 열 · 담당 관리자 열 삭제). 이하 본문은 044 당시 기록이다.
 > 목업: `docs/ui-mock/본사관리자/S-Patrol-Admin v2 (standalone).html` 의 `SitesPage` · `SiteDetail` · `SiteFormModal` · `HealthModal` · `Emergency` — **레이아웃 · 배치 · 워크플로우만 참고**, 시각은 현장 리디자인 `App*` 컴포넌트로(043 과 같다)
 
 ---

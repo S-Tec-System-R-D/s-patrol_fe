@@ -538,7 +538,8 @@ export interface NoticeAttach {
 // 사업장 헬스체크 설정 — ✅ 별도 엔티티가 아니다. `SiteDetail` 의 `healthCheck*` · `exceptionTime` 이고 `UpdateSite` 로 저장한다(`spec 044`).
 //   옛 설계 `HealthCheckSetting`(예약시간 등)은 폐기 — 서버는 사용 시간 + 예외 시간(여러 개) + 주기 · 타임아웃 · 반복이다.
 
-// 비상연락망 — 요일별 담당자 다중. ⚠️ **설계안 그대로**(API 없음, B-57) — 044 는 자리 카드만 두었다
+// 비상연락망 — 요일별 담당자 다중. ⚠️ **설계 의도 기록**이다 — 실제는 `spec 057` 의 `features/emergency/types/emergency.ts`(`api-spec.md` §5-1-C).
+//   🔴 서버에 **담당자 풀이 없다**(아래 `pool` 은 없는 개념) — 후보는 전사 트리(`GetEmergencyUserTree`).
 export interface EmergencyContactRoster {
   locationId: string
   byDay: Record<DayOfWeek, EmergencyContactRef[]>
@@ -610,8 +611,8 @@ export interface Keyword {
 | 그룹 할당 관리자 | ✅ `GET Group/W/sign/GetGroupAdminList?groupSeq` | `GroupAdminRow[]`(`isInclude`) — 이름 변경 전 할당 보존용 |
 | 사업장 목록 | ✅ `GET Group/W/sign/GetGroupList`(`spec 044`) | `ApiDetailResponse<GroupListNode>`(루트 1개 · 클라이언트가 그룹 범위 · 검색) |
 | 사업장 상세(기본정보 · 헬스체크) | ✅ `GET Site/W/sign/GetSiteDetail?siteSeq` | `ApiDetailResponse<SiteDetail>` — 없으면 400 "잘못된 요청입니다." |
-| 사업장 담당 관리자 | ✅ `GET Group/W/sign/GetGroupAdminList?groupSeq={소속 지사}` | `GroupAdminRow[]` 의 `isInclude` — 사업장 단위는 없다(B-58) |
-| 비상연락망 | ❌ 없음(B-57) | — |
+| 사업장 담당 관리자 | ✅ `GET Site/W/sign/GetSiteManagerList?siteSeq`(`spec 057`) | `SiteManager[]` — 상속 포함 · 화면은 매니저만 |
+| 비상연락망 | ✅ `GET Emergency/W/sign/GetEmergency?siteSeq` · `GetEmergencyUserTree` · `POST AddEmergency` · `DELETE DeleteEmergency`(`spec 057`) | `EmergencyDayEntry[]`(항상 7요일) · `EmergencyTreeNode[]` · `true` — 한 사람 · 한 요일씩 |
 
 ### 4-3. 공통 — 인증 / 본인 정보
 
