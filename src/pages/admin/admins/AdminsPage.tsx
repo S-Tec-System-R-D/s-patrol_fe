@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react'
-import { FilterXIcon, PlusIcon, RotateCcwIcon, ShieldIcon, TriangleAlertIcon, UsersIcon } from 'lucide-react'
+import {
+  FilterXIcon,
+  PlusIcon,
+  RotateCcwIcon,
+  ShieldIcon,
+  TriangleAlertIcon,
+  UsersIcon,
+} from 'lucide-react'
 
 import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
@@ -13,8 +20,13 @@ import AdminCard from '@/features/admins/components/AdminCard'
 import { adminColumns } from '@/features/admins/components/AdminColumns'
 import AdminDetailDialog from '@/features/admins/components/AdminDetailDialog'
 import AddAdminForm from '@/features/admins/form/AddAdminForm'
-import { useAdminAssignments } from '@/features/admins/hooks/useAdminAssignments'
-import { countAdmins, filterAdminRows, scopeAdminRows } from '@/features/admins/lib/adminList'
+import { useAdminList } from '@/features/admins/hooks/useAdminList'
+import {
+  adminPermission,
+  countAdmins,
+  filterAdminRows,
+  scopeAdminRows,
+} from '@/features/admins/lib/adminList'
 import {
   ADMIN_CODE,
   adminRoleFilterOptions,
@@ -32,20 +44,20 @@ import { useQueryParams } from '@/hooks/useQueryParams'
 import { ALL_VALUE } from '@/lib/listQuery'
 
 /**
- * 본사 관리자 `/admin/admins` (`spec 045` US1 · US2 · US3).
+ * 본사 관리자 `/admin/admins` (`spec 045` → `spec 056` — 관리자 API 6종).
  *
  * 골격은 사업장 목록(`LocationsPage`)과 같다 — XL 이상 좌측 관리그룹 패널 / XL 미만 필터 줄 경로 버튼.
  *
- * 🔴 **관리자 목록 API 가 없다**(B-61) — 트리의 그룹마다 `GetGroupAdminList` 를 불러 행 · 담당 그룹을 만든다
- * (`useAdminAssignments`). 전부 받기 전에는 표를 그리지 않는다.
- * 🔴 **[관리자 추가] 는 UI 만**(B-59 — 관리자 생성 API 가 없다) — 검증 후 안내 토스트(`AddAdminForm`, 045 후속).
+ * - 행은 `GetAdminList` 하나로(`useAdminList`) · 🔴 시스템관리자는 화면에 없다(사용자 결정 2026-10-27).
+ * - 범위는 회사 = 전원 · 본부 · 지사 = 그 그룹 + 하위에 할당된 매니저만(`scopeAdminRows`).
+ * - [관리자 추가] 는 로그인 권한이 만들 권한을 정한다(시스템관리자 → 마스터 · 마스터 → 매니저 · 매니저는 없음).
  * 🔴 서버 필터 · 페이지네이션 없음 — 관리자는 수 명이다.
  */
 
 const SEARCH_DEBOUNCE_MS = 300
 
 const AdminsPage = () => {
-  const assignments = useAdminAssignments()
+  const assignments = useAdminList()
   const { selected } = useGroupParam(assignments.root)
   const [params, setParams] = useQueryParams<'q' | 'role'>()
   const [selectedUserSeq, setSelectedUserSeq] = useState<number | null>(null)
@@ -81,14 +93,23 @@ const AdminsPage = () => {
   /** 🔴 재조회 뒤 그 관리자가 사라지면(남이 지움) 모달이 저절로 닫힌다 */
   const openRow = allRows?.find((row) => row.admin.userSeq === selectedUserSeq) ?? null
 
-  /** 할당 조회가 끝나기 전에는 수를 그리지 않는다 — 틀린 0 보다 빈칸이 낫다 */
+  /** 관리자 조회가 끝나기 전에는 수를 그리지 않는다 — 틀린 0 보다 빈칸이 낫다 */
   const count = (group: GroupNode) => (allRows ? countAdmins(allRows, group) : null)
-  const filterProps = { unitLabel: '관리자', count, countUnit: '명', headerAction: <GroupEditTrigger /> }
+  const filterProps = {
+    unitLabel: '관리자',
+    count,
+    countUnit: '명',
+    headerAction: <GroupEditTrigger />,
+  }
 
   const hasFilter = Boolean(params.q || params.role)
   const resetFilters = () => setParams({ q: undefined, role: undefined })
   /** 부제 — 범위 + 수(`layout.md` §5-1). 할당 조회 중에는 그룹 이름만 */
-  const subtitle = selected ? (allRows ? `${selected.groupName} 담당 관리자 ${scopedRows.length}명` : selected.groupName) : undefined
+  const subtitle = selected
+    ? allRows
+      ? `${selected.groupName} 담당 관리자 ${scopedRows.length}명`
+      : selected.groupName
+    : undefined
 
   return (
     <div className="flex flex-col gap-4 p-4 xl:p-8">
@@ -145,16 +166,24 @@ const AdminsPage = () => {
                 contentClassName="sm:max-w-[520px]"
                 trigger={
                   /* 🔴 `xl` 미만에서는 아이콘만 — `aria-label` 로 이름을 유지한다(`LocationsPage` 와 같다) */
-                  <AppButton icon={PlusIcon} iconSize={14} aria-label="관리자 추가" className="h-9 px-3 xl:px-4">
+                  <AppButton
+                    icon={PlusIcon}
+                    iconSize={14}
+                    aria-label="관리자 추가"
+                    className="h-9 px-3 xl:px-4"
+                  >
                     <span className="hidden xl:inline">관리자 추가</span>
                   </AppButton>
                 }
               >
                 <AddAdminForm
                   codeSeq={createCode}
-                  myRoleLabel={adminRoleLabel(me?.role === 'SYSTEM' ? ADMIN_CODE.SYSTEM : ADMIN_CODE.MASTER, '')}
+                  myRoleLabel={adminRoleLabel(
+                    me?.role === 'SYSTEM' ? ADMIN_CODE.SYSTEM : ADMIN_CODE.MASTER,
+                    ''
+                  )}
                   root={root}
-                  onCancel={() => setAddOpen(false)}
+                  onDone={() => setAddOpen(false)}
                 />
               </AppDialog>
             )}
@@ -174,7 +203,10 @@ const AdminsPage = () => {
               </div>
             </div>
           ) : assignments.isPending ? (
-            <div aria-label="관리자 불러오는 중" className="rounded-sm border border-border bg-card">
+            <div
+              aria-label="관리자 불러오는 중"
+              className="rounded-sm border border-border bg-card"
+            >
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="border-b border-border/50 px-3 py-3 last:border-0">
                   <div className="h-[22px] animate-pulse rounded-md bg-muted" />
@@ -188,7 +220,11 @@ const AdminsPage = () => {
                 <AppEmpty icon={UsersIcon} title="이 그룹에 할당된 관리자가 없습니다" />
               ) : (
                 <>
-                  <AppEmpty icon={FilterXIcon} title="검색 결과가 없습니다" description="검색어나 권한을 바꿔보세요." />
+                  <AppEmpty
+                    icon={FilterXIcon}
+                    title="검색 결과가 없습니다"
+                    description="검색어나 권한을 바꿔보세요."
+                  />
                   <div className="flex justify-center pb-6">
                     <AppButton variant="sub" onClick={resetFilters}>
                       필터 초기화
@@ -215,7 +251,18 @@ const AdminsPage = () => {
         </div>
       </div>
 
-      {root && <AdminDetailDialog row={openRow} root={root} onClose={() => setSelectedUserSeq(null)} />}
+      {root && (
+        <AdminDetailDialog
+          row={openRow}
+          root={root}
+          permission={
+            openRow && allRows
+              ? adminPermission(me, allRows, openRow)
+              : { edit: false, remove: false }
+          }
+          onClose={() => setSelectedUserSeq(null)}
+        />
+      )}
     </div>
   )
 }

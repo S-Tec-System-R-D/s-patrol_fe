@@ -8,6 +8,14 @@ import type {
   GroupListSite,
   UpdateGroupRequest,
 } from '@/features/groups/types/group'
+import type {
+  AddAdminRequest,
+  AdminDetail,
+  AdminGroupNode,
+  AdminListItem,
+  ResetAdminPasswordRequest,
+  UpdateAdminRequest,
+} from '@/features/admins/types/admin'
 import type { ExceptionTime, SiteDetail, UpdateSiteRequest } from '@/features/sites/types/site'
 import type { UserDetail } from '@/features/workers/types/user'
 
@@ -29,6 +37,7 @@ import type { UserDetail } from '@/features/workers/types/user'
  * - 사업장 수정: 🔴 생략·`null` 유지 · `""` 지움 · 예외시간 통째 교체 · 하위 사업장 그룹 변경 400 · 이동 시 하위 동반
  * - 사업장 삭제: 🔴 하위 사업장 연쇄(B-54)
  * - 헬스체크 필수값 누락: 🔴 **(D) 문자열 body**
+ * - 본사 관리자 6종(`spec 056`): 시스템관리자 · Master 전체 담당 · 노드 `admins` 상속 · 시스템관리자 상세 400 · 중복 사번 400
  */
 
 const BASE = '/api/v1/Group/W/sign'
@@ -155,36 +164,33 @@ const seedSites: StoredSite[] = [
   },
 ]
 
-/** 본사 관리자 전원(`codeSeq` 2 시스템관리자 · 3 관리자 · 4 매니저) — 실측 */
-const ADMINS: Omit<GroupAdminRow, 'isInclude'>[] = [
-  { userSeq: 1, codeSeq: 2, codeName: '시스템관리자', userName: '시스템관리자' },
-  { userSeq: 3, codeSeq: 3, codeName: '관리자', userName: '김용우' },
-  { userSeq: 4, codeSeq: 3, codeName: '관리자', userName: '이현성' },
-  { userSeq: 6, codeSeq: 4, codeName: '매니저', userName: '테스트' },
-  { userSeq: 12, codeSeq: 3, codeName: '관리자', userName: 'test' },
-]
-
 /**
- * 관리자 `UserDetail` 에만 있는 값(`spec 045` T819). 사번은 실측, 연락처는 가짜(실데이터는 개인 번호다).
- * 🔴 관리자는 `siteSeq: 0` · `siteName: null` 이다(실측 2026-10-23).
+ * 본사 관리자 전원(`codeSeq` 2 시스템관리자 · 3 관리자 · 4 매니저) — 실측. 🔴 **상태를 보유한다**(`spec 056` T994 — 추가 · 수정 · 삭제).
+ * 사번은 실측, 연락처는 가짜(실데이터는 개인 번호다). 비밀번호는 `ResetAdminPassword` 흉내용.
  */
-const ADMIN_ACCOUNTS: Record<number, { loginId: string; phone: string }> = {
-  1: { loginId: '000000', phone: '01000000001' },
-  3: { loginId: '232727', phone: '01000000003' },
-  4: { loginId: '232728', phone: '01000000004' },
-  6: { loginId: '111111', phone: '01000000006' },
-  12: { loginId: '222222', phone: '01012345678' },
+interface StoredAdmin extends Omit<GroupAdminRow, 'isInclude'> {
+  loginId: string
+  phone: string
+  loginPw: string
 }
+
+const seedAdmins: StoredAdmin[] = [
+  { userSeq: 1, codeSeq: 2, codeName: '시스템관리자', userName: '시스템관리자', loginId: '000000', phone: '01000000001', loginPw: '' },
+  { userSeq: 3, codeSeq: 3, codeName: '관리자', userName: '김용우', loginId: '232727', phone: '01000000003', loginPw: '' },
+  { userSeq: 4, codeSeq: 3, codeName: '관리자', userName: '이현성', loginId: '232728', phone: '01000000004', loginPw: '' },
+  { userSeq: 6, codeSeq: 4, codeName: '매니저', userName: '테스트', loginId: '111111', phone: '01000000006', loginPw: '' },
+  { userSeq: 12, codeSeq: 3, codeName: '관리자', userName: 'test', loginId: '222222', phone: '01012345678', loginPw: '' },
+]
 
 /** 관리자 상세 — 근무자 핸들러(`users.ts`)가 자기 저장소에 없을 때 여기서 찾는다(한 출처) */
 export const findMockAdminDetail = (userSeq: number): UserDetail | null => {
-  const admin = ADMINS.find((row) => row.userSeq === userSeq)
+  const admin = admins.find((row) => row.userSeq === userSeq)
   if (!admin) return null
   return {
     userSeq: admin.userSeq,
-    loginId: ADMIN_ACCOUNTS[userSeq].loginId,
+    loginId: admin.loginId,
     userName: admin.userName,
-    phone: ADMIN_ACCOUNTS[userSeq].phone,
+    phone: admin.phone,
     siteSeq: 0,
     siteName: null,
     workYn: false,
@@ -200,13 +206,15 @@ export const findMockAdminDetail = (userSeq: number): UserDetail | null => {
 
 /**
  * 그룹별 할당 — 🔴 한 사람이 여러 그룹에 있다(user 3 = g2 · g4 · g6, 실측).
- * 8 은 mock 전용 지사 — 사업장 상세 담당 관리자 탭(`spec 044`)이 보일 거리가 있게 본부 4 와 같게 둔다.
+ * 3 = 매니저 6(강동지사, 실측 2026-10-27). 8 은 mock 전용 지사 — 사업장 상세 담당 관리자 탭(`spec 044`)이 보일 거리가 있게 본부 4 와 같게 둔다.
  */
-const seedAssignments: Record<number, number[]> = { 1: [1], 2: [3, 4], 4: [3, 12], 6: [1, 3, 4], 8: [3, 12] }
+const seedAssignments: Record<number, number[]> = { 1: [1], 2: [3, 4], 3: [6], 4: [3, 12], 6: [1, 3, 4], 8: [3, 12] }
 
 let groups: StoredGroup[] = []
 let sites: StoredSite[] = []
 let assignments = new Map<number, number[]>()
+let admins: StoredAdmin[] = []
+let nextUserSeq = 179300
 /** 실서버 identity 를 흉내 — 시드 최대 seq 다음부터 */
 let nextGroupSeq = 12
 let nextSiteSeq = 13
@@ -220,6 +228,8 @@ export const resetGroupStore = (): void => {
   groups = seedGroups.map((group) => ({ ...group }))
   sites = seedSites.map((site) => ({ ...site, exceptionTime: site.exceptionTime.map((row) => ({ ...row })) }))
   assignments = new Map(Object.entries(seedAssignments).map(([seq, users]) => [Number(seq), [...users]]))
+  admins = seedAdmins.map((admin) => ({ ...admin }))
+  nextUserSeq = 179300
   nextGroupSeq = 12
   nextSiteSeq = 13
   nextDetailSeq = 6
@@ -406,6 +416,61 @@ interface AddSiteBody extends Partial<UpdateSiteRequest> {
   parentSiteSeq?: number | null
 }
 
+// ── 본사 관리자(`spec 056` T994 — `api-spec.md` §5-1-C) ───────────
+
+const ADMIN_BASE = '/api/v1/AdminUser/W/sign'
+const ADMIN_NOT_FOUND = '관리자 계정이 존재하지 않습니다.'
+
+/** 🔴 시스템관리자 · Master 는 전체 담당(`allGroupYn`) — 할당 맵을 보지 않는다(실측) */
+const isAllGroup = (admin: StoredAdmin) => admin.codeSeq !== 4
+const assignedGroupSeqs = (userSeq: number) =>
+  [...assignments.entries()].filter(([, users]) => users.includes(userSeq)).map(([groupSeq]) => groupSeq)
+
+const toAdminItem = (admin: StoredAdmin): AdminListItem => {
+  const allGroupYn = isAllGroup(admin)
+  return {
+    userSeq: admin.userSeq,
+    userName: admin.userName,
+    phone: admin.phone,
+    codeSeq: admin.codeSeq,
+    codeName: admin.codeName,
+    allGroupYn,
+    groups: allGroupYn
+      ? []
+      : assignedGroupSeqs(admin.userSeq).flatMap((groupSeq) => {
+          const group = groups.find((candidate) => candidate.groupSeq === groupSeq)
+          return group ? [{ groupSeq, groupName: group.groupName }] : []
+        }),
+  }
+}
+
+/** 🔴 노드 `admins` = 전체 담당 + **그 노드 또는 조상**에 할당된 매니저(실측 — 노드마다 반복) */
+const toAdminNode = (group: StoredGroup, depth: number, inherited: number[]): AdminGroupNode => {
+  const covered = [...inherited, group.groupSeq]
+  return {
+    groupSeq: group.groupSeq,
+    groupName: group.groupName,
+    parentGroupSeq: group.parentGroupSeq,
+    layer: depth,
+    depth,
+    admins: admins
+      .filter((admin) => isAllGroup(admin) || assignedGroupSeqs(admin.userSeq).some((seq) => covered.includes(seq)))
+      .map(toAdminItem),
+    children: childGroups(group.groupSeq).map((child) => toAdminNode(child, depth + 1, covered)),
+  }
+}
+
+/** 담당 그룹 교체 — 그 관리자를 모든 그룹에서 빼고 `groupSeq` 에만 넣는다 */
+const replaceAdminGroups = (userSeq: number, groupSeqs: number[]) => {
+  assignments.forEach((users, groupSeq) => assignments.set(groupSeq, users.filter((seq) => seq !== userSeq)))
+  groupSeqs.forEach((groupSeq) => assignments.set(groupSeq, [...(assignments.get(groupSeq) ?? []), userSeq]))
+}
+
+const findAdminParam = (request: Request) => {
+  const param = new URL(request.url).searchParams.get('userSeq')
+  return param === null ? undefined : admins.find((admin) => admin.userSeq === Number(param)) ?? null
+}
+
 export const groupHandlers = [
   http.get(ADMIN_SITE_SELECT_PATH, () => ok(buildTree())),
 
@@ -416,7 +481,15 @@ export const groupHandlers = [
   http.get(`${BASE}/GetGroupAdminList`, ({ request }) => {
     const groupSeq = Number(new URL(request.url).searchParams.get('groupSeq'))
     const included = assignments.get(groupSeq) ?? []
-    return ok(ADMINS.map((admin) => ({ ...admin, isInclude: included.includes(admin.userSeq) })))
+    return ok(
+      admins.map(({ userSeq, codeSeq, codeName, userName }) => ({
+        userSeq,
+        codeSeq,
+        codeName,
+        userName,
+        isInclude: included.includes(userSeq),
+      }))
+    )
   }),
 
   http.post(`${BASE}/AddGroup`, async ({ request }) => {
@@ -453,7 +526,7 @@ export const groupHandlers = [
     }
 
     const userSeq = body.userSeq ?? [] // 🔴 생략 = 비우기(B-50)
-    if (userSeq.some((seq) => !ADMINS.some((admin) => admin.userSeq === seq))) return serverError()
+    if (userSeq.some((seq) => !admins.some((admin) => admin.userSeq === seq))) return serverError()
 
     target.groupName = groupName
     target.parentGroupSeq = parentGroupSeq
@@ -609,6 +682,75 @@ export const groupHandlers = [
     // 🔴 하위 사업장까지 함께(B-54)
     const removed = new Set([siteSeq, ...descendantSiteSeqs(siteSeq)])
     sites = sites.filter((site) => !removed.has(site.siteSeq))
+    return ok(true)
+  }),
+  http.get(`${ADMIN_BASE}/GetAdminList`, () => ok(toAdminNode(findRoot(), 0, []))),
+
+  // 🔴 시스템관리자도 400(실측) · 파라미터 생략은 "잘못된 요청입니다."
+  http.get(`${ADMIN_BASE}/GetAdminDetail`, ({ request }) => {
+    const admin = findAdminParam(request)
+    if (admin === undefined) return HttpResponse.json({ message: BAD_REQUEST, data: null, code: 400 }, { status: 400 })
+    if (!admin || admin.codeSeq === 2) {
+      return HttpResponse.json({ message: ADMIN_NOT_FOUND, data: null, code: 400 }, { status: 400 })
+    }
+    const detail: AdminDetail = {
+      userSeq: admin.userSeq,
+      codeSeq: admin.codeSeq,
+      loginId: admin.loginId,
+      name: admin.userName,
+      phone: admin.phone,
+      groupSeq: isAllGroup(admin) ? null : assignedGroupSeqs(admin.userSeq),
+    }
+    return ok(detail)
+  }),
+
+  http.post(`${ADMIN_BASE}/AddAdmin`, async ({ request }) => {
+    const body = (await request.json()) as Partial<AddAdminRequest>
+    for (const field of ['loginId', 'loginPw', 'name', 'phone'] as const) {
+      if (!body[field]) return fieldRequired(field)
+    }
+    if (admins.some((admin) => admin.loginId === body.loginId)) return businessError('이미 사용중인 아이디입니다.')
+    const userSeq = nextUserSeq++
+    const codeSeq = body.codeSeq ?? 4
+    admins.push({
+      userSeq,
+      codeSeq,
+      codeName: codeSeq === 3 ? '관리자' : '매니저',
+      userName: body.name ?? '',
+      loginId: body.loginId ?? '',
+      phone: body.phone ?? '',
+      loginPw: body.loginPw ?? '',
+    })
+    replaceAdminGroups(userSeq, body.groupSeq ?? [])
+    return ok(true)
+  }),
+
+  // 🔴 생략 · `null` = 유지 · `groupSeq` = 교체(`[]` 도 받는다 — 실측)
+  http.put(`${ADMIN_BASE}/UpdateAdmin`, async ({ request }) => {
+    const body = (await request.json()) as Partial<UpdateAdminRequest>
+    const admin = admins.find((candidate) => candidate.userSeq === body.userSeq)
+    if (!admin) return businessError(ADMIN_NOT_FOUND)
+    if (body.name != null) admin.userName = body.name
+    if (body.phone != null) admin.phone = body.phone
+    if (body.groupSeq != null) replaceAdminGroups(admin.userSeq, body.groupSeq)
+    return ok(true)
+  }),
+
+  http.put(`${ADMIN_BASE}/ResetAdminPassword`, async ({ request }) => {
+    const body = (await request.json()) as Partial<ResetAdminPasswordRequest>
+    const admin = admins.find((candidate) => candidate.userSeq === body.userSeq)
+    if (!admin) return businessError(ADMIN_NOT_FOUND)
+    if (!body.loginPw) return fieldRequired('loginPw')
+    admin.loginPw = body.loginPw
+    return ok(true)
+  }),
+
+  http.delete(`${ADMIN_BASE}/DeleteAdmin`, ({ request }) => {
+    const admin = findAdminParam(request)
+    if (admin === undefined) return businessError(BAD_REQUEST)
+    if (!admin) return businessError(ADMIN_NOT_FOUND)
+    admins = admins.filter((candidate) => candidate.userSeq !== admin.userSeq)
+    replaceAdminGroups(admin.userSeq, [])
     return ok(true)
   }),
 ]

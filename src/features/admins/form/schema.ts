@@ -1,9 +1,10 @@
 import z from 'zod'
 
-import { addWorkerSchema } from '@/features/workers/form/schema'
+import { addWorkerSchema, toPhoneDigits } from '@/features/workers/form/schema'
+import type { AddAdminRequest } from '../types/admin'
 
 /**
- * 관리자 추가 (`spec 045` T842) — 🔴 **API 가 없다**(B-59). 화면 검증만 한다.
+ * 관리자 추가 (`spec 045` T842 → `spec 056` T1001 — `AddAdmin`).
  *
  * 이름 · 사번 · 연락처 · 초기 비밀번호는 **근무자 추가와 같은 규칙**이다 — 로그인 ID 가 사번이고 로그인 화면 규칙을 따라야
  * "만들 수는 있는데 로그인 화면이 거부하는 계정" 이 생기지 않는다(041 판단). 서버는 검사하지 않는다(B-45 · B-60).
@@ -26,3 +27,13 @@ export const addAdminSchema = (requireGroups: boolean) =>
     })
 
 export type AddAdminFormData = z.infer<ReturnType<typeof addAdminSchema>>
+
+/** 🔴 매니저만 `groupSeq` 를 싣는다(마스터는 전체 담당 — 키 없음) · 연락처는 숫자만(B-45) · 확인 칸은 보내지 않는다 */
+export const toAddAdminRequest = (data: AddAdminFormData, codeSeq: number, withGroups: boolean): AddAdminRequest => ({
+  codeSeq,
+  loginId: data.loginId,
+  loginPw: data.loginPw,
+  name: data.name,
+  phone: toPhoneDigits(data.phone),
+  ...(withGroups ? { groupSeq: data.groupSeqs } : {}),
+})

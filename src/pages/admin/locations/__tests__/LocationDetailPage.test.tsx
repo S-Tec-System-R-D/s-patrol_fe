@@ -98,7 +98,8 @@ describe('LocationDetailPage — 머리 · 기본정보 · 담당 관리자', ()
   })
 
   it('할당이 없으면 빈 상태', async () => {
-    renderPage('/admin/locations/3')
+    // 강동지사(G3)는 매니저 6 할당이 있다(시드 — `spec 056`) → 할당 없는 지사 G7 의 사업장 2
+    renderPage('/admin/locations/2')
     expect(await screen.findByText('지정된 담당 관리자가 없습니다')).toBeInTheDocument()
   })
 

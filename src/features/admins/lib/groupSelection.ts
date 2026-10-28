@@ -1,5 +1,5 @@
 import type { GroupNode } from '@/features/auth/types/site'
-import { countSites, groupPath, walkGroups } from '@/features/groups/lib/groupTree'
+import { groupPath, walkGroups } from '@/features/groups/lib/groupTree'
 import { isTopGroup } from './adminList'
 
 /**
@@ -77,8 +77,8 @@ export const searchChoices = (root: GroupNode, options: GroupNode[], keyword: st
 
 /** 상세의 담당 그룹 묶음 — 회사 · 본부가 할당되면 "전체" 한 줄, 아니면 본부 아래 지사 칩 */
 export type AssignmentSection =
-  | { kind: 'whole'; group: GroupNode; scope: string; sites: number }
-  | { kind: 'branches'; hq: GroupNode | null; branches: GroupNode[]; sites: number }
+  | { kind: 'whole'; group: GroupNode; scope: string }
+  | { kind: 'branches'; hq: GroupNode | null; branches: GroupNode[] }
 
 export const assignmentSections = (root: GroupNode, groups: GroupNode[]): AssignmentSection[] => {
   const assigned = new Set(groups.map((group) => group.groupSeq))
@@ -87,20 +87,19 @@ export const assignmentSections = (root: GroupNode, groups: GroupNode[]): Assign
 
   for (const group of walkGroups(root).filter((g) => assigned.has(g.groupSeq))) {
     if (isTopGroup(group) || isHq(group)) {
-      sections.push({ kind: 'whole', group, scope: isTopGroup(group) ? '회사 전체' : '본부 전체', sites: countSites(group) })
+      sections.push({ kind: 'whole', group, scope: isTopGroup(group) ? '회사 전체' : '본부 전체' })
       continue
     }
     const hq = hqOf(root, group)
     // 🔴 본부가 이미 맡겨져 있으면 그 지사 할당은 본부 줄에 포함된다(겹친 실데이터 — 김용우 g4 + g8)
     if (hq && assigned.has(hq.groupSeq)) continue
     const key = hq?.groupSeq ?? -1
-    const section = branchSections.get(key) ?? { kind: 'branches' as const, hq, branches: [], sites: 0 }
+    const section = branchSections.get(key) ?? { kind: 'branches' as const, hq, branches: [] }
     if (!branchSections.has(key)) {
       branchSections.set(key, section)
       sections.push(section)
     }
     section.branches.push(group)
-    section.sites += countSites(group)
   }
   return sections
 }

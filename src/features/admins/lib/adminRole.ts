@@ -41,5 +41,5 @@ export const adminRoleFilterOptions: AppSelectOption[] = [
 export const creatableAdminCode = (role: Role | undefined): number | null =>
   role === 'SYSTEM' ? ADMIN_CODE.MASTER : role === 'MASTER' ? ADMIN_CODE.MANAGER : null
 
-/** 시스템 구축 시 만든 계정 — 수정 · 삭제할 수 없다(목업 잠금 안내) */
+/** 시스템관리자인가 — 🔴 관리자 화면에서 뺀다(사용자 결정 2026-10-27 — `spec 056`) */
 export const isSystemAdmin = (codeSeq: number): boolean => codeSeq === ADMIN_CODE.SYSTEM
