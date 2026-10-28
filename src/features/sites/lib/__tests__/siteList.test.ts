@@ -85,6 +85,12 @@ describe('collectSiteRows — 범위 · 평탄화', () => {
     expect(rows[0].groupPath).toBe('에스텍시스템')
     expect(rows[1].groupPath).toBe('수도권본부 › 강동지사')
   })
+
+  it('🔴 본부 · 지사 열 — 경로에 그 단계가 없으면 null(회사 직속 · 본부 직속)', () => {
+    const rows = collectSiteRows(ROOT, 1)
+    expect([rows[0].hqName, rows[0].branchName]).toEqual([null, null])
+    expect([rows[1].hqName, rows[1].branchName]).toEqual(['수도권본부', '강동지사'])
+  })
 })
 
 describe('collectSiteRows — 검색', () => {

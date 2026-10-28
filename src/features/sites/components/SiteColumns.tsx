@@ -4,10 +4,14 @@ import { ChevronRightIcon } from 'lucide-react'
 import type { SiteRow } from '../lib/siteList'
 
 /**
- * 사업장 목록 컬럼 (`spec 044` T789) — 목업 v2 `SitesPage` 에서 4열.
+ * 사업장 목록 컬럼 (`spec 044` T789 → `spec 057`) — 사업장명 · 본부 · 지사 · 주소 + 꺾쇠.
+ *
+ * 🔄 소속 그룹 `본부 › 지사` 한 칸을 **본부 · 지사 두 열**로 나눴다(사용자 요청 2026-10-28). 경로에 그 단계가 없으면 `-`
+ * (본부 직속 사업장 — 테스트 데이터). 좁은 폭 카드는 경로 한 줄 그대로다.
  *
  * 🔴 목업의 코스·지점 · 운영 상태 열은 **뺐다** — 사업장 개념에 없다(사용자 결정 2026-10-23).
- * 🔴 **담당 관리자는 고정 `—`** — 서버에 값이 없다. 사용자가 백엔드에 요청 중이라 자리를 둔다(OQ-044-D).
+ * 🔄 **담당 관리자 열은 뺐다**(`spec 057`) — 사업장마다 `GetSiteManagerList` 를 불러야 해서 목록에는 두지 않고 상세 카드에서만 본다
+ *   (사용자 결정 2026-10-27).
  */
 
 /** 값 없음 — `design-system.md` §4-5A(999 T869 에서 `—` → `-`) */
@@ -35,20 +39,20 @@ export const siteColumns = (): ColumnDef<SiteRow>[] => {
       },
     },
     {
-      id: 'group',
-      header: '소속 그룹',
-      cell: ({ row }) => <span className="text-muted-foreground">{row.original.groupPath}</span>,
+      id: 'hq',
+      header: '본부',
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.hqName ?? EMPTY}</span>,
+    },
+    {
+      id: 'branch',
+      header: '지사',
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.branchName ?? EMPTY}</span>,
     },
     {
       id: 'address',
       header: '주소',
       meta: { className: 'hidden xl:table-cell' },
       cell: ({ row }) => <span className="text-muted-foreground">{row.original.site.address ?? EMPTY}</span>,
-    },
-    {
-      id: 'managers',
-      header: '담당 관리자',
-      cell: () => <span className="text-muted-foreground">{EMPTY}</span>,
     },
     {
       id: 'open',

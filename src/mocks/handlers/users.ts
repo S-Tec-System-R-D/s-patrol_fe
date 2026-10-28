@@ -106,6 +106,22 @@ const cloneSeeds = (): MockUser[] => seeds.map((item) => ({ ...item }))
 /** 모듈 스코프 저장소 — 쓰기 3종이 이 배열을 직접 고친다 */
 let store: MockUser[] = cloneSeeds()
 
+/**
+ * 비상연락망 후보 트리(`emergency.ts`)가 읽는 현장 사람 — 🔴 읽기 전용 스냅숏(`spec 057` T1018).
+ * `siteSeq` = 소속지 · `listedSiteSeq` 가 다르면 배치 중이다.
+ */
+export const mockFieldUsers = () =>
+  store.map(({ userSeq, userName, phone, codeSeq, codeName, siteSeq, siteName, listedSiteSeq }) => ({
+    userSeq,
+    userName,
+    phone,
+    codeSeq,
+    codeName,
+    siteSeq,
+    siteName,
+    listedSiteSeq,
+  }))
+
 /** 저장소를 초기 상태로 — 🔴 테스트 격리용(`resetCourseStore` 선례) */
 export const resetUserStore = (): void => {
   store = cloneSeeds()

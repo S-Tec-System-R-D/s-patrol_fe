@@ -5,13 +5,13 @@ import { ArrowLeftIcon, ChevronRightIcon, SquarePenIcon, TriangleAlertIcon } fro
 import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
-import { useGroupAdminList } from '@/features/groups/hooks/useGroupAdminList'
 import { useGroupList } from '@/features/groups/hooks/useGroupList'
 import EmergencyContactCard from '@/features/sites/components/EmergencyContactCard'
 import HealthCheckCard from '@/features/sites/components/HealthCheckCard'
 import SiteDeleteDialog from '@/features/sites/components/SiteDeleteDialog'
 import SiteInfoCard from '@/features/sites/components/SiteInfoCard'
 import SiteManagersCard from '@/features/sites/components/SiteManagersCard'
+import { useSiteManagers } from '@/features/sites/hooks/useSiteManagers'
 import SiteForm from '@/features/sites/form/SiteForm'
 import { toUpdateSiteRequest } from '@/features/sites/form/schema'
 import { useSiteDetail } from '@/features/sites/hooks/useSiteDetail'
@@ -64,7 +64,7 @@ const LocationDetailPage = () => {
   const detail = useSiteDetail(siteSeq)
   const list = useGroupList()
   const found = list.data && siteSeq !== null ? findSite(list.data, siteSeq) : null
-  const admins = useGroupAdminList(found?.group.groupSeq ?? null)
+  const managers = useSiteManagers(siteSeq)
   const updateSite = useUpdateSiteInfo()
   const deleteSite = useDeleteSite()
   const [editOpen, setEditOpen] = useState(false)
@@ -202,15 +202,15 @@ const LocationDetailPage = () => {
         </div>
 
         <div className="flex flex-col gap-4 xl:col-span-2">
+          {/* 🔄 057: 출처 = `GetSiteManagerList`(사업장 기준) — 소속 그룹을 몰라도 부른다 */}
           <SiteManagersCard
-            admins={admins.data}
-            // 소속 그룹을 아직 모르면(목록 조회 중) 로딩으로 본다. 목록에 없는 사업장이면 빈 상태
-            isPending={!list.isError && (found ? admins.isPending : !list.data)}
-            isError={admins.isError || list.isError}
-            onRetry={() => void (list.isError ? list.refetch() : admins.refetch())}
+            managers={managers.data}
+            isPending={managers.isPending}
+            isError={managers.isError}
+            onRetry={() => void managers.refetch()}
           />
           <HealthCheckCard detail={site} />
-          <EmergencyContactCard />
+          <EmergencyContactCard siteSeq={site.siteSeq} />
         </div>
       </div>
     </div>

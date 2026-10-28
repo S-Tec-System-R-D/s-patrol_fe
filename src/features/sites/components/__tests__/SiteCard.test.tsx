@@ -26,6 +26,8 @@ const row = (over: Partial<SiteRow> = {}): SiteRow => ({
   site: site(),
   depth: 0,
   groupPath: '서울본부 › 강동지사',
+  hqName: '서울본부',
+  branchName: '강동지사',
   ...over,
 })
 
@@ -43,7 +45,11 @@ describe('SiteCard', () => {
     expect(screen.queryByText('└')).not.toBeInTheDocument()
     unmount()
 
-    render(<>{SiteCard(row({ depth: 1, site: site({ siteName: '그랜드타워 B동', parentSiteSeq: 10 }) }))}</>)
+    render(
+      <>
+        {SiteCard(row({ depth: 1, site: site({ siteName: '그랜드타워 B동', parentSiteSeq: 10 }) }))}
+      </>
+    )
     expect(screen.getByText('└')).toBeInTheDocument()
   })
 

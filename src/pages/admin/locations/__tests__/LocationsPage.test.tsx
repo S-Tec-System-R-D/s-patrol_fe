@@ -78,26 +78,25 @@ describe('LocationsPage — 범위 · 하위 사업장', () => {
     expect(siteNames()).toHaveLength(11)
   })
 
-  it('소속 그룹은 경로(회사 제외) · 주소 없으면 -', async () => {
+  it('🔴 본부 · 지사 열을 나눈다(057) · 주소 없으면 -', async () => {
     renderPage('/admin/locations?group=2')
     const row = (await findInTable('테스트사업장')).closest('tr') as HTMLElement
     const cells = within(row).getAllByRole('cell')
-    expect(cells[1]).toHaveTextContent('테스트사업장(수정)')
-    expect(cells[2]).toHaveTextContent(/^-$/) // 사업장 2 는 주소 null(실측)
-    expect(within(table().getAllByRole('row')[2]).getAllByRole('cell')[1]).toHaveTextContent(
-      '테스트사업장(수정) › 강동지사'
-    )
+    expect(cells[1]).toHaveTextContent(/^테스트사업장\(수정\)$/)
+    expect(cells[2]).toHaveTextContent(/^본부할당 사업장$/)
+    expect(cells[3]).toHaveTextContent(/^-$/) // 사업장 2 는 주소 null(실측)
+    const second = within(table().getAllByRole('row')[2]).getAllByRole('cell')
+    expect(second[2]).toHaveTextContent(/^강동지사$/)
   })
 
-  it('🔴 담당 관리자는 고정 — · 코스·지점 · 운영 상태는 없다', async () => {
+  it('🔴 담당 관리자 열 없음(057) · 코스·지점 · 운영 상태는 없다', async () => {
     renderPage('/admin/locations?group=6')
-    const row = (await findInTable('수정사업장됨')).closest('tr') as HTMLElement
-    expect(within(row).getAllByRole('cell')[3]).toHaveTextContent(/^-$/)
+    await findInTable('수정사업장됨')
     expect(table().getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual([
       '사업장명',
-      '소속 그룹',
+      '본부',
+      '지사',
       '주소',
-      '담당 관리자',
       '', // 꺾쇠 — 상세 페이지 이동(046 #2)
     ])
     expect(screen.queryByRole('combobox', { name: '운영 상태' })).not.toBeInTheDocument()

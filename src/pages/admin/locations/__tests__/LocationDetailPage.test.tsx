@@ -2,11 +2,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { http, HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { addSite } from '@/features/sites/api/addSite'
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
+import { resetEmergencyStore } from '@/mocks/handlers/emergency'
 import { resetGroupStore } from '@/mocks/handlers/groups'
+import { resetUserStore } from '@/mocks/handlers/users'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
 import LocationDetailPage from '../LocationDetailPage'
@@ -16,7 +19,8 @@ import LocationDetailPage from '../LocationDetailPage'
  *
  * 시드: 3 테테테(수정)1(강동지사 · 하위 4 · 헬스체크 사용 30분 · 코스 13 · 지점 15)
  * / 6 테스트 사업장2(지사 8 · 하위 7·8 · 코스 7 · 지점 16 · 근무자 5) / 9 강동지사_추가사업장(전부 0).
- * 지사 8 할당 = 김용우 · test.
+ * 담당 관리자(`spec 057` — 매니저만): 강동지사(G3) = 매니저 6 테스트 · 지사 8 = 매니저 없음(마스터 할당뿐).
+ * 비상연락망 시드: 사업장 3 = 월 테스트(6) · 토 김용우(3). 근무자 MSW: 오준혁(103) = 소속 12 · 사업장 7 에 배치 중.
  */
 
 const UPDATE_PATH = '/api/v1/Site/W/sign/UpdateSite'
@@ -65,6 +69,8 @@ beforeEach(() => {
   clearTokens()
   setAccessToken(makeAccessToken())
   resetGroupStore()
+  resetUserStore()
+  resetEmergencyStore()
 })
 
 afterEach(() => server.events.removeAllListeners())
@@ -89,12 +95,23 @@ describe('LocationDetailPage — 머리 · 기본정보 · 담당 관리자', ()
     expect(screen.queryByText('하위 사업장')).not.toBeInTheDocument()
   })
 
-  it('🔴 담당 관리자 = 소속 지사 그룹의 isInclude · 인원 수 · [관리자 지정] disabled', async () => {
-    renderPage('/admin/locations/6')
+  it('🔴 담당 관리자 = GetSiteManagerList 의 매니저만 · [관리자 지정] 없음 · GetGroupAdminList 호출 없음', async () => {
+    const called: string[] = []
+    server.events.on('request:start', ({ request }) => {
+      called.push(new URL(request.url).pathname.split('/').pop() ?? '')
+    })
+    renderPage('/admin/locations/3')
     const list = await screen.findByRole('list', { name: '담당 관리자' })
-    expect(within(list).getAllByRole('listitem').map((item) => item.textContent)).toEqual(['김용우관리자', 'test관리자'])
-    expect(screen.getByText('2명')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '관리자 지정' })).toBeDisabled()
+    // 마스터(전체 담당)는 응답에 있어도 그리지 않는다
+    expect(within(list).getAllByRole('listitem').map((item) => item.textContent)).toEqual(['테스트매니저'])
+    expect(screen.queryByRole('button', { name: '관리자 지정' })).not.toBeInTheDocument()
+    expect(called).toContain('GetSiteManagerList')
+    expect(called).not.toContain('GetGroupAdminList')
+  })
+
+  it('매니저가 없으면 빈 상태 — 마스터만 할당된 지사', async () => {
+    renderPage('/admin/locations/6')
+    expect(await screen.findByText('지정된 담당 관리자가 없습니다')).toBeInTheDocument()
   })
 
   it('할당이 없으면 빈 상태', async () => {
@@ -106,7 +123,7 @@ describe('LocationDetailPage — 머리 · 기본정보 · 담당 관리자', ()
   it('브레드크럼 → 이 사업장의 지사를 고른 목록(046 #3)', async () => {
     const user = userEvent.setup()
     renderPage('/admin/locations/6')
-    await screen.findByRole('list', { name: '담당 관리자' })
+    await screen.findByText('지정된 담당 관리자가 없습니다')
     await user.click(within(screen.getByRole('navigation', { name: '현재 위치' })).getByRole('link', { name: '사업장' }))
     expect(url()).toBe('/admin/locations?group=8')
   })
@@ -208,7 +225,7 @@ describe('LocationDetailPage — 삭제', () => {
   it('🔴 문구에 하위 · 코스 · 지점 · 근무자 수 → 삭제 후 지사 목록으로', async () => {
     const user = userEvent.setup()
     renderPage('/admin/locations/6')
-    await screen.findByRole('list', { name: '담당 관리자' })
+    await screen.findByText('지정된 담당 관리자가 없습니다')
     await user.click(screen.getByRole('button', { name: '삭제' }))
 
     const alert = await screen.findByRole('alertdialog')
@@ -247,5 +264,106 @@ describe('LocationDetailPage — 없음 · 주소 오류', () => {
     renderPage('/admin/locations/abc')
     expect(screen.getByText('주소가 올바르지 않습니다.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '다시 시도' })).not.toBeInTheDocument()
+  })
+})
+
+describe('LocationDetailPage — 비상연락망 (spec 057)', () => {
+  const EMERGENCY = '/api/v1/Emergency/W/sign'
+  const week = () => within(screen.getByRole('table', { name: '요일별 담당자' }))
+  const dayCell = (label: string) => within(week().getByRole('rowheader', { name: label }).closest('tr') as HTMLElement)
+
+  const recordEmergency = () => {
+    const calls: { name: string; search: string; body?: unknown }[] = []
+    server.events.on('request:start', ({ request }) => {
+      const parsed = new URL(request.url)
+      if (!parsed.pathname.startsWith(EMERGENCY) || request.method === 'GET') return
+      const entry: { name: string; search: string; body?: unknown } = {
+        name: parsed.pathname.split('/').pop() ?? '',
+        search: parsed.search,
+      }
+      calls.push(entry)
+      if (request.method === 'POST') void request.clone().json().then((body) => (entry.body = body))
+    })
+    return calls
+  }
+
+  const openAdd = async (user: ReturnType<typeof userEvent.setup>, label: string) => {
+    await user.click(await screen.findByRole('button', { name: `${label}요일 담당자 추가` }))
+    const dialog = within(await screen.findByRole('dialog', { name: `${label}요일 담당자 추가` }))
+    await dialog.findByRole('list', { name: '담당자 후보' })
+    return dialog
+  }
+
+  it('7요일 · 칩(이름 · 권한 · 연락처) · 담당자 N명(중복 제거) · 예시 안내 · 담당자 풀 없음', async () => {
+    renderPage('/admin/locations/3')
+    await screen.findByRole('table', { name: '요일별 담당자' })
+    expect(week().getAllByRole('rowheader').map((cell) => cell.textContent)).toEqual(['월', '화', '수', '목', '금', '토', '일'])
+    expect(dayCell('월').getByText('테스트')).toBeInTheDocument()
+    expect(dayCell('월').getByText('010-0000-0006')).toBeInTheDocument()
+    expect(dayCell('토').getByText('마스터')).toBeInTheDocument()
+    expect(screen.getByText('담당자 2명')).toBeInTheDocument()
+    expect(screen.queryByText(/예시 화면/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: '담당자 풀' })).not.toBeInTheDocument()
+  })
+
+  it('🔴 추가 모달: 시스템관리자 없음 · 이미 등록 잠금 · 배치 중 뱃지 · 검색', async () => {
+    const user = userEvent.setup()
+    renderPage('/admin/locations/3')
+    const dialog = await openAdd(user, '월')
+    expect(dialog.queryByLabelText('시스템관리자')).not.toBeInTheDocument()
+    expect(dialog.getByLabelText('테스트')).toBeChecked()
+    expect(dialog.getByLabelText('테스트')).toBeDisabled()
+    expect(dialog.getByText('배치 중 · 테스트 사업장2-1')).toBeInTheDocument()
+
+    await user.type(dialog.getByLabelText('담당자 검색'), '오준')
+    const people = within(dialog.getByRole('list', { name: '담당자 후보' })).getAllByRole('checkbox')
+    expect(people).toHaveLength(1)
+  })
+
+  it('🔴 여러 명 추가 = 고른 사람마다 AddEmergency 차례로 · 닫히고 칩이 보인다', async () => {
+    const user = userEvent.setup()
+    const calls = recordEmergency()
+    renderPage('/admin/locations/3')
+    const dialog = await openAdd(user, '화')
+    await user.click(dialog.getByLabelText('김용우'))
+    await user.click(dialog.getByLabelText('이현성'))
+    await user.click(dialog.getByRole('button', { name: '추가 (2)' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(calls.map((call) => [call.name, call.body])).toEqual([
+      ['AddEmergency', { siteSeq: 3, userSeq: 3, day: 'TUE' }],
+      ['AddEmergency', { siteSeq: 3, userSeq: 4, day: 'TUE' }],
+    ])
+    expect(await dayCell('화').findByText('이현성')).toBeInTheDocument()
+    expect(dayCell('화').getByText('김용우')).toBeInTheDocument()
+  })
+
+  it('🔴 첫 실패에서 멈춘다 · 모달 유지', async () => {
+    const user = userEvent.setup()
+    const calls = recordEmergency()
+    server.use(
+      http.post(`${EMERGENCY}/AddEmergency`, () =>
+        HttpResponse.json({ message: '담당자가 존재하지 않습니다.', data: false, code: 400 }, { status: 400 })
+      )
+    )
+    renderPage('/admin/locations/3')
+    const dialog = await openAdd(user, '화')
+    await user.click(dialog.getByLabelText('김용우'))
+    await user.click(dialog.getByLabelText('이현성'))
+    await user.click(dialog.getByRole('button', { name: '추가 (2)' }))
+
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(screen.getByRole('dialog', { name: '화요일 담당자 추가' })).toBeInTheDocument()
+  })
+
+  it('칩 해제 = DeleteEmergency(siteSeq · userSeq · day) · 칩 사라짐', async () => {
+    const user = userEvent.setup()
+    const calls = recordEmergency()
+    renderPage('/admin/locations/3')
+    await user.click(await screen.findByRole('button', { name: '월요일 테스트 해제' }))
+
+    await waitFor(() => expect(dayCell('월').queryByText('테스트')).not.toBeInTheDocument())
+    expect(calls).toEqual([{ name: 'DeleteEmergency', search: '?siteSeq=3&userSeq=6&day=MON' }])
+    expect(screen.getByText('담당자 1명')).toBeInTheDocument()
   })
 })

@@ -6,4 +6,7 @@
  */
 export const siteKeys = {
   detail: (siteSeq: number) => ['site-detail', siteSeq] as const,
+  /** `GetSiteManagerList` — 관리자 계정 · 담당 그룹 변경(056)이 무효화한다 */
+  managers: (siteSeq: number) => ['site-managers', siteSeq] as const,
+  managersAll: ['site-managers'] as const,
 }

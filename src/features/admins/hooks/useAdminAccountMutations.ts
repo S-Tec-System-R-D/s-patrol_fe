@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { groupKeys } from '@/features/groups/queryKeys'
+import { siteKeys } from '@/features/sites/queryKeys'
 import { notify } from '@/lib/notify'
 import { addAdmin } from '../api/addAdmin'
 import { deleteAdmin } from '../api/deleteAdmin'
@@ -23,6 +24,8 @@ export const useInvalidateAdmins = () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.list }),
       queryClient.invalidateQueries({ queryKey: adminKeys.detailAll }),
       queryClient.invalidateQueries({ queryKey: groupKeys.adminsAll }),
+      // 사업장 상세 담당 관리자 카드(`spec 057`)
+      queryClient.invalidateQueries({ queryKey: siteKeys.managersAll }),
     ])
 }
 

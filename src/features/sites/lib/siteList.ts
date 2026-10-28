@@ -44,8 +44,23 @@ export const groupPathText = (root: GroupListNode, groupSeq: number): string => 
 export interface SiteRow {
   site: GroupListSite
   depth: number
-  /** 소속 그룹 경로 표기 */
+  /** 소속 그룹 경로 표기 — 좁은 폭 카드 */
   groupPath: string
+  /** 표의 본부 · 지사 열(`spec 057` 사용자 요청 2026-10-28). 그 단계가 경로에 없으면 `null`(본부 직속 사업장의 지사 등) */
+  hqName: string | null
+  branchName: string | null
+}
+
+type SitePlace = Pick<SiteRow, 'groupPath' | 'hqName' | 'branchName'>
+
+/** 🔴 단계는 `layer` 로 고른다(B-55 — `depth` 는 어긋난다) */
+const placeOf = (root: GroupListNode, groupSeq: number): SitePlace => {
+  const path = pathTo(root, groupSeq)
+  return {
+    groupPath: groupPathText(root, groupSeq),
+    hqName: path.find((group) => group.layer === HQ_LAYER)?.groupName ?? null,
+    branchName: path.find((group) => group.layer === BRANCH_LAYER)?.groupName ?? null,
+  }
 }
 
 const matches = (site: GroupListSite, keyword: string): boolean =>
@@ -56,16 +71,11 @@ const matches = (site: GroupListSite, keyword: string): boolean =>
  * 하위 사업장을 펼친다. 🔴 검색어가 하위에만 맞으면 **모 사업장 행도 남긴다**(맥락 유지) —
  * 모 사업장만 맞으면 맞지 않는 하위는 빠진다.
  */
-const flattenSites = (
-  sites: GroupListSite[],
-  depth: number,
-  keyword: string,
-  groupPath: string
-): SiteRow[] =>
+const flattenSites = (sites: GroupListSite[], depth: number, keyword: string, place: SitePlace): SiteRow[] =>
   sites.flatMap((site) => {
-    const childRows = flattenSites(site.children, depth + 1, keyword, groupPath)
+    const childRows = flattenSites(site.children, depth + 1, keyword, place)
     const keep = keyword === '' || matches(site, keyword) || childRows.length > 0
-    return keep ? [{ site, depth, groupPath }, ...childRows] : []
+    return keep ? [{ site, depth, ...place }, ...childRows] : []
   })
 
 /**
@@ -76,7 +86,7 @@ export const collectSiteRows = (root: GroupListNode, groupSeq: number | null, se
   const scope = (groupSeq === null ? null : findListGroup(root, groupSeq)) ?? root
   const keyword = search.trim().toLowerCase()
   return walkListGroups(scope).flatMap((group) =>
-    flattenSites(group.sites, 0, keyword, groupPathText(root, group.groupSeq))
+    flattenSites(group.sites, 0, keyword, placeOf(root, group.groupSeq))
   )
 }
 

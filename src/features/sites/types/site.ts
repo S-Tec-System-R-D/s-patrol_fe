@@ -88,3 +88,14 @@ export interface UpdateSiteRequest {
   healthCheckEndTime?: string
   exceptionTime?: UpdateExceptionTime[]
 }
+
+/**
+ * `GET Site/W/sign/GetSiteManagerList?siteSeq` 행 (`spec 057`) — 실측 2026-10-27(`api-spec.md` §5-1-C).
+ * 🔴 연락처 · 사번 없음. 없는 사업장 400 "사업장이 존재하지 않습니다."
+ */
+export interface SiteManager {
+  userSeq: number
+  codeSeq: number
+  codeName: string
+  userName: string
+}

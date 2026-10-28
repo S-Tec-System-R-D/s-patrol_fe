@@ -1,6 +1,7 @@
 import { authHandlers } from './auth'
 import { courseHandlers } from './courses'
 import { deploymentHandlers } from './deployments'
+import { emergencyHandlers } from './emergency'
 import { groupHandlers } from './groups'
 import { historyHandlers } from './history'
 import { noticeHandlers } from './notices'
@@ -28,5 +29,6 @@ export const handlers = [
   ...noticeHandlers,
   ...userHandlers,
   ...deploymentHandlers,
+  ...emergencyHandlers,
   ...groupHandlers,
 ]

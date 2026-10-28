@@ -38,6 +38,7 @@ import type { UserDetail } from '@/features/workers/types/user'
  * - 사업장 삭제: 🔴 하위 사업장 연쇄(B-54)
  * - 헬스체크 필수값 누락: 🔴 **(D) 문자열 body**
  * - 본사 관리자 6종(`spec 056`): 시스템관리자 · Master 전체 담당 · 노드 `admins` 상속 · 시스템관리자 상세 400 · 중복 사번 400
+ * - 사업장 담당 관리자(`spec 057`): 상속 포함 · 없는 사업장 400. 비상연락망은 `emergency.ts`(이 저장소를 읽는다)
  */
 
 const BASE = '/api/v1/Group/W/sign'
@@ -466,6 +467,31 @@ const replaceAdminGroups = (userSeq: number, groupSeqs: number[]) => {
   groupSeqs.forEach((groupSeq) => assignments.set(groupSeq, [...(assignments.get(groupSeq) ?? []), userSeq]))
 }
 
+/** 그룹과 그 조상(루트까지) */
+const selfAndAncestors = (groupSeq: number): number[] => {
+  const group = groups.find((candidate) => candidate.groupSeq === groupSeq)
+  if (!group) return []
+  return [groupSeq, ...(group.parentGroupSeq === null ? [] : selfAndAncestors(group.parentGroupSeq))]
+}
+
+/**
+ * 비상연락망 핸들러(`emergency.ts`)가 읽는 저장소 — 🔴 **읽기 전용 스냅숏**(한 출처 · `spec 057` T1018).
+ * 순환 import 를 피하려고 비상연락망 상태는 그쪽에 두고, 그룹 · 사업장 · 관리자 · 할당은 여기서만 고친다.
+ */
+export const mockGroupSnapshot = () => ({
+  groups: groups.map((group) => ({ ...group })),
+  sites: sites.map(({ siteSeq, siteName, groupSeq, parentSiteSeq }) => ({ siteSeq, siteName, groupSeq, parentSiteSeq })),
+  admins: admins.map((admin) => ({
+    userSeq: admin.userSeq,
+    userName: admin.userName,
+    phone: admin.phone,
+    codeSeq: admin.codeSeq,
+    codeName: admin.codeName,
+    allGroupYn: isAllGroup(admin),
+    groupSeqs: assignedGroupSeqs(admin.userSeq),
+  })),
+})
+
 const findAdminParam = (request: Request) => {
   const param = new URL(request.url).searchParams.get('userSeq')
   return param === null ? undefined : admins.find((admin) => admin.userSeq === Number(param)) ?? null
@@ -685,6 +711,19 @@ export const groupHandlers = [
     return ok(true)
   }),
   http.get(`${ADMIN_BASE}/GetAdminList`, () => ok(toAdminNode(findRoot(), 0, []))),
+
+  // 🔴 상속 포함 — 전체 담당 + 사업장 그룹과 조상에 할당된 매니저(실측 2026-10-27) · `spec 057` T1018
+  http.get(`${SITE_BASE}/GetSiteManagerList`, ({ request }) => {
+    const param = new URL(request.url).searchParams.get('siteSeq')
+    if (param === null) return HttpResponse.json({ message: BAD_REQUEST, data: null, code: 400 }, { status: 400 })
+    const site = sites.find((candidate) => candidate.siteSeq === Number(param))
+    if (!site) return HttpResponse.json({ message: SITE_NOT_FOUND, data: null, code: 400 }, { status: 400 })
+    const covered = selfAndAncestors(site.groupSeq)
+    const managers = admins.filter(
+      (admin) => isAllGroup(admin) || assignedGroupSeqs(admin.userSeq).some((seq) => covered.includes(seq))
+    )
+    return ok(managers.map(({ userSeq, codeSeq, codeName, userName }) => ({ userSeq, codeSeq, codeName, userName })))
+  }),
 
   // 🔴 시스템관리자도 400(실측) · 파라미터 생략은 "잘못된 요청입니다."
   http.get(`${ADMIN_BASE}/GetAdminDetail`, ({ request }) => {
