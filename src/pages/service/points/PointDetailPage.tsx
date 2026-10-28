@@ -145,6 +145,7 @@ const PointDetailPage = () => {
                   icon={Trash2Icon}
                   variant="destructive"
                   title="지점을 삭제하시겠습니까?"
+                  actionLabel="삭제"
                   onAction={() => removal.mutate(point.pointSeq)}
                 >
                   <AppButton

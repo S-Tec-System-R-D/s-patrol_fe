@@ -226,6 +226,7 @@ const UserDetailPage = () => {
               icon={Trash2Icon}
               variant="destructive"
               title="근무자를 삭제하시겠습니까?"
+              actionLabel="삭제"
               onAction={() => deleteMutation.mutate(user.userSeq)}
             >
               <AppButton

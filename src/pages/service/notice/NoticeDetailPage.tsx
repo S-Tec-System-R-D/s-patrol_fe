@@ -189,6 +189,7 @@ const NoticeDetailPage = () => {
               variant="destructive"
               title="공지를 삭제하시겠습니까?"
               description="삭제된 공지는 복구할 수 없습니다."
+              actionLabel="삭제"
               onAction={() => deleteMutation.mutate(notice.noticeSeq)}
             >
               <AppButton

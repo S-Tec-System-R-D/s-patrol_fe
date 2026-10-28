@@ -64,7 +64,7 @@ test('S3 공지 작성 → 상세 → 삭제', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible()
 
   await page.getByRole('button', { name: '삭제', exact: true }).click()
-  await page.getByRole('alertdialog').getByRole('button', { name: '확인', exact: true }).click()
+  await page.getByRole('alertdialog').getByRole('button', { name: '삭제', exact: true }).click()
   await expect(page).toHaveURL(/\/notice$/)
   await expect(page.getByRole('cell', { name: title })).toHaveCount(0)
 })

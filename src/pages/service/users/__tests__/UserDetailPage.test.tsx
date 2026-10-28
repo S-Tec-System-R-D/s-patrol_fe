@@ -141,7 +141,7 @@ describe('UserDetailPage — 정상', () => {
 
     await user.click(await screen.findByRole('button', { name: '삭제' }))
     const dialog = await screen.findByRole('alertdialog')
-    await user.click(within(dialog).getByRole('button', { name: /삭제|확인/ }))
+    await user.click(within(dialog).getByRole('button', { name: '삭제' }))
 
     expect(await screen.findByText('LIST_ROUTE')).toBeInTheDocument()
     await expect(fetchUserDetail(101)).rejects.toBeTruthy()
@@ -158,7 +158,7 @@ describe('UserDetailPage — 정상', () => {
 
     await user.click(screen.getByRole('button', { name: '삭제' }))
     const dialog = await screen.findByRole('alertdialog')
-    await user.click(within(dialog).getByRole('button', { name: /삭제|확인/ }))
+    await user.click(within(dialog).getByRole('button', { name: '삭제' }))
 
     expect(await screen.findByText(/불러오지 못했습니다/)).toBeInTheDocument()
     expect(screen.queryByText('LIST_ROUTE')).not.toBeInTheDocument()

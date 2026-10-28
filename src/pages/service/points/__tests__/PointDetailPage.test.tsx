@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -42,10 +42,10 @@ const renderAt = (path: string) => {
   )
 }
 
-/** 삭제 버튼 → 확인 모달 → 확인 */
+/** 삭제 버튼 → 확인 모달 → 삭제(060 — 확인 버튼은 액션 이름 그대로) */
 const confirmDelete = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(await screen.findByRole('button', { name: '삭제' }))
-  await user.click(await screen.findByRole('button', { name: '확인' }))
+  await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: '삭제' }))
 }
 
 beforeEach(() => {
