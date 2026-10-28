@@ -41,4 +41,4 @@
 
 > 다음 spec의 `§0 Carry-over` 입력원. 새 세션은 이 블록만 읽으면 됨.
 
-- [ ] OQ-049-A mock 미완료 행의 인증 방식(`authMethodName` 이 실측과 달리 채워져 있음) → 미정(037 mock 정리)
+- [x] OQ-049-A mock 미완료 행의 인증 방식(`authMethodName` 이 실측과 달리 채워져 있음) → ✅ **058 해소**(2026-10-28 — 미완료 행 `authMethod: null` · `authMethodName: ''`)

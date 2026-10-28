@@ -530,7 +530,7 @@ HTTP 400 · Content-Type: application/json; charset=utf-8
 | 엔드포인트 | 성공 | 특이사항 |
 |---|---|---|
 | `POST Point/W/sign/AddPoint` | 200 / `data: true` | 🔴 `qrCode` 를 **서버가 자동 생성**: `STSP1:{siteSeq}:{pointSeq}:{unix}:{서명}`. `gpsLat`/`gpsLng` 를 보내지 않으면 `null` 로 남는다. 생성된 `pointSeq` 는 응답에 없다 |
-| `PATCH Point/W/sign/UpdatePoint` | 200 / `data: true` | 🔴 **진짜 부분 갱신** — 생략한 필드는 유지된다. 🔴🔴 **`nfcTagId` 는 `authMethod` 가 함께 올 때만 처리된다**(재측정 2026-10-15) — 없으면 **무시하면서 200**. 그래서 TAG ID 를 바꾸려면 `authMethod` 를 반드시 동봉한다. ⚠️ 단 `authMethod: 10`(NFC)을 **TAG ID 없이** 보내면 **400** `"NFC 값을 입력해주세요."` — 수단과 태그는 **함께** 보낸다. `authMethod: 9`(QR)는 태그 없이 200. 🔴 **값을 비울 수 없다**(B-15): `null`·`''` 은 무시. `memo` 는 `' '` 로만 지워지고 `nfcTagId`·좌표는 지울 방법이 없다(`authMethod` 를 동봉해도 그렇다). 인증수단을 바꿔도 `qrCode`·`nfcTagId` 는 그대로 남는다 |
+| `PATCH Point/W/sign/UpdatePoint` | 200 / `data: true` | 🔴 **진짜 부분 갱신** — 생략한 필드는 유지된다. 🔴🔴 **`nfcTagId` 는 `authMethod` 가 함께 올 때만 처리된다**(재측정 2026-10-15) — 없으면 **무시하면서 200**. 그래서 TAG ID 를 바꾸려면 `authMethod` 를 반드시 동봉한다. ⚠️ 단 `authMethod: 10`(NFC)을 **TAG ID 없이** 보내면 **400** `"NFC 값을 입력해주세요."` — 수단과 태그는 **함께** 보낸다. `authMethod: 9`(QR)는 태그 없이 200. ✅ **값을 비울 수 있다**(B-15 해소 — 재측정 2026-10-28): `memo` 는 `null`·`''` 로 지워지고, `nfcTagId` 는 `authMethod` 동봉 시 `null`·`''` 로 지워진다(좌표 미재측정). ~~`null`·`''` 은 무시~~(2026-10-08). 인증수단만 바꾸면(`nfcTagId` 미전송) `qrCode`·`nfcTagId` 는 그대로 남는다 |
 | `DELETE Point/W/sign/DeletePoint` | 200 / `data: true` | 삭제 후 해당 `DetailPoint` 는 400 + 래퍼(`data: null`). ⚠️ **`usedCount > 0` 지점의 거부 여부는 미실측** — 확인하려면 실 지점을 지울 위험이 있어 보류(OQ-022-B) |
 
 **코스 3종 (실측 2026-10-10, `spec 023` WF-1-0)**
@@ -538,7 +538,7 @@ HTTP 400 · Content-Type: application/json; charset=utf-8
 | 엔드포인트 | 성공 | 특이사항 |
 |---|---|---|
 | `POST Course/W/sign/AddCourse` | 200 / `data: true` | 🔴 **`points` 가 무시된다.** 지점을 실어 보내도 `pointCount: 0` 으로 생성된다 — **200 인데 절반만 됐다**(B-27) |
-| `PUT Course/W/sign/UpdateCourse` | 200 / `data: true` | 🔴 **`points` 는 전체 교체다**(B-25 확정) — 생략·빈 배열·일부 전송 **모두 나머지를 삭제**한다. ⚠️ `memo: null` 은 **반영된다**(비워짐) — 지점 `UpdatePoint` 와 **반대**(B-15) |
+| `PUT Course/W/sign/UpdateCourse` | 200 / `data: true` | 🔴 **`points` 는 전체 교체다**(B-25 확정) — 생략·빈 배열·일부 전송 **모두 나머지를 삭제**한다. ⚠️ `memo: null` 은 **반영된다**(비워짐) — 지점 `UpdatePoint` 도 B-15 해소(2026-10-28) 뒤로 같다 |
 | `DELETE Course/W/sign/DeleteCourse` | 200 / `data: true` | 파라미터는 **`courseId`**(`courseSeq` 로 보내면 400 ProblemDetails). 편성 지점이 있어도 삭제된다 |
 
 **지점 인증수단 전환 · QR 재발행 (실측 2026-10-13, `spec 029` WF-1-0)**
@@ -550,7 +550,7 @@ HTTP 400 · Content-Type: application/json; charset=utf-8
 |---|---|
 | `authMethod: 10` + `nfcTagId` (QR→NFC) | ✅ 200. `authMethod`·`authMethodName` 이 실제로 바뀐다 |
 | `authMethod: 9` (NFC→QR, `nfcTagId` 미전송) | ✅ 200. 🔴 **`nfcTagId` 가 그대로 남는다**(B-15) |
-| `nfcTagId: null` / `''` 로 비우기 | 🔴 **둘 다 무시 + 200.** QR 지점에 **쓰이지 않는 TAG ID 가 영구히 남는다**(B-15 재확인) |
+| `nfcTagId: null` / `''` 로 비우기 | ✅ **재측정 2026-10-28: 둘 다 지워진다**(`authMethod: 9` 동봉, 지점 87). ~~둘 다 무시 + 200~~(B-15 해소) |
 | QR→NFC 전환 후 `qrCode` | 🔴 **그대로 남는다.** 지금 쓰는 수단이 아닌 자격증명이 응답에 계속 온다 |
 | ⚠️ **`reissueQrYn: true`** | **결과를 바꾸지 않는다**(재측정 2026-10-15). 이미 코드가 있으면 그대로이고, **QR 로 전환할 때 코드가 없으면 `false` 로 보내도 서버가 발급한다** — 즉 **서버가 이 플래그를 보지 않는다**(→ **Q6**) |
 | `authMethod: 10` 인데 `nfcTagId` 없음 | ✅ **400 + 래퍼** `"NFC 값을 입력해주세요."` — 🔴 **NFC 전환에는 TAG ID 가 필수다**(스위치만으로는 전환할 수 없다) |
@@ -802,7 +802,7 @@ HTTP 400 · Content-Type: application/json; charset=utf-8
 | Master 토큰 `UpdateGroup` · 할당 안 된 그룹 | **403 + 래퍼 `"해당 관리그룹을 수정할 권한이 없습니다."`** · 할당된 그룹은 200 |
 | Master · Manager `AdminSiteSelect` | **할당된 그룹만** 루트로 준다(G13 하나). 🔴 할당 0개인 Master 는 **400 래퍼 `"잘못된 요청입니다."`** |
 | Master · Manager `GetGroupAdminList` · `GetGroupList` · `UserDetail` · `GetSiteDetail` | 200 — 할당 밖 그룹(G3)도 `GetGroupAdminList` 가 준다 |
-| 루트 그룹(G1) `UpdateGroup` | **미실측** — 실데이터라 피했다(OQ-045-A) |
+| 루트 그룹(G1) `UpdateGroup` | **미실측** — 실데이터라 피했다. ✅ **OQ-045-A 종결(사용자 결정 2026-10-28)**: 서버가 예비로 둔 구조이고 **프론트는 회사(루트)를 바꾸지 않는다**(이름 · 삭제 · 할당 변경 모두 없음, 표시만) |
 
 **코스 편성·총 소요시간 (실측 2026-10-12, `spec 023` Phase 4)**
 
@@ -1678,7 +1678,7 @@ interface NoticeAttach {
 | B-12 | `DeleteCourse` 만 파라미터명 `courseId`(나머지는 `courseSeq`) / `UserList` 는 `siteId`, `UserDetail` 은 `userId` | ⚪ **개선 방향**: `~Seq` 로 통일. `spec 023` 의 `UpdateCourse` 요청(B-24~B-26)과 **함께 전달**한다 | ⚪ |
 | B-13 | 🔴 **`authMethod=10`(NFC) 인데 `nfcTagId: null` 인 지점이 실제로 존재**(실측 `pointSeq=30`). 서버가 NFC 지점의 TAG ID 를 강제하지 않는다. 프론트 폼은 필수로 막고 있어 **서버가 더 느슨하다** — 기존 데이터에 빈 TAG 가 있을 수 있다 | 🟡 |
 | B-14 | **`qrCode` 에 QR 페이로드가 아닌 임의 문자열이 들어있다**(실측 `pointSeq=30`: `"수정하면서 넣은 지점"`). 형식(`STSP1:...`)이 강제되지 않고 **NFC 지점에도 값이 들어있다** | 🟡 |
-| B-15 | 🔴 **`UpdatePoint` 로 값을 비울 수 없다.** `null` 과 `''` 를 "변경하지 않음" 으로 해석해 무시한다(실측 2026-10-08). → ① 사용자가 **설명을 비워도 지워지지 않는다** ② NFC → QR 로 바꿔도 `nfcTagId` 가 남아 **인증수단과 어긋난 데이터**가 된다. `memo` 는 공백 1칸(`' '`)을 보내면 지워지지만 `nfcTagId` 는 `null`·`''`·`' '` **전부 무시**되어 지울 방법이 없었다. **"비우기" 를 표현할 수 있는 규약이 필요하다.** ✅ **재측정 2026-10-15 — 범위와 조건을 특정했다**: ① 좌표(`gpsLat`/`gpsLng`)도 `null` 로 못 비운다(같은 성질) ② **`UpdateCourse` 의 `memo` 는 `null`·`''` 를 정상 처리한다** — 엔드포인트별로 다르므로 지점 쪽만 고치면 된다 ③ `authMethod` 를 동봉해도 비우기는 안 된다(동봉은 `nfcTagId` **값 변경**의 조건일 뿐이다) ④ 그래서 **QR 로 전환할 때 서버가 TAG ID 를 해제**하는 쪽을 요청한다 — 프론트에 우회 수단이 없다 | 🔴 |
+| B-15 | ✅ **해소(재측정 2026-10-28, 지점 87)** — `memo` 는 `null`·`''` 로, `nfcTagId` 는 `authMethod` 동봉 시 `null`·`''` 로 지워진다. 좌표는 미재측정(웹에 입력란 없음). 아래는 기록. 🔴 **`UpdatePoint` 로 값을 비울 수 없다.** `null` 과 `''` 를 "변경하지 않음" 으로 해석해 무시한다(실측 2026-10-08). → ① 사용자가 **설명을 비워도 지워지지 않는다** ② NFC → QR 로 바꿔도 `nfcTagId` 가 남아 **인증수단과 어긋난 데이터**가 된다. `memo` 는 공백 1칸(`' '`)을 보내면 지워지지만 `nfcTagId` 는 `null`·`''`·`' '` **전부 무시**되어 지울 방법이 없었다. **"비우기" 를 표현할 수 있는 규약이 필요하다.** ✅ **재측정 2026-10-15 — 범위와 조건을 특정했다**: ① 좌표(`gpsLat`/`gpsLng`)도 `null` 로 못 비운다(같은 성질) ② **`UpdateCourse` 의 `memo` 는 `null`·`''` 를 정상 처리한다** — 엔드포인트별로 다르므로 지점 쪽만 고치면 된다 ③ `authMethod` 를 동봉해도 비우기는 안 된다(동봉은 `nfcTagId` **값 변경**의 조건일 뿐이다) ④ 그래서 **QR 로 전환할 때 서버가 TAG ID 를 해제**하는 쪽을 요청한다 — 프론트에 우회 수단이 없다 | 🔴 |
 | B-16 | **유효성 오류가 400 이 아니라 500 으로 샌다**(실측 2026-10-08). `AddPoint` 에서 `name` 누락은 400 ProblemDetails 로 오지만, **`siteSeq` 누락은 500**(ProblemDetails + `detail`), **`authMethod: 99`(enum 밖)는 500 + 빈 body** 다. 필수값·enum 검증이 일부 누락돼 있다 | 🟡 |
 | B-17 | **변경계 실패 문구가 전부 `"잘못된 요청입니다."`** 하나다(실측 2026-10-08, 없는 `pointSeq` 로 `UpdatePoint`·`DeletePoint`). 호출부가 사유를 구분할 수 없고 사용자에게 보여줄 문구로도 불충분하다 | 🟡 |
 | B-18 | 🔴 **CORS 설정이 없다** — `Access-Control-Allow-Origin` 을 **전혀 주지 않는다**(실측 2026-10-08). preflight(OPTIONS)에는 204 를 주지만 CORS 헤더가 없어 **브라우저가 응답을 버린다.** `curl` 은 CORS 를 적용하지 않아 API 계약 실측에서는 드러나지 않았고, 브라우저로 앱을 돌리는 순간 전부 실패했다. → 프론트는 **vite dev 프록시**로 우회했다(`vite.config.ts` · `.env.real`). 운영은 same-origin(도메인 + 백엔드 prefix)이라 문제가 없으므로 **로컬 개발 환경을 위한 설정 요청**이다 | 🟡 |
