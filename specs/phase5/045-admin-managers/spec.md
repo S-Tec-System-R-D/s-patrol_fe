@@ -4,6 +4,8 @@
 > 관련 화면: 관리자 목록(`/admin/admins`) · 관리자 상세 모달 · 담당 그룹 추가 모달
 > Phase: `roadmap.md` Phase 5 §9-0 — 3분할 중 마지막(043 → 044 → **045**). 본 spec 종료 = Phase 5 종료
 > 목업: `docs/ui-mock/본사관리자/S-Patrol-Admin v2 (standalone).html` 의 `ManagersPage` · `ManagerModal` · `ManagerFormModal` · `PasswordModal` · `AssignSiteModal` — **레이아웃 · 배치 · 워크플로우만 참고**, 시각은 현장 리디자인 `App*` 컴포넌트로(043 · 044 와 같다)
+>
+> 🔄 **`spec 056` 에서 뒤집힘**(관리자 API 6종 — 2026-10-27 · 28): 목록 출처(그룹마다 `GetGroupAdminList` → `GetAdminList`) · 시스템관리자 행 · 잠금 안내(→ 화면에서 제외) · 범위(본부/지사 = 할당 매니저만, 마스터 없음) · 열(연락처 추가) · 상세 680px · 사업장 수(→ 520px · 없음) · 계정 관리 막음(→ 동작 · 계층 권한) · 마스터 할당 · 자기 해제 확인(→ 마스터는 전체 담당, 조작 없음) · 할당 `UpdateGroup.userSeq`(→ `UpdateAdmin.groupSeq`). 이하 본문은 045 당시 기록이다.
 
 ---
 

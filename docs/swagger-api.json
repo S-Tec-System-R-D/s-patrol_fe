@@ -5,6 +5,164 @@
     "version": "v1"
   },
   "paths": {
+    "/api/v1/AdminUser/W/sign/AddAdmin": {
+      "post": {
+        "tags": ["AdminUser"],
+        "summary": "관리자 계정 생성",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_AddAdminDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_AddAdminDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_AddAdminDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_AddAdminDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/AdminUser/W/sign/GetAdminList": {
+      "get": {
+        "tags": ["AdminUser"],
+        "summary": "관리자 계정 목록 조회 (그룹 트리)",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/AdminUser/W/sign/GetAdminDetail": {
+      "get": {
+        "tags": ["AdminUser"],
+        "summary": "관리자 계정 상세 조회",
+        "parameters": [
+          {
+            "name": "userSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/AdminUser/W/sign/UpdateAdmin": {
+      "put": {
+        "tags": ["AdminUser"],
+        "summary": "관리자 계정 수정",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_UpdateAdminDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_UpdateAdminDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_UpdateAdminDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_UpdateAdminDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/AdminUser/W/sign/ResetAdminPassword": {
+      "put": {
+        "tags": ["AdminUser"],
+        "summary": "관리자 계정 비밀번호 변경",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_ResetAdminPasswordDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_ResetAdminPasswordDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_ResetAdminPasswordDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_ResetAdminPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/AdminUser/W/sign/DeleteAdmin": {
+      "delete": {
+        "tags": ["AdminUser"],
+        "summary": "관리자 계정 삭제",
+        "parameters": [
+          {
+            "name": "userSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/Assignment/W/sign/GetAssignmentList": {
       "get": {
         "tags": ["Assignment"],
@@ -564,6 +722,113 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Emergency/W/sign/GetEmergency": {
+      "get": {
+        "tags": ["Emergency"],
+        "summary": "비상연락망 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Emergency/W/sign/GetEmergencyUserTree": {
+      "get": {
+        "tags": ["Emergency"],
+        "summary": "비상연락망 담당자 등록용 사용자 조직도 조회",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Emergency/W/sign/AddEmergency": {
+      "post": {
+        "tags": ["Emergency"],
+        "summary": "비상연락망 담당자 등록",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Emergency_Request_AddEmergencyDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Emergency_Request_AddEmergencyDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Emergency_Request_AddEmergencyDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolWebService_Comm_Dto_v1_Emergency_Request_AddEmergencyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Emergency/W/sign/DeleteEmergency": {
+      "delete": {
+        "tags": ["Emergency"],
+        "summary": "비상연락망 담당자 삭제 (요일 단위)",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "userSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "day",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -1634,6 +1899,27 @@
         }
       }
     },
+    "/api/v1/Site/W/sign/GetSiteManagerList": {
+      "get": {
+        "tags": ["Site"],
+        "summary": "사업장 담당관리자 리스트 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "tags": ["StspPatrolWebService"],
@@ -2107,6 +2393,87 @@
         },
         "additionalProperties": false
       },
+      "StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_AddAdminDto": {
+        "required": ["loginId", "loginPw", "name", "phone"],
+        "type": "object",
+        "properties": {
+          "codeSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "loginId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "loginPw": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "phone": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "groupSeq": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_ResetAdminPasswordDto": {
+        "required": ["loginPw", "userSeq"],
+        "type": "object",
+        "properties": {
+          "userSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "loginPw": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolWebService_Comm_Dto_v1_Admin_User_Request_UpdateAdminDto": {
+        "required": ["userSeq"],
+        "type": "object",
+        "properties": {
+          "userSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "loginPw": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "groupSeq": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "StspPatrolWebService_Comm_Dto_v1_Assignment_Request_AssignmentDto": {
         "type": "object",
         "properties": {
@@ -2335,6 +2702,25 @@
         },
         "additionalProperties": false
       },
+      "StspPatrolWebService_Comm_Dto_v1_Emergency_Request_AddEmergencyDto": {
+        "required": ["day", "siteSeq", "userSeq"],
+        "type": "object",
+        "properties": {
+          "siteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "userSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "day": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "StspPatrolWebService_Comm_Dto_v1_Login_Request_LoginDto": {
         "required": ["loginId", "loginPw"],
         "type": "object",
@@ -2441,10 +2827,16 @@
   ],
   "tags": [
     {
+      "name": "AdminUser"
+    },
+    {
       "name": "Assignment"
     },
     {
       "name": "Course"
+    },
+    {
+      "name": "Emergency"
     },
     {
       "name": "Group"

@@ -784,7 +784,7 @@ HTTP 400 · Content-Type: application/json; charset=utf-8
 
 > 본사 계정(`000000`)으로 `테스트그룹`(G6) 아래 임시 그룹 `WF0-045`(G13) · 임시 사업장(seq 33)을 만들고, 그 안에서 **우리가 만든 계정만**(사번 `99045xx`, userSeq 179258~179260) 만들고 지웠다.
 > 끝에 `GetGroupList` 트리 · `GetGroupAdminList` 행 · 기존 할당(G2·G4·G6)이 시작 전과 같음을 확인했다.
-> 🔴 **관리자 생성 API 는 없다**(사용자 전달 2026-10-23 — `AddUser` 는 현장 관리자·근무자용이고 관리자 생성 API 는 요청 중, B-59). 아래 `AddUser` 결과는 기록용이다.
+> ✅ **2026-10-27 관리자 전용 API 가 생겼다 → §5-1-C**(아래는 그 전 기록). 🔴 **관리자 생성 API 는 없다**(사용자 전달 2026-10-23 — `AddUser` 는 현장 관리자·근무자용이고 관리자 생성 API 는 요청 중, B-59). 아래 `AddUser` 결과는 기록용이다.
 
 | 관측 | 결과 |
 |---|---|
@@ -1042,6 +1042,147 @@ C단은 **사유 없이** 먼저 만든다(사용자 결정 2026-10-12).
 
 
 **재현**: `docs/api-spec.md` §7 과 같은 방식. 테스트 지점을 `siteSeq=7`(현장 계정 소속, 지점 0건)에 만들어 생성 → 수정 → 삭제 한 사이클로 확인하고 **마지막에 삭제해 뒷정리**했다.
+
+---
+
+### 5-1-C. 본사 신규 API — 관리자 · 비상연락망 · 담당 관리자 (실측 2026-10-27)
+
+> 2026-10-26 요청분(B-57 · B-58 · B-59 · B-61)이 swagger 에 반영됐다 — **11개**(`AdminUser` 6 · `Emergency` 4 · `Site/GetSiteManagerList` 1). 전부 `/W/sign/` 경로 · 본사 계정(`000000`)으로 실측.
+> 쓰기는 **우리가 만든 임시 매니저 2개**(사번 `990902` · `990903`, userSeq 179262 · 179263)와 그 계정의 비상연락망(사업장 11)만 만들고 지웠다. 끝에 관리자 목록 · `GetEmergency` · 로그인 불가로 원상복구를 확인했다.
+
+#### 요약
+
+| # | API | 결과 |
+|---|---|---|
+| 1 | `GET AdminUser/W/sign/GetAdminList` | 200 — 그룹 트리 **단일 객체**(배열 아님) · 노드마다 `admins[]` |
+| 2 | `GET AdminUser/W/sign/GetAdminDetail?userSeq` | 200 — Master · 매니저. 🔴 **시스템관리자는 400** `"관리자 계정이 존재하지 않습니다."` |
+| 3 | `POST AdminUser/W/sign/AddAdmin` | 200 `data: true` — 🔴 **새 `userSeq` 를 주지 않는다** |
+| 4 | `PUT AdminUser/W/sign/UpdateAdmin` | 200 `data: true` — 보낸 필드만 바뀐다 |
+| 5 | `PUT AdminUser/W/sign/ResetAdminPassword` | 200 `data: true` — 즉시 반영 |
+| 6 | `DELETE AdminUser/W/sign/DeleteAdmin?userSeq` | 200 `data: true` — 상세 400 · 로그인 불가 |
+| 7 | `GET Emergency/W/sign/GetEmergency?siteSeq` | 200 — 항상 7요일 |
+| 8 | `GET Emergency/W/sign/GetEmergencyUserTree` | 200 — 담당자 후보 트리(파라미터 없음 · 사업장 · 요일 무관) |
+| 9 | `POST Emergency/W/sign/AddEmergency` | 200 `data: true` — 요일 하나씩 |
+| 10 | `DELETE Emergency/W/sign/DeleteEmergency?siteSeq&userSeq&day` | 200 `data: true` |
+| 11 | `GET Site/W/sign/GetSiteManagerList?siteSeq` | 200 — 상속 포함 담당 관리자 |
+
+에러는 기존 규약 그대로다 — 비즈니스 오류는 **HTTP 400 + (A) 래퍼**(`data` 는 조회계 `null` · 변경계 `false`), 필수값 누락은 (B) ProblemDetails, 토큰 없음 401 빈 body.
+
+#### 사용자 결정 (2026-10-27)
+
+- **담당 관리자는 조회만** — 매니저는 본부 · 지사에 속하고 그 아래 사업장 전부를 관리한다. 사업장 단위 추가 · 수정 · 삭제는 **의도적으로 없다**(B-58 의 "수정" 요청 철회).
+- **사번(`loginId`)은 표시하지 않는다** — 목록에 없고 상세에만 있다. 목록에 추가 요청하지 않는다.
+- **시스템관리자(`codeSeq 2`)는 화면에서 제외** — 관리자 목록 · 상세 · 비상연락망 담당자 후보 모두. 상세 400 도 이걸로 화면에 드러나지 않는다.
+- `assignmentType` 은 **무시**(백엔드: 신경 쓰지 않아도 됨).
+
+#### 관리자 (`AdminUser`)
+
+| 관측 | 결과 |
+|---|---|
+| `GetAdminList` 노드 `admins` | 🔴 **상속 포함** — `allGroupYn: true`(시스템관리자 · Master) + 상위 그룹 할당자 + 그 노드 할당자가 **노드마다 반복**된다. 예: 강동지사(G3) 6명 중 직접 할당은 `userSeq 6` 하나. 관리자 목록은 `userSeq` 로 중복 제거해 만든다 |
+| `admins[].groups` | 그 관리자의 **직접 할당 그룹**(`allGroupYn: true` 면 `[]`) |
+| 사번 | 목록에 **없다**(상세 `loginId` 에만) — 표시 안 함(결정) |
+| `GetAdminDetail` `groupSeq` | Master `null` · 매니저 `number[]`(할당 해제 시 `[]`) |
+| `GetAdminDetail` 대상 | 시스템관리자(1) · 현장관리자(7) · 없는 seq → 400 동일 문구. 파라미터 생략 400 `"잘못된 요청입니다."` |
+| `AddAdmin` 중복 사번 | 400 `"이미 사용중인 아이디입니다."` |
+| `AddAdmin` 빈 필수값 | (B) ProblemDetails — `errors.loginId · loginPw · name · phone` |
+| `AddAdmin` 성공 후 | `GetAdminList` 에 나온다 · 로그인 `code 103`(매니저). `userSeq` 는 목록 재조회로만 안다 |
+| `UpdateAdmin` 부분 수정 | 생략(`null`) 필드는 **유지** — `{userSeq, name}` 만 보내면 이름만 바뀐다 |
+| `UpdateAdmin` `groupSeq: []` | 할당 **전부 해제**. 🔴 매니저인데도 서버가 막지 않는다 → "매니저 담당 그룹 필수" 는 화면 검사 |
+| `UpdateAdmin` · `ResetAdminPassword` 대상 아님 | 없는 seq · 현장관리자(7) → 400 `"관리자 계정이 존재하지 않습니다."` |
+| `ResetAdminPassword` | 옛 비밀번호 로그인 400 · 새 비밀번호 200 |
+| `DeleteAdmin` 재삭제 / 없는 seq | 400 `"관리자 계정이 존재하지 않습니다."` · 파라미터 생략 400 `"잘못된 요청입니다."` |
+| 할당 없는 매니저 | `GetEmergencyUserTree` 에 `nodeType: "UNASSIGNED"` 노드로 나온다(B-61 의 "빠질 수 있다" 우려 — 비상연락망 트리에서는 해소) |
+
+#### 비상연락망 (`Emergency`)
+
+| 관측 | 결과 |
+|---|---|
+| `GetEmergency` | 항상 `MON`~`SUN` 7개. 🔴 **없는 `siteSeq` 도 200 + 빈 7요일**(검증 없음) |
+| 요일별 `users[]` | `{userSeq, userName, phone, codeSeq, codeName}` |
+| `AddEmergency` 같은 (사업장 · 사람 · 요일) 재등록 | **200 · 중복 없음**(멱등) |
+| `day` 대소문자 | `mon` 도 받는다(등록 · 삭제 모두). 응답은 대문자 |
+| 잘못된 `day` | 400 `"요일이 올바르지 않습니다. (MON, TUE, WED, THU, FRI, SAT, SUN)"` |
+| 없는 사업장 / 사람 | 400 `"사업장이 존재하지 않습니다."` / `"담당자가 존재하지 않습니다."` |
+| `DeleteEmergency` 미등록 | 400 `"등록된 비상연락망 담당자가 아닙니다."` · `day` 생략은 (B) ProblemDetails |
+| 여러 요일 등록 | API 가 요일 하나씩이라 **요일 수만큼 호출** |
+| `GetEmergencyUserTree` 요일 | 🔴 **없다** — 사업장 · 요일 무관 후보 풀. "그 요일에 이미 등록됨" 은 `GetEmergency` 와 대조해 화면에서 판단 |
+| 트리 `nodeType` | `ROOT`(`nodeSeq: null`, "전체 관리자" — 시스템관리자 · Master) · `GROUP`(매니저) · `SITE`(현장관리자 · 근무자) · `UNASSIGNED`(할당 없는 매니저) |
+| 트리 `SITE` 위치 | 지사 아래 외에 **사업장 아래 사업장**(3→4, 6→7·8) · **본부 직속 사업장**(2 · 5 · 6 · 1)이 있다 — 옛 테스트 데이터. 재귀로 그대로 그린다 |
+| `assignmentYn` · `assignedSiteSeq` · `assignedSiteName` | **근무자 배치 전용**(백엔드 확인 2026-10-27) — 다른 사업장에 배치 중이면 `true` + 배치된 사업장. 배치 안 됨이면 `false` + `null`(그룹 트리 위치가 소속이라 null 이 정상). 관리자 · 현장관리자는 늘 `false` · `null` |
+
+#### 담당 관리자 (`GetSiteManagerList`)
+
+- 행: `{userSeq, codeSeq, codeName, userName}` — 연락처 · 사번 없음.
+- **상속 포함** — 사업장 11 · 3(둘 다 강동지사 아래)이 같은 5명(시스템관리자 · Master 3 · 강동지사 매니저). 시스템관리자는 화면에서 거른다(결정).
+- 없는 `siteSeq` 400 `"사업장이 존재하지 않습니다."` · 생략 400 `"잘못된 요청입니다."`
+
+#### 응답 타입
+
+```ts
+// ── 관리자 ─────────────────────────────
+interface AdminGroupRef { groupSeq: number; groupName: string }
+interface AdminListItem {
+  userSeq: number
+  userName: string
+  phone: string
+  codeSeq: number             // 2 시스템관리자 · 3 Master · 4 매니저
+  codeName: string
+  allGroupYn: boolean         // true = 전체 그룹(시스템관리자 · Master)
+  groups: AdminGroupRef[]     // 직접 할당. allGroupYn 이면 []
+}
+interface AdminGroupNode {
+  groupSeq: number
+  groupName: string
+  parentGroupSeq: number | null
+  layer: number
+  depth: number
+  admins: AdminListItem[]     // 상속 포함 — 노드마다 반복
+  children: AdminGroupNode[]
+}
+type GetAdminListData = AdminGroupNode          // 루트 하나
+interface AdminDetail {
+  userSeq: number
+  codeSeq: number
+  loginId: string             // 사번 — 표시 안 함
+  name: string
+  phone: string
+  groupSeq: number[] | null   // Master null
+}
+// Add · Update · ResetPassword · Delete → ApiResponse<boolean>
+
+// ── 비상연락망 ─────────────────────────
+type EmergencyDay = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN'
+interface EmergencyUser { userSeq: number; userName: string; phone: string; codeSeq: number; codeName: string }
+interface EmergencyDayEntry { day: EmergencyDay; users: EmergencyUser[] }
+type GetEmergencyData = EmergencyDayEntry[]   // 항상 7개
+interface EmergencyTreeMember {
+  userSeq: number
+  userName: string
+  phone: string
+  codeSeq: number
+  codeName: string
+  assignmentYn: boolean            // 근무자 배치 중
+  assignmentType: unknown | null   // 무시(백엔드 확인)
+  assignedSiteSeq: number | null   // 배치 중일 때만
+  assignedSiteName: string | null
+}
+interface EmergencyTreeNode {
+  nodeType: 'ROOT' | 'GROUP' | 'SITE' | 'UNASSIGNED'
+  nodeSeq: number | null           // ROOT · UNASSIGNED null
+  name: string
+  members: EmergencyTreeMember[]
+  children: EmergencyTreeNode[]
+}
+type GetEmergencyUserTreeData = EmergencyTreeNode[]
+// AddEmergency · DeleteEmergency → ApiResponse<boolean>
+
+// ── 담당 관리자 ────────────────────────
+interface SiteManager { userSeq: number; codeSeq: number; codeName: string; userName: string }
+type GetSiteManagerListData = SiteManager[]
+```
+
+> `assignmentType` 은 값이 늘 `null` 이라 실제 타입을 모른다 → `unknown | null` 로 둔다(무시 결정).
 
 ---
 
@@ -1579,11 +1720,11 @@ interface NoticeAttach {
 | B-54 | 🔴 **`DeleteSite` 가 하위 사업장과 소속 지점을 확인 없이 함께 지운다**(실측 2026-10-23) — B-51 과 같은 종류. 코스·순찰 이력·근무자 영향은 미실측. 프론트는 삭제 확인에 **하위 사업장 수 · `userCount`/`courseCount`/`pointCount`** 를 띄운다. **요청(확인)**: 의도된 연쇄 삭제인지, 데이터가 있으면 막아야 하는지 | 🔴 |
 | B-55 | 🟡 **`GetGroupList` 사업장 행의 `healthCheckYn` 이 항상 `false` 다**(실측 2026-10-23) — 상세가 `true` 인 사업장(3·4·12)도 `false` 이고, 새 사업장을 만들어 헬스체크를 켠 직후에도 목록은 `false`(상세는 `true`). 또 그룹 `depth` 가 `layer` 와 어긋난다(G6: layer 1 · depth 0). 프론트는 목록에서 헬스체크 값을 **쓰지 않고**, 단계는 `layer` 로 판단한다. **요청**: `healthCheckYn` 을 실제 값으로 · `depth` 정정(또는 제거). (목록 `courseCount`/`pointCount` 요청은 철회 — 목록 열을 빼기로 함, 사용자 결정 2026-10-23) | 🟡 |
 | B-56 | ⚪ **불필요로 닫음(2026-10-23)** — `site_info` 에 없는 개념이고 화면에도 두지 않는다(사용자 결정). 아래는 기록. ~~**사업장 운영 상태(운영중/중지)와 계약 기간이 서버에 없다**(swagger · `SiteDetail` · `GetGroupList` 확인 2026-10-23, `spec 044`) — 목업은 목록 열 · 상태 필터 · 상세 [운영 중지/재개] · 추가/수정 폼의 계약 시작/종료일을 갖는다. 화면은 자리만 두고 막았다(사용자 결정 2026-10-23). **요청**: 필드 + 변경 수단(운영 상태 토글은 별도 액션이 필요한지) · 중지 사업장에서 앱·현장 사이트가 어떻게 동작하는지 정의~~ | ⚪ |
-| B-57 | 🟡 **비상연락망 API 가 없다**(2026-10-23, `spec 044`) — 헬스체크 이상 시 알림 대상(요일별 담당자 다중 + 사업장별 담당자 풀: 이름 · 역할 · 연락처). 헬스체크는 설정할 수 있는데 **알림 받을 사람을 지정할 수 없어** 기능이 반쪽이다. 화면은 **예시 데이터 목업**(`048`)이다. **요청(전달 2026-10-26)**: ① 담당자 풀 **조회 · 수정**(등록 · 삭제를 한 번에) ② 요일별 담당자 **조회 · 등록 · 삭제** | 🟡 |
-| B-58 | 🟡 **사업장 담당 관리자 개념이 서버에 없다**(2026-10-23, `spec 044`) — 할당은 관리그룹 단위(`GetGroupAdminList`)뿐이라 목업 목록 열 "담당 관리자" · 상세 담당 관리자 탭을 사업장 기준으로 채울 수 없다. 화면은 목록 열을 `-` 로, 상세 카드는 소속 지사 그룹 할당으로 대신 보여 준다(`048` — API 미지원 안내). **요청(전달 2026-10-26)**: 사업장별 담당 관리자 **조회 · 수정**(등록 · 삭제를 한 번에) | 🟡 |
-| B-59 | 🔴 **본사 관리자 생성 · 수정 · 삭제 API 가 없다**(2026-10-23, `spec 045`) — `AddUser` 는 현장용이라 실제 `siteSeq` 를 요구하고(0·생략 500), 그렇게 만든 관리자는 **그 사업장이 지워지면 함께 지워진다**. 화면은 추가 · 수정 · 비밀번호 · 삭제를 **자리만 두고 막았다**. **요청(전달 2026-10-26)**: 관리자 **추가 · 수정 · 삭제**를 현장 관리자 API 와 **분리**(`siteSeq` 없이) + **비밀번호 변경은 별도 API** | 🔴 |
+| B-57 | ✅ **반영됨(실측 2026-10-27, §5-1-C)** — `Emergency` 4종(조회 · 후보 트리 · 요일별 등록 · 삭제). 아래는 기록. ~~**비상연락망 API 가 없다**(2026-10-23, `spec 044`) — 헬스체크 이상 시 알림 대상(요일별 담당자 다중 + 사업장별 담당자 풀: 이름 · 역할 · 연락처). 헬스체크는 설정할 수 있는데 **알림 받을 사람을 지정할 수 없어** 기능이 반쪽이다. 화면은 **예시 데이터 목업**(`048`)이다. **요청(전달 2026-10-26)**: ① 담당자 풀 **조회 · 수정**(등록 · 삭제를 한 번에) ② 요일별 담당자 **조회 · 등록 · 삭제**~~ | ✅ |
+| B-58 | ✅ **반영됨(실측 2026-10-27, §5-1-C)** — `GetSiteManagerList` 조회만. 수정은 **불필요로 철회**(사용자 결정 — 매니저는 본부 · 지사 소속, 하위 사업장 자동 관리). 아래는 기록. ~~**사업장 담당 관리자 개념이 서버에 없다**(2026-10-23, `spec 044`) — 할당은 관리그룹 단위(`GetGroupAdminList`)뿐이라 목업 목록 열 "담당 관리자" · 상세 담당 관리자 탭을 사업장 기준으로 채울 수 없다. 화면은 목록 열을 `-` 로, 상세 카드는 소속 지사 그룹 할당으로 대신 보여 준다(`048` — API 미지원 안내). **요청(전달 2026-10-26)**: 사업장별 담당 관리자 **조회 · 수정**(등록 · 삭제를 한 번에)~~ | ✅ |
+| B-59 | ✅ **반영됨(실측 2026-10-27, §5-1-C)** — `AddAdmin` · `UpdateAdmin` · `ResetAdminPassword` · `DeleteAdmin`(`siteSeq` 없음). 아래는 기록. ~~**본사 관리자 생성 · 수정 · 삭제 API 가 없다**(2026-10-23, `spec 045`) — `AddUser` 는 현장용이라 실제 `siteSeq` 를 요구하고(0·생략 500), 그렇게 만든 관리자는 **그 사업장이 지워지면 함께 지워진다**. 화면은 추가 · 수정 · 비밀번호 · 삭제를 **자리만 두고 막았다**. **요청(전달 2026-10-26)**: 관리자 **추가 · 수정 · 삭제**를 현장 관리자 API 와 **분리**(`siteSeq` 없이) + **비밀번호 변경은 별도 API**~~ | ✅ |
 | B-60 | 🔴 **관리자 계정 권한 검사가 없다**(실측 2026-10-23) — Manager 토큰으로 Master 생성 200 · Master 토큰으로 다른 관리자 수정 · 삭제 200. 명세 규칙(시스템관리자 → Master, Master → Manager 생성 · 시스템관리자 계정 수정 · 삭제 불가)을 화면만 막는다. ⏸ **추후 진행**(백엔드 개발자와 합의 2026-10-26 — 이번 요청에 넣지 않았다). 그때까지 화면 검사를 유지한다 | 🔴 |
-| B-61 | 🟡 **관리자 목록 API 가 없다**(2026-10-23) — `GetGroupAdminList` 행에 연락처 · 등록일이 없고, 관리자별 담당 그룹을 알려면 **그룹마다** 호출해야 한다(화면은 트리의 그룹 수만큼 병렬 조회). **요청(전달 2026-10-26)**: 관리자 조회를 **`GetGroupList` 처럼 그룹 트리에 넣어서**(노드마다 할당된 관리자) + 관리자 행에 **사번 · 연락처** 추가(등록일은 화면에 없어 요청하지 않음 — 045 결정). ⚠️ 트리 방식이면 **어느 그룹에도 할당되지 않은 관리자**가 빠질 수 있다 — 응답이 오면 확인 | 🟡 |
+| B-61 | ✅ **반영됨(실측 2026-10-27, §5-1-C)** — `GetAdminList`(그룹 트리 · 노드마다 상속 포함 `admins`) + `GetAdminDetail`. 사번은 목록에 없지만 **표시 안 함으로 결정**(추가 요청 안 함). 아래는 기록. ~~**관리자 목록 API 가 없다**(2026-10-23) — `GetGroupAdminList` 행에 연락처 · 등록일이 없고, 관리자별 담당 그룹을 알려면 **그룹마다** 호출해야 한다(화면은 트리의 그룹 수만큼 병렬 조회). **요청(전달 2026-10-26)**: 관리자 조회를 **`GetGroupList` 처럼 그룹 트리에 넣어서**(노드마다 할당된 관리자) + 관리자 행에 **사번 · 연락처** 추가(등록일은 화면에 없어 요청하지 않음 — 045 결정). ⚠️ 트리 방식이면 **어느 그룹에도 할당되지 않은 관리자**가 빠질 수 있다 — 응답이 오면 확인~~ | ✅ |
 
 ### 6-1-A. 🔴 백엔드 전달용 — 우선순위 (2026-10-10 기준)
 
@@ -1670,7 +1811,7 @@ interface NoticeAttach {
 
 아래 영역은 swagger에 없으나 **백엔드가 개발 완료 상태가 아니기 때문**이며, 프론트 mock을 유지하고 손대지 않는다.
 
-비상연락망 · ~~근무자 배치요청/배치이력~~(✅ **2026-10-22 구현·실측** — §5-1-B 배치 10종, `spec 042`. 남은 요청은 [`api-request-deployment.md`](./api-request-deployment.md)) · 환경설정 키워드 · ~~순찰 진행현황(실시간)~~ · 사업장 목록 조회 · 권한코드 목록 조회 · 공지 APP 푸시 발송
+~~비상연락망~~(✅ **2026-10-27 실측** — §5-1-C) · ~~근무자 배치요청/배치이력~~(✅ **2026-10-22 구현·실측** — §5-1-B 배치 10종, `spec 042`. 남은 요청은 [`api-request-deployment.md`](./api-request-deployment.md)) · 환경설정 키워드 · ~~순찰 진행현황(실시간)~~ · 사업장 목록 조회 · 권한코드 목록 조회 · 공지 APP 푸시 발송
 
 > 🔴 **"순찰 진행현황(실시간)" 은 전용 엔드포인트가 없을 뿐, 만들 수 있다**(2026-10-13 정정). `GetCourseHistory` 의 **`eventType=0`(진행중)** 이 바로 "지금 순찰 중" 목록이다(§4 `eventType` 블록, 백엔드 확인 2026-10-12). 화면은 `screens.md` **§1-2A**. 보류로 적어 두면 "서버가 없어서 못 만든다" 로 읽히는데, **그렇지 않다** — 미정인 것은 갱신 방식·범위·진입 위치 셋이다.
 
