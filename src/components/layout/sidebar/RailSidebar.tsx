@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { LogoutButton } from './LogoutButton'
+import { SiteSwitchButton, type SiteSwitchProps } from './SiteSwitchButton'
 import type { MenuItemType } from './sidebar.config'
 
 interface RailSidebarProps {
@@ -14,17 +15,22 @@ interface RailSidebarProps {
    * (실패·로딩 — 숫자를 지어내지 않는다).
    */
   badges?: Partial<Record<NonNullable<MenuItemType['badge']>, number>>
+  /**
+   * 사업장 전환(`spec 061`) — 있으면 로그아웃 위에 버튼. 🔴 **목록 조회는 `ServiceLayout` 이 한다** —
+   * 레일은 본사와 공용이고, 본사 토큰으로 `UserSiteSelect` 를 부르면 403 이다.
+   */
+  siteSwitch?: SiteSwitchProps
 }
 
 /**
  * 68px 다크 아이콘 레일 — 현장(`ServiceLayout`)·본사(`AdminLayout`) 공용(`spec 043`).
  * - 그룹 헤더 없음, `menus`(flat)를 그대로 순회.
  * - 라벨은 hover/포커스 시 우측 툴팁으로만 노출.
- * - 하단은 로그아웃 버튼(`spec 053` — 프로필 드롭다운 제거).
+ * - 하단은 사업장 전환(현장 · 복수 소속만 — `spec 061`) + 로그아웃 버튼(`spec 053` — 프로필 드롭다운 제거).
  * - 🔴 `xl` 이상에서만 보인다 — 미만은 하단 `FloatingNav`(`spec 053`).
  * layout.md §2-A. 아이템 치수·색상은 목업 CSS 그대로 이식(007 수정).
  */
-export const RailSidebar = ({ menus, tag, badges }: RailSidebarProps) => {
+export const RailSidebar = ({ menus, tag, badges, siteSwitch }: RailSidebarProps) => {
   const location = useLocation()
 
   return (
@@ -77,6 +83,7 @@ export const RailSidebar = ({ menus, tag, badges }: RailSidebarProps) => {
       {/* 알림 버튼 예약 자리 (layout.md §2-A) */}
       <div className="w-full h-8" />
 
+      {siteSwitch && <SiteSwitchButton tooltipSide="right" {...siteSwitch} />}
       <LogoutButton tooltipSide="right" />
     </div>
   )

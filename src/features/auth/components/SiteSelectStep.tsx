@@ -1,4 +1,4 @@
-import AppButton from '@/components/app/AppButton'
+import { SiteOptionList } from '@/features/auth/components/SiteOptionList'
 import type { SiteOption } from '@/features/auth/types/site'
 
 /**
@@ -8,8 +8,8 @@ import type { SiteOption } from '@/features/auth/types/site'
  * 모두 막아야 하고, 그건 `AppDialog`를 기본 동작과 반대로 쓰는 것이다. 단계 전환이면
  * "뒤로 = 다시 로그인" 하나로 끝난다(`spec 021` §3 규칙 4).
  *
- * 🔴 **`LoginForm` 안에 인라인하지 않고 분리해 둔다.** 로그인 후 사업장을 바꾸는 UI가
- * 생기면(OQ-021-C) 이 컴포넌트가 그대로 재사용될 자리다.
+ * 목록은 `SiteOptionList` — 로그인 뒤 사업장 전환 모달(`spec 061`, OQ-021-C)과 같이 쓴다.
+ * 이 단계에 남은 것은 로그인 카드 제목 · 안내 문구다.
  *
  * 목업이 없다 — `design-system.md` 토큰과 `AppButton`만으로 구성한다.
  */
@@ -28,20 +28,6 @@ export const SiteSelectStep = ({ options, onSelect, disabled }: SiteSelectStepPr
       <p className="text-xs text-muted-foreground">이용할 사업장을 선택해주세요</p>
     </div>
 
-    <ul className="space-y-2">
-      {options.map((site) => (
-        <li key={site.siteSeq}>
-          <AppButton
-            variant="sub"
-            size="full"
-            type="button"
-            disabled={disabled}
-            onClick={() => onSelect(site)}
-          >
-            {site.siteName}
-          </AppButton>
-        </li>
-      ))}
-    </ul>
+    <SiteOptionList options={options} onSelect={onSelect} disabled={disabled} />
   </div>
 )

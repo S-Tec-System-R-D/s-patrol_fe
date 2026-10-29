@@ -2,12 +2,15 @@ import { cn } from '@/lib/utils'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { LogoutButton } from './LogoutButton'
+import { SiteSwitchButton, type SiteSwitchProps } from './SiteSwitchButton'
 import type { MenuItemType } from './sidebar.config'
 
 interface FloatingNavProps {
   menus: MenuItemType[]
   /** 메뉴 뱃지 숫자 — `RailSidebar` 와 같은 값. 🔴 세는 훅은 레이아웃이 부른다(`spec 043` T743) */
   badges?: Partial<Record<NonNullable<MenuItemType['badge']>, number>>
+  /** 사업장 전환(`spec 061`) — 있으면 로그아웃 옆에 버튼. `RailSidebar` 와 같은 값 */
+  siteSwitch?: SiteSwitchProps
 }
 
 /**
@@ -18,7 +21,7 @@ interface FloatingNavProps {
  * - 콘텐츠가 가려지지 않게 하는 하단 여백은 레이아웃이 준다(`pb-24 xl:pb-0`).
  * layout.md §5-7.
  */
-export const FloatingNav = ({ menus, badges }: FloatingNavProps) => {
+export const FloatingNav = ({ menus, badges, siteSwitch }: FloatingNavProps) => {
   const location = useLocation()
 
   return (
@@ -62,6 +65,7 @@ export const FloatingNav = ({ menus, badges }: FloatingNavProps) => {
 
       <span aria-hidden className="mx-1 w-px h-6 bg-white/10" />
 
+      {siteSwitch && <SiteSwitchButton tooltipSide="top" {...siteSwitch} />}
       <LogoutButton tooltipSide="top" />
     </nav>
   )

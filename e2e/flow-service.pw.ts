@@ -98,3 +98,38 @@ test('S5 배치 요청 승인', async ({ page }) => {
   await page.getByRole('tab', { name: '전입 이력' }).click()
   await expect(page.getByRole('cell', { name: new RegExp(worker) }).first()).toBeVisible()
 })
+
+/**
+ * S8 사업장 전환(`spec 061`) — 홈(2-1 · 7)에서 루트(6 · 코스 0건)로 → 빈 목록 → 다시 2-1 로 → 목록.
+ * 🔴 **홈에서 바꾼다** — 같은 주소라 다시 그려지지 않을 수 있던 경우다(spec §3).
+ * 레일(1280)과 floating nav(390) 둘 다. 버튼은 레일 · nav 에 하나씩 있어 **보이는 것**을 누른다.
+ */
+const switchSite = async (page: Page, siteName: string) => {
+  await page.getByRole('button', { name: '사업장 전환' }).filter({ visible: true }).click()
+  await dialog(page, '사업장 전환').getByRole('button', { name: siteName, exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: '사업장 전환 중' })).toBeHidden()
+  await expect(page).toHaveURL(/\/zones$/)
+}
+
+/** 홈 목록의 행 — 넓은 폭 = 표의 행, 좁은 폭 = 카드(`openFirstRow` 와 같은 선택자) */
+const homeRows = (page: Page) =>
+  page
+    .locator('tbody tr[tabindex]')
+    .filter({ visible: true })
+    .or(page.locator('div.flex-col.xl\\:hidden > button').filter({ visible: true }))
+
+for (const width of [1280, 390]) {
+  test.describe(`S8 사업장 전환 · ${width}px`, () => {
+    test.use({ viewport: { width, height: width === 1280 ? 900 : 844 } })
+
+    test('홈에서 전환 → 새 사업장 목록 → 되돌리기', async ({ page }) => {
+      await expect(homeRows(page).first()).toBeVisible()
+
+      await switchSite(page, '테스트 사업장2')
+      await expect(homeRows(page)).toHaveCount(0)
+
+      await switchSite(page, '테스트 사업장2-1')
+      await expect(homeRows(page).first()).toBeVisible()
+    })
+  })
+}

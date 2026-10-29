@@ -65,4 +65,11 @@ describe('AdminLayout', () => {
     await new Promise((resolve) => setTimeout(resolve, 50))
     expect(requested).not.toContain('/api/v1/Assignment/W/sign/GetAssignmentCount')
   })
+
+  it('🔴 본사에는 사업장 전환이 없다 — 버튼 없음 · UserSiteSelect 요청 0건(spec 061)', async () => {
+    renderAdmin()
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(screen.queryByRole('button', { name: '사업장 전환' })).not.toBeInTheDocument()
+    expect(requested).not.toContain('/api/v1/Login/W/sign/UserSiteSelect')
+  })
 })
