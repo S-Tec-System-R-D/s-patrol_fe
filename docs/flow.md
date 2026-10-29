@@ -20,8 +20,8 @@
 flowchart LR
     Visit([URL 진입]) --> Path{경로?}
 
-    Path -- "/" --> Landing["/ 랜딩<br/>현장 로그인 진입 링크"]
-    Landing --> Login
+    Path -- "/" --> Landing["/ 랜딩<br/>로그인 겸 서비스 소개"]
+    Landing --> LoginPost
 
     Path -- "/login" --> Login["/login<br/>현장 로그인"]
     Path -- "/admin/login" --> AdminLogin["/admin/login<br/>본사 로그인"]
@@ -53,7 +53,7 @@ flowchart LR
 
 **규칙**
 
-- `/` = 정적 랜딩(공개). 현장 로그인 링크만 노출. 본사 로그인 링크 미노출.
+- `/` = 랜딩(공개 · `spec 062`). **로그인 겸 서비스 소개** — 그 자리에서 로그인한다(처리 · 착지는 `/login` 과 같다). 본사 로그인 링크 미노출. 로그인 상태여도 그대로 보인다(`/login` 과 같음).
 - `/login` = 현장 로그인. 현장관리자/Admin 3종 모두 사용(Admin 은 로그인 후 본사 화면으로 간다).
 - `/admin/login` = 본사 로그인. URL 직접 접근. 시스템관리자/Master/Manager 사용.
 - `/*` 미인증 → `/login`. `/admin/*` 미인증 → `/admin/login`.
@@ -86,7 +86,7 @@ flowchart LR
 flowchart TB
     Landing["/ 랜딩"]
     Login["/login 현장 로그인"]
-    Landing --> Login
+    Landing -. "같은 로그인 처리" .- Login
 
     subgraph Service["/* (현장)"]
         direction TB
@@ -183,8 +183,7 @@ flowchart LR
 ```mermaid
 %%{init: {'theme':'dark'}}%%
 flowchart LR
-    A(["/ 랜딩"]) --> B["/login"]
-    B -- 인증 --> C["/* 홈"]
+    A(["/ 랜딩 또는 /login"]) -- 인증 --> C["/* 홈"]
     C -- "사이드바 '근무자'" --> D["/users"]
     D -- "근무자 추가" --> E[(근무자 폼)]
     E -- 등록 --> D
