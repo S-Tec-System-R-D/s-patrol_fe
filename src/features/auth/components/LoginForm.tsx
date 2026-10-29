@@ -15,9 +15,13 @@ import type { SiteOption } from '@/features/auth/types/site'
 import { clearTokens, setAccessToken, setRefreshToken } from '@/lib/auth/tokens'
 import { setSite } from '@/lib/auth/site'
 import { isServiceLoginCode } from '@/types/api'
+import { cn } from '@/lib/utils'
 
 /**
- * 로그인 폼. 현장(`/login`)·본사(`/admin/login`) **공용**.
+ * 로그인 내용(제목 · 폼 · 사업장 선택 단계 · 처리). 현장(`/login`)·본사(`/admin/login`)·랜딩(`/`, `spec 062`) **공용**.
+ *
+ * 🔴 **틀(카드)이 없다** — 놓일 자리가 화면마다 달라서다. `/login` · `/admin/login` 은 `LoginForm` 의 가운데 카드,
+ * 랜딩은 분할 카드의 왼쪽 반. 자식(제목 · 폼)의 간격은 부모가 `space-y-6` 으로 준다.
  *
  * 로그인 엔드포인트가 하나뿐이고 사이트는 응답 `code`로만 갈리므로(`api-spec.md` §2-1)
  * 사이트별 차이는 **제목·안내 문구 2가지**뿐이다. 착지 경로는 `code`가 정하므로 prop이 아니다.
@@ -29,9 +33,11 @@ import { isServiceLoginCode } from '@/types/api'
 interface LoginFormProps {
   title: string
   description?: string
+  /** 제목 굵기 · 크기 덮어쓰기 — 랜딩의 서비스명(`spec 062`). 로그인 화면은 넘기지 않는다 */
+  titleClassName?: string
 }
 
-export const LoginForm = ({ title, description }: LoginFormProps) => {
+export const LoginPanel = ({ title, description, titleClassName }: LoginFormProps) => {
   const navigate = useNavigate()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -124,55 +130,61 @@ export const LoginForm = ({ title, description }: LoginFormProps) => {
     }
   }
 
-  return (
-    <div className="flex min-h-svh items-center justify-center bg-background p-6">
-      <div className="w-full max-w-sm space-y-6 rounded-md border border-border bg-card p-6 shadow-sm">
-        {siteOptions !== null && landing !== null ? (
-          <SiteSelectStep
-            options={siteOptions}
-            disabled={entering}
-            onSelect={(site) => enterSite(site, landing)}
-          />
-        ) : (
-          <>
-            <div className="space-y-1 text-center">
-              <h1 className="text-lg font-semibold">{title}</h1>
-              {description && <p className="text-xs text-muted-foreground">{description}</p>}
-            </div>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-              <AppInput
-                label="사번"
-                required
-                autoComplete="username"
-                placeholder="사번을 입력해주세요"
-                error={errors.loginId?.message}
-                {...register('loginId')}
-              />
-              <AppInput
-                label="비밀번호"
-                required
-                variant="password"
-                autoComplete="current-password"
-                placeholder="비밀번호를 입력해주세요"
-                error={errors.loginPw?.message}
-                {...register('loginPw')}
-              />
-
-              {submitError && (
-                <p role="alert" className="text-sm text-destructive">
-                  {submitError}
-                </p>
-              )}
-
-              {/* 제출 중 비활성 — 연타로 로그인 요청이 중복 나가는 것을 막는다 */}
-              <AppButton size="full" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? '로그인 중…' : '로그인'}
-              </AppButton>
-            </form>
-          </>
-        )}
+  return siteOptions !== null && landing !== null ? (
+    <SiteSelectStep
+      options={siteOptions}
+      disabled={entering}
+      onSelect={(site) => enterSite(site, landing)}
+    />
+  ) : (
+    <>
+      <div className="space-y-1 text-center">
+        <h1 className={cn('text-lg font-semibold', titleClassName)}>{title}</h1>
+        {description && <p className="text-xs text-muted-foreground">{description}</p>}
       </div>
-    </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <AppInput
+          label="사번"
+          required
+          autoComplete="username"
+          placeholder="사번을 입력해주세요"
+          error={errors.loginId?.message}
+          {...register('loginId')}
+        />
+        <AppInput
+          label="비밀번호"
+          required
+          variant="password"
+          autoComplete="current-password"
+          placeholder="비밀번호를 입력해주세요"
+          error={errors.loginPw?.message}
+          {...register('loginPw')}
+        />
+
+        {submitError && (
+          <p role="alert" className="text-sm text-destructive">
+            {submitError}
+          </p>
+        )}
+
+        {/* 제출 중 비활성 — 연타로 로그인 요청이 중복 나가는 것을 막는다 */}
+        <AppButton size="full" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? '로그인 중…' : '로그인'}
+        </AppButton>
+      </form>
+    </>
   )
 }
+
+/**
+ * 로그인 화면 틀 — `/login` · `/admin/login`. 화면 가운데 카드 하나에 `LoginPanel`.
+ * 사이트별 차이는 **제목·안내 문구 2가지**뿐이다(`LoginPanel` 주석).
+ */
+export const LoginForm = (props: LoginFormProps) => (
+  <div className="flex min-h-svh items-center justify-center bg-background p-6">
+    <div className="w-full max-w-sm space-y-6 rounded-md border border-border bg-card p-6 shadow-sm">
+      <LoginPanel {...props} />
+    </div>
+  </div>
+)

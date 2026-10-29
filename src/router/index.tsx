@@ -1,3 +1,4 @@
+import LandingPage from '@/pages/auth/LandingPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import AdminLoginPage from '@/pages/auth/AdminLoginPage'
 import { createBrowserRouter } from 'react-router-dom'
@@ -28,6 +29,12 @@ import { PageErrorFallback } from './PageErrorFallback'
 
 export const router = createBrowserRouter([
   //비인증 전용
+  // 랜딩 = 로그인 겸 서비스 소개(`spec 062`). `/login` 과 같이 가드 없음 — 로그인 상태여도 그대로 보인다
+  {
+    path: paths.landing,
+    element: <LandingPage />,
+    errorElement: <PageErrorFallback />,
+  },
   {
     path: paths.serviceLogin,
     element: <LoginPage />,
