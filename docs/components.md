@@ -31,6 +31,7 @@
 | `AppDetailCard` / `AppDetailRow` | `components/app/AppDetailCard.tsx` / `AppDetailRow.tsx` | 마스터-디테일 우측 상세 패널 | ✅ 표준 |
 | `AppKpiCard` | `components/app/AppKpiCard.tsx` | 통계 타일(아이콘+라벨+숫자) | ✅ 표준 |
 | `AppBadge` | `components/app/AppBadge.tsx` | 상태/결과 뱃지(시맨틱 5색) | ✅ 표준 |
+| `AppBlockingOverlay` | `components/app/AppBlockingOverlay.tsx` | 화면 전체를 덮는 진행 오버레이(`z-[60]` · 클릭 차단 · `role="status"`). 키보드는 부르는 쪽이 뒤 영역에 `inert` — 사용처: 사업장 전환(`spec 061`) | ✅ 표준 |
 | `ui/button` | `components/ui/button.tsx` | shadcn 원시 | ⛔ 신규 금지 (점진 제거) |
 | `ui/dialog` | `components/ui/dialog.tsx` | shadcn 원시 | 내부 구현용 |
 | `ui/alert-dialog` | `components/ui/alert-dialog.tsx` | shadcn 원시 | 내부 구현용 |
