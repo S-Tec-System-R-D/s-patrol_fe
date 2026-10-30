@@ -9,8 +9,8 @@ describe('homePath', () => {
     expect(homePath('MANAGER')).toBe(paths.admin.locations)
   })
 
-  it('현장관리자(FIELD_MANAGER) → /zones', () => {
-    expect(homePath('FIELD_MANAGER')).toBe(paths.service.zones)
+  it('현장관리자(FIELD_MANAGER) → /dashboard', () => {
+    expect(homePath('FIELD_MANAGER')).toBe(paths.service.dashboard)
   })
 
   it('근무자(WORKER) → / 현장 로그인 (fallback)', () => {

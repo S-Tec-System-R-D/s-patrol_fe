@@ -37,8 +37,9 @@ const renderRail = (initialPath: string) => {
 }
 
 describe('RailSidebar (현장)', () => {
-  it('5개 메뉴 아이콘 flat 렌더(순찰이력·코스/지점·근무자·배치관리·공지사항)', () => {
+  it('6개 메뉴 아이콘 flat 렌더(대시보드·순찰이력·코스/지점·근무자·배치관리·공지사항)', () => {
     const rail = renderRail('/zones')
+    expect(rail.getByLabelText('대시보드')).toBeInTheDocument()
     expect(rail.getByLabelText('순찰이력')).toBeInTheDocument()
     expect(rail.getByLabelText('코스/지점')).toBeInTheDocument()
     expect(rail.getByLabelText('근무자')).toBeInTheDocument()

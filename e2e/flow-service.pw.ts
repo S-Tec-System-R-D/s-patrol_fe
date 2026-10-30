@@ -101,18 +101,23 @@ test('S5 배치 요청 승인', async ({ page }) => {
 
 /**
  * S8 사업장 전환(`spec 061`) — 홈(2-1 · 7)에서 루트(6 · 코스 0건)로 → 빈 목록 → 다시 2-1 로 → 목록.
- * 🔴 **홈에서 바꾼다** — 같은 주소라 다시 그려지지 않을 수 있던 경우다(spec §3).
- * 레일(1280)과 floating nav(390) 둘 다. 버튼은 레일 · nav 에 하나씩 있어 **보이는 것**을 누른다.
+ * 🔴 **홈에서 바꾼다** — 같은 주소라 다시 그려지지 않을 수 있던 경우다(spec §3). 홈 = 대시보드(`spec 066`)라
+ * 다시 그려졌는지는 부제의 사업장명으로 보고, 목록은 코스/지점으로 가서 본다.
+ * 레일(1280)과 floating nav(390) 둘 다. 버튼 · 메뉴는 레일 · nav 에 하나씩 있어 **보이는 것**을 누른다.
  */
 const switchSite = async (page: Page, siteName: string) => {
   await page.getByRole('button', { name: '사업장 전환' }).filter({ visible: true }).click()
   await dialog(page, '사업장 전환').getByRole('button', { name: siteName, exact: true }).click()
   await expect(page.getByRole('status').filter({ hasText: '사업장 전환 중' })).toBeHidden()
-  await expect(page).toHaveURL(/\/zones$/)
+  await expect(page).toHaveURL(/\/dashboard$/)
+  await expect(page.getByText(`${siteName}의 순찰 현황`)).toBeVisible()
 }
 
-/** 홈 목록의 행 — 넓은 폭 = 표의 행, 좁은 폭 = 카드(`openFirstRow` 와 같은 선택자) */
-const homeRows = (page: Page) =>
+const goCourses = (page: Page) =>
+  page.getByRole('link', { name: '코스/지점', exact: true }).filter({ visible: true }).click()
+
+/** 코스 목록의 행 — 넓은 폭 = 표의 행, 좁은 폭 = 카드(`openFirstRow` 와 같은 선택자) */
+const courseRows = (page: Page) =>
   page
     .locator('tbody tr[tabindex]')
     .filter({ visible: true })
@@ -123,13 +128,13 @@ for (const width of [1280, 390]) {
     test.use({ viewport: { width, height: width === 1280 ? 900 : 844 } })
 
     test('홈에서 전환 → 새 사업장 목록 → 되돌리기', async ({ page }) => {
-      await expect(homeRows(page).first()).toBeVisible()
-
       await switchSite(page, '테스트 사업장2')
-      await expect(homeRows(page)).toHaveCount(0)
+      await goCourses(page)
+      await expect(courseRows(page)).toHaveCount(0)
 
       await switchSite(page, '테스트 사업장2-1')
-      await expect(homeRows(page).first()).toBeVisible()
+      await goCourses(page)
+      await expect(courseRows(page).first()).toBeVisible()
     })
   })
 }

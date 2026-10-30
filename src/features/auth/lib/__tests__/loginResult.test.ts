@@ -17,7 +17,7 @@ describe('resolveLoginOutcome', () => {
   it('현장 화면 · 현장관리자 code(201)는 현장 홈으로', () => {
     expect(resolveLoginOutcome(201, 'service')).toEqual({
       kind: 'allowed',
-      landing: paths.service.zones,
+      landing: paths.service.dashboard,
     })
   })
 
@@ -51,7 +51,7 @@ describe('resolveLoginOutcome', () => {
   it('200은 사전에 없지만 2xx 범위라 현장으로 간다 — 의도된 동작', () => {
     expect(resolveLoginOutcome(200, 'service')).toEqual({
       kind: 'allowed',
-      landing: paths.service.zones,
+      landing: paths.service.dashboard,
     })
   })
 

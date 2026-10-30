@@ -53,7 +53,7 @@ const ServiceLayout = () => {
   const handleSwitch = (site: SiteOption) => {
     setSwitching(true)
     setSite(site.siteSeq, site.siteName)
-    navigate(paths.service.zones, { replace: true })
+    navigate(paths.service.dashboard, { replace: true })
   }
 
   const siteSwitch: SiteSwitchProps | undefined =
@@ -79,7 +79,7 @@ const ServiceLayout = () => {
    * 전환 전 화면의 조회가 남아 있으면 그것까지 기다린다(오버레이 아래라 보이지 않는다).
    */
   useEffect(() => {
-    if (!switching || pathname !== paths.service.zones) return
+    if (!switching || pathname !== paths.service.dashboard) return
     const releaseIfIdle = () => {
       if (queryClient.isFetching() === 0) setSwitching(false)
     }

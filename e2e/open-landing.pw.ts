@@ -20,5 +20,5 @@ test('랜딩 — 로그인 · 소개 슬라이드(넓은 폭만) · 그 자리�
   await page.getByLabel('비밀번호').fill('test1234!')
   await page.getByRole('button', { name: '로그인', exact: true }).click()
   await page.getByRole('button', { name: '테스트 사업장2-1', exact: true }).click()
-  await expect(page).toHaveURL(/\/zones$/)
+  await expect(page).toHaveURL(/\/dashboard$/)
 })

@@ -48,6 +48,7 @@ export const paths = {
 
   // 현장 사이트(/*)
   service: {
+    dashboard: '/dashboard',
     patrolZones: '/patrol/zones',
     patrolZoneDetail: patrolZoneDetail,
     patrolPoints: '/patrol/points',

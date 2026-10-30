@@ -16,7 +16,7 @@ const renderLanding = () =>
     <MemoryRouter initialEntries={['/']}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/zones" element={<div>SERVICE_HOME</div>} />
+        <Route path="/dashboard" element={<div>SERVICE_HOME</div>} />
         <Route path="/admin/locations" element={<div>ADMIN_HOME</div>} />
       </Routes>
     </MemoryRouter>

@@ -37,9 +37,10 @@ describe('FloatingNav (현장)', () => {
     expect(screen.getByRole('navigation', { name: '하단 메뉴' })).toHaveClass('xl:hidden', 'fixed', 'z-40')
   })
 
-  it('레일과 같은 순서의 메뉴 5개 + 로그아웃', () => {
+  it('레일과 같은 순서의 메뉴 6개 + 로그아웃', () => {
     const nav = renderNav('/zones')
     expect(nav.getAllByRole('link').map((link) => link.getAttribute('aria-label'))).toEqual([
+      '대시보드',
       '순찰이력',
       '코스/지점',
       '근무자',

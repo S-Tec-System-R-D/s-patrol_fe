@@ -51,7 +51,7 @@ export const resolveLoginOutcome = (code: number, area: LoginArea): LoginOutcome
         link: { to: paths.serviceLogin, label: '현장 로그인으로 이동' },
       }
     }
-    return { kind: 'allowed', landing: paths.service.zones }
+    return { kind: 'allowed', landing: paths.service.dashboard }
   }
 
   // 서버가 사전에 없는 code를 주는 경우. 추측으로 어느 사이트든 보내지 않는다 —

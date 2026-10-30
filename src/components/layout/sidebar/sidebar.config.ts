@@ -2,6 +2,7 @@ import {
   ArrowLeftRightIcon,
   Building2Icon,
   ClockAlertIcon,
+  LayoutDashboardIcon,
   MapPinIcon,
   MegaphoneIcon,
   ShieldUserIcon,
@@ -27,10 +28,16 @@ export interface MenuItemType {
 }
 
 /**
- * 현장 사이드바(RailSidebar) 메뉴 — flat 5개, 그룹 헤더 없음.
+ * 현장 사이드바(RailSidebar) 메뉴 — flat 6개, 그룹 헤더 없음.
  * 순서 고정: 순찰이력 → 코스/지점 → 근무자 → 배치관리 → 공지사항 (리디자인 결정 2026-07-23).
+ * 맨 앞에 대시보드(현장 홈, `spec 066` 2026-10-30).
  */
 export const ServiceMenus: MenuItemType[] = [
+  {
+    icon: LayoutDashboardIcon,
+    title: '대시보드',
+    url: paths.service.dashboard,
+  },
   {
     icon: ClockAlertIcon,
     title: '순찰이력',

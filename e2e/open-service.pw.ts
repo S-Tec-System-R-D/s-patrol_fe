@@ -24,6 +24,12 @@ test.beforeEach(async ({ page }) => {
   await loginField(page)
 })
 
+test('대시보드 — 로그인 착지(현장 홈, spec 066)', async ({ page }) => {
+  await expect(page).toHaveURL(/\/dashboard$/)
+  await expectHeading(page, '대시보드')
+  await expectNoOverflow(page)
+})
+
 test('코스 순찰이력 목록 · 상세', async ({ page }) => {
   await goMenu(page, '순찰이력')
   await expectHeading(page, '순찰이력')

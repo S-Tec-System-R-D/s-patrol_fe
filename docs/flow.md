@@ -32,7 +32,7 @@ flowchart LR
     Guard -- "JWT role 확인" --> Role{"role?"}
 
     Role -- "매핑 밖 role" --> Login
-    Role -- 현장관리자 --> ServiceHome["/zones 현장 홈"]
+    Role -- 현장관리자 --> ServiceHome["/dashboard 현장 홈"]
     Role -- Admin 3종 --> AdminHome["/admin/locations 본사 홈"]
 
     Login --> LoginPost{"응답 code?"}
@@ -62,11 +62,13 @@ flowchart LR
 - 🔴 **Admin 3종(`1xx`)은 무조건 본사 화면**(`/admin/locations`)으로 간다 — 사업장 선택 없음. 사업장 선택은 **현장관리자만**(소속 2개 이상일 때) 한다. 본사 → 현장 이동 링크도 없다(사용자 결정 2026-10-23, `spec 043` US4 철회).
 - 🔴 **Admin 3종은 현장 화면에 들어가지 않는다**(사용자 결정 2026-10-23, `spec 999` US2) — 현장 URL 로 오면 가드가 **본사 홈**으로 보낸다. 판정은 사업장 미선택 검사보다 먼저다(전에는 `siteSeq` 가 없어 현장 로그인으로 튕겼다).
 - 현장관리자는 `/*`만. `/admin/*` 접근 시 **`/403`**(`RequireRoute` — 확정, `spec 999`).
-- **사업장 전환**(`spec 061`) — 로그인 뒤에도 레일 · floating nav 버튼으로 사업장을 바꾼다(선택지 2개 이상만). 저장값(`auth.siteSeq` · `auth.siteName`) 교체 → 전환 중 오버레이 → **항상 현장 홈 `/zones`**. 현장 영역은 `siteSeq` 를 key 로 통째 다시 그린다. 서버 호출은 목록 조회(`UserSiteSelect`)뿐이다(선택 확정 API 없음).
+- **사업장 전환**(`spec 061`) — 로그인 뒤에도 레일 · floating nav 버튼으로 사업장을 바꾼다(선택지 2개 이상만). 저장값(`auth.siteSeq` · `auth.siteName`) 교체 → 전환 중 오버레이 → **항상 현장 홈 `/dashboard`**. 현장 영역은 `siteSeq` 를 key 로 통째 다시 그린다. 서버 호출은 목록 조회(`UserSiteSelect`)뿐이다(선택 확정 API 없음).
 
 > **해소(020, 2026-10-06)**: 로그인 직후 첫 화면은 **현장 `/zones` · 본사 `/admin/locations`**다(`homePath()`·`paths`와 일치). 당초 현장 홈을 사이드바 첫 메뉴인 `/patrol/zones`로 잠정 가정했으나 코드는 `/zones`(순찰코스 관리)였고, 코드 쪽을 유지하기로 결정했다.
 >
 > **해소(021, 2026-10-07)**: 사업장 선택 단계가 로그인과 홈 사이에 들어갔다(위 다이어그램 반영).
+>
+> **변경(066, 2026-10-30)**: 현장 홈을 `/zones` → **`/dashboard`(대시보드)** 로 옮겼다(사용자 결정). 020 의 "현장 홈 = `/zones`" 를 뒤집는다 — 로그인 착지 · 사업장 전환 · 403/404 "홈으로" 가 모두 대시보드다.
 >
 > - **라우트가 아니라 로그인 카드 안의 단계**다. 선택 중에도 주소는 `/login` 그대로다 — 선택 확정 API가 없어 이 단계는 "목록 1회 조회 + 로컬 저장"뿐이라 라우트·가드를 둘 무게가 아니었다.
 > - 현장은 **1개면 자동 진입**(선택 UI 스킵, 저장은 그대로), 2개 이상이면 선택. **0개·조회 실패·403은 토큰을 지우고 중단**한다.
@@ -87,6 +89,7 @@ flowchart TB
     subgraph Service["/* (현장)"]
         direction TB
         SBar([사이드바])
+        SBar --> Dash["/dashboard 대시보드(홈)"]
         SBar --> Patrol["/patrol/* 순찰이력"]
         SBar --> ZP["/zones, /points 구역·지점"]
         SBar --> Users["/users 근무자"]
@@ -401,7 +404,7 @@ flowchart LR
 
 ## 4. Open Questions
 
-- [ ] 로그인 직후 첫 화면(현장 / 본사 각각의 "홈")의 명시적 라우트
+- [x] 로그인 직후 첫 화면(현장 / 본사 각각의 "홈")의 명시적 라우트 — 현장 `/dashboard`(`spec 066`) · 본사 `/admin/locations`
 - [ ] 403 발생 시 정책: 별도 화면 vs 본인 영역 홈 리다이렉트
 - [ ] 사업장 삭제 시 사용 중 검사의 책임 위치(프론트 사전 안내 여부)
 - [ ] 사이트 간 전환(`/admin/*` ↔ `/*`) 시 직전 위치 기억 필요 여부

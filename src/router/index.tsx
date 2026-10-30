@@ -5,6 +5,7 @@ import AuthGuard from './guards/AuthGuard'
 
 import ServiceLayout from '@/components/layout/ServiceLayout'
 import AdminLayout from '@/components/layout/AdminLayout'
+import DashboardPage from '@/pages/service/dashboard/DashboardPage'
 import PointsPage from '@/pages/service/points/PointsPage'
 import PointDetailPage from '@/pages/service/points/PointDetailPage'
 import ZonesPage from '@/pages/service/zones/ZonesPage'
@@ -62,6 +63,12 @@ export const router = createBrowserRouter([
         element: <ServiceLayout />,
         errorElement: <PageErrorFallback />,
         children: [
+          // 현장 홈 = 대시보드(`spec 066`) — 로그인 · 사업장 전환 착지점
+          {
+            path: paths.service.dashboard,
+            element: <DashboardPage />,
+            errorElement: <PageErrorFallback />,
+          },
           // 순찰이력 — 지점/코스 두 페이지가 각자 PatrolHistoryTabs를 렌더링 (별도 레이아웃 wrapper 없음)
           {
             path: paths.service.patrolPoints,

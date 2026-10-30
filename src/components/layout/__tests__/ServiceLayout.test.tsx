@@ -15,7 +15,7 @@ import ServiceLayout from '../ServiceLayout'
  * mock `UserSiteSelect`(`mocks/handlers/auth.ts`)는 토큰 `loginId` 로 갈린다 — `333333` = 루트 6 + 7 · 8(3개),
  * `555555` = 루트만(1개).
  *
- * 홈(`/zones`) 자리에 **조회를 손으로 끝내는 화면**을 둔다 — 오버레이가 "홈 첫 조회가 끝나면" 걷히는지 보려면
+ * 홈(`/dashboard`) 자리에 **조회를 손으로 끝내는 화면**을 둔다 — 오버레이가 "홈 첫 조회가 끝나면" 걷히는지 보려면
  * 조회가 끝나는 순간을 테스트가 정해야 한다.
  */
 
@@ -23,7 +23,7 @@ const USER_SITE_SELECT = '/api/v1/Login/W/sign/UserSiteSelect'
 const requested: string[] = []
 const pending: Array<() => void> = []
 
-const ZonesProbe = () => {
+const HomeProbe = () => {
   const seq = getSiteSeq()
   const { isSuccess } = useQuery({
     queryKey: ['probe', seq],
@@ -55,7 +55,7 @@ const renderLayout = (initialPath: string) => {
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route element={<ServiceLayout />}>
-            <Route path="/zones" element={<ZonesProbe />} />
+            <Route path="/dashboard" element={<HomeProbe />} />
             <Route path="/points/:pointSeq" element={<p>지점 상세</p>} />
           </Route>
         </Routes>
@@ -123,8 +123,8 @@ describe('ServiceLayout — 사업장 전환', () => {
     expect(screen.getByRole('navigation', { name: '하단 메뉴' }).closest('[inert]')).toBeNull()
   })
 
-  it('🔴 홈(/zones)에서 바꿔도 새 사업장으로 다시 그린다 — 같은 주소라도 재마운트', async () => {
-    renderLayout('/zones')
+  it('🔴 홈(/dashboard)에서 바꿔도 새 사업장으로 다시 그린다 — 같은 주소라도 재마운트', async () => {
+    renderLayout('/dashboard')
     expect(await screen.findByText('홈 6 로딩')).toBeInTheDocument()
     finishProbe()
     expect(await screen.findByText('홈 6 로드됨')).toBeInTheDocument()
