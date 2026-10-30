@@ -379,6 +379,26 @@
   animation: bounce-y 1.5s ease-in-out infinite;
 }
 
+/**
+ * NOTE: 대시보드 지점 단계의 **현재 위치** 퍼지는 원(`spec 067`).
+ * 🔴 Tailwind `animate-ping` 은 2배로 커져 단계 줄(`overflow-hidden`)에 상하좌우가 잘렸다 —
+ * 1.5배까지만 키운다(번호 원 20px → 30px, 사방 5px). 위아래는 감싼 쪽 여백, 왼쪽은 뱃지 안쪽 여백이 받는다(`CourseStepper`).
+ */
+@keyframes step-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.step-pulse-anim {
+  animation: step-pulse 1.6s ease-out infinite;
+}
+
 /*
  * NOTE: 지도(Leaflet)를 자기 쌓임 맥락 안에 가둔다(`spec 053`).
  * Leaflet 은 패널 400 · 컨트롤 1000 의 z-index 를 쓰는데, 컨테이너가 쌓임 맥락을 만들지 않아

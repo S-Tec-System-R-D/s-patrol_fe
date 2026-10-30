@@ -24,10 +24,17 @@ test.beforeEach(async ({ page }) => {
   await loginField(page)
 })
 
-test('대시보드 — 로그인 착지(현장 홈, spec 066)', async ({ page }) => {
+test('대시보드 — 로그인 착지(현장 홈, spec 066) · 본문(spec 067)', async ({ page }) => {
   await expect(page).toHaveURL(/\/dashboard$/)
   await expectHeading(page, '대시보드')
+  await expect(page.getByRole('heading', { name: '진행 중인 순찰' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'C코스' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '최근 미완료 · 시간초과' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '공지사항' })).toBeVisible()
   await expectNoOverflow(page)
+  // 카드 → 회차 상세
+  await page.getByRole('heading', { name: 'C코스' }).click()
+  await expectDetail(page, /\/patrol\/zones\/103$/)
 })
 
 test('코스 순찰이력 목록 · 상세', async ({ page }) => {
