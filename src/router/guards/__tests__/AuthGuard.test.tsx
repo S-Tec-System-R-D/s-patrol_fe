@@ -29,7 +29,7 @@ const renderAt = (initialPath: string) => {
           <Route path="/*" element={<AuthGuard />}>
             <Route path="zones" element={<div>OUTLET_OK</div>} />
           </Route>
-          <Route path="/login" element={<div>SERVICE_LOGIN</div>} />
+          <Route path="/" element={<div>SERVICE_LOGIN</div>} />
           <Route path="/admin/login" element={<div>ADMIN_LOGIN</div>} />
         </Routes>
       </MemoryRouter>
@@ -43,7 +43,7 @@ describe('AuthGuard', () => {
     server.resetHandlers()
   })
 
-  it('토큰 없음 → /login 으로 Navigate', async () => {
+  it('토큰 없음 → / (현장 로그인 = 랜딩) 으로 Navigate', async () => {
     renderAt('/zones')
     await waitFor(() => expect(screen.getByText('SERVICE_LOGIN')).toBeInTheDocument())
   })

@@ -25,7 +25,7 @@ const renderWithRouter = (initialPath: string, ui: React.ReactNode) => {
         <Routes>
           <Route path="/admin/*" element={ui} />
           <Route path="/403" element={<div>FORBIDDEN_PAGE</div>} />
-          <Route path="/login" element={<div>LOGIN_PAGE</div>} />
+          <Route path="/" element={<div>LOGIN_PAGE</div>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>
@@ -89,7 +89,7 @@ describe('RequireRoute', () => {
   })
 
   // 020: useMe 실패 = 토큰이 없거나 디코딩 불가. 네트워크 401이 아니다.
-  it('미인증(토큰 없음) 시 /login으로 리다이렉트', async () => {
+  it('미인증(토큰 없음) 시 / (현장 로그인)로 리다이렉트', async () => {
     renderWithRouter(
       '/admin/anything',
       <RequireRoute roles={['SYSTEM', 'MASTER', 'MANAGER']}>

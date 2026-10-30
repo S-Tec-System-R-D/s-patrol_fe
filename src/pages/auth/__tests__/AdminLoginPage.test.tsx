@@ -40,9 +40,11 @@ describe('AdminLoginPage', () => {
     server.resetHandlers()
   })
 
-  it('본사 로그인 제목을 보여준다', () => {
+  it('랜딩과 같은 틀 — 제목 S-Patrol + 관리자 배지 · 본사 안내 문구 · 소개 슬라이드(spec 063)', () => {
     renderAdminLogin()
-    expect(screen.getByRole('heading', { name: '본사 로그인' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'S-Patrol 관리자' })).toBeInTheDocument()
+    expect(screen.getByText('본사 관리자 전용 로그인입니다')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '서비스 소개' })).toBeInTheDocument()
   })
 
   it.each([101, 102, 103])(
@@ -58,15 +60,18 @@ describe('AdminLoginPage', () => {
     }
   )
 
-  // 본사 로그인 화면에 현장 계정이 들어오는 경우. 화면이 아니라 code가 착지점을 정한다 —
-  // 현장 계정을 본사 홈으로 보내면 가드가 막아 /403이 된다.
-  it('현장 코드(201)로 로그인하면 현장 홈으로 보낸다', async () => {
+  // 🔴 본사 로그인에 현장 계정이 들어오면 막고 현장 로그인 링크를 준다(spec 063 — 020 의
+  // "code 가 착지점을 정한다" 를 뒤집었다). 토큰은 저장하지 않는다.
+  it('현장 코드(201)면 막는다 — 현장 로그인(/) 링크 · 토큰 저장 안 함', async () => {
     server.use(http.post(LOGIN_PATH, () => loginOk(201)))
 
     renderAdminLogin()
     await fillAndSubmit()
 
-    await waitFor(() => expect(screen.getByText('SERVICE_HOME')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/현장 로그인을 이용/))
+    expect(screen.getByRole('link', { name: '현장 로그인으로 이동' })).toHaveAttribute('href', '/')
+    expect(screen.queryByText('SERVICE_HOME')).not.toBeInTheDocument()
+    expect(getAccessToken()).toBeNull()
   })
 
   it('로그인 실패 문구를 폼에 보여준다', async () => {

@@ -4,7 +4,7 @@ import { userEvent } from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/mocks/server'
-import LoginPage from '../LoginPage'
+import LandingPage from '../LandingPage'
 import { clearTokens, getAccessToken, getRefreshToken } from '@/lib/auth/tokens'
 import { clearSite, getSiteName, getSiteSeq } from '@/lib/auth/site'
 
@@ -21,9 +21,9 @@ const loginOk = (code: number) =>
 
 const renderLogin = () =>
   render(
-    <MemoryRouter initialEntries={['/login']}>
+    <MemoryRouter initialEntries={['/']}>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/zones" element={<div>SERVICE_HOME</div>} />
         <Route path="/admin/locations" element={<div>ADMIN_HOME</div>} />
       </Routes>
@@ -40,7 +40,7 @@ const fillAndSubmit = async (loginId = '333333', loginPw = 'abcd123!') => {
   await user.click(screen.getByRole('button', { name: /로그인/ }))
 }
 
-describe('LoginPage — 성공', () => {
+describe('현장 로그인(/) — 성공', () => {
   beforeEach(() => {
     clearTokens()
     server.resetHandlers()
@@ -57,15 +57,18 @@ describe('LoginPage — 성공', () => {
     expect(getRefreshToken()).toBe('new-refresh')
   })
 
-  // 현장 로그인 화면으로 본사 계정이 들어올 수 있다(screens.md §1-1). code가 보낼 곳을 정한다.
-  it.each([101, 102, 103])('본사 코드(%i)면 본사 홈으로 이동한다', async (code) => {
+  // 🔴 현장 로그인에서 본사 계정은 막는다(spec 063 — 020 의 "code 가 보낼 곳을 정한다" 를 뒤집었다).
+  // 안내만 하고 본사 로그인 주소는 드러내지 않는다(flow.md §0). 토큰은 저장하지 않는다.
+  it.each([101, 102, 103])('본사 코드(%i)면 막는다 — 관리자 계정 안내 · 토큰 저장 안 함', async (code) => {
     server.use(http.post(LOGIN_PATH, () => loginOk(code)))
 
     renderLogin()
     await fillAndSubmit()
 
-    await waitFor(() => expect(screen.getByText('ADMIN_HOME')).toBeInTheDocument())
-    expect(getAccessToken()).toBe('new-access')
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/관리자 계정/))
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(screen.queryByText('ADMIN_HOME')).not.toBeInTheDocument()
+    expect(getAccessToken()).toBeNull()
   })
 
   // 서버가 보낸 요청 본문이 swagger LoginDto(loginId/loginPw)와 맞는지 고정한다.
@@ -85,7 +88,7 @@ describe('LoginPage — 성공', () => {
   })
 })
 
-describe('LoginPage — 폼 검증', () => {
+describe('현장 로그인(/) — 폼 검증', () => {
   beforeEach(() => {
     clearTokens()
     server.resetHandlers()
@@ -133,7 +136,7 @@ describe('LoginPage — 폼 검증', () => {
   })
 })
 
-describe('LoginPage — 실패', () => {
+describe('현장 로그인(/) — 실패', () => {
   beforeEach(() => {
     clearTokens()
     server.resetHandlers()
@@ -208,7 +211,7 @@ describe('LoginPage — 실패', () => {
   })
 })
 
-describe('LoginPage — 근무자 차단 (US3)', () => {
+describe('현장 로그인(/) — 근무자 차단 (US3)', () => {
   beforeEach(() => {
     clearTokens()
     server.resetHandlers()
@@ -262,7 +265,7 @@ describe('LoginPage — 근무자 차단 (US3)', () => {
  * 선택은 **라우트가 아니라 로그인 카드 안의 단계**다. 따라서 "현장 홈으로 갔는가"는
  * 선택을 마친 뒤에만 참이 된다.
  */
-describe('LoginPage — 사업장 선택 (US1, US2)', () => {
+describe('현장 로그인(/) — 사업장 선택 (US1, US2)', () => {
   beforeEach(() => {
     clearTokens()
     clearSite()
@@ -351,14 +354,16 @@ describe('LoginPage — 사업장 선택 (US1, US2)', () => {
     expect(screen.getByRole('button', { name: '테스트 사업장2' })).toBeInTheDocument()
   })
 
-  /** 본사는 선택 단계가 없다 — 사업장 선택은 현장관리자만(사용자 결정 2026-10-23, spec 043 US4 철회) */
-  it('본사 계정은 사업장 선택 없이 본사 홈으로 간다', async () => {
+  /** 본사는 선택 단계가 없다 — 사업장 선택은 현장관리자만(spec 043). 063 부터 본사 계정은 이 화면에서 막히므로
+   *  사업장 목록 조회까지 가지 않는다 */
+  it('본사 계정은 사업장 선택 단계로 가지 않는다', async () => {
     server.use(http.post(LOGIN_PATH, () => loginOk(101)))
 
     renderLogin()
     await fillAndSubmit()
 
-    await waitFor(() => expect(screen.getByText('ADMIN_HOME')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    expect(screen.queryByText('사업장 선택')).not.toBeInTheDocument()
     expect(getSiteSeq()).toBeNull()
   })
 })
@@ -371,7 +376,7 @@ describe('LoginPage — 사업장 선택 (US1, US2)', () => {
  * siteSeq 없이 홈이 조회를 날린다. 그 응답은 403이 아니라 `200` + 빈 목록이라
  * (api-spec.md:211) 에러로 드러나지도 않는다.
  */
-describe('LoginPage — 사업장 확보 실패 (US3)', () => {
+describe('현장 로그인(/) — 사업장 확보 실패 (US3)', () => {
   beforeEach(() => {
     clearTokens()
     clearSite()

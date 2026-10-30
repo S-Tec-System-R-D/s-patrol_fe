@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import AppButton from '@/components/app/AppButton'
 import AppInput from '@/components/app/AppInput'
 import { login } from '@/features/auth/api/login'
 import { fetchUserSiteSelect } from '@/features/auth/api/userSiteSelect'
-import { resolveLoginOutcome } from '@/features/auth/lib/loginResult'
+import { resolveLoginOutcome, type LoginArea } from '@/features/auth/lib/loginResult'
 import { toSiteOptions } from '@/features/auth/lib/siteOptions'
 import { resolveSiteSelectOutcome } from '@/features/auth/lib/siteSelectOutcome'
 import { loginSchema, type LoginFormData } from '@/features/auth/form/schema'
@@ -15,13 +15,12 @@ import type { SiteOption } from '@/features/auth/types/site'
 import { clearTokens, setAccessToken, setRefreshToken } from '@/lib/auth/tokens'
 import { setSite } from '@/lib/auth/site'
 import { isServiceLoginCode } from '@/types/api'
-import { cn } from '@/lib/utils'
 
 /**
- * 로그인 내용(제목 · 폼 · 사업장 선택 단계 · 처리). 현장(`/login`)·본사(`/admin/login`)·랜딩(`/`, `spec 062`) **공용**.
+ * 로그인 내용(제목 · 폼 · 사업장 선택 단계 · 처리). 현장(`/` 랜딩)·본사(`/admin/login`) **공용**.
  *
- * 🔴 **틀(카드)이 없다** — 놓일 자리가 화면마다 달라서다. `/login` · `/admin/login` 은 `LoginForm` 의 가운데 카드,
- * 랜딩은 분할 카드의 왼쪽 반. 자식(제목 · 폼)의 간격은 부모가 `space-y-6` 으로 준다.
+ * 🔴 **틀(카드)이 없다** — 틀은 `LoginLanding`(분할 카드, `spec 062` · `063`)이 준다. 자식(제목 · 폼)의 간격은
+ * 부모가 `space-y-6` 으로 준다. 화면 가운데 작은 카드(`LoginForm`)는 `/login` 을 없애며 지웠다(`spec 063`).
  *
  * 로그인 엔드포인트가 하나뿐이고 사이트는 응답 `code`로만 갈리므로(`api-spec.md` §2-1)
  * 사이트별 차이는 **제목·안내 문구 2가지**뿐이다. 착지 경로는 `code`가 정하므로 prop이 아니다.
@@ -30,16 +29,20 @@ import { cn } from '@/lib/utils'
  * 인터셉터 일괄 toast면 중복 노출이 된다(spec 020 §3 규칙 9).
  */
 
-interface LoginFormProps {
+interface LoginPanelProps {
+  /** 로그인한 화면 — 다른 사이트 계정을 막는 기준(`spec 063`) */
+  area: LoginArea
   title: string
   description?: string
-  /** 제목 굵기 · 크기 덮어쓰기 — 랜딩의 서비스명(`spec 062`). 로그인 화면은 넘기지 않는다 */
-  titleClassName?: string
+  /** 제목 옆 작은 배지 — 본사 로그인의 `관리자`(`spec 063`) */
+  titleBadge?: string
 }
 
-export const LoginPanel = ({ title, description, titleClassName }: LoginFormProps) => {
+export const LoginPanel = ({ area, title, description, titleBadge }: LoginPanelProps) => {
   const navigate = useNavigate()
   const [submitError, setSubmitError] = useState<string | null>(null)
+  // 차단 안내에 붙는 갈 곳 — 본사 화면에서 현장관리자가 로그인했을 때만(`spec 063`)
+  const [errorLink, setErrorLink] = useState<{ to: string; label: string } | null>(null)
 
   // 사업장 선택 단계(spec 021). 라우트가 아니라 **카드 안의 단계**다 — 선택은
   // "목록 1회 조회 + 로컬 저장"뿐이라 라우트·가드를 건드릴 무게가 아니다.
@@ -72,14 +75,16 @@ export const LoginPanel = ({ title, description, titleClassName }: LoginFormProp
 
   const onSubmit = async (values: LoginFormData) => {
     setSubmitError(null)
+    setErrorLink(null)
     try {
       const { code, accessToken, refreshToken } = await login(values)
-      const outcome = resolveLoginOutcome(code)
+      const outcome = resolveLoginOutcome(code, area)
 
       // 🔴 허용이 아니면 **토큰을 저장하지 않는다.** 저장 후 차단이 아니다 —
       // 저장하면 새로고침 시 토큰이 살아 있어 가드를 통과할 여지가 생긴다(spec 020 §3 규칙 4).
       if (outcome.kind !== 'allowed') {
         setSubmitError(outcome.message)
+        if (outcome.kind === 'blocked' && outcome.link) setErrorLink(outcome.link)
         return
       }
 
@@ -139,7 +144,16 @@ export const LoginPanel = ({ title, description, titleClassName }: LoginFormProp
   ) : (
     <>
       <div className="space-y-1 text-center">
-        <h1 className={cn('text-lg font-semibold', titleClassName)}>{title}</h1>
+        <h1 className="flex items-center justify-center gap-2 text-lg font-bold">
+          {title}
+          {/* 공백 — 없으면 제목이 "S-Patrol관리자" 로 붙어 읽힌다(flex 안이라 화면 간격은 gap 이 준다) */}
+          {titleBadge && ' '}
+          {titleBadge && (
+            <span className="rounded-full bg-rail px-2 py-0.5 text-[11px] font-semibold text-white">
+              {titleBadge}
+            </span>
+          )}
+        </h1>
         {description && <p className="text-xs text-muted-foreground">{description}</p>}
       </div>
 
@@ -165,6 +179,14 @@ export const LoginPanel = ({ title, description, titleClassName }: LoginFormProp
         {submitError && (
           <p role="alert" className="text-sm text-destructive">
             {submitError}
+            {errorLink && (
+              <>
+                {' '}
+                <Link to={errorLink.to} className="font-medium underline underline-offset-2">
+                  {errorLink.label}
+                </Link>
+              </>
+            )}
           </p>
         )}
 
@@ -176,15 +198,3 @@ export const LoginPanel = ({ title, description, titleClassName }: LoginFormProp
     </>
   )
 }
-
-/**
- * 로그인 화면 틀 — `/login` · `/admin/login`. 화면 가운데 카드 하나에 `LoginPanel`.
- * 사이트별 차이는 **제목·안내 문구 2가지**뿐이다(`LoginPanel` 주석).
- */
-export const LoginForm = (props: LoginFormProps) => (
-  <div className="flex min-h-svh items-center justify-center bg-background p-6">
-    <div className="w-full max-w-sm space-y-6 rounded-md border border-border bg-card p-6 shadow-sm">
-      <LoginPanel {...props} />
-    </div>
-  </div>
-)

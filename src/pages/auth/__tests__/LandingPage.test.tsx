@@ -7,8 +7,8 @@ import { getSiteSeq } from '@/lib/auth/site'
 import LandingPage from '../LandingPage'
 
 /**
- * 랜딩(`/`, `spec 062`) — 로그인 처리는 `/login` 과 같은 `LoginPanel` 이다. 여기서는 **랜딩 자리에서도
- * 끝까지 이어지는지**만 본다(분기 전체는 `LoginPage.test.tsx`). mock dev 계정(`mocks/handlers/auth.ts`)을 쓴다.
+ * 랜딩(`/`, `spec 062`) — 현장 로그인 화면이다(`spec 063`). 여기서는 화면 구성과 **끝까지 이어지는지**만 본다
+ * (로그인 분기 전체는 `LandingLogin.test.tsx`). mock dev 계정(`mocks/handlers/auth.ts`)을 쓴다.
  */
 
 const renderLanding = () =>
@@ -58,10 +58,12 @@ describe('LandingPage', () => {
     expect(screen.getByRole('region', { name: '서비스 소개' })).toBeInTheDocument()
   })
 
-  it('본사 계정은 본사 홈으로 간다(/login 과 같다)', async () => {
+  it('🔴 본사 계정은 막는다 — 관리자 계정 안내 · 본사 주소 링크 없음(spec 063)', async () => {
     renderLanding()
     await login('000000')
-    expect(await screen.findByText('ADMIN_HOME')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent(/관리자 계정/)
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(getAccessToken()).toBeNull()
   })
 
   it('근무자는 차단 안내 · 토큰 저장 안 함', async () => {

@@ -19,7 +19,7 @@ const renderAt = (initialPath: string) =>
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
         <Route path="/*" element={<LogoutButton tooltipSide="right" />} />
-        <Route path="/login" element={<div>SERVICE_LOGIN</div>} />
+        <Route path="/" element={<div>SERVICE_LOGIN</div>} />
         <Route path="/admin/login" element={<div>ADMIN_LOGIN</div>} />
       </Routes>
     </MemoryRouter>

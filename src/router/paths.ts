@@ -38,7 +38,8 @@ const patrolPointDetail = (detailSeq: number) => `/patrol/points/${detailSeq}`
 export const paths = {
   // 공개 영역
   landing: '/',
-  serviceLogin: '/login',
+  // 🔴 현장 로그인 = 랜딩(`spec 063`). `/login` 은 없앴다(들어오면 `/` 로 넘긴다) — 가드 · 로그아웃 · 401 · 403/404 홈이 이 값을 쓴다
+  serviceLogin: '/',
   adminLogin: '/admin/login',
 
   // 에러 상태 (005 결정: 401 별도 페이지 없음 — 인터셉터 refresh→실패 시 로그인 리다이렉트로 흡수)

@@ -1,7 +1,6 @@
 import LandingPage from '@/pages/auth/LandingPage'
-import LoginPage from '@/pages/auth/LoginPage'
 import AdminLoginPage from '@/pages/auth/AdminLoginPage'
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import AuthGuard from './guards/AuthGuard'
 
 import ServiceLayout from '@/components/layout/ServiceLayout'
@@ -29,16 +28,16 @@ import { PageErrorFallback } from './PageErrorFallback'
 
 export const router = createBrowserRouter([
   //비인증 전용
-  // 랜딩 = 로그인 겸 서비스 소개(`spec 062`). `/login` 과 같이 가드 없음 — 로그인 상태여도 그대로 보인다
+  // 랜딩 = 현장 로그인 겸 서비스 소개(`spec 062` · `063`). 가드 없음 — 로그인 상태여도 그대로 보인다
   {
     path: paths.landing,
     element: <LandingPage />,
     errorElement: <PageErrorFallback />,
   },
+  // 예전 현장 로그인 주소(`spec 063`) — 즐겨찾기가 깨지지 않게 랜딩으로 넘긴다
   {
-    path: paths.serviceLogin,
-    element: <LoginPage />,
-    errorElement: <PageErrorFallback />,
+    path: '/login',
+    element: <Navigate to={paths.landing} replace />,
   },
   {
     path: paths.adminLogin,

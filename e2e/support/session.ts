@@ -25,7 +25,8 @@ const FIELD_SITE = '테스트 사업장2-1'
 
 /** 로그인 폼 제출까지만 — 결과(사업장 선택 · 차단 안내 · 홈)는 호출부가 본다 */
 export const submitLogin = async (page: Page, loginId: string, area: 'service' | 'admin') => {
-  await page.goto(area === 'admin' ? '/admin/login' : '/login')
+  // 현장 로그인 = 랜딩 `/`(`spec 063`)
+  await page.goto(area === 'admin' ? '/admin/login' : '/')
   await page.getByLabel('사번').fill(loginId)
   await page.getByLabel('비밀번호').fill(PASSWORD)
   await page.getByRole('button', { name: '로그인', exact: true }).click()

@@ -13,7 +13,7 @@ describe('homePath', () => {
     expect(homePath('FIELD_MANAGER')).toBe(paths.service.zones)
   })
 
-  it('근무자(WORKER) → /login (fallback)', () => {
+  it('근무자(WORKER) → / 현장 로그인 (fallback)', () => {
     expect(homePath('WORKER')).toBe(paths.serviceLogin)
   })
 })
