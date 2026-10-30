@@ -503,7 +503,8 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 - 트리거 시각만 제공. 팝오버/드롭다운 콘텐츠 조립은 소비 측(각 화면) 책임.
 - `asChild`로 radix `PopoverTrigger`/`DropdownMenuTrigger`에 감쌀 수 있도록 ref를 전달한다.
 - **`AppSelect`·`AppDatePicker`를 `AppFilterButton`으로 감싸지 않는다**(018 결정). 둘은 이미 자체 트리거 버튼을 갖고 있어 감싸면 **버튼 안에 버튼**이 되어 DOM이 무효가 되고 포커스·키보드 동작이 깨진다. 그래서 두 primitive에 `icon`·`active`를 직접 추가해 필터 트리거로 쓴다(§3-2·§3-3).
-- `AppFilterButton`은 **자체 트리거가 없는 커스텀 팝오버 필터**에만 쓴다. 현재 소비처는 `/users` 2곳.
+- `AppFilterButton`은 **자체 트리거가 없는 커스텀 팝오버 필터**에만 쓴다. 현재 소비처는 `AppFilterPopover` → 코스(`CourseFilters`) · 지점(`PointFilters`) 목록 필터 2곳씩(`/users` 는 `AppSelect` 로 옮겨 갔다).
+- 🔴 **미선택 톤 · 아이콘은 `AppSelect` 필터 트리거와 같다**(2026-10-30) — 미선택(`active === false`) 글자 `text-muted-foreground` · 앞 아이콘과 화살표 16px · 60% 불투명. 한쪽만 바꾸면 같은 줄의 필터끼리 무게가 달라 보인다.
 
 ---
 
