@@ -81,7 +81,8 @@ describe('PatrolPointsPage — 서버 목록', () => {
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
     expect(screen.getByText('순찰일시')).toBeInTheDocument()
     expect(screen.getByText('순찰지점')).toBeInTheDocument()
-    expect(screen.getByText('인증수단')).toBeInTheDocument()
+    // 필터 버튼에도 '인증수단' 이 보인다(spec 065 — 이름 표시) — 표 머리글로 좁힌다
+    expect(screen.getByRole('columnheader', { name: /인증수단/ })).toBeInTheDocument()
     expect(screen.getByText('구간')).toBeInTheDocument()
     expect(inTable().getAllByRole('row').length).toBeGreaterThan(1)
   })

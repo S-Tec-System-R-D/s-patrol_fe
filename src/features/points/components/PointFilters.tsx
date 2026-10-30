@@ -1,6 +1,7 @@
 import { SmartphoneIcon, ToggleLeftIcon } from 'lucide-react'
 
-import AppFilterPopover from '@/components/app/AppFilterPopover'
+import AppSelect, { type AppSelectOption } from '@/components/app/AppSelect'
+import { ALL_VALUE } from '@/lib/listQuery'
 
 /**
  * 순찰지점 목록 필터 — 인증수단 · 사용여부 (`spec 027` Phase 4, 022 US5 이월).
@@ -13,18 +14,25 @@ import AppFilterPopover from '@/components/app/AppFilterPopover'
  *
  * 🔴 **값은 URL 그대로의 문자열**이다. 서버 타입(정수·불리언) 변환은
  * `lib/pointListParams.ts` 한 자리에서만 한다 — 여기서 바꾸면 변환이 두 군데가 된다.
+ *
+ * 트리거는 다른 목록 필터와 같은 `AppSelect`(`spec 065` — 옛 `AppFilterPopover` 에서 통일). `전체` 는
+ * 값이 아니라 **해제**다 — 화면 경계에서 `undefined` 로 바꾼다(`ALL_VALUE`, 018 규약).
  */
 
 /** 🔴 `authMethod` 는 **정수**다(9=QR / 10=NFC, `api-spec.md` §4). URL 에도 그 값을 쓴다 */
-const AUTH_METHOD_OPTIONS = [
+const AUTH_METHOD_OPTIONS: AppSelectOption[] = [
+  { value: ALL_VALUE, label: '전체' },
   { value: '9', label: 'QR' },
   { value: '10', label: 'NFC' },
 ]
 
-const USE_YN_OPTIONS = [
+const USE_YN_OPTIONS: AppSelectOption[] = [
+  { value: ALL_VALUE, label: '전체' },
   { value: 'true', label: '사용' },
   { value: 'false', label: '미사용' },
 ]
+
+const toFilterValue = (value: string) => (value === ALL_VALUE ? undefined : value)
 
 interface PointFiltersProps {
   authMethod?: string
@@ -34,19 +42,23 @@ interface PointFiltersProps {
 
 const PointFilters = ({ authMethod, useYn, onChange }: PointFiltersProps) => (
   <div className="flex items-center gap-2">
-    <AppFilterPopover
-      label="인증수단"
+    <AppSelect
+      aria-label="인증수단"
       icon={SmartphoneIcon}
       options={AUTH_METHOD_OPTIONS}
-      value={authMethod}
-      onChange={(next) => onChange({ authMethod: next })}
+      value={authMethod ?? ALL_VALUE}
+      onChange={(next) => onChange({ authMethod: toFilterValue(next) })}
+      active={Boolean(authMethod)}
+      className="w-auto"
     />
-    <AppFilterPopover
-      label="사용여부"
+    <AppSelect
+      aria-label="사용여부"
       icon={ToggleLeftIcon}
       options={USE_YN_OPTIONS}
-      value={useYn}
-      onChange={(next) => onChange({ useYn: next })}
+      value={useYn ?? ALL_VALUE}
+      onChange={(next) => onChange({ useYn: toFilterValue(next) })}
+      active={Boolean(useYn)}
+      className="w-auto"
     />
   </div>
 )

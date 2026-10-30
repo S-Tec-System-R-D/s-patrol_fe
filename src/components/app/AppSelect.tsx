@@ -26,7 +26,10 @@ interface AppSelectProps {
    * `undefined` 는 "필터가 아니다"(폼 안의 셀렉트)다 — 미선택 톤은 **앞쪽에만** 입힌다.
    */
   active?: boolean
-  /** `AppFormField` 외부 라벨이 없을 때 트리거의 접근성 이름 */
+  /**
+   * `AppFormField` 외부 라벨이 없을 때 트리거의 접근성 이름.
+   * 🔴 **필터(`active` 를 넘김)일 때는 버튼 글자로도 쓴다**(`spec 065`) — 미선택 `권한` · 선택 `권한: 관리자`.
+   */
   'aria-label'?: string
 }
 
@@ -50,6 +53,20 @@ const AppSelect = ({
   'aria-label': ariaLabel,
 }: AppSelectProps) => {
   const field = useFormFieldIds()
+
+  /*
+   * 🔴 **필터 표시 — 이름 · "이름: 값"**(사용자 결정 2026-10-30, `spec 065`). 전에는 미선택이 `전체` 여서
+   * 무슨 필터인지 아이콘으로만 알 수 있었다(코스/지점의 옛 `AppFilterPopover` 가 이 표시였다 — 통일하며 옮겨 왔다).
+   * `undefined` 면 `SelectValue` 가 고른 항목 글자를 그대로 그린다(폼 안의 셀렉트).
+   */
+  const selectedLabel = options.find((option) => option.value === value)?.label
+  const filterText =
+    active === undefined || !ariaLabel
+      ? undefined
+      : active && selectedLabel
+        ? `${ariaLabel}: ${selectedLabel}`
+        : ariaLabel
+
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger
@@ -84,12 +101,24 @@ const AppSelect = ({
           {/* 🔴 **치수·불투명도를 `AppDatePicker` 와 맞춘다**(2026-10-20) — 같은 줄에서
               기간 아이콘은 16px·60% 인데 이쪽만 14px·불투명이라 **무게가 달라 보였다** */}
           {Icon && <Icon size={16} strokeWidth={1.75} className="shrink-0 opacity-60" />}
-          <SelectValue placeholder={placeholder} className="truncate" />
+          <SelectValue placeholder={placeholder} className="truncate">
+            {filterText}
+          </SelectValue>
         </span>
       </SelectTrigger>
       <SelectContent>
         {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
+          <SelectItem
+            key={option.value}
+            value={option.value}
+            /* 🔴 필터일 때 펼친 목록의 고른 항목 = 굵은 파란 글자 + 파란 체크 14px — 옛 `AppFilterPopover` 표시
+               그대로(사용자 결정 2026-10-30, `spec 065`). 체크와 함께 줘서 색만으로 전달하지 않는다(design-system §3).
+               폼 안의 셀렉트(`active` 없음)는 그대로 */
+            className={cn(
+              active !== undefined &&
+                'data-[state=checked]:font-semibold data-[state=checked]:text-point data-[state=checked]:[&_svg]:size-3.5'
+            )}
+          >
             {option.label}
           </SelectItem>
         ))}

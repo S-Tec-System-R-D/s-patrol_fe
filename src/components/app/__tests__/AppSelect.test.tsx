@@ -79,4 +79,28 @@ describe('AppSelect', () => {
     expect(screen.getByText('필수 항목입니다')).toBeInTheDocument()
     expect(screen.getByRole('combobox')).toBeInTheDocument()
   })
+
+  /** 🔴 필터 표시(`spec 065`) — 미선택은 이름, 선택은 "이름: 값". 폼 안의 셀렉트(`active` 없음)는 그대로 */
+  describe('필터 표시 — active 를 넘길 때', () => {
+    const filterOptions = [{ value: 'ALL', label: '전체' }, ...options]
+
+    it('미선택이면 필터 이름을 보여준다(전체 아님)', () => {
+      render(
+        <AppSelect aria-label="결과" options={filterOptions} value="ALL" onChange={() => {}} active={false} />
+      )
+      expect(screen.getByRole('combobox', { name: '결과' })).toHaveTextContent(/^결과$/)
+    })
+
+    it('선택하면 "이름: 값" 을 보여준다', () => {
+      render(
+        <AppSelect aria-label="결과" options={filterOptions} value="INCOMPLETE" onChange={() => {}} active />
+      )
+      expect(screen.getByRole('combobox', { name: '결과' })).toHaveTextContent('결과: 미완료')
+    })
+
+    it('폼 안의 셀렉트(active 없음)는 고른 값만 보여준다', () => {
+      render(<AppSelect aria-label="결과" options={options} value="INCOMPLETE" onChange={() => {}} />)
+      expect(screen.getByRole('combobox', { name: '결과' })).toHaveTextContent(/^미완료$/)
+    })
+  })
 })

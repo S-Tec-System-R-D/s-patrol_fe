@@ -244,7 +244,7 @@ describe('ZonesPage — 검색·필터·페이지', () => {
     renderPage()
 
     await screen.findAllByText('A동 순찰코스')
-    await user.click(inFilters().getByRole('button', { name: /교대/ }))
+    await user.click(inFilters().getByRole('combobox', { name: /교대/ }))
     await user.click(await screen.findByRole('option', { name: '허용' }))
 
     await waitFor(() => expect(url()).toContain('switchYn=true'))
@@ -254,7 +254,7 @@ describe('ZonesPage — 검색·필터·페이지', () => {
     const user = userEvent.setup()
     renderPage('/zones?switchYn=true')
 
-    await user.click(inFilters().getByRole('button', { name: /교대/ }))
+    await user.click(inFilters().getByRole('combobox', { name: /교대/ }))
     await user.click(await screen.findByRole('option', { name: '전체' }))
 
     await waitFor(() => expect(url()).not.toContain('switchYn'))
@@ -264,7 +264,7 @@ describe('ZonesPage — 검색·필터·페이지', () => {
     const user = userEvent.setup()
     renderPage('/zones?page=3')
 
-    await user.click(await inFilters().findByRole('button', { name: /사용여부/ }))
+    await user.click(await inFilters().findByRole('combobox', { name: /사용여부/ }))
     await user.click(await screen.findByRole('option', { name: '미사용' }))
 
     await waitFor(() => expect(url()).toContain('useYn=false'))

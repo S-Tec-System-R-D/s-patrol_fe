@@ -208,7 +208,7 @@ describe('PointsPage — 검색·필터·페이지 (Phase 4)', () => {
     renderPage()
 
     await screen.findAllByText('정문 입구')
-    await user.click(inFilters().getByRole('button', { name: /인증수단/ }))
+    await user.click(inFilters().getByRole('combobox', { name: /인증수단/ }))
     await user.click(await screen.findByRole('option', { name: 'NFC' }))
 
     await waitFor(() => expect(url()).toContain('authMethod=10'))
@@ -218,7 +218,7 @@ describe('PointsPage — 검색·필터·페이지 (Phase 4)', () => {
     const user = userEvent.setup()
     renderPage('/points?authMethod=10')
 
-    await user.click(inFilters().getByRole('button', { name: /인증수단/ }))
+    await user.click(inFilters().getByRole('combobox', { name: /인증수단/ }))
     await user.click(await screen.findByRole('option', { name: '전체' }))
 
     await waitFor(() => expect(url()).not.toContain('authMethod'))
@@ -229,7 +229,7 @@ describe('PointsPage — 검색·필터·페이지 (Phase 4)', () => {
     // 3페이지는 결과가 없다(10건 / 20건씩) — 필터 바는 목록과 무관하게 항상 있다
     renderPage('/points?page=3')
 
-    await user.click(await inFilters().findByRole('button', { name: /사용여부/ }))
+    await user.click(await inFilters().findByRole('combobox', { name: /사용여부/ }))
     await user.click(await screen.findByRole('option', { name: '미사용' }))
 
     await waitFor(() => expect(url()).toContain('useYn=false'))

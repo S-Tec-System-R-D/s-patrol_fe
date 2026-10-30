@@ -1,6 +1,7 @@
 import { RefreshCwIcon, ToggleLeftIcon } from 'lucide-react'
 
-import AppFilterPopover from '@/components/app/AppFilterPopover'
+import AppSelect, { type AppSelectOption } from '@/components/app/AppSelect'
+import { ALL_VALUE } from '@/lib/listQuery'
 
 /**
  * 순찰코스 목록 필터 — 사용여부 · 교대 (`spec 023` Phase 2).
@@ -16,17 +17,24 @@ import AppFilterPopover from '@/components/app/AppFilterPopover'
  *
  * 🔴 **값은 URL 그대로의 문자열**이다. 서버 타입 변환은 `lib/courseListParams.ts`
  * 한 자리에서만 한다.
+ *
+ * 트리거는 다른 목록 필터와 같은 `AppSelect`(`spec 065` — 옛 `AppFilterPopover` 에서 통일). `전체` 는
+ * 값이 아니라 **해제**다 — 화면 경계에서 `undefined` 로 바꾼다(`ALL_VALUE`, 018 규약).
  */
 
-const USE_YN_OPTIONS = [
+const USE_YN_OPTIONS: AppSelectOption[] = [
+  { value: ALL_VALUE, label: '전체' },
   { value: 'true', label: '사용' },
   { value: 'false', label: '미사용' },
 ]
 
-const SWITCH_YN_OPTIONS = [
+const SWITCH_YN_OPTIONS: AppSelectOption[] = [
+  { value: ALL_VALUE, label: '전체' },
   { value: 'true', label: '허용' },
   { value: 'false', label: '허용 안 함' },
 ]
+
+const toFilterValue = (value: string) => (value === ALL_VALUE ? undefined : value)
 
 interface CourseFiltersProps {
   useYn?: string
@@ -36,19 +44,23 @@ interface CourseFiltersProps {
 
 const CourseFilters = ({ useYn, switchYn, onChange }: CourseFiltersProps) => (
   <div className="flex items-center gap-2">
-    <AppFilterPopover
-      label="사용여부"
+    <AppSelect
+      aria-label="사용여부"
       icon={ToggleLeftIcon}
       options={USE_YN_OPTIONS}
-      value={useYn}
-      onChange={(next) => onChange({ useYn: next })}
+      value={useYn ?? ALL_VALUE}
+      onChange={(next) => onChange({ useYn: toFilterValue(next) })}
+      active={Boolean(useYn)}
+      className="w-auto"
     />
-    <AppFilterPopover
-      label="교대"
+    <AppSelect
+      aria-label="교대"
       icon={RefreshCwIcon}
       options={SWITCH_YN_OPTIONS}
-      value={switchYn}
-      onChange={(next) => onChange({ switchYn: next })}
+      value={switchYn ?? ALL_VALUE}
+      onChange={(next) => onChange({ switchYn: toFilterValue(next) })}
+      active={Boolean(switchYn)}
+      className="w-auto"
     />
   </div>
 )
