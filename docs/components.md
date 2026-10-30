@@ -26,7 +26,6 @@
 | `AppEmpty` | `components/app/AppEmpty.tsx` | 빈 상태 | ✅ 표준 |
 | `AppTable` | `components/AppTable.tsx` | tanstack-table 래퍼 | ✅ 표준 |
 | `AppPageHeader` | `components/app/AppPageHeader.tsx` | 페이지 상단 제목+부제+우측 액션 | ✅ 표준 |
-| `AppFilterButton` | `components/app/AppFilterButton.tsx` | 드롭다운/팝오버 필터 트리거 | ✅ 표준 |
 | `AppPagination` | `components/app/AppPagination.tsx` | 신규 페이지네이션(행수 선택+범위+이전/다음) | ✅ 표준 |
 | `AppDetailCard` / `AppDetailRow` | `components/app/AppDetailCard.tsx` / `AppDetailRow.tsx` | 마스터-디테일 우측 상세 패널 | ✅ 표준 |
 | `AppKpiCard` | `components/app/AppKpiCard.tsx` | 통계 타일(아이콘+라벨+숫자) | ✅ 표준 |
@@ -213,7 +212,8 @@ import AppSelect from '@/components/app/AppSelect'
 **가이드**
 
 - **label / error / hint를 갖지 않는다.** 폼에서 쓸 땐 `AppFormField`로 감쌀 것(D9 분담).
-- `icon`·`active`는 **필터 트리거로 쓸 때**만 준다(018 추가). `active`는 `AppFilterButton`과 동일한 강조 토큰(`border-point`/`bg-point-bg`/`text-point-foreground`)을 적용한다. 둘 다 optional이라 기존 호출부(`AppPagination`)는 외형이 변하지 않는다.
+- `icon`·`active`는 **필터 트리거로 쓸 때**만 준다(018 추가). `active`는 선택 강조 토큰(`border-point`/`bg-point-bg`/`text-point-foreground`)을 적용한다. 🔴 **목록 필터는 전부 이것이다**(`spec 065` — 7화면 13개).
+- 🔴 **필터 표시 — 미선택은 이름, 선택은 "이름: 값"**(`spec 065`, 사용자 결정 2026-10-30). 이름은 `aria-label` 값을 그대로 쓴다 — 호출부가 따로 넘기지 않는다. 미선택 글자는 `text-muted-foreground`, 아이콘 16px 60%(064 · 2026-10-20). 펼친 목록의 고른 항목은 **굵은 파란 글자 + 파란 체크 14px**(옛 팝오버 표시 — 체크가 있어 색만으로 전달하지 않는다). `전체` 는 `ALL_VALUE` 선택지로 두고 화면 경계에서 `undefined` 로 바꾼다(018 규약). 둘 다 optional이라 기존 호출부(`AppPagination`)는 외형이 변하지 않는다.
 - 아이콘과 `SelectValue`는 한 `<span>`으로 묶여 있다 — `SelectTrigger` 기본 클래스의 `justify-between`(`ui/select.tsx:24`) 때문에 묶지 않으면 값이 가운데로 벌어진다.
 - 트리거는 `<button role="combobox">`다. `<label>`로 감싸도 이름이 연결되지 않으므로, `AppFormField` 밖에서 쓸 땐 `aria-label`을 준다(예: `AppPagination`의 "페이지당 행 수").
 - **다중 선택 미지원**(017 결정 — 확정 수요가 없었음). 필요해지면 기본값 `false`인 `multiple` prop으로 확장하며, 기존 호출부는 건드리지 않는다.
@@ -472,39 +472,11 @@ import { PlusIcon } from 'lucide-react'
 
 ---
 
-## 9-2. AppFilterButton
+## 9-2. ~~AppFilterButton~~ (삭제 — `spec 065`, 2026-10-30)
 
-기간/코스/결과 등 드롭다운·팝오버 필터의 트리거 시각. 008(R1)에서 신설.
-
-```tsx
-import AppFilterButton from '@/components/app/AppFilterButton'
-import { CalendarIcon } from 'lucide-react'
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
-
-<Popover>
-  <PopoverTrigger asChild>
-    <AppFilterButton icon={CalendarIcon} label="기간 선택" active={!!range} />
-  </PopoverTrigger>
-  <PopoverContent>{/* 필터 콘텐츠는 소비 측이 구성 */}</PopoverContent>
-</Popover>
-```
-
-**Props**
-
-| Prop | 타입 | 기본 |
-|---|---|---|
-| `icon` | `LucideIcon` | — |
-| `label` | `string` | (필수) |
-| `active` | `boolean` | `false` — 선택된 필터 강조(테두리+배경 point) |
-| 기타 | `ButtonHTMLAttributes` | — |
-
-**규칙**
-
-- 트리거 시각만 제공. 팝오버/드롭다운 콘텐츠 조립은 소비 측(각 화면) 책임.
-- `asChild`로 radix `PopoverTrigger`/`DropdownMenuTrigger`에 감쌀 수 있도록 ref를 전달한다.
-- **`AppSelect`·`AppDatePicker`를 `AppFilterButton`으로 감싸지 않는다**(018 결정). 둘은 이미 자체 트리거 버튼을 갖고 있어 감싸면 **버튼 안에 버튼**이 되어 DOM이 무효가 되고 포커스·키보드 동작이 깨진다. 그래서 두 primitive에 `icon`·`active`를 직접 추가해 필터 트리거로 쓴다(§3-2·§3-3).
-- `AppFilterButton`은 **자체 트리거가 없는 커스텀 팝오버 필터**에만 쓴다. 현재 소비처는 `AppFilterPopover` → 코스(`CourseFilters`) · 지점(`PointFilters`) 목록 필터 2곳씩(`/users` 는 `AppSelect` 로 옮겨 갔다).
-- 🔴 **미선택 톤 · 아이콘은 `AppSelect` 필터 트리거와 같다**(2026-10-30) — 미선택(`active === false`) 글자 `text-muted-foreground` · 앞 아이콘과 화살표 16px · 60% 불투명. 한쪽만 바꾸면 같은 줄의 필터끼리 무게가 달라 보인다.
+목록 필터를 **`AppSelect` 하나로 통일**하며 지웠다(`AppFilterPopover` 와 함께). 코스(`CourseFilters`) · 지점(`PointFilters`)만
+`AppFilterPopover` → `AppFilterButton` 이었고 나머지 5화면(순찰이력 2 · 근무자 · 배치관리 · 본사 관리자)은 `AppSelect` 였다 —
+같은 일(단일 선택 + "전체")을 하는 필터가 두 벌이라 한쪽만 고쳐지는 일이 생겼다(064 톤 차이). 필터 트리거 규칙은 §3-2.
 
 ---
 

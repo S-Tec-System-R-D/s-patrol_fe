@@ -660,9 +660,14 @@ AlertDialog: 바뀌는 결과를 문장으로 설명
 
 ---
 
-## 16. 컴팩트 필터 팝오버 (2026-10-10)
+## 16. 컴팩트 필터 팝오버 (2026-10-10) — ⛔ 폐기(`spec 065`, 2026-10-30)
 
-> 구현: `components/app/AppFilterPopover.tsx` · 첫 사용처: `/points`(`spec 027`)
+> 🔴 **`AppFilterPopover` · `AppFilterButton` 을 지웠다.** 목록 필터는 전부 `AppSelect`(`components.md` §3-2)다 —
+> 이 패턴의 소비처는 코스 · 지점 두 곳뿐이었고 나머지 5화면은 `AppSelect` 로 갔다. 아래 규칙 중 살아남은 것:
+> "전체 = 해제(`ALL_VALUE` → `undefined`)" · "선택값을 버튼에 붙인다(`이름: 값`)" · "필터 변경 = URL + 첫 페이지" — 모두 `AppSelect` 필터가 그대로 따른다.
+> 아래는 기록이다.
+
+> 구현(삭제): `components/app/AppFilterPopover.tsx` · 첫 사용처: `/points`(`spec 027`)
 
 ### 왜 생겼나
 

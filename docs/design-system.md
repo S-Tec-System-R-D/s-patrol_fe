@@ -539,7 +539,7 @@ UI 텍스트(라벨, 확인 문구, 빈 상태, 에러)의 한국어 일관성 �
     없을 때 placeholder 가 이미 연하게 처리한다.
   - 아이콘 치수는 `AppDatePicker`(16 · 60%)가 먼저였고 `AppSelect`(14 · 불투명)가
     어긋나 있었다 — **먼저 있던 쪽에 맞췄다.**
-- **적용**: `AppSelect`. `AppDatePicker`·`AppFilterButton` 은 이미 같은 규칙이었다.
+- **적용**: `AppSelect`. `AppDatePicker`·`AppFilterButton` 은 이미 같은 규칙이었다. (`AppFilterButton` 은 `spec 065` 에서 삭제 — 목록 필터는 전부 `AppSelect`)
 - **사용 화면**: `/patrol/zones` · `/patrol/points` · `/points` 등 목록 필터 전부.
 
 ---
