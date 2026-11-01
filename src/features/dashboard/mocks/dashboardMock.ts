@@ -31,10 +31,11 @@ const points = (names: string[], checked: number[]) =>
   }))
 
 export const dashboardKpiMock: DashboardKpi = {
-  completedToday: 12,
-  incompleteToday: 1,
-  overtimeToday: 2,
-  pendingDeployments: 2,
+  completedCount: 12,
+  incompleteCount: 1,
+  overtimeCount: 2,
+  pendingAssignmentCount: 2,
+  pendingReturnCount: 1,
 }
 
 export const activeCoursesMock: ActiveCourse[] = [

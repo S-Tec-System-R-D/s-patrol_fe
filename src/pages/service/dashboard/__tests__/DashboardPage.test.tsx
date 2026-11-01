@@ -26,12 +26,18 @@ const renderPage = (entry = '/dashboard') =>
   )
 
 describe('DashboardPage', () => {
-  it('KPI 4칸 — 진행 중 칸은 없고, 누를 수 없다(링크 없음)', () => {
+  it('KPI — 묶음 2개(오늘 순찰 3칸 · 배치 대기 2칸), 진행 중 칸 없음, 누를 수 없다', () => {
     renderPage()
-    for (const label of ['오늘 완료', '오늘 미완료', '시간초과', '배치 대기']) {
-      expect(screen.getByText(label, { selector: 'p' }).closest('a')).toBeNull()
-    }
-    expect(screen.queryByText('진행 중', { selector: 'p' })).toBeNull()
+    const patrol = screen.getByRole('region', { name: '오늘 순찰' })
+    expect(within(patrol).getAllByRole('term').map((el) => el.textContent)).toEqual([
+      '오늘 완료',
+      '오늘 미완료',
+      '시간초과',
+    ])
+    const deploy = screen.getByRole('region', { name: '배치 대기' })
+    expect(within(deploy).getAllByRole('term').map((el) => el.textContent)).toEqual(['배치 요청', '복귀 요청'])
+    expect(within(deploy).getAllByRole('definition').map((el) => el.textContent)).toEqual(['2건', '1건'])
+    expect(patrol.closest('a')).toBeNull()
   })
 
   it('진행 중 카드 — 시간초과 코스가 맨 위, 카드는 회차 상세로 간다', () => {
@@ -83,22 +89,17 @@ describe('DashboardPage', () => {
     expect(within(notice).getByRole('link', { name: /사업장 출입 보안 수칙/ })).toHaveAttribute('href', '/notice/5')
   })
 
-  it('KPI 값이 0 이면 색을 빼고, 있으면 미완료 · 시간초과는 danger', () => {
-    const { container, unmount } = render(
-      <MemoryRouter>
-        <DashboardKpiRow kpi={{ completedToday: 0, incompleteToday: 0, overtimeToday: 0, pendingDeployments: 0 }} />
-      </MemoryRouter>
-    )
+  it('KPI 값이 0 이면 색을 빼고, 있으면 미완료 · 시간초과는 danger · 배치는 point', () => {
+    const zero = { completedCount: 0, incompleteCount: 0, overtimeCount: 0, pendingAssignmentCount: 0, pendingReturnCount: 0 }
+    const { container, unmount } = render(<DashboardKpiRow kpi={zero} />)
     expect(container.querySelector('.bg-danger-bg, .bg-point-bg')).toBeNull()
     unmount()
 
     const filled = render(
-      <MemoryRouter>
-        <DashboardKpiRow kpi={{ completedToday: 3, incompleteToday: 1, overtimeToday: 2, pendingDeployments: 0 }} />
-      </MemoryRouter>
+      <DashboardKpiRow kpi={{ ...zero, completedCount: 3, incompleteCount: 1, overtimeCount: 2, pendingReturnCount: 1 }} />
     )
     expect(filled.container.querySelectorAll('.bg-danger-bg')).toHaveLength(2)
-    expect(filled.container.querySelector('.bg-point-bg')).toBeNull()
+    expect(filled.container.querySelectorAll('.bg-point-bg')).toHaveLength(1)
   })
 
   it('?preview=empty — 진행 중 없음, 하단은 그대로', () => {

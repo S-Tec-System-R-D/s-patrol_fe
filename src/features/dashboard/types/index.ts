@@ -6,13 +6,14 @@
  * 붙으면 실측 응답 타입을 따로 두고 이쪽으로 옮긴다(`CLAUDE.md` B4 "서버 응답이 메인").
  */
 
-/** 오늘 숫자 4칸 */
+/** 오늘 숫자 — 요청서 `GetTodaySummary` 와 같은 이름(`docs/api-request-dashboard.md` §2) */
 export interface DashboardKpi {
-  completedToday: number
-  incompleteToday: number
+  completedCount: number
+  incompleteCount: number
   /** ⚠️ 정의 미정 — 끝난 회차만인지, 진행 중 초과까지인지(OQ-067-B) */
-  overtimeToday: number
-  pendingDeployments: number
+  overtimeCount: number
+  pendingAssignmentCount: number
+  pendingReturnCount: number
 }
 
 /** 진행 중 회차의 지점 하나 — 코스 편성 순서대로 온다 */
