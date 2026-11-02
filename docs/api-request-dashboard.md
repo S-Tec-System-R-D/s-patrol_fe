@@ -12,7 +12,7 @@
 | 1-A | 진행 중인 순찰 — **현재 상태 조회** | 🆕 신규 | `GET History/W/sign/GetActiveCourseList?siteSeq` | P1 | `GetCourseHistory?eventType=0` 에 **기준 시간 · 지점 목록이 없다** — 지점은 `CheckDetails` 를 회차마다 따로 불러야 한다(N+1) |
 | 1-B | 진행 중인 순찰 — **변화 알림** | 🆕 신규 | `GET History/W/sign/ActiveCourseStream?siteSeq` (SSE) | P1 | 없음 |
 | 2 | 오늘 숫자(KPI 5칸) | 🆕 신규 | `GET History/W/sign/GetTodaySummary?siteSeq` | P1 | 완료 · 미완료는 `GetCourseHistory` 를 여러 번 불러야 셀 수 있고 **시간초과는 거를 방법이 없다**. 배치 · 복귀 요청 수도 여기에 함께 받는다(새로고침 1번 = 숫자 5칸 한 번에) |
-| 3 | 최근 미완료 · 시간초과 | ✏️ 기존 확장 | `GET History/W/sign/GetPointHistory` + `issueYn=true` | P2 | `status` 필터는 있지만 **"미완료 또는 시간초과"** 를 한 번에 거를 수 없다 |
+| 3 | 최근 미완료 · 시간초과 | ✏️ 기존 확장 | `GET History/W/sign/GetPointHistory` + **`overTimeYn` 파라미터** | P2 | `status` 필터는 있지만 **시간초과로 거르는 파라미터가 없다** |
 | 4 | 공지사항(최근 3건) | ✅ 기존 그대로 | `GetNoticeList?pageNumber=1&pageSize=3` | — | 확인만(아래 Q4) |
 | 5 | KPI · 최근 기록 갱신 | — | **SSE 이벤트를 받으면** 2 · 3 을 다시 부른다(주기 조회 없음) | — | 아래 1-B "이벤트 → 화면" |
 
@@ -28,7 +28,7 @@
 | 2 | KPI | `오늘 순찰` 묶음(오늘 완료 · 오늘 미완료 · 시간초과) · `배치 대기` 묶음(배치 요청 · 복귀 요청) | 🆕 `GetTodaySummary` | 조회 + `course-ended` 이벤트 때 다시 조회 · 새로고침 | 숫자 5개 |
 | 1-A | 진행 중인 순찰 | 카드 목록 · 개수 · 코스명 · 순찰자 · `교대` · 시작 시각 · 경과/기준 · 시간 막대 · 지점 단계 뱃지 · 카드 → 회차 상세 | 🆕 `GetActiveCourseList` | 조회(화면 열 때 · SSE 다시 연결할 때). **계산**: 카드 순서 · `시간초과 +N분` · `건너뜀 N` · `n/N 지점` · `다음: 지점명` · 경과 1분마다 더하기 | 회차 배열(지점 배열 포함) |
 | 1-B | 진행 중인 순찰 | 위 카드의 변화(추가 · 제거 · 지점 인증 · 교대 · 일시정지) | 🆕 `ActiveCourseStream`(SSE) | 이벤트 → 1-A 로 받은 데이터를 고친다 | 이벤트 6종 |
-| 3 | 최근 미완료 · 시간초과 | 행 5개(시각 · 지점 · 코스 · 순찰자 · `미완료`/`시간초과` 뱃지 · 메모 아이콘 · 행 → 지점 인증 상세) | ✏️ `GetPointHistory` + `issueYn`(기존 확장) | 조회 + `point-checked` · `course-ended` 이벤트 때 다시 조회 | 기존 `PointHistoryRow` 목록 |
+| 3 | 최근 미완료 · 시간초과 | 행 5개(시각 · 지점 · 코스 · 순찰자 · `미완료`/`시간초과` 뱃지 · 메모 아이콘 · 행 → 지점 인증 상세) | ✏️ `GetPointHistory` + `overTimeYn`(기존 확장) | 조회 2번(`status=3` · `overTimeYn=true`, 각 5건) → **계산**: 시간순으로 합쳐 겹치는 행 1개로 · 앞 5건. `point-checked` · `course-ended` 이벤트 때 다시 조회 | 기존 `PointHistoryRow` 목록 |
 | 4 | 공지사항 | 행 3개(제목 · 날짜 · 고정 핀 · 행 → 공지 상세) | ✅ `GetNoticeList`(기존) | 조회만(실시간 불필요) | 기존 `NoticeRow` 목록 |
 
 ## 1-A. 진행 중인 순찰 현재 상태 — `GetActiveCourseList` 🆕
@@ -94,12 +94,13 @@
 
 ## 3. 최근 미완료 · 시간초과 — `GetPointHistory` 확장 ✏️
 
-| 추가 파라미터 | 뜻 |
-|---|---|
-| `issueYn=true` | `status = 3(미완료)` **또는** `overTimeYn = true` 인 행만 |
+| 추가 파라미터 | 타입 | 뜻 |
+|---|---|---|
+| `overTimeYn` | boolean(선택) | `true` 면 **시간초과 행만**, `false` 면 시간초과 아닌 행만, 없으면 지금처럼 전체 |
 
-- 화면은 `pageNumber=1&pageSize=5` 로 부르고 **최근 순(`checkDt` 내림차순)** 이면 된다(지금 기본 정렬 그대로).
-- 응답은 지금 `PointHistoryRow` 그대로(`detailSeq · checkDt · pointName · courseName · userName · status · overTimeYn · hasMemo`).
+- 🔴 **추가는 이 파라미터 하나뿐이다** — 응답(`PagedData<PointHistoryRow>`) · 다른 파라미터 · 정렬(최근 순)은 그대로. 기존 `status` 필터와 같은 모양의 **일반 필터**라 지점 순찰이력 목록에서도 쓸 수 있다.
+- 화면은 두 번 부른다: `status=3&pageSize=5`(미완료) · `overTimeYn=true&pageSize=5`(시간초과) → 시간순으로 합치고, 미완료이면서 시간초과인 행(같은 `detailSeq`)은 하나로, 앞 5건.
+- 경위: `api-spec.md` B-34 에서 이 필터 요청을 **철회**했었다(2026-10-12 — 쓰는 화면이 없었다). 대시보드가 쓰는 화면이 되어 다시 요청한다.
 
 ---
 
@@ -186,28 +187,28 @@ data: {"historySeq":103,"status":1}
 }
 ```
 
-### 3. `GET History/W/sign/GetPointHistory?siteSeq=7&issueYn=true&pageNumber=1&pageSize=5` ✏️
+### 3. `GET History/W/sign/GetPointHistory?siteSeq=7&overTimeYn=true&pageNumber=1&pageSize=5` ✏️
 
-응답은 **지금과 같다**(`PagedData<PointHistoryRow>`) — 추가는 `issueYn` 파라미터뿐.
+응답은 **지금과 같다**(`PagedData<PointHistoryRow>`) — 추가는 `overTimeYn` 파라미터뿐. 미완료는 기존 `status=3` 으로 따로 부른다.
 
 ```json
 {
   "items": [
     {
-      "detailSeq": 1000,
-      "courseSeq": 1,
-      "courseName": "A코스",
-      "pointSeq": 1,
-      "pointName": "3층",
-      "checkDt": "2026-11-02T09:12:00",
-      "userSeq": 21,
-      "userName": "홍길동",
-      "authMethod": null,
-      "authMethodName": "",
-      "status": 3,
-      "statusName": "미완료",
-      "overTimeYn": false,
-      "hasMemo": true,
+      "detailSeq": 2000,
+      "courseSeq": 2,
+      "courseName": "B코스",
+      "pointSeq": 2,
+      "pointName": "창고",
+      "checkDt": "2026-11-02T08:47:00",
+      "userSeq": 32,
+      "userName": "김철수",
+      "authMethod": 10,
+      "authMethodName": "NFC",
+      "status": 4,
+      "statusName": "완료",
+      "overTimeYn": true,
+      "hasMemo": false,
       "pauseTime": "00:00:00"
     }
   ],
