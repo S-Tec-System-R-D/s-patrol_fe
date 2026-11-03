@@ -7,8 +7,16 @@ import { cardBadge } from '@/components/app/AppBadge.variants'
 import { cn } from '@/lib/utils'
 import { paths } from '@/router/paths'
 
-import { checkedCount, elapsedRatio, nextPoint, overtimeMin, skippedCount } from '../lib/activeCourse'
-import type { ActiveCourse } from '../types'
+import {
+  checkedCount,
+  currentUserName,
+  elapsedRatio,
+  hasStandard,
+  nextPoint,
+  overtimeMin,
+  skippedCount,
+} from '../lib/activeCourse'
+import type { DashboardCourse } from '../types'
 import CourseStepper from './CourseStepper'
 
 /**
@@ -16,6 +24,8 @@ import CourseStepper from './CourseStepper'
  *
  * 1줄 = **무엇이 · 문제가 있나 · 얼마나**(코스명 · 시간초과/건너뜀 · `n/N 지점`),
  * 2줄 = **누가 · 언제 · 시간 · 다음**. 목업의 `4 ~ 5 순찰중` 은 아래 단계 표시와 같은 말이라 뺐다.
+ * `spec 068` — 서버 이름 그대로: 순찰자 = `users` 마지막 · `교대` = `handoverCount > 0` · 기준 = `totalMin`.
+ * 🔴 **`totalMin 0` 은 `기준 없음`** — 막대 · 시간초과를 그리지 않는다(0 분 기준이면 전부 초과로 보인다).
  */
 
 const formatTime = (value: string): string => {
@@ -24,14 +34,17 @@ const formatTime = (value: string): string => {
 }
 
 interface ActiveCourseCardProps {
-  course: ActiveCourse
+  course: DashboardCourse
+  /** 지금의 경과 분 — 섹션이 1분마다 다시 센다(`elapsedMinAt`) */
+  elapsedMin: number
 }
 
-const ActiveCourseCard = ({ course }: ActiveCourseCardProps) => {
-  const over = overtimeMin(course)
+const ActiveCourseCard = ({ course, elapsedMin }: ActiveCourseCardProps) => {
+  const over = overtimeMin(course, elapsedMin)
   const skipped = skippedCount(course.points)
   const next = nextPoint(course.points)
-  const ratio = Math.min(elapsedRatio(course), 1)
+  const ratio = Math.min(elapsedRatio(course, elapsedMin), 1)
+  const userName = currentUserName(course)
 
   return (
     <Link
@@ -62,8 +75,8 @@ const ActiveCourseCard = ({ course }: ActiveCourseCardProps) => {
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="font-medium text-foreground">{course.userName}</span>
-          {course.swapped && (
+          <span className="font-medium text-foreground">{userName ?? '-'}</span>
+          {course.handoverCount > 0 && (
             <AppBadge variant="muted" className={cn(cardBadge, 'gap-1')}>
               <RepeatIcon size={11} strokeWidth={2} />
               교대
@@ -71,17 +84,21 @@ const ActiveCourseCard = ({ course }: ActiveCourseCardProps) => {
           )}
         </span>
         <span className="tabular-nums">{formatTime(course.startDt)} 시작</span>
-        <span className="flex items-center gap-2">
-          <span className={cn('tabular-nums', over > 0 && 'font-semibold text-danger-foreground')}>
-            {course.elapsedMin}분 / {course.standardMin}분
+        {hasStandard(course) ? (
+          <span className="flex items-center gap-2">
+            <span className={cn('tabular-nums', over > 0 && 'font-semibold text-danger-foreground')}>
+              {elapsedMin}분 / {course.totalMin}분
+            </span>
+            <span aria-hidden className="h-1 w-16 overflow-hidden rounded-full bg-muted">
+              <span
+                className={cn('block h-full rounded-full', over > 0 ? 'bg-danger' : 'bg-point')}
+                style={{ width: `${ratio * 100}%` }}
+              />
+            </span>
           </span>
-          <span aria-hidden className="h-1 w-16 overflow-hidden rounded-full bg-muted">
-            <span
-              className={cn('block h-full rounded-full', over > 0 ? 'bg-danger' : 'bg-point')}
-              style={{ width: `${ratio * 100}%` }}
-            />
-          </span>
-        </span>
+        ) : (
+          <span className="tabular-nums">{elapsedMin}분 · 기준 없음</span>
+        )}
         {next && (
           <span>
             다음: <span className="font-medium text-foreground">{next.pointName}</span>

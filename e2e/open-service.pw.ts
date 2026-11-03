@@ -24,12 +24,16 @@ test.beforeEach(async ({ page }) => {
   await loginField(page)
 })
 
-test('대시보드 — 로그인 착지(현장 홈, spec 066) · 본문(spec 067)', async ({ page }) => {
+test('대시보드 — 로그인 착지(현장 홈, spec 066) · 본문(spec 067) · API 연결(spec 068)', async ({ page }) => {
   await expect(page).toHaveURL(/\/dashboard$/)
   await expectHeading(page, '대시보드')
+  // 값은 mock 핸들러(`mocks/handlers/dashboard.ts`) 응답
+  await expect(page.getByRole('region', { name: '오늘 순찰' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '진행 중인 순찰' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'C코스' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: '최근 미완료 · 시간초과' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /임시코스/ })).toContainText('기준 없음')
+  const recent = page.locator('section', { has: page.getByRole('heading', { name: '최근 미완료 · 시간초과' }) })
+  await expect(recent.getByRole('listitem')).toHaveCount(5)
   await expect(page.getByRole('heading', { name: '공지사항' })).toBeVisible()
   await expectNoOverflow(page)
   // 카드 → 회차 상세

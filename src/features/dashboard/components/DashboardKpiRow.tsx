@@ -1,9 +1,10 @@
 import type { LucideIcon } from 'lucide-react'
 import { CircleAlertIcon, CircleCheckIcon, ClockAlertIcon, Undo2Icon, UserRoundPlusIcon } from 'lucide-react'
 
+import AppButton from '@/components/app/AppButton'
 import { cn } from '@/lib/utils'
 
-import type { DashboardKpi } from '../types'
+import type { AreaState, TodaySummary } from '../types'
 
 /**
  * 오늘 숫자 — `spec 067`. **묶음 카드 2개**(사용자 결정 2026-11-02): `오늘 순찰` 3칸 · `배치 대기` 2칸.
@@ -14,6 +15,7 @@ import type { DashboardKpi } from '../types'
  * 🔴 **값이 0 이면 색을 뺀다** — 0건에 빨강이 서 있으면 문제가 있는 것처럼 읽힌다.
  * 🔴 시간초과는 `danger` 다 — 순찰이력 결과 뱃지와 같은 색(`historyBadge.ts` `overtimeBadge`).
  * 🔴 **누를 수 없다**(사용자 결정 2026-10-30) — 숫자를 보는 칸이고, 목록으로 가는 길은 메뉴에 있다.
+ * 🔴 **조회 중 · 실패에 0 을 그리지 않는다**(`spec 068`) — 0 은 "오늘 문제 없음" 으로 읽힌다.
  */
 
 type Tone = 'neutral' | 'point' | 'danger'
@@ -68,48 +70,73 @@ const KpiGroup = ({ title, cells, className }: { title: string; cells: Cell[]; c
 )
 
 interface DashboardKpiRowProps {
-  kpi: DashboardKpi
+  summary: TodaySummary | undefined
+  state: AreaState
+  onRetry: () => void
 }
 
-const DashboardKpiRow = ({ kpi }: DashboardKpiRowProps) => (
-  <div className="grid grid-cols-1 gap-3 xl:grid-cols-5">
-    <KpiGroup
-      title="오늘 순찰"
-      className="xl:col-span-3"
-      cells={[
-        { label: '오늘 완료', value: kpi.completedCount, icon: CircleCheckIcon, tone: 'neutral' },
-        {
-          label: '오늘 미완료',
-          value: kpi.incompleteCount,
-          icon: CircleAlertIcon,
-          tone: toneWhen(kpi.incompleteCount, 'danger'),
-        },
-        {
-          label: '시간초과',
-          value: kpi.overtimeCount,
-          icon: ClockAlertIcon,
-          tone: toneWhen(kpi.overtimeCount, 'danger'),
-        },
-      ]}
-    />
-    <KpiGroup
-      title="배치 대기"
-      className="xl:col-span-2"
-      cells={[
-        {
-          label: '배치 요청',
-          value: kpi.pendingAssignmentCount,
-          icon: UserRoundPlusIcon,
-          tone: toneWhen(kpi.pendingAssignmentCount, 'point'),
-        },
-        {
-          label: '복귀 요청',
-          value: kpi.pendingReturnCount,
-          icon: Undo2Icon,
-          tone: toneWhen(kpi.pendingReturnCount, 'point'),
-        },
-      ]}
-    />
+const DashboardKpiRow = ({ summary, state, onRetry }: DashboardKpiRowProps) => {
+  if (state === 'error') return <KpiError onRetry={onRetry} />
+  if (state === 'loading' || !summary) {
+    return (
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-5" aria-label="불러오는 중">
+        <div className="h-[58px] animate-pulse rounded-lg bg-muted xl:col-span-3" />
+        <div className="h-[58px] animate-pulse rounded-lg bg-muted xl:col-span-2" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-3 xl:grid-cols-5">
+      <KpiGroup
+        title="오늘 순찰"
+        className="xl:col-span-3"
+        cells={[
+          { label: '오늘 완료', value: summary.completedCount, icon: CircleCheckIcon, tone: 'neutral' },
+          {
+            label: '오늘 미완료',
+            value: summary.incompleteCount,
+            icon: CircleAlertIcon,
+            tone: toneWhen(summary.incompleteCount, 'danger'),
+          },
+          {
+            label: '시간초과',
+            value: summary.overtimeCount,
+            icon: ClockAlertIcon,
+            tone: toneWhen(summary.overtimeCount, 'danger'),
+          },
+        ]}
+      />
+      <KpiGroup
+        title="배치 대기"
+        className="xl:col-span-2"
+        cells={[
+          {
+            label: '배치 요청',
+            value: summary.pendingAssignmentCount,
+            icon: UserRoundPlusIcon,
+            tone: toneWhen(summary.pendingAssignmentCount, 'point'),
+          },
+          {
+            label: '복귀 요청',
+            value: summary.pendingReturnCount,
+            icon: Undo2Icon,
+            tone: toneWhen(summary.pendingReturnCount, 'point'),
+          },
+        ]}
+      />
+    </div>
+  )
+}
+
+/** 숫자 영역 오류 — 한 줄로(카드 높이를 크게 바꾸지 않는다) */
+const KpiError = ({ onRetry }: { onRetry: () => void }) => (
+  <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
+    <CircleAlertIcon size={16} className="shrink-0 text-muted-foreground" />
+    <p className="min-w-0 flex-1 text-caption text-muted-foreground">오늘 숫자를 불러오지 못했습니다</p>
+    <AppButton variant="sub" onClick={onRetry}>
+      다시 시도
+    </AppButton>
   </div>
 )
 

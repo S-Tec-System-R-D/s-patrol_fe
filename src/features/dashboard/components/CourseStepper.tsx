@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils'
 
 import { pointSteps } from '../lib/activeCourse'
-import type { ActiveCoursePoint, PointStepStatus } from '../types'
+import type { DashboardCoursePoint, PointStepStatus } from '../types'
 
 /**
- * 진행 중 회차의 지점 단계 — `spec 067`.
+ * 진행 중 회차의 지점 단계 — `spec 067`. 상태는 서버 `status` 그대로(`spec 068` — `pointSteps`).
  *
  * 🔴 **뱃지형이다**(사용자 결정 2026-10-30) — 번호 + 지점명을 상태색 뱃지 하나로 묶고 선을 바로 붙인다.
  * 번호 원 + 이름(숫자 스테퍼)과 나란히 비교해 골랐다: 선이 이어진 느낌이 강하고 색만으로 어디까지 갔는지 보인다.
@@ -57,7 +57,7 @@ const Connector = ({ kind }: { kind: 'passed' | 'current' | 'rest' }) => (
 )
 
 interface CourseStepperProps {
-  points: ActiveCoursePoint[]
+  points: DashboardCoursePoint[]
 }
 
 const CourseStepper = ({ points }: CourseStepperProps) => {
@@ -83,7 +83,7 @@ const CourseStepper = ({ points }: CourseStepperProps) => {
           // 이 단계로 들어오는 선 — 다음 지점으로 가는 구간만 점선
           const connector = index === nextIndex ? 'current' : index < nextIndex || nextIndex === -1 ? 'passed' : 'rest'
           return (
-            <li key={point.orderNo} className="flex items-center">
+            <li key={point.detailSeq} className="flex items-center">
               <Connector kind={connector} />
               <span
                 className={cn(

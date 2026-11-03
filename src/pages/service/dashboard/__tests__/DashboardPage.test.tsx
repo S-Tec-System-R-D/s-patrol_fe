@@ -1,65 +1,124 @@
-import { render, screen, within } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import ActiveCourseSection from '@/features/dashboard/components/ActiveCourseSection'
 import DashboardKpiRow from '@/features/dashboard/components/DashboardKpiRow'
+import type { DashboardCourse } from '@/features/dashboard/types'
+import { setSite } from '@/lib/auth/site'
+import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
+import { resetNoticeStore } from '@/mocks/handlers/notices'
+import { server } from '@/mocks/server'
+import { makeAccessToken } from '@/test/jwt'
 import DashboardPage from '../DashboardPage'
 
 /**
- * `/dashboard` — `spec 067`(API 없음, 고정 데이터). 정렬 · 링크 · 상태 3종 · 0 KPI 색.
+ * `/dashboard` — `spec 068`(API 연결). 값은 `mocks/handlers/dashboard.ts` 응답 기준.
+ * 정렬 · 단계 · 기준 없음 · 경과 증가 · 최근 기록 합치기 · 영역별 오류 · 새로고침.
  */
 
-const LocationProbe = () => {
-  const location = useLocation()
-  return <div data-testid="location">{location.pathname + location.search}</div>
+const PATHS = {
+  summary: '/api/v1/DashBoard/W/sign/GetTodaySummary',
+  courses: '/api/v1/DashBoard/W/sign/GetDashboardCourseList',
+  history: '/api/v1/DashBoard/W/sign/GetDashboardPointHistory',
+  notice: '/api/v1/Notice/W/sign/GetNoticeList',
 }
 
-const renderPage = (entry = '/dashboard') =>
-  render(
-    <MemoryRouter initialEntries={[entry]}>
-      <Routes>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="*" element={<LocationProbe />} />
-      </Routes>
-    </MemoryRouter>
-  )
+const serverError = () => HttpResponse.json({ title: 'Internal Server Error', status: 500 }, { status: 500 })
 
-describe('DashboardPage', () => {
-  it('KPI — 묶음 2개(오늘 순찰 3칸 · 배치 대기 2칸), 진행 중 칸 없음, 누를 수 없다', () => {
+const renderPage = () => {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <Routes>
+          <Route path="/dashboard" element={<DashboardPage />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
+  )
+}
+
+const captureRequests = () => {
+  const calls: URL[] = []
+  server.events.on('request:start', ({ request }) => calls.push(new URL(request.url)))
+  return calls
+}
+
+const section = (heading: string) => screen.getByRole('heading', { name: heading }).closest('section')!
+const courseCard = (name: string) => screen.getByRole('heading', { name }).closest('a')!
+
+beforeEach(() => {
+  resetNoticeStore()
+  clearTokens()
+  setAccessToken(makeAccessToken())
+  // 공지 mock 시드가 사업장 7 이다
+  setSite(7, '테스트 사업장')
+})
+
+afterEach(() => {
+  clearTokens()
+  server.events.removeAllListeners()
+})
+
+describe('DashboardPage — API 연결', () => {
+  it('선택한 사업장으로 4개 영역을 부른다 — 최근 기록은 미완료 · 시간초과 2번', async () => {
+    const calls = captureRequests()
     renderPage()
-    const patrol = screen.getByRole('region', { name: '오늘 순찰' })
+    await screen.findByRole('heading', { name: 'C코스' })
+
+    const of = (path: string) => calls.filter((url) => url.pathname === path)
+    expect(of(PATHS.summary)[0].searchParams.get('siteSeq')).toBe('7')
+    expect(of(PATHS.courses)[0].searchParams.get('siteSeq')).toBe('7')
+    const history = of(PATHS.history).map((url) => url.searchParams)
+    expect(history).toHaveLength(2)
+    expect(history.map((p) => [p.get('status'), p.get('overTimeYn'), p.get('pageSize')])).toEqual([
+      ['3', null, '5'],
+      [null, 'true', '5'],
+    ])
+    expect(of(PATHS.notice)[0].searchParams.get('pageSize')).toBe('3')
+  })
+
+  it('KPI — 응답 숫자 그대로 · 묶음 2개 · 누를 수 없다', async () => {
+    renderPage()
+    const patrol = await screen.findByRole('region', { name: '오늘 순찰' })
     expect(within(patrol).getAllByRole('term').map((el) => el.textContent)).toEqual([
       '오늘 완료',
       '오늘 미완료',
       '시간초과',
     ])
+    expect(within(patrol).getAllByRole('definition').map((el) => el.textContent)).toEqual(['12건', '1건', '2건'])
     const deploy = screen.getByRole('region', { name: '배치 대기' })
-    expect(within(deploy).getAllByRole('term').map((el) => el.textContent)).toEqual(['배치 요청', '복귀 요청'])
     expect(within(deploy).getAllByRole('definition').map((el) => el.textContent)).toEqual(['2건', '1건'])
     expect(patrol.closest('a')).toBeNull()
   })
 
-  it('진행 중 카드 — 시간초과 코스가 맨 위, 카드는 회차 상세로 간다', () => {
+  it('진행 중 카드 — 시간초과 → 경과 비율 순, 기준 없음은 맨 뒤, 회차 상세로 간다', async () => {
     renderPage()
-    const section = screen.getByRole('heading', { name: '진행 중인 순찰' }).closest('section')!
-    const cards = within(section).getAllByRole('link')
-    expect(cards).toHaveLength(4)
-    expect(within(cards[0]).getByRole('heading')).toHaveTextContent('C코스')
-    expect(cards[0]).toHaveTextContent('시간초과 +13분')
-    expect(cards[0]).toHaveAttribute('href', '/patrol/zones/103')
-    // A코스 18/30 → B코스 23/40 → 야간코스 2/25
-    expect(cards.slice(1).map((card) => within(card).getByRole('heading').textContent)).toEqual([
+    await screen.findByRole('heading', { name: 'C코스' })
+    const cards = within(section('진행 중인 순찰')).getAllByRole('link')
+    expect(cards.map((card) => within(card).getByRole('heading').textContent)).toEqual([
+      'C코스',
       'A코스',
       'B코스',
+      'D코스',
       '야간코스',
+      '임시코스',
     ])
+    expect(cards[0]).toHaveTextContent('시간초과 +13분')
+    expect(cards[0]).toHaveAttribute('href', '/patrol/zones/103')
   })
 
-  it('카드 두 줄 — 지점 수 · 교대 · 다음 지점 · 건너뜀', () => {
+  it('카드 — 서버 status 단계 · 지금 순찰자 · 교대 · 다음 지점 · 건너뜀', async () => {
     renderPage()
-    const card = screen.getByRole('heading', { name: 'B코스' }).closest('a')!
+    await screen.findByRole('heading', { name: 'B코스' })
+    const card = courseCard('B코스')
     expect(card).toHaveTextContent('3/5 지점')
+    expect(card).toHaveTextContent('김철수')
+    expect(card).not.toHaveTextContent('최근무')
     expect(card).toHaveTextContent('교대')
     expect(card).toHaveTextContent('다음: 옥상')
     expect(card).toHaveTextContent('건너뜀 1')
@@ -68,56 +127,160 @@ describe('DashboardPage', () => {
     expect(steps[2]).toHaveTextContent('3창고 (건너뜀)')
     expect(steps[4]).toHaveTextContent('5옥상 (다음)')
 
-    const night = screen.getByRole('heading', { name: '야간코스' }).closest('a')!
+    const night = courseCard('야간코스')
     expect(night).toHaveTextContent('출발')
     expect(night).toHaveTextContent('0/4 지점')
+    expect(night).not.toHaveTextContent('교대')
   })
 
-  it('최근 미완료 · 시간초과 · 공지 — 건수 뱃지 없음 · 행 링크 · 고정 공지만 핀', () => {
+  it('totalMin 0 — 기준 없음(막대 · 시간초과 없음)', async () => {
     renderPage()
-    const history = screen.getByRole('heading', { name: '최근 미완료 · 시간초과' }).closest('section')!
-    expect(within(history).getByRole('link', { name: /전체 보기/ })).toHaveAttribute('href', '/patrol/points')
-    expect(within(history).getByRole('link', { name: /3층/ })).toHaveAttribute('href', '/patrol/points/1000')
-    // 처리할 목록이 아니다 — 건수를 세우지 않는다
-    expect(within(history).queryByText('5')).toBeNull()
-    // 인증을 마친 행은 결과 뱃지 없이 시간초과만 — 이상없음 · 순찰기록이 안 나온다
-    expect(within(history).queryByText('이상없음')).toBeNull()
-    expect(within(within(history).getByRole('link', { name: /창고/ })).getByText('시간초과')).toBeInTheDocument()
+    await screen.findByRole('heading', { name: '임시코스' })
+    const card = courseCard('임시코스')
+    expect(card).toHaveTextContent('12분 · 기준 없음')
+    expect(card).not.toHaveTextContent('시간초과')
+    expect(card).not.toHaveTextContent('/ 0분')
+  })
 
-    const notice = screen.getByRole('heading', { name: '공지사항' }).closest('section')!
+  it('최근 미완료 · 시간초과 — 2번 호출을 합쳐 최근 순 5건 · 겹친 행 하나 · 완료 행은 시간초과만', async () => {
+    renderPage()
+    const history = await waitFor(() => {
+      const el = section('최근 미완료 · 시간초과')
+      expect(within(el).getAllByRole('listitem')).toHaveLength(5)
+      return el
+    })
+    const rows = within(history).getAllByRole('listitem')
+    expect(rows.map((row) => row.querySelector('.font-semibold')?.textContent)).toEqual([
+      '3층',
+      '창고',
+      '옥상',
+      '지하 주차장 B1',
+      '후문',
+    ])
+    expect(within(rows[2]).getByText('미완료')).toBeInTheDocument()
+    expect(within(rows[2]).getByText('시간초과')).toBeInTheDocument()
+    expect(within(history).getByRole('link', { name: /3층/ })).toHaveAttribute('href', '/patrol/points/1000')
+    expect(within(history).getByRole('link', { name: /전체 보기/ })).toHaveAttribute('href', '/patrol/points')
+    expect(within(history).queryByText('이상없음')).toBeNull()
+    expect(within(rows[1]).getByText('시간초과')).toBeInTheDocument()
+  })
+
+  it('공지 — 앞 3건 · 고정 공지만 핀', async () => {
+    renderPage()
+    const notice = await waitFor(() => {
+      const el = section('공지사항')
+      expect(within(el).getAllByRole('listitem')).toHaveLength(3)
+      return el
+    })
     expect(within(notice).getAllByLabelText('고정 공지')).toHaveLength(1)
     expect(within(notice).getByRole('link', { name: /사업장 출입 보안 수칙/ })).toHaveAttribute('href', '/notice/5')
   })
 
-  it('KPI 값이 0 이면 색을 빼고, 있으면 미완료 · 시간초과는 danger · 배치는 point', () => {
+  it('진행 중 0건 — 없음 표시', async () => {
+    server.use(http.get(PATHS.courses, () => HttpResponse.json({ message: 'ok', data: [], code: 200 })))
+    renderPage()
+    expect(await screen.findByText('지금 진행 중인 순찰이 없습니다')).toBeInTheDocument()
+  })
+
+  it('한 영역이 실패해도 나머지는 그린다 · 다시 시도하면 그 영역만 다시 받는다', async () => {
+    server.use(http.get(PATHS.courses, serverError, { once: true }))
+    renderPage()
+    expect(await screen.findByText('진행 중인 순찰을 불러오지 못했습니다')).toBeInTheDocument()
+    // KPI 는 정상
+    expect(await screen.findByRole('region', { name: '오늘 순찰' })).toBeInTheDocument()
+
+    await userEvent.click(within(section('진행 중인 순찰')).getByRole('button', { name: '다시 시도' }))
+    expect(await screen.findByRole('heading', { name: 'C코스' })).toBeInTheDocument()
+  })
+
+  it('최근 기록 2번 중 하나만 실패해도 영역 전체가 오류다(반쪽 목록 없음)', async () => {
+    server.use(
+      http.get(PATHS.history, ({ request }) =>
+        new URL(request.url).searchParams.get('overTimeYn') === 'true' ? serverError() : undefined
+      )
+    )
+    renderPage()
+    expect(await screen.findByText('최근 기록을 불러오지 못했습니다')).toBeInTheDocument()
+    expect(within(section('최근 미완료 · 시간초과')).queryAllByRole('listitem')).toHaveLength(0)
+  })
+
+  it('KPI 실패 — 0 을 그리지 않고 오류 · 다시 시도', async () => {
+    server.use(http.get(PATHS.summary, serverError))
+    renderPage()
+    expect(await screen.findByText('오늘 숫자를 불러오지 못했습니다')).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: '오늘 순찰' })).toBeNull()
+  })
+
+  it('새로고침 — 4개 영역을 다시 부른다 · 30초 자동 문구 없음', async () => {
+    renderPage()
+    await screen.findByRole('heading', { name: 'C코스' })
+    await waitFor(() => expect(within(section('공지사항')).getAllByRole('listitem')).toHaveLength(3))
+    expect(screen.queryByText(/30초마다 자동/)).toBeNull()
+
+    const calls = captureRequests()
+    await userEvent.click(screen.getByRole('button', { name: '새로고침' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: '새로고침' })).toBeEnabled())
+    const count = (path: string) => calls.filter((url) => url.pathname === path).length
+    expect([count(PATHS.summary), count(PATHS.courses), count(PATHS.history), count(PATHS.notice)]).toEqual([
+      1, 1, 2, 1,
+    ])
+  })
+})
+
+describe('ActiveCourseSection — 경과 1분 증가', () => {
+  afterEach(() => vi.useRealTimers())
+
+  const course = (overrides: Partial<DashboardCourse>): DashboardCourse => ({
+    historySeq: 1,
+    courseSeq: 1,
+    courseName: '흐름',
+    startDt: '2026-11-03T09:00:00',
+    elapsedSec: 10 * 60,
+    pausedYn: false,
+    totalMin: 30,
+    handoverCount: 0,
+    users: [{ userSeq: 1, userName: '순찰자' }],
+    points: [],
+    ...overrides,
+  })
+
+  it('1분 뒤 경과가 늘고, 멈춘 회차는 그대로', () => {
+    vi.useFakeTimers()
+    const receivedAt = Date.now()
+    render(
+      <MemoryRouter>
+        <ActiveCourseSection
+          courses={[course({}), course({ historySeq: 2, courseName: '멈춤', pausedYn: true })]}
+          state="ready"
+          receivedAt={receivedAt}
+          onRetry={() => {}}
+        />
+      </MemoryRouter>
+    )
+    expect(courseCard('흐름')).toHaveTextContent('10분 / 30분')
+    expect(courseCard('멈춤')).toHaveTextContent('10분 / 30분')
+
+    act(() => vi.advanceTimersByTime(60_000))
+    expect(courseCard('흐름')).toHaveTextContent('11분 / 30분')
+    expect(courseCard('멈춤')).toHaveTextContent('10분 / 30분')
+  })
+})
+
+describe('DashboardKpiRow — 색', () => {
+  it('값이 0 이면 색을 빼고, 있으면 미완료 · 시간초과는 danger · 배치는 point', () => {
     const zero = { completedCount: 0, incompleteCount: 0, overtimeCount: 0, pendingAssignmentCount: 0, pendingReturnCount: 0 }
-    const { container, unmount } = render(<DashboardKpiRow kpi={zero} />)
+    const { container, unmount } = render(<DashboardKpiRow summary={zero} state="ready" onRetry={() => {}} />)
     expect(container.querySelector('.bg-danger-bg, .bg-point-bg')).toBeNull()
     unmount()
 
     const filled = render(
-      <DashboardKpiRow kpi={{ ...zero, completedCount: 3, incompleteCount: 1, overtimeCount: 2, pendingReturnCount: 1 }} />
+      <DashboardKpiRow
+        summary={{ ...zero, completedCount: 3, incompleteCount: 1, overtimeCount: 2, pendingReturnCount: 1 }}
+        state="ready"
+        onRetry={() => {}}
+      />
     )
     expect(filled.container.querySelectorAll('.bg-danger-bg')).toHaveLength(2)
     expect(filled.container.querySelectorAll('.bg-point-bg')).toHaveLength(1)
-  })
-
-  it('?preview=empty — 진행 중 없음, 하단은 그대로', () => {
-    renderPage('/dashboard?preview=empty')
-    expect(screen.getByText('지금 진행 중인 순찰이 없습니다')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '최근 미완료 · 시간초과' })).toBeInTheDocument()
-  })
-
-  it('?preview=loading — 스켈레톤', () => {
-    renderPage('/dashboard?preview=loading')
-    expect(screen.getByLabelText('불러오는 중')).toBeInTheDocument()
-    expect(screen.queryByText('지금 진행 중인 순찰이 없습니다')).toBeNull()
-  })
-
-  it('?preview=error — 다시 시도하면 정상 화면', async () => {
-    renderPage('/dashboard?preview=error')
-    expect(screen.getByText('진행 중인 순찰을 불러오지 못했습니다')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: '다시 시도' }))
-    expect(screen.getByRole('heading', { name: 'C코스' })).toBeInTheDocument()
   })
 })

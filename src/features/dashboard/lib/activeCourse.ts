@@ -1,55 +1,67 @@
-import type { ActiveCourse, ActiveCoursePoint, PointStepStatus } from '../types'
+import type { DashboardCourse, DashboardCoursePoint, PointStepStatus } from '../types'
 
 /**
- * 진행 중 회차 계산 — `spec 067`. 화면이 계산하는 순수 함수라 API 가 붙어도 그대로 쓴다.
+ * 진행 중 회차 계산 — `spec 067` → `spec 068`(서버 `status` 기준으로 교체).
  *
- * ⚠️ **"건너뜀" 은 서버에 없는 개념이다** — 마지막 인증 지점보다 **앞**의 미인증 지점을 이렇게
- * 부른다. 앱이 순서대로 찍게 강제하는지는 API spec 에서 확인한다(OQ-067-A).
+ * 🔴 **단계는 서버 `status` 그대로다**(OQ-067-A 해소) — 앱은 순서를 강제하지 않고, 건너뛴 지점은 서버가
+ * 그 순간 `3` 으로 바꾼다. 067 의 "마지막 인증보다 앞인데 미인증 = 건너뜀" 계산은 지웠다.
+ * `2` 순찰제외는 실데이터 0건(OQ-18) — 대기와 같게 그린다.
  */
 
-const lastCheckedIndex = (points: ActiveCoursePoint[]): number =>
-  points.reduce((last, point, index) => (point.checked ? index : last), -1)
-
-/** 단계마다의 상태 — 인증 / 건너뜀 / 다음 / 아직 안 감 */
-export const pointSteps = (points: ActiveCoursePoint[]): PointStepStatus[] => {
-  const last = lastCheckedIndex(points)
-  let nextAssigned = false
-  return points.map((point, index) => {
-    if (point.checked) return 'done'
-    if (index < last) return 'skipped'
-    if (!nextAssigned) {
-      nextAssigned = true
-      return 'next'
-    }
-    return 'pending'
-  })
+const STEP_BY_STATUS: Partial<Record<number, PointStepStatus>> = {
+  4: 'done',
+  3: 'skipped',
+  1: 'next',
 }
 
-/** 다음 지점 = 마지막 인증 지점 뒤의 첫 미인증 지점. 다 찍었으면 `null` */
-export const nextPoint = (points: ActiveCoursePoint[]): ActiveCoursePoint | null => {
-  const index = pointSteps(points).indexOf('next')
-  return index === -1 ? null : points[index]
+export const pointStep = (status: number): PointStepStatus => STEP_BY_STATUS[status] ?? 'pending'
+
+export const pointSteps = (points: DashboardCoursePoint[]): PointStepStatus[] =>
+  points.map((point) => pointStep(point.status))
+
+/** 다음 지점 = `status 1`(진행중). 없으면 `null` */
+export const nextPoint = (points: DashboardCoursePoint[]): DashboardCoursePoint | null =>
+  points.find((point) => pointStep(point.status) === 'next') ?? null
+
+export const skippedCount = (points: DashboardCoursePoint[]): number =>
+  points.filter((point) => pointStep(point.status) === 'skipped').length
+
+export const checkedCount = (points: DashboardCoursePoint[]): number =>
+  points.filter((point) => pointStep(point.status) === 'done').length
+
+/**
+ * 지금의 경과 분 = 응답의 `elapsedSec` + 받은 뒤 지난 시간. 멈춘 회차(교대 요청 중)는 더하지 않는다.
+ *
+ * 🔴 **기준은 화면이 응답을 받은 시각**(`receivedAt`)이다 — 서버 `startDt` 로 세면 서버 · PC 시계가 어긋난
+ * 만큼 틀리고, 멈춘 시간도 다시 들어간다(사용자 결정 2026-11-03).
+ */
+export const elapsedMinAt = (course: DashboardCourse, receivedAt: number, now: number): number => {
+  const sinceReceived = course.pausedYn ? 0 : Math.max(now - receivedAt, 0) / 1000
+  return Math.floor((course.elapsedSec + sinceReceived) / 60)
 }
 
-export const skippedCount = (points: ActiveCoursePoint[]): number =>
-  pointSteps(points).filter((step) => step === 'skipped').length
+/** 🔴 `totalMin 0` = 기준 없음 — 막대 · 시간초과를 판단하지 않는다(코스 65) */
+export const hasStandard = (course: DashboardCourse): boolean => course.totalMin > 0
 
-export const checkedCount = (points: ActiveCoursePoint[]): number =>
-  points.filter((point) => point.checked).length
+/** 경과 / 기준. 기준이 없으면 0 */
+export const elapsedRatio = (course: DashboardCourse, elapsedMin: number): number =>
+  hasStandard(course) ? elapsedMin / course.totalMin : 0
 
-/** 경과 / 기준. 기준이 0 이면 비교할 수 없어 0 으로 둔다 */
-export const elapsedRatio = (course: ActiveCourse): number =>
-  course.standardMin > 0 ? course.elapsedMin / course.standardMin : 0
+/** 기준을 넘긴 분. 넘지 않았거나 기준이 없으면 0 */
+export const overtimeMin = (course: DashboardCourse, elapsedMin: number): number =>
+  hasStandard(course) ? Math.max(elapsedMin - course.totalMin, 0) : 0
 
-/** 기준을 넘긴 분. 넘지 않았으면 0 */
-export const overtimeMin = (course: ActiveCourse): number =>
-  course.standardMin > 0 ? Math.max(course.elapsedMin - course.standardMin, 0) : 0
+/** 지금 순찰자 = `users` 마지막. 비어 올 때가 있다(회차 83 — OQ-17) */
+export const currentUserName = (course: DashboardCourse): string | null => course.users.at(-1)?.userName ?? null
 
 /** 문제 있는 코스가 위로 — 시간초과 먼저, 그다음 경과 비율이 높은 순 */
-export const sortActiveCourses = (courses: ActiveCourse[]): ActiveCourse[] =>
-  [...courses].sort((a, b) => {
-    const overA = overtimeMin(a) > 0 ? 1 : 0
-    const overB = overtimeMin(b) > 0 ? 1 : 0
-    if (overA !== overB) return overB - overA
-    return elapsedRatio(b) - elapsedRatio(a)
-  })
+export const sortActiveCourses = (
+  courses: DashboardCourse[],
+  receivedAt: number,
+  now: number
+): DashboardCourse[] => {
+  const elapsed = new Map(courses.map((course) => [course.historySeq, elapsedMinAt(course, receivedAt, now)]))
+  const over = (course: DashboardCourse) => (overtimeMin(course, elapsed.get(course.historySeq)!) > 0 ? 1 : 0)
+  const ratio = (course: DashboardCourse) => elapsedRatio(course, elapsed.get(course.historySeq)!)
+  return [...courses].sort((a, b) => over(b) - over(a) || ratio(b) - ratio(a))
+}

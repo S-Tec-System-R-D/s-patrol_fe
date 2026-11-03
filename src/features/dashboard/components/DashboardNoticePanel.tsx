@@ -2,12 +2,15 @@ import { format, isValid, parseISO } from 'date-fns'
 import { ChevronRightIcon, PinIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import type { NoticeRow } from '@/features/notice/types/notice'
 import { paths } from '@/router/paths'
 
-import type { DashboardNoticeRow } from '../types'
+import type { AreaState } from '../types'
+import AreaFallback from './AreaFallback'
 
 /**
  * 공지사항 — `spec 067`. 🔴 **핀은 고정 공지에만** — 목업처럼 모든 행에 붙이면 고정이 구분되지 않는다.
+ * `spec 068` — `GetNoticeList` 앞 3건(`NoticeRow`) · 서버 순서 그대로(고정 먼저 — 실측).
  */
 
 const formatDate = (value: string): string => {
@@ -16,10 +19,12 @@ const formatDate = (value: string): string => {
 }
 
 interface DashboardNoticePanelProps {
-  rows: DashboardNoticeRow[]
+  rows: NoticeRow[]
+  state: AreaState
+  onRetry: () => void
 }
 
-const DashboardNoticePanel = ({ rows }: DashboardNoticePanelProps) => (
+const DashboardNoticePanel = ({ rows, state, onRetry }: DashboardNoticePanelProps) => (
   <section className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
     <div className="flex items-center gap-2">
       <h2 className="text-panel-title font-bold text-foreground">공지사항</h2>
@@ -32,7 +37,9 @@ const DashboardNoticePanel = ({ rows }: DashboardNoticePanelProps) => (
       </Link>
     </div>
 
-    {rows.length === 0 ? (
+    {state !== 'ready' ? (
+      <AreaFallback state={state} label="공지" onRetry={onRetry} />
+    ) : rows.length === 0 ? (
       <p className="py-6 text-center text-caption text-muted-foreground">등록된 공지가 없습니다</p>
     ) : (
       <ul className="flex flex-col">
