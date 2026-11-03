@@ -5,6 +5,43 @@
 > 기존 API 실측: [`api-spec.md`](./api-spec.md) §5.
 > 🔴 **진행 중인 순찰은 SSE 로 갱신한다**(결정 2026-10-30) — 처음에 **현재 상태를 조회**하고, 이후 변화는 **SSE 이벤트가 오면 화면을 바꾼다.** 주기 조회(30초)는 하지 않는다.
 
+## 답변 현황 (실측 2026-11-03)
+
+> 백엔드 반영분을 앱으로 실제 순찰하며 확인했다(회차 87~94 — 시작 · 건너뜀 · 인증 · 교대 · 완료 · 미완료 종료). 상세 · 응답 타입은 [`api-spec.md`](./api-spec.md) **§5-1-D**, 남은 확인은 §6-1 **B-64~B-68**(B-62 철회 · B-63 해소).
+> 🟢 **결론: 화면 연결을 막는 API 문제는 없다.** 아래 "남은 확인" 은 전부 표시 기준 · 예외 상황 질문이다.
+
+| # | 요청 | 실제 | 판정 |
+|:-:|---|---|---|
+| 1-A | `History/.../GetActiveCourseList` | `DashBoard/W/sign/GetDashboardCourseList` | ✅ 필드 일치 · 🟡 `userList` → `users` · `pointList` → `points` · 지점에 `detailSeq` 추가 |
+| 1-B | `History/.../ActiveCourseStream`(SSE, 이벤트에 내용 담기) | **별도 SSE 서버** `{CommService}/api/v1/Sse/subscribe` — 이벤트엔 ID · 상태만, 자세한 내용은 **알림 뒤 조회 API 5개**(`GetCourseStart` · `GetPointChecked` · `GetCoursePaused` · `GetCourseHandover` · `GetCourseEnded`) | ✅ 이벤트 5종 수신(`course-resumed` 는 없다 — 교대가 재개). 화면은 받은 값만으로 거의 처리되고 시작만 목록을 다시 부른다 |
+| 2 | `History/.../GetTodaySummary` | `DashBoard/W/sign/GetTodaySummary` | ✅ 필드명 5개 동일 |
+| 3 | 기존 `GetPointHistory` + `overTimeYn` | 새 `DashBoard/W/sign/GetDashboardPointHistory`(응답은 `GetPointHistory` 와 같음) — 기존 것은 그대로 | ✅ 필터 동작 |
+| 4 | `GetNoticeList` 기존 | 변경 없음 | ✅ |
+
+| 질문 | 답 |
+|:-:|---|
+| Q1 순서 강제 | ✅ **강제 안 함** — 건너뛴 지점은 즉시 `status 3` + 시각 기록 + `point-checked`. 화면은 `status 3` 을 그대로 "건너뜀" 으로 쓴다 |
+| Q2 시간초과 범위 | 🟡 끝난 회차는 센다(완료 · 미완료와 **겹쳐서**). 진행 중 초과는 미실측 |
+| Q3 미인증 지점 목록 포함 | ❌ 지금은 안 나온다(`checkDt` 없는 행 제외) — 남은 확인 C3 |
+| Q4 고정 공지 먼저 | ✅ **고정 먼저** — 사업장 6 · 3 모두 고정 공지가 최신 일반 공지보다 위 |
+| Q5 SSE 인증 | ✅ `?access_token=` · `Authorization: Bearer` **둘 다** 된다 → 화면은 헤더(`fetch` 스트림) |
+| Q6 토큰 만료 시 | ⏸ 미실측(3시간). 없음 · 무효 토큰은 401 빈 body |
+| Q7 버퍼링 · 타임아웃 | ✅ `X-Accel-Buffering: no` · 핑 20초 · 30분 연속 유지 확인. 운영은 웹과 같은 도메인 |
+| Q8 교대 | ✅ 한 번 교대(회차 94): `GetCourseHandover` 순찰자 2명(**지금 순찰자가 마지막**) · `handoverCount 1` · 기존 `GetCourseHistoryHandOvers` 와 일치. 🟡 되돌린 교대는 기록이 없다(C4) |
+| (추가) 놓친 이벤트 | 다시 주지 않는다(백엔드) — 화면이 재연결 때 목록을 다시 부른다 |
+| (추가) 일시정지 | ✅ **교대 요청 중 = 멈춤** — `course-paused` → (교대 완료) `course-handover` 가 재개. 멈춘 시간은 경과에서 빠진다 |
+| (추가) 시간초과 KPI ↔ 목록 불일치 | ❌ **버그 아님** — 테스트 코스 74 의 지점 사이 시간(`courseMin`)이 전부 0 이라 지점 시간초과가 판정되지 않았다(B-62 철회) |
+
+### 남은 확인 (화면 연결을 막지 않음)
+
+| # | 내용 | 관련 |
+|:-:|---|---|
+| C1 | **회차가 열린 채 남는 경우** — 앱 오류 무렵 시작된 회차가 2시간 가까이 열려 있었고, 다시 "순찰 시작" 하면 그 회차에 이어 붙었다. 자동 종료 정책이 있는지 | B-65 |
+| C2 | **"완료" 의 정의** — 건너뛴 지점이 있어도(인증 2/5) 마지막 지점을 찍으면 완료. 의도가 맞는지 | B-66 |
+| C3 | 한 번도 안 간 지점(`checkDt` 없음)도 최근 미완료 목록에 넣을 수 있는지(Q3) | Q3 |
+| C4 | **원래 순찰자에게 되돌린 교대**(13 → 14 → 13)는 교대 기록이 전부 사라진다 — 이벤트는 2번 왔는데 조회는 0회. 의도인지 | B-68 |
+| C5 | 테스트 데이터 — 배치 · 복귀 대기 1건 이상(KPI 와 배치 화면 숫자가 같은 기준인지 확인용) | — |
+
 ## 요청 요약
 
 | # | 화면 영역 | 구분 | API(안) | 우선 | 기존 API 로 안 되는 이유 |

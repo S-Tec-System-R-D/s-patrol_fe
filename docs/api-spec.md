@@ -1186,6 +1186,174 @@ type GetSiteManagerListData = SiteManager[]
 
 ---
 
+### 5-1-D. 현장 대시보드 API · SSE (실측 2026-11-03)
+
+> [`api-request-dashboard.md`](./api-request-dashboard.md) 요청분. swagger 에 **`DashBoard` 8개**가 추가됐고(요청서의 `History/...` 가 아니라 별도 컨트롤러), 실시간 알림은 **별도 SSE 서버**(swagger 에 없음 — 백엔드가 따로 알려 줌)다.
+> 현장 계정 `333333` 으로 실측. 앱으로 **실제 순찰 회차 87~94** 를 만들어 시작 · 건너뜀 · 인증 · 교대 · 자동 종료(완료) · 중단 종료(미완료)를 확인했다(사업장 6 · 7). 사업장 1~20 전수 조회 포함.
+> 🟢 **결론: 화면 연결을 막는 API 문제는 없다.** 남은 것(B-64~B-68)은 표시 기준 · 예외 상황 확인이다.
+
+#### 요약
+
+| # | API | 용도 | 결과 |
+|---|---|---|---|
+| 1 | `GET DashBoard/W/sign/GetTodaySummary?siteSeq` | KPI 숫자 5칸 | ✅ 필드명 요청서와 **동일** |
+| 2 | `GET DashBoard/W/sign/GetDashboardCourseList?siteSeq` | 진행 중 카드(요청서 `GetActiveCourseList`) | ✅ 배열(페이징 없음). 🟡 `userList` → **`users`**, `pointList` → **`points`** |
+| 3 | `GET DashBoard/W/sign/GetDashboardPointHistory?siteSeq&…&overTimeYn` | 최근 미완료 · 시간초과 | ✅ 응답은 `GetPointHistory` 와 **행 단위까지 같다** + `overTimeYn` 필터 동작. 기존 `GetPointHistory` 는 **확장되지 않았다**(`overTimeYn` 무시) |
+| 4 | `GET DashBoard/W/sign/GetCourseStart?historySeq` | 시작 알림 뒤 조회 | 200 — 🟡 **지점 배열만**(코스명 · 시작 시각 · 기준 시간 · 순찰자 없음 → 카드를 못 만든다) |
+| 5 | `GET DashBoard/W/sign/GetPointChecked?detailSeq` | 지점 인증 알림 뒤 조회 | ✅ `{historySeq, detailSeq, pointSeq, orderNo, status, checkDt}` |
+| 6 | `GET DashBoard/W/sign/GetCoursePaused?historySeq` | 멈춤 알림 뒤 조회 | ✅ `{historySeq, elapsedSec}` — `pausedYn` 은 없지만 이벤트 이름이 곧 멈춤이라 필요 없다 |
+| 7 | `GET DashBoard/W/sign/GetCourseHandover?historySeq` | 교대 알림 뒤 조회 | ✅ `{historySeq, handoverDetail[], handoverCount}` — 처음 순찰자 → **지금 순찰자가 마지막**. 🟡 되돌린 교대는 비어 있다(B-68) |
+| 8 | `GET DashBoard/W/sign/GetCourseEnded?historySeq` | 종료 알림 뒤 조회 | ✅ `{historySeq, status}`(코스 사전 1 완료 · 2 미완료) |
+| 9 | `GET {SSE 서버}/api/v1/Sse/subscribe` | 실시간 알림 | ✅ `text/event-stream` — 아래 |
+
+에러는 기존 규약 그대로다 — 없는 ID 는 **HTTP 400 + (A) 래퍼** `{"message":"잘못된 요청입니다.","data":null,"code":400}`, 필수값 누락 · 형식 오류는 (B) ProblemDetails, 토큰 없음 401 빈 body. 없는 사업장(`siteSeq=99999`)도 **200 + 0** — 사업장 권한 검사 없음(B-9 와 같다).
+
+#### SSE 서버
+
+| 항목 | 실측 |
+|---|---|
+| 주소 | `GET {CommService}/api/v1/Sse/subscribe` — 테스트 `http://123.2.156.148:5258`(웹 API `:5231` 과 **별도 프로젝트**). **운영은 웹과 같은 도메인**으로 들어간다(사용자 확인) |
+| 인증 | `?access_token={JWT}` 쿼리 **또는** `Authorization: Bearer` 헤더 — 둘 다 된다. 없음 · 무효 → **401 빈 body**(`WWW-Authenticate: Bearer error="invalid_token"`) |
+| 응답 헤더 | `Content-Type: text/event-stream` · `Cache-Control: no-cache, no-transform` · **`X-Accel-Buffering: no`**(프록시 버퍼링 끄기) · chunked |
+| 첫 메시지 | `retry: 10000`(끊기면 10초 뒤 재연결) → `event: connected` / `data: <연결마다 새 ID>` |
+| 연결 유지 | 주석 `:` **20초마다**. 30분 연속 유지 3회 확인. 1회 약 6분 만에 끊김(서버 재시작 무렵 — 재현 안 됨) |
+| 사업장 | 주소에 `siteSeq` 가 없다 — **이 계정이 볼 수 있는 이벤트가 전부 오고**, 각 이벤트 `data.siteSeq` 로 구분한다(`?siteSeq=6` 을 붙여도 동작 차이 없음) |
+| 놓친 이벤트 | **다시 주지 않는다**(백엔드 — SSE 특성상 누락이 생길 수 있다고 함). 이벤트마다 `id:` 는 있지만 `Last-Event-ID` 재전송은 없다 |
+| 지연 | 앱 동작 → 수신 **1초 안쪽** |
+
+이벤트 형식 — `data` 는 **ID 와 상태만** 담고, 화면 데이터는 뒤따르는 조회(위 4~8)로 받는다.
+
+```text
+event: course-started
+id: 9f540dad97f845178d04142b7196c70a
+data: {"link":"Patrol","siteSeq":6,"courseSeq":74,"historySeq":92,"userSeq":13,"eventDt":"2026-11-03T14:06:48.813325+09:00"}
+
+event: point-checked
+id: 1f9c9b330e764b40bde21f9636f1dbdc
+data: {"link":"Patrol","siteSeq":6,"courseSeq":74,"historySeq":92,"detailSeq":288,"detailStatus":3,"userSeq":13,"eventDt":"2026-11-03T14:08:53.282441+09:00"}
+
+event: course-paused
+id: 19545867eb674de7a2e5d522bd7e722c
+data: {"link":"Patrol","siteSeq":6,"courseSeq":74,"historySeq":94,"userSeq":13,"eventDt":"2026-11-03T14:33:28.172786+09:00"}
+
+event: course-handover
+id: bd51ac9379c449bfabe34b745be3283d
+data: {"link":"Patrol","siteSeq":6,"courseSeq":74,"historySeq":94,"userSeq":14,"previousUserSeq":13,"eventDt":"2026-11-03T14:33:34.863289+09:00"}
+
+event: course-ended
+id: c2f83f0a493d47508e46ab86fe5d475e
+data: {"link":"Patrol","siteSeq":6,"courseSeq":74,"historySeq":92,"endType":"completed","userSeq":13,"eventDt":"2026-11-03T14:09:44.237655+09:00"}
+```
+
+| 이벤트 | 실측 | `data` 고유 필드 |
+|---|---|---|
+| `connected` | ✅ | 연결 ID 문자열(JSON 아님) |
+| `course-started` | ✅ | — |
+| `point-checked` | ✅ 건너뜀(`3`) · 인증(`4`) 모두 | `detailSeq` · `detailStatus`(지점 사전) — **조회 없이 지점 색을 바꿀 수 있다**. 중단 종료로 남은 지점(`status 3` · `checkDt` 없음)은 **이벤트가 오지 않는다** |
+| `course-paused` | ✅ **교대 요청 때** | — . 🔴 **일시정지 = 교대 요청 중**이다(앱에 별도 일시정지 버튼 없음). 멈춘 시간은 `pauseTime` 으로 쌓이고 `elapsedSec` 에서 빠진다(회차 93: 8초 + 12초 → `00:00:19`) |
+| `course-resumed` | **오지 않는다** | 교대가 끝나면 `course-handover` 가 오고 그게 재개다 |
+| `course-handover` | ✅ | `userSeq`(새 순찰자) · **`previousUserSeq`**(이전 순찰자) — 이름은 없다 → `GetCourseHandover` 로 받는다 |
+| `course-ended` | ✅ 완료 · 미완료 | `endType` — **`"completed"`**(마지막 지점 인증 → 자동) · **`"aborted"`**(앱에서 중단). 🟡 문자열이다(`GetCourseEnded` 는 숫자 `status` 1 · 2) |
+
+- 공통 필드: `link`(`"Patrol"` — 순찰 외 종류도 같은 연결로 올 수 있다는 뜻으로 보인다) · `siteSeq` · `courseSeq` · `historySeq` · `userSeq` · `eventDt`.
+- 🟡 `eventDt` 는 **타임존(`+09:00`) + 마이크로초**가 붙는다 — 다른 API 의 "타임존 없음" 규약과 다르다(B-67).
+- 🔴 **순서가 뒤바뀔 수 있다** — 회차 92 는 마지막 지점 인증과 자동 종료가 같은 `eventDt` 로 나가면서 **`course-ended` 가 마지막 `point-checked` 보다 먼저** 왔다(회차 91 은 정상 순서). B-64.
+
+**화면 처리 방침**(위 실측에 따른 결정):
+- 연결(재연결 포함) 직후 `GetDashboardCourseList` 를 다시 부른다 — 놓친 이벤트는 이걸로 메운다.
+- `data.siteSeq` 가 지금 사업장이 아니면 버린다. `link` 가 `"Patrol"` 이 아니면 버린다.
+- **이벤트 순서에 기대지 않는다** — 이미 없는 회차(종료로 지운 카드)의 이벤트는 버린다.
+- `course-started` 는 `GetCourseStart` 대신 **목록을 다시 부른다**(시작 조회는 카드 정보가 모자라다).
+- `point-checked` 는 `detailSeq` 로 지점을 찾아 `detailStatus` 로 바꾼다(조회 불필요).
+- `course-paused` 는 그 카드의 경과 시간을 멈추고, `course-handover` 가 오면 `GetCourseHandover` 로 순찰자 · 교대 횟수를 받고 다시 센다.
+- `course-ended` 는 카드를 지운다. `course-ended` · `point-checked` 뒤 오늘 숫자 · 최근 기록을 다시 부른다(몰리면 묶어서 1번).
+
+#### 조회 API 실측 결과
+
+| 항목 | 결과 |
+|---|---|
+| `GetTodaySummary` "오늘" | 오늘 **시작한** 회차 기준 — 어제(11-02) 회차는 안 센다. 순찰이 끝나면 **바로** 반영 |
+| `overtimeCount` | **회차 단위** `overtimeYn` 을 센다 — 완료이면서 시간초과인 회차가 완료 1 · 시간초과 1 로 **양쪽에** 들어간다. 진행 중 초과를 세는지는 미실측(요청서 Q2) |
+| `pendingAssignmentCount` · `pendingReturnCount` | `GetAssignmentCount.pendingCount` · `pendingReturnCount` 와 6개 사업장 모두 같다 — **전부 0** 이라 기준 일치는 미증명 |
+| `GetDashboardCourseList` 지점 `status` | 지금 찍을 지점 = **`1` 진행중**, 그 뒤 = `0` 대기 — 화면의 "현재 위치" 에 바로 쓴다 |
+| `elapsedSec` | 멈춘 시간을 **뺀** 실제 경과 — 이력 `actualElapsedTime` 과 같다(회차 92: 175초 = `00:02:55`) |
+| `overTimeYn` 필터 | **지점 단위** `overTimeYn` 으로 거른다 — `true` + `false` 합 = 전체(사업장 6: 1 + 105 = 106). `status` 와 함께 쓰면 AND. KPI 는 회차 단위지만 **지점 사이 시간이 설정된 코스라면 둘이 함께 간다**(B-62 철회 — 테스트 코스 74 는 지점 사이 시간이 전부 0) |
+| 미인증 지점 | `checkDt` 가 없는 행은 목록에 **안 나온다** — 한 지점도 안 찍고 끝난 회차 87 은 KPI 미완료 1 인데 목록 0건(요청서 Q3) |
+| `GetCourseHandover` `handoverDetail` | 교대 없으면 순찰자 1명. 한 번 교대(회차 94, 13 → 14) → `[13, 14]` · `handoverCount 1` — 기존 `GetCourseHistoryHandOvers`(`{fromUserSeq 13, toUserSeq 14, lastOrderNo 4, nextOrderNo null}`) · 회차 상세 `handoverCount` 와 일치. 🟡 되돌린 교대(회차 93, 13 → 14 → 13)는 셋 다 **교대 0**(B-68). 회차 83 은 이력 `userList` 가 비었는데 여기선 1명이 나온다(OQ-17 과 같은 원인으로 추정) |
+| `GetCourseHistory` `userList` | 🟡 교대 받은 사람이 **빠진다**(회차 94: `[13]` 뿐) — 대시보드는 `users` · `GetCourseHandover` 를 쓰므로 무관, 코스이력 화면 순찰자 열에 걸린다 |
+| `GetNoticeList` 순서 | ✅ **고정 공지가 먼저**(사업장 6 · 3) — 요청서 Q4 해소 |
+
+#### 앱 동작 (회차 87~94 로 확인)
+
+- **순서를 강제하지 않는다**(요청서 Q1 해소) — 1·2·3 을 건너뛰고 4 를 찍을 수 있다. 건너뛴 지점은 서버가 **그 순간 `status 3`(미완료) + `checkDt`** 로 바꾸고 `point-checked` 를 보낸다. → 화면의 "건너뜀"은 계산하지 않고 **`status 3` 을 그대로** 쓴다(지금 `activeCourse` 의 "마지막 인증보다 앞인데 미인증" 계산은 API 연결 때 바꾼다).
+- **마지막 지점을 찍으면 자동 종료**된다 — 별도 종료 동작 없음.
+- 🟡 **인증 2/5 여도 "완료"** 다(회차 89 · 91 · 92) — "모든 지점 인증" 이 아니라 "마지막 지점까지 마침" 으로 보인다(B-66).
+- 🟡 **회차가 열린 채 남을 수 있다** — 앱 오류 무렵(12:08) 시작된 회차 91 이 2시간 가까이 열려 있었고, 나중에 "순찰 시작" 을 누르자 **새 회차 없이 91 에 이어서** 인증됐다(시작 이벤트 없음). 결과 경과 1시간 51분 · 시간초과(B-65).
+- **교대 요청 → 멈춤 → 교대 완료 → 다시 흐름.** 교대 뒤에는 새 순찰자가 이어서 찍고, 종료 이벤트의 `userSeq` 도 새 순찰자다.
+- **중단 종료**(앱에서 끝내기)는 남은 지점을 `status 3`(시각 없음)으로 닫고 `endType "aborted"` · `status 2 미완료`.
+
+#### 개발 환경 (사용자 결정 2026-11-03)
+
+- CORS: 웹 API · SSE 모두 적용됐다 — 허용 출처는 **개발 PC 사내 IP + `:5173` 하나**(`Allow-Credentials: true` · SSE `Allow-Headers: authorization`). `localhost` 는 허용 안 함 — **요청하지 않는다.**
+- 실 서버 개발은 **IP 주소로 연다**(`vite --host`) — 사내망 · 본인 PC 만 허용이라 IP 변경 · 공유는 신경 쓰지 않는다. mock(MSW)은 Service Worker 가 secure context 를 요구해 `localhost` 그대로.
+- 운영은 웹 · SSE 가 같은 도메인이라 CORS 불필요.
+
+#### 응답 타입
+
+```ts
+// ── 1. 오늘 숫자 ─────────────────────────
+interface TodaySummary {
+  completedCount: number
+  incompleteCount: number
+  overtimeCount: number          // 회차 단위 overtimeYn
+  pendingAssignmentCount: number
+  pendingReturnCount: number
+}
+
+// ── 2. 진행 중 회차 ───────────────────────
+interface DashboardCoursePoint {
+  detailSeq: number
+  pointSeq: number
+  orderNo: number
+  pointName: string
+  status: number                 // 지점 사전 0 대기 · 1 진행중 · 3 미완료 · 4 완료
+  checkDt: string | null
+}
+interface DashboardCourse {
+  historySeq: number
+  courseSeq: number
+  courseName: string
+  startDt: string
+  elapsedSec: number             // 응답 시점 · 멈춤 제외
+  pausedYn: boolean
+  totalMin: number
+  handoverCount: number
+  users: { userSeq: number; userName: string }[]
+  points: DashboardCoursePoint[]
+}
+type GetDashboardCourseListData = DashboardCourse[]
+
+// ── 3. 최근 미완료 · 시간초과 ─────────────
+type GetDashboardPointHistoryData = PagedData<PointHistoryRow>   // §5-2 와 같다
+
+// ── 4. 알림 뒤 조회 ───────────────────────
+type GetCourseStartData = DashboardCoursePoint[]
+interface PointCheckedData { historySeq: number; detailSeq: number; pointSeq: number; orderNo: number; status: number; checkDt: string | null }
+interface CoursePausedData { historySeq: number; elapsedSec: number }
+interface CourseHandoverData { historySeq: number; handoverDetail: { userSeq: number; userName: string }[]; handoverCount: number }
+interface CourseEndedData { historySeq: number; status: number }   // 코스 사전 1 · 2
+
+// ── 5. SSE data ───────────────────────────
+interface SseEventBase { link: string; siteSeq: number; courseSeq: number; historySeq: number; userSeq: number; eventDt: string }  // eventDt 는 +09:00 포함
+type CourseStartedEvent = SseEventBase
+interface PointCheckedEvent extends SseEventBase { detailSeq: number; detailStatus: number }
+type CoursePausedEvent = SseEventBase                                  // 교대 요청 때
+interface CourseHandoverEvent extends SseEventBase { previousUserSeq: number }   // userSeq = 새 순찰자
+interface CourseEndedEvent extends SseEventBase { endType: 'completed' | 'aborted' }
+```
+
+---
+
 ### 5-2. 응답 타입 (실측 기반 TS)
 
 ```ts
@@ -1681,7 +1849,7 @@ interface NoticeAttach {
 | B-15 | ✅ **해소(재측정 2026-10-28, 지점 87)** — `memo` 는 `null`·`''` 로, `nfcTagId` 는 `authMethod` 동봉 시 `null`·`''` 로 지워진다. 좌표는 미재측정(웹에 입력란 없음). 아래는 기록. 🔴 **`UpdatePoint` 로 값을 비울 수 없다.** `null` 과 `''` 를 "변경하지 않음" 으로 해석해 무시한다(실측 2026-10-08). → ① 사용자가 **설명을 비워도 지워지지 않는다** ② NFC → QR 로 바꿔도 `nfcTagId` 가 남아 **인증수단과 어긋난 데이터**가 된다. `memo` 는 공백 1칸(`' '`)을 보내면 지워지지만 `nfcTagId` 는 `null`·`''`·`' '` **전부 무시**되어 지울 방법이 없었다. **"비우기" 를 표현할 수 있는 규약이 필요하다.** ✅ **재측정 2026-10-15 — 범위와 조건을 특정했다**: ① 좌표(`gpsLat`/`gpsLng`)도 `null` 로 못 비운다(같은 성질) ② **`UpdateCourse` 의 `memo` 는 `null`·`''` 를 정상 처리한다** — 엔드포인트별로 다르므로 지점 쪽만 고치면 된다 ③ `authMethod` 를 동봉해도 비우기는 안 된다(동봉은 `nfcTagId` **값 변경**의 조건일 뿐이다) ④ 그래서 **QR 로 전환할 때 서버가 TAG ID 를 해제**하는 쪽을 요청한다 — 프론트에 우회 수단이 없다 | 🔴 |
 | B-16 | **유효성 오류가 400 이 아니라 500 으로 샌다**(실측 2026-10-08). `AddPoint` 에서 `name` 누락은 400 ProblemDetails 로 오지만, **`siteSeq` 누락은 500**(ProblemDetails + `detail`), **`authMethod: 99`(enum 밖)는 500 + 빈 body** 다. 필수값·enum 검증이 일부 누락돼 있다 | 🟡 |
 | B-17 | **변경계 실패 문구가 전부 `"잘못된 요청입니다."`** 하나다(실측 2026-10-08, 없는 `pointSeq` 로 `UpdatePoint`·`DeletePoint`). 호출부가 사유를 구분할 수 없고 사용자에게 보여줄 문구로도 불충분하다 | 🟡 |
-| B-18 | 🔴 **CORS 설정이 없다** — `Access-Control-Allow-Origin` 을 **전혀 주지 않는다**(실측 2026-10-08). preflight(OPTIONS)에는 204 를 주지만 CORS 헤더가 없어 **브라우저가 응답을 버린다.** `curl` 은 CORS 를 적용하지 않아 API 계약 실측에서는 드러나지 않았고, 브라우저로 앱을 돌리는 순간 전부 실패했다. → 프론트는 **vite dev 프록시**로 우회했다(`vite.config.ts` · `.env.real`). 운영은 same-origin(도메인 + 백엔드 prefix)이라 문제가 없으므로 **로컬 개발 환경을 위한 설정 요청**이다 | 🟡 |
+| B-18 | 🔴 **CORS 설정이 없다** — `Access-Control-Allow-Origin` 을 **전혀 주지 않는다**(실측 2026-10-08). preflight(OPTIONS)에는 204 를 주지만 CORS 헤더가 없어 **브라우저가 응답을 버린다.** `curl` 은 CORS 를 적용하지 않아 API 계약 실측에서는 드러나지 않았고, 브라우저로 앱을 돌리는 순간 전부 실패했다. → 프론트는 **vite dev 프록시**로 우회했다(`vite.config.ts` · `.env.real`). 운영은 same-origin(도메인 + 백엔드 prefix)이라 문제가 없으므로 **로컬 개발 환경을 위한 설정 요청**이다. ✅ **2026-11-03 적용** — 웹 API · SSE 서버 모두, 허용 출처는 **개발 PC 사내 IP + `:5173` 하나**(`localhost` 는 요청하지 않음 — 사용자 결정). 실 서버 개발은 IP 로 연다(§5-1-D 개발 환경) | ✅ |
 | B-19 | ❌ **철회(2026-10-13, `spec 029`). 요청하지 않는다.** `DetailPoint` 에 생성·수정 메타(`createdAt` 등)를 요청했었고 사유는 "목업 기본정보 8칸 중 4칸이 여기 달려 있다" 였다. 🔴 **그 4칸을 화면에서 치웠다**(사용자 결정 2026-10-13) — `지점 코드`·`등록`·`최근 수정` 은 쓰임이 없고 `상세 위치` 는 **좌표로 대체**했다(좌표는 서버에 실제로 있다). **받을 자리를 없애 놓고 요청만 남겨 두지 않는다**(B-34·B-29 선례). "누가 언제 바꿨나" 가 실제로 필요해지면 그때 근거와 함께 다시 올린다 | — |
 | B-20 | **"상세 위치" 필드가 없다**(예: `지하 1층 · 주차장 B구역 입구`). 목업은 `memo`(설명)와 **별개 칸**으로 둔다 — 설명은 자유 서술이고 상세 위치는 **현장에서 지점을 찾는 정보**다. `gpsLat`/`gpsLng` 는 좌표일 뿐 사람이 읽는 위치가 아니다 | 🟡 |
 | B-21 | **사람이 읽는 지점 코드가 없다**(목업 `PT-0032`). `pointSeq`(정수)뿐이라 헤더·기본정보·QR 식별자 표기를 채울 수 없다. QR 식별자 목업(`SPT-0032-9F4C2A`)도 이 코드를 전제로 한다 | 🟡 |
@@ -1701,7 +1869,7 @@ interface NoticeAttach {
 | B-31 | 🔴 **`totalMin` 을 서버가 검증하지 않는다**(실측 2026-10-12). `UpdateCourse` 에 `totalMin: 99` 를 보내면 구간시간 합이 25 여도 **99 가 저장되고 200 이 온다** — 목록·상세의 "총 소요시간" 이 지점 합과 **다른 값**일 수 있고, 그 화면을 보는 사람은 어느 쪽이 맞는지 알 수 없다. ✅ 다만 **`null` 을 보내면 서버가 합으로 채운다** — 그래서 프론트는 항상 `null` 을 보내 어긋날 경로를 없앴다. **개선 방향**: 파생 값이면 요청 DTO 에서 **빼거나**(서버가 항상 계산), 받을 거면 **합과 다를 때 400** 으로 거부한다 | 🟡 |
 | B-32 | ✅ **해소 확인(실측 2026-10-16). 요청하지 않는다** — `GetCourseDetail.points[]` 에 `gpsLat`/`gpsLng` 가 **온다.** 값도 채워져 있고 지점 마스터와 일치한다(코스 74 의 5개 지점 전수). 언제 반영됐는지는 알 수 없고, `spec 032` 가 지도를 만들 때 이미 쓰고 있었다(`features/courses/lib/courseCoords.ts`) — **문서만 옛 상태로 남아 있었다.** 🔴 **코스이력 상세의 미인증 핀도 이 좌표로 찍는다**(`CheckDetails` 좌표는 인증 시점 위치라 미인증은 `null`). 아래는 요청 당시 기록이다. ~~🟡 `GetCourseDetail.points[]` 에 좌표(`gpsLat`/`gpsLng`)가 없다.~~ 좌표 자체는 서버에 있다 — `PointDetail` 과 `GetCourseHistoryCheckDetails` 에는 둘 다 온다(§5-2). 그런데 **코스 편성 응답에만 없어서**, 코스 상세에 순찰 동선 지도를 그리려면 지점을 **1 + N 회** 조회해야 한다(`DetailPoint` 는 `pointSeq` 하나씩만 받는다) — 지점 12개 코스면 요청 13회, 한 건만 실패해도 **핀이 빠진 지도**가 나오고 어느 핀이 빠졌는지 화면에서 알 수 없다. **요청**: ① `GetCourseDetail` 의 `points[]` 에 `gpsLat`/`gpsLng` 추가(요청 수 그대로 1회, **선호**) ② 어렵다면 `GetClassificationPoint`(사업장 전량 배열)에 추가 — 2회가 되지만 사업장 단위라 캐시해 모든 코스가 공유한다. ⚠️ **값이 실제로 채워져 있는지는 미관측** — 모바일 앱 좌표 동기화가 채우는지 확인 필요(사용자 2026-10-12). 전부 `null` 이면 필드만 받아도 지도를 못 그린다 | 🟡 |
 | B-33 | 🔴 **지점 좌표에 유효성 검증이 없다**(실측 2026-10-12). 사업장 3 의 지점들이 `gpsLat: 123`, `gpsLng: 57.22` 로 저장돼 있다 — **위도는 -90~90, 경도는 -180~180** 이라 123 은 불가능한 값이다. `AddPoint`/`UpdatePoint` 가 범위를 보지 않는다. 지도에 그대로 넘기면 핀이 엉뚱한 곳으로 날아가거나 렌더가 깨진다. **요청**: 범위 밖 값을 **400** 으로 거부한다. ⚠️ 거부되더라도 **이미 저장된 값은 남으므로** 프론트가 범위 검사를 하고 벗어난 지점은 "좌표 없음" 과 같이 다룬다 | 🔴 |
-| B-34 | ❌ **철회(2026-10-12). 요청하지 않는다.** 처음에 `GetCourseHistory` 에 `status`·`overtimeYn` 필터를 요청했는데, ① `status` 는 **이미 있었다**(`eventType`, OQ-5 해소) ② `overtimeYn` 으로 거르는 화면이 **코드에도 목업에도 결정에도 없다.** 확정된 필터는 코스이력 페이지의 **기간·코스·결과** 3종이고 결과는 `eventType` 이 덮는다. 🔴 **목업의 `지연` 뱃지를 보고 "보이면 걸러 보고 싶을 것" 이라고 추측해 올린 요청이었다**(A1 위반). 요청 사유로 쓴 "페이징과 충돌해 틀린 건수가 뜬다" 는 **그 필터를 쓰는 화면이 생길 때만** 성립한다 — 그때 다시 요청한다 |
+| B-34 | ❌ **철회(2026-10-12). 요청하지 않는다.** 처음에 `GetCourseHistory` 에 `status`·`overtimeYn` 필터를 요청했는데, ① `status` 는 **이미 있었다**(`eventType`, OQ-5 해소) ② `overtimeYn` 으로 거르는 화면이 **코드에도 목업에도 결정에도 없다.** 확정된 필터는 코스이력 페이지의 **기간·코스·결과** 3종이고 결과는 `eventType` 이 덮는다. 🔴 **목업의 `지연` 뱃지를 보고 "보이면 걸러 보고 싶을 것" 이라고 추측해 올린 요청이었다**(A1 위반). 요청 사유로 쓴 "페이징과 충돌해 틀린 건수가 뜬다" 는 **그 필터를 쓰는 화면이 생길 때만** 성립한다 — 그때 다시 요청한다. → 2026-10-30 대시보드가 쓰는 화면이 되어 지점이력 `overTimeYn` 으로 다시 요청 → **2026-11-03 대시보드 전용 `GetDashboardPointHistory` 로 반영**(기존 `GetPointHistory` 는 그대로, §5-1-D) |
 | B-35 | 🟡 **같은 메모를 응답마다 다른 이름으로 준다**(실측 2026-10-12). `GetCourseHistoryCheckDetails` 는 `memos` / `attaches` / `imagePath` / `fileExt`, `GetPointHistoryDetail` 은 **`memoList` / `attachList` / `attachPath`** 이고 **`fileExt` 가 없다** — `memoSeq`·`attachSeq`·URL 이 같은 **동일 데이터**다. 백엔드가 전달한 DTO(`CourseHistoryMemoDto`)는 **코스 쪽뿐**이라, 지점 쪽을 쓰려면 프론트에 어댑터가 하나 더 생긴다. B-4(필드명 불일치) 계열이지만 **중첩 2단에 걸쳐** 어긋나 비용이 더 크다. **요청**: 한쪽 이름으로 통일 |
 | B-40 | 🔴🔴 **첨부 이미지 URL 로 파일을 받을 수 없다 — 404 다**(실측 2026-10-16). 응답은 절대 URL 을 정상적으로 주는데(OQ-13 대로 `http://{호스트}/UploadedFiles/...`), **실제로 요청하면 `HTTP 404` + 0바이트**다. 🔴 **순찰 첨부 2건**(`patrols/202610/`, `attachSeq 45`·`46`)과 **공지 첨부 1건**(`notices/202607/`, `attachSeq 17`) **전부** 404 이고, **토큰을 붙여도·빼도 같다**(인증 문제가 아니다). 디렉토리 자체도 404. 즉 **지금은 사진을 화면에 띄울 수 없다** — 코스이력 상세의 순찰기록 썸네일·지점 인증 상세의 현장 사진·공지 첨부가 **전부 빈 칸이 된다**. ⚠️ 응답에 경로가 있으니 **프론트에서는 "데이터가 있다" 로 보인다** — 깨진 이미지만 뜨고 원인을 화면에서 알 수 없다. **요청**: 파일 미존재 / 정적 서빙 미설정(`UseStaticFiles`) / 경로 매핑 불일치 중 **어느 것인지 확인**. ⚠️ 프론트는 그와 별개로 **onError 폴백**을 넣는다(OQ-13 의 mixed content·프록시 문제와 겹치는 자리) | 🔴 |
 | B-41 | ◩ **① 해소(2026-10-21 당일 재실측 — 현장관리자 `UserList`·`UserDetail` 200, 응답 형태 동일) · ② 일부 반영(상세에 `codeName` 이 생겼다 — 2026-10-21 관측) · `codeSeq`·`createDt` 대기**. (원문) 🔴🔴 **현장관리자가 근무자 API 를 쓸 수 없다 — 403 이다**(재실측 2026-10-21, `spec 038`). `UserList`·`UserDetail` 이 현장관리자(`333333`) 토큰에 **403 + 빈 body**, 본사 토큰에는 200 이다. 🔴 **현장 사이트 근무자 화면(`/users`)의 주 사용자가 현장관리자**라 이대로면 그 화면은 **현장관리자에게 항상 조회 실패**다(본사 계정으로만 보인다). ⚠️ 변경계 3종(`AddUser`·`UpdateUser`·`RemoveUser`)은 **미실측**이나 같은 권한일 가능성이 높다 — 명세서는 "근무자 추가는 현장관리자만" 이다(`screens.md` §1-4). **요청**: ① 현장관리자에게 **자기 사업장** 근무자 조회·추가·수정·삭제 권한 개방 ② 함께 — **`UserDetail` 에 `codeSeq`·`codeName`·`createDt` 추가**(목록에는 있는데 상세에 없어 상세에서 권한·등록일을 보여줄 수 없다, OQ-8). 프론트는 **서버 타입·MSW 위에서 이미 만들어 두었다** — 열리면 코드 변경 없이 동작한다 | 🔴 |
@@ -1725,6 +1893,13 @@ interface NoticeAttach {
 | B-59 | ✅ **반영됨(실측 2026-10-27, §5-1-C)** — `AddAdmin` · `UpdateAdmin` · `ResetAdminPassword` · `DeleteAdmin`(`siteSeq` 없음). 아래는 기록. ~~**본사 관리자 생성 · 수정 · 삭제 API 가 없다**(2026-10-23, `spec 045`) — `AddUser` 는 현장용이라 실제 `siteSeq` 를 요구하고(0·생략 500), 그렇게 만든 관리자는 **그 사업장이 지워지면 함께 지워진다**. 화면은 추가 · 수정 · 비밀번호 · 삭제를 **자리만 두고 막았다**. **요청(전달 2026-10-26)**: 관리자 **추가 · 수정 · 삭제**를 현장 관리자 API 와 **분리**(`siteSeq` 없이) + **비밀번호 변경은 별도 API**~~ | ✅ |
 | B-60 | 🔴 **관리자 계정 권한 검사가 없다**(실측 2026-10-23) — Manager 토큰으로 Master 생성 200 · Master 토큰으로 다른 관리자 수정 · 삭제 200. 명세 규칙(시스템관리자 → Master, Master → Manager 생성 · 시스템관리자 계정 수정 · 삭제 불가)을 화면만 막는다. ⏸ **추후 진행**(백엔드 개발자와 합의 2026-10-26 — 이번 요청에 넣지 않았다). 그때까지 화면 검사를 유지한다 | 🔴 |
 | B-61 | ✅ **반영됨(실측 2026-10-27, §5-1-C)** — `GetAdminList`(그룹 트리 · 노드마다 상속 포함 `admins`) + `GetAdminDetail`. 사번은 목록에 없지만 **표시 안 함으로 결정**(추가 요청 안 함). 아래는 기록. ~~**관리자 목록 API 가 없다**(2026-10-23) — `GetGroupAdminList` 행에 연락처 · 등록일이 없고, 관리자별 담당 그룹을 알려면 **그룹마다** 호출해야 한다(화면은 트리의 그룹 수만큼 병렬 조회). **요청(전달 2026-10-26)**: 관리자 조회를 **`GetGroupList` 처럼 그룹 트리에 넣어서**(노드마다 할당된 관리자) + 관리자 행에 **사번 · 연락처** 추가(등록일은 화면에 없어 요청하지 않음 — 045 결정). ⚠️ 트리 방식이면 **어느 그룹에도 할당되지 않은 관리자**가 빠질 수 있다 — 응답이 오면 확인~~ | ✅ |
+| B-62 | ❌ **철회(2026-11-03) — 버그 아님.** ~~시간초과 기준이 KPI(회차 단위 `overtimeYn`)와 목록(지점 단위 `overTimeYn`)에서 달라 "시간초과 1" 인데 목록 0건~~. 원인은 **테스트 코스 74 의 지점 사이 시간(`courseMin`)이 전부 0**(전체 `totalMin` 만 10분)이라 지점 시간초과가 판정되지 않은 것이다 — 지점 사이 시간이 설정된 코스 40(`0 / 15 / 10`, 합 25 = `totalMin`)에서만 지점 시간초과가 나왔다. 지점 사이 시간 합 = 전체 시간이면 전체 초과는 어느 한 구간 초과 없이는 생길 수 없다(사용자 지적). 남는 것: 서버가 `totalMin` ≠ `courseMin` 합 저장을 허용한다(§5-2 `CourseDetail` 주석 · 코스 등록 쪽 문제, 대시보드와 별개) | ❌ |
+| B-63 | ✅ **해소(실측 2026-11-03)** — **일시정지 = 교대 요청 중**이다. 교대를 요청하면 `course-paused`, 교대가 끝나면 `course-handover` 가 재개 역할(`course-resumed` 는 없다). 멈춘 시간은 `pauseTime` 에 쌓이고 `elapsedSec` 에서 빠진다. `GetCoursePaused` 에 `pausedYn` 이 없어도 이벤트 이름이 곧 상태라 문제없다. ~~앱 버튼 없음 · `pausedYn` 없음~~ | ✅ |
+| B-64 | 🟡 **SSE 이벤트 순서가 뒤바뀔 수 있다**(실측 2026-11-03) — 회차 92 에서 마지막 지점 인증 · 자동 종료가 같은 `eventDt` 로 나가 `course-ended` 가 마지막 `point-checked` 보다 **먼저** 왔다. 화면은 순서에 기대지 않게 처리한다(§5-1-D) — 서버에 알림만 | 🟡 |
+| B-65 | 🟡 **회차가 열린 채 남는다**(실측 2026-11-03) — 앱 오류 무렵 시작된 회차 91 이 약 2시간 열려 있었고, 앱에서 "순찰 시작" 을 누르자 새 회차 없이 그 회차에 이어서 인증됐다. 대시보드에는 "몇 시간째 진행 중 · 시간초과" 로 보인다. **확인 요청**: 오래 열린 회차를 서버가 자동으로 닫는지 · 앱이 이어 받는 게 의도인지 | 🟡 |
+| B-66 | 🟡 **인증 2/5 여도 "완료"**(실측 2026-11-03, 회차 89 · 91 · 92) — 건너뛴 지점이 있어도 마지막 지점을 찍으면 `status 1 완료`. KPI "오늘 완료" 에 건너뛴 회차가 섞인다. **확인 요청**: "완료" 의 정의가 "마지막 지점까지 마침" 이 맞는지 | 🟡 |
+| B-67 | 🟢 **SSE `eventDt` 만 타임존 · 마이크로초 포함**(`2026-11-03T14:06:48.813325+09:00`) — 다른 API 는 타임존 없는 로컬시각이다. 화면은 파싱만 맞추면 된다 — 알림만 | 🟢 |
+| B-68 | 🟡 **원래 순찰자에게 되돌린 교대는 기록이 사라진다**(실측 2026-11-03) — 회차 93 에서 13 → 14 → 13 으로 두 번 교대하자 SSE `course-handover` 는 **2번** 왔는데 `GetCourseHandover`(`handoverCount 0` · 1명) · `GetCourseHistoryHandOvers`(빈 배열) · 이력 `userList`(13) 모두 **교대 0** 이다. 한 번 교대(회차 94)는 셋 다 정상. 대시보드 카드의 `교대` 뱃지가 이벤트 직후와 다시 조회 뒤에 달라진다. **확인 요청**: 되돌림을 "교대 취소" 로 보는 게 의도인지 | 🟡 |
 
 ### 6-1-A. 🔴 백엔드 전달용 — 우선순위 (2026-10-10 기준)
 
@@ -1814,6 +1989,7 @@ interface NoticeAttach {
 ~~비상연락망~~(✅ **2026-10-27 실측** — §5-1-C) · ~~근무자 배치요청/배치이력~~(✅ **2026-10-22 구현·실측** — §5-1-B 배치 10종, `spec 042`. 남은 요청은 [`api-request-deployment.md`](./api-request-deployment.md)) · 환경설정 키워드 · ~~순찰 진행현황(실시간)~~ · 사업장 목록 조회 · 권한코드 목록 조회 · 공지 APP 푸시 발송
 
 > 🔴 **"순찰 진행현황(실시간)" 은 전용 엔드포인트가 없을 뿐, 만들 수 있다**(2026-10-13 정정). `GetCourseHistory` 의 **`eventType=0`(진행중)** 이 바로 "지금 순찰 중" 목록이다(§4 `eventType` 블록, 백엔드 확인 2026-10-12). 화면은 `screens.md` **§1-2A**. 보류로 적어 두면 "서버가 없어서 못 만든다" 로 읽히는데, **그렇지 않다** — 미정인 것은 갱신 방식·범위·진입 위치 셋이다.
+> → **2026-11-03 전용 API · SSE 생김**(§5-1-D) — 진행현황은 현장 대시보드(`spec 067`)가 흡수했다.
 
 ---
 

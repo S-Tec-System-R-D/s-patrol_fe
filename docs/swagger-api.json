@@ -732,6 +732,277 @@
         }
       }
     },
+    "/api/v1/DashBoard/W/sign/GetTodaySummary": {
+      "get": {
+        "tags": ["DashBoard"],
+        "summary": "대시보드 건수 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/DashBoard/W/sign/GetDashboardPointHistory": {
+      "get": {
+        "tags": ["DashBoard"],
+        "summary": "대시보드 지점 이력 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fromDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "courseSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pointSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "authMethod",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "userSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "courseName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "overTimeYn",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/DashBoard/W/sign/GetDashboardCourseList": {
+      "get": {
+        "tags": ["DashBoard"],
+        "summary": "대시보드 진행중인 코스 목록 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/DashBoard/W/sign/GetCourseStart": {
+      "get": {
+        "tags": ["DashBoard"],
+        "summary": "순찰 시작 SSE 수신 후 조회",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/DashBoard/W/sign/GetPointChecked": {
+      "get": {
+        "tags": ["DashBoard"],
+        "summary": "지점 인증 SSE 수신 후 조회",
+        "parameters": [
+          {
+            "name": "detailSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/DashBoard/W/sign/GetCoursePaused": {
+      "get": {
+        "tags": ["DashBoard"],
+        "summary": "순찰 멈춤/재개 SSE 수신 후 조회",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/DashBoard/W/sign/GetCourseHandover": {
+      "get": {
+        "tags": ["DashBoard"],
+        "summary": "순찰 교대 SSE 수신 후 조회",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/DashBoard/W/sign/GetCourseEnded": {
+      "get": {
+        "tags": ["DashBoard"],
+        "summary": "순찰 종료 SSE 수신 후 조회",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/Emergency/W/sign/GetEmergency": {
       "get": {
         "tags": ["Emergency"],
@@ -2834,6 +3105,9 @@
     },
     {
       "name": "Course"
+    },
+    {
+      "name": "DashBoard"
     },
     {
       "name": "Emergency"
