@@ -46,13 +46,21 @@ export const test = base.extend<{ checks: Checks }>({
 
 export { expect }
 
-/** 가로 넘침 없음 — 문서 폭이 화면 폭을 넘지 않는다(`053` 기준) */
-export const expectNoOverflow = async (page: Page) => {
-  // 데이터가 들어온 뒤에 잰다 — 빈 목록일 때는 넘치지 않다가 행이 차면 넘칠 수 있다
-  await page.waitForLoadState('networkidle')
+/**
+ * 지금 폭을 잰다. 🔴 **실시간 연결이 열린 화면(대시보드 — `spec 069`)은 이걸 쓴다** — SSE 가 계속 열려 있어
+ * `networkidle` 에 닿지 않는다. 데이터가 그려진 것을 먼저 확인하고 부른다.
+ */
+export const expectNoOverflowNow = async (page: Page) => {
   const { scrollWidth, innerWidth } = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     innerWidth: window.innerWidth,
   }))
   expect(scrollWidth, `가로 넘침 — ${page.url()}`).toBeLessThanOrEqual(innerWidth)
+}
+
+/** 가로 넘침 없음 — 문서 폭이 화면 폭을 넘지 않는다(`053` 기준) */
+export const expectNoOverflow = async (page: Page) => {
+  // 데이터가 들어온 뒤에 잰다 — 빈 목록일 때는 넘치지 않다가 행이 차면 넘칠 수 있다
+  await page.waitForLoadState('networkidle')
+  await expectNoOverflowNow(page)
 }

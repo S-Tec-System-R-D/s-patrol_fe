@@ -29,6 +29,7 @@ export const useRecentIssues = (siteSeq: number | null) =>
       rows: mergeRecentIssues(...results.map((result) => result.data?.items ?? [])),
       isPending: results.some((result) => result.isPending),
       isError: results.some((result) => result.isError),
+      dataUpdatedAt: Math.max(...results.map((result) => result.dataUpdatedAt)),
       refetch: () => Promise.all(results.map((result) => result.refetch())),
     }),
   })

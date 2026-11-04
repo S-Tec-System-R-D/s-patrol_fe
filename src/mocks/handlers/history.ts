@@ -1,3 +1,4 @@
+import { format } from 'date-fns'
 import { http, HttpResponse } from 'msw'
 
 import type {
@@ -44,6 +45,9 @@ const daysAgo = (days: number, time: string): string => {
   date.setDate(date.getDate() - days)
   return `${date.toISOString().slice(0, 10)}T${time}`
 }
+
+/** 오늘 — 화면이 지역 날짜로 고른다(`daysAgo` 는 UTC 라 아침엔 어제가 된다) */
+const todayAt = (time: string): string => `${format(new Date(), 'yyyy-MM-dd')}T${time}`
 
 const row = (
   overrides: Partial<MockHistory> & Pick<MockHistory, 'historySeq' | 'courseSeq'>
@@ -122,6 +126,26 @@ const seeds: MockHistory[] = [
     checkedCount: 1,
     actualElapsedTime: '00:12:00',
     userList: [],
+  }),
+  // 오늘 끝난 회차 — 대시보드 `최근 종료된 순찰`(`spec 069`). 뒤 행이 먼저 시작해 늦게 끝난다
+  row({
+    historySeq: 190,
+    courseSeq: 900,
+    courseName: '오늘 완료 코스',
+    startDt: todayAt('00:30:00'),
+    endDt: todayAt('00:40:00'),
+    actualElapsedTime: '00:10:00',
+  }),
+  row({
+    historySeq: 191,
+    courseSeq: 900,
+    courseName: '오늘 중단 코스',
+    startDt: todayAt('00:10:00'),
+    endDt: todayAt('00:50:00'),
+    status: 2,
+    statusName: '미완료',
+    checkedCount: 1,
+    actualElapsedTime: '00:40:00',
   }),
   // 🔴 진행 중(`endDt: null`) — `eventType=0` 이 거르는 상태다
   row({

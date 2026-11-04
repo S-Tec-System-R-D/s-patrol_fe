@@ -53,3 +53,38 @@ export type AreaState = 'ready' | 'loading' | 'error'
 
 /** 진행 중 단계 하나의 상태 — 색은 회차 상세 지도 핀과 같은 규칙 */
 export type PointStepStatus = 'done' | 'skipped' | 'next' | 'pending'
+
+/**
+ * SSE 이벤트 `data` — `spec 069`. **실측 그대로**(§5-1-D "5. SSE data"). ID 와 상태만 담긴다.
+ * `connected` 의 `data` 는 JSON 이 아니라 연결 ID 문자열이라 타입이 없다.
+ */
+export interface SseEventBase {
+  /** `"Patrol"` 만 처리한다 — 다른 종류도 같은 연결로 올 수 있다 */
+  link: string
+  siteSeq: number
+  courseSeq: number
+  historySeq: number
+  userSeq: number
+  /** 🟡 타임존(`+09:00`) + 마이크로초가 붙는다(B-67) — 쓰지 않는다 */
+  eventDt: string
+}
+
+export type CourseStartedEvent = SseEventBase
+
+export interface PointCheckedEvent extends SseEventBase {
+  detailSeq: number
+  /** 지점 사전 — `3` 건너뜀 · `4` 인증 */
+  detailStatus: number
+}
+
+/** 교대 요청 때 온다(앱에 별도 일시정지 없음) */
+export type CoursePausedEvent = SseEventBase
+
+export interface CourseHandoverEvent extends SseEventBase {
+  /** `userSeq` = 새 순찰자 */
+  previousUserSeq: number
+}
+
+export interface CourseEndedEvent extends SseEventBase {
+  endType: 'completed' | 'aborted'
+}

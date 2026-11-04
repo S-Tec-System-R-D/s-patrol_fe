@@ -154,7 +154,26 @@ const historyRows = (): PointHistoryRow[] => [
   historyRow({ detailSeq: 8000, checkDt: daysAgoAt(3, '15:20'), pointName: '정문', courseName: 'A코스', userName: '홍길동', status: 3, overTimeYn: false, hasMemo: false }),
 ]
 
+/**
+ * 실시간 알림(SSE) — `spec 069` T1144. 🔴 **연결만 흉내 낸다**(사용자 결정 2026-11-03): `retry` + `connected`
+ * 를 보내고 스트림을 열어 둔다. 이벤트는 보내지 않는다 — 처리는 단위 테스트, 실제 흐름은 실서버 + 앱 순찰로 본다.
+ * 경로는 SSE 서버(`VITE_SSE_BASE_URL`)의 것 — mock 에선 비워 같은 출처로 온다.
+ */
+const SSE_SUBSCRIBE_PATH = '/api/v1/Sse/subscribe'
+
+const sseConnected = () =>
+  new HttpResponse(
+    new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('retry: 10000\n\nevent: connected\ndata: mock-connection\n\n'))
+      },
+    }),
+    { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' } }
+  )
+
 export const dashboardHandlers = [
+  http.get(SSE_SUBSCRIBE_PATH, sseConnected),
+
   http.get(GET_TODAY_SUMMARY_PATH, () => ok(summary)),
 
   http.get(GET_DASHBOARD_COURSE_LIST_PATH, () => ok(courses())),

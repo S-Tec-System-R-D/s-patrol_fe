@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 
 import AppButton from '@/components/app/AppButton'
 import AppEmpty from '@/components/app/AppEmpty'
+import { cn } from '@/lib/utils'
 
 import { elapsedMinAt, sortActiveCourses } from '../lib/activeCourse'
 import type { AreaState, DashboardCourse } from '../types'
@@ -75,9 +76,9 @@ const ActiveCourseSection = ({ courses, state, receivedAt, onRetry }: ActiveCour
           <AppEmpty icon={FootprintsIcon} title="지금 진행 중인 순찰이 없습니다" />
         </div>
       ) : (
-        /* 🔴 넓은 폭은 **2열**(사용자 결정 2026-10-30) — 1열이면 단계가 왼쪽 절반에서 끝나 오른쪽이 비었다.
+        /* 🔴 넓은 폭은 **2개부터 2열**(사용자 결정 2026-10-30 · 2026-11-04) — 1개면 전체 폭을 쓴다.
            정렬 순서는 왼쪽 → 오른쪽, 위 → 아래로 읽힌다(시간초과가 맨 왼쪽 위) */
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+        <div className={cn('grid grid-cols-1 gap-3', courses.length > 1 && 'xl:grid-cols-2')}>
           {sortActiveCourses(courses, receivedAt, now).map((course) => (
             <ActiveCourseCard
               key={course.historySeq}

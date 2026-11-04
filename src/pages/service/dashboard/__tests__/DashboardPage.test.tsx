@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { format, subDays } from 'date-fns'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -25,6 +26,8 @@ const PATHS = {
   courses: '/api/v1/DashBoard/W/sign/GetDashboardCourseList',
   history: '/api/v1/DashBoard/W/sign/GetDashboardPointHistory',
   notice: '/api/v1/Notice/W/sign/GetNoticeList',
+  finished: '/api/v1/History/W/sign/GetCourseHistory',
+  sse: '/api/v1/Sse/subscribe',
 }
 
 const serverError = () => HttpResponse.json({ title: 'Internal Server Error', status: 500 }, { status: 500 })
@@ -47,6 +50,31 @@ const captureRequests = () => {
   server.events.on('request:start', ({ request }) => calls.push(new URL(request.url)))
   return calls
 }
+
+const pagedHistory = (items: unknown[]) => ({
+  message: 'ok',
+  data: { items, totalCount: items.length, page: 1, pageSize: 100 },
+  code: 200,
+})
+
+/** 연결을 열어 두고 알림을 보낸다 — mock 기본 핸들러는 `connected` 뿐이다 */
+const liveSse = () => {
+  const encoder = new TextEncoder()
+  let stream: ReadableStreamDefaultController<Uint8Array>
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      stream = controller
+      controller.enqueue(encoder.encode('event: connected\ndata: conn\n\n'))
+    },
+  })
+  server.use(
+    http.get(PATHS.sse, () => new HttpResponse(body, { headers: { 'Content-Type': 'text/event-stream' } }))
+  )
+  return (event: string, data: object) =>
+    stream.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`))
+}
+
+const updatedAtText = () => screen.getByText('마지막 갱신', { exact: false }).textContent
 
 const section = (heading: string) => screen.getByRole('heading', { name: heading }).closest('section')!
 const courseCard = (name: string) => screen.getByRole('heading', { name }).closest('a')!
@@ -211,20 +239,100 @@ describe('DashboardPage — API 연결', () => {
     expect(screen.queryByRole('region', { name: '오늘 순찰' })).toBeNull()
   })
 
-  it('새로고침 — 4개 영역을 다시 부른다 · 30초 자동 문구 없음', async () => {
+  it('새로고침 — 5개 영역을 다시 부른다 · 30초 자동 문구 없음', async () => {
+    const calls = captureRequests()
+    const count = (path: string) => calls.filter((url) => url.pathname === path).length
     renderPage()
     await screen.findByRole('heading', { name: 'C코스' })
     await waitFor(() => expect(within(section('공지사항')).getAllByRole('listitem')).toHaveLength(3))
     expect(screen.queryByText(/30초마다 자동/)).toBeNull()
+    // 첫 연결의 목록 다시 받기(`spec 069`)가 끝난 뒤부터 센다
+    await waitFor(() => expect(count(PATHS.courses)).toBe(2))
 
-    const calls = captureRequests()
+    calls.length = 0
     await userEvent.click(screen.getByRole('button', { name: '새로고침' }))
     await waitFor(() => expect(screen.getByRole('button', { name: '새로고침' })).toBeEnabled())
-    const count = (path: string) => calls.filter((url) => url.pathname === path).length
-    expect([count(PATHS.summary), count(PATHS.courses), count(PATHS.history), count(PATHS.notice)]).toEqual([
-      1, 1, 2, 1,
-    ])
+    expect([
+      count(PATHS.summary),
+      count(PATHS.courses),
+      count(PATHS.finished),
+      count(PATHS.history),
+      count(PATHS.notice),
+    ]).toEqual([1, 1, 1, 2, 1])
   })
+
+  it('실시간 연결 — mock 연결이 붙으면 `실시간`', async () => {
+    renderPage()
+    expect(await screen.findByText('실시간')).toBeInTheDocument()
+  })
+
+  it('실시간 연결 실패 — `다시 연결 중` · 화면은 그대로 그린다', async () => {
+    server.use(http.get(PATHS.sse, serverError))
+    renderPage()
+    await screen.findByRole('heading', { name: 'C코스' })
+    expect(screen.getByText('다시 연결 중')).toBeInTheDocument()
+    expect(screen.queryByText('실시간')).toBeNull()
+  })
+})
+
+describe('DashboardPage — 최근 종료된 순찰', () => {
+  const finishedRows = () => within(section('최근 종료된 순찰')).getAllByRole('listitem')
+
+  it('어제~오늘 100건을 받아 오늘 끝난 회차를 종료 시각 순으로 · 회차 상세로 간다', async () => {
+    const calls = captureRequests()
+    renderPage()
+    await screen.findByRole('link', { name: /오늘 중단 코스/ })
+
+    const query = calls.find((url) => url.pathname === PATHS.finished)!.searchParams
+    expect(query.get('pageSize')).toBe('100')
+    expect(query.get('toDt')).toBe(format(new Date(), 'yyyy-MM-dd'))
+    expect(query.get('fromDt')).toBe(format(subDays(new Date(), 1), 'yyyy-MM-dd'))
+
+    const rows = finishedRows()
+    expect(rows).toHaveLength(2)
+    expect(rows[0]).toHaveTextContent('00:50')
+    expect(rows[0]).toHaveTextContent('1/3 인증')
+    expect(rows[0]).toHaveTextContent('미완료')
+    expect(rows[1]).toHaveTextContent('오늘 완료 코스')
+    expect(within(rows[0]).getByRole('link')).toHaveAttribute('href', '/patrol/zones/191')
+    expect(within(section('최근 종료된 순찰')).getByRole('link', { name: /전체 보기/ })).toHaveAttribute(
+      'href',
+      '/patrol/zones'
+    )
+  })
+
+  it('오늘 끝난 회차가 없으면 없음 표시', async () => {
+    server.use(http.get(PATHS.finished, () => HttpResponse.json(pagedHistory([]))))
+    renderPage()
+    expect(await screen.findByText('오늘 종료된 순찰이 없습니다')).toBeInTheDocument()
+  })
+
+  it('실패해도 나머지는 그리고 다시 시도하면 그 영역만 다시 받는다', async () => {
+    server.use(http.get(PATHS.finished, serverError, { once: true }))
+    renderPage()
+    expect(await screen.findByText('최근 종료된 순찰을 불러오지 못했습니다')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'C코스' })).toBeInTheDocument()
+
+    await userEvent.click(within(section('최근 종료된 순찰')).getByRole('button', { name: '다시 시도' }))
+    expect(await screen.findByRole('link', { name: /오늘 중단 코스/ })).toBeInTheDocument()
+  })
+
+  it('종료 알림 — 행이 나타나고 `마지막 갱신` 이 바뀐다', async () => {
+    const send = liveSse()
+    server.use(http.get(PATHS.finished, () => HttpResponse.json(pagedHistory([])), { once: true }))
+    renderPage()
+    await screen.findByText('오늘 종료된 순찰이 없습니다')
+    await screen.findByText('실시간')
+    await screen.findByRole('heading', { name: 'C코스' })
+    // 표시가 초 단위라 첫 연결의 다시 받기가 끝난 뒤 1초를 넘겨 둔다
+    await new Promise((resolve) => setTimeout(resolve, 1600))
+    const before = updatedAtText()
+
+    send('course-ended', { link: 'Patrol', siteSeq: 7, courseSeq: 1, historySeq: 191, endType: 'aborted' })
+
+    expect(await screen.findByRole('link', { name: /오늘 중단 코스/ }, { timeout: 2000 })).toBeInTheDocument()
+    expect(updatedAtText()).not.toBe(before)
+  }, 10_000)
 })
 
 describe('ActiveCourseSection — 경과 1분 증가', () => {
@@ -242,6 +350,21 @@ describe('ActiveCourseSection — 경과 1분 증가', () => {
     users: [{ userSeq: 1, userName: '순찰자' }],
     points: [],
     ...overrides,
+  })
+
+  it('넓은 폭 — 1개면 1열 · 2개부터 2열', () => {
+    const renderCards = (courses: DashboardCourse[]) =>
+      render(
+        <MemoryRouter>
+          <ActiveCourseSection courses={courses} state="ready" receivedAt={Date.now()} onRetry={() => {}} />
+        </MemoryRouter>
+      )
+    const one = renderCards([course({})])
+    expect(one.container.querySelector('.xl\\:grid-cols-2')).toBeNull()
+    one.unmount()
+
+    const two = renderCards([course({}), course({ historySeq: 2 })])
+    expect(two.container.querySelector('.xl\\:grid-cols-2')).not.toBeNull()
   })
 
   it('1분 뒤 경과가 늘고, 멈춘 회차는 그대로', () => {

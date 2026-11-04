@@ -110,7 +110,7 @@ const runRefresh = async (): Promise<string> => {
  * single-flight 진입점 — 진행 중 Promise가 있으면 공유, 없으면 새로 시작.
  * 종단(성공/실패)에서 Promise 슬롯을 비워 다음 만료 사이클을 새로 받는다.
  */
-const ensureRefresh = (): Promise<string> => {
+export const ensureRefresh = (): Promise<string> => {
   if (!refreshPromise) {
     refreshPromise = runRefresh().finally(() => {
       refreshPromise = null
@@ -196,7 +196,7 @@ api.interceptors.response.use(
 let lastFailureAt = 0
 const FAILURE_TOAST_GUARD_MS = 1000
 
-function finalizeAuthFailure(): void {
+export function finalizeAuthFailure(): void {
   clearTokens()
   const now = Date.now()
   if (now - lastFailureAt > FAILURE_TOAST_GUARD_MS) {
