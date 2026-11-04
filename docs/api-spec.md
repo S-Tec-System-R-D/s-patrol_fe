@@ -944,6 +944,8 @@ HTTP 400 · Content-Type: application/json; charset=utf-8
 
 → **19 + 27 = 46 = 전체.** `eventType` 이 코스 상태를 거른다는 것이 수치로 맞는다(OQ-5 해소 확인).
 
+🔴 **정렬은 시작 최근 순이다**(실측 2026-11-04, 회차 81~97) — 종료 순이 아니다. `pageSize=200` 은 **400**(상한 100). 대시보드 `최근 종료된 순찰`은 그래서 100건을 받아 화면이 종료 순으로 다시 고른다(`spec 069`).
+
 → **프론트 결정**: 기간은 **`yyyy-MM-dd`** 로 보낸다(시각을 붙여도 결과가 같아 붙이지 않는다).
 🔴 구간을 만들 때 **`from ≤ to` 를 보장**한다 — 뒤집히면 에러 없이 0건이라 **빈 화면이
 버그처럼 보이지 않는다.**
@@ -1259,14 +1261,13 @@ data: {"link":"Patrol","siteSeq":6,"courseSeq":74,"historySeq":92,"endType":"com
 - 🟡 `eventDt` 는 **타임존(`+09:00`) + 마이크로초**가 붙는다 — 다른 API 의 "타임존 없음" 규약과 다르다(B-67).
 - 🔴 **순서가 뒤바뀔 수 있다** — 회차 92 는 마지막 지점 인증과 자동 종료가 같은 `eventDt` 로 나가면서 **`course-ended` 가 마지막 `point-checked` 보다 먼저** 왔다(회차 91 은 정상 순서). B-64.
 
-**화면 처리 방침**(위 실측에 따른 결정):
-- 연결(재연결 포함) 직후 `GetDashboardCourseList` 를 다시 부른다 — 놓친 이벤트는 이걸로 메운다.
+**화면 처리 방침**(위 실측에 따른 결정 · 🔴 `spec 069` 에서 **전부 다시 받기**로 바꿨다, 사용자 결정 2026-11-03 — 지점 인증 알림에 "다음 지점"이 없고, 캐시를 고치면 경과 시간 기준이 틀어진다):
+- 연결 직후 `GetDashboardCourseList` 를 다시 부른다. 재연결이면 오늘 숫자 · 최근 기록 · 최근 종료도 — 놓친 이벤트는 이걸로 메운다.
 - `data.siteSeq` 가 지금 사업장이 아니면 버린다. `link` 가 `"Patrol"` 이 아니면 버린다.
-- **이벤트 순서에 기대지 않는다** — 이미 없는 회차(종료로 지운 카드)의 이벤트는 버린다.
-- `course-started` 는 `GetCourseStart` 대신 **목록을 다시 부른다**(시작 조회는 카드 정보가 모자라다).
-- `point-checked` 는 `detailSeq` 로 지점을 찾아 `detailStatus` 로 바꾼다(조회 불필요).
-- `course-paused` 는 그 카드의 경과 시간을 멈추고, `course-handover` 가 오면 `GetCourseHandover` 로 순찰자 · 교대 횟수를 받고 다시 센다.
-- `course-ended` 는 카드를 지운다. `course-ended` · `point-checked` 뒤 오늘 숫자 · 최근 기록을 다시 부른다(몰리면 묶어서 1번).
+- **이벤트 순서 · 내용에 기대지 않는다** — 알림은 다시 받을 영역만 정한다.
+- `course-started` · `course-paused` · `course-handover` 는 **목록을 다시 부른다**(알림 뒤 조회 `GetCourseStart` 등은 쓰지 않는다).
+- `point-checked` · `course-ended` 는 목록 + 오늘 숫자 · 최근 기록 · 최근 종료(`GetCourseHistory`)를 다시 부른다. 마지막 알림 뒤 0.5초 묶어 영역마다 1번.
+- 스트림 줄 끝은 `\n` 뿐이다(실측 2026-11-04 — 연결 메시지 기준).
 
 #### 조회 API 실측 결과
 
