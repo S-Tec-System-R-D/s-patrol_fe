@@ -107,7 +107,7 @@
   --background: oklch(0.984 0.003 247); /* 기본배경 #f8fafc */
   --foreground: oklch(0.208 0.042 265); /* 텍스트 #0f172a */
 
-  --contents-bg: oklch(0.985 0.003 260);
+  --contents-bg: oklch(0.97 0.008 260);
 
   /* ── 카드 / 팝오버 ── */
   --card: oklch(1 0 0);

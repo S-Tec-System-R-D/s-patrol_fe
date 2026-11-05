@@ -199,7 +199,7 @@ const DeploymentBoard = () => {
     })
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 flex-col gap-4">
       {/* 페이지 탭 — 순찰이력(`PatrolHistoryTabs`)·코스/지점과 같은 밑줄형(사용자 결정 2026-10-21).
           라우트가 아니라 쿼리(`?tab`)를 바꾸므로 링크가 아니라 **탭 버튼**이다.
           🔴 바닥선은 `border-b` 가 아니라 **안쪽 그림자**다(`spec 055`) — 탭이 `-mb-px` 로 바닥선을
@@ -289,17 +289,17 @@ const DeploymentBoard = () => {
 
       {active.isError ? (
         /* 🔴 조회 실패를 "없음" 으로 보여주지 않는다 — 처리할 요청을 놓친다 */
-        <div className="rounded-lg border border-border bg-card">
+        <div className="flex flex-1 flex-col">
           <AppEmpty
             icon={TriangleAlertIcon}
             title={ERROR_TITLE[tab]}
             description={active.error?.message}
+            action={
+              <AppButton variant="sub" onClick={() => void active.refetch()}>
+                다시 시도
+              </AppButton>
+            }
           />
-          <div className="flex justify-center pb-6">
-            <AppButton variant="sub" onClick={() => void active.refetch()}>
-              다시 시도
-            </AppButton>
-          </div>
         </div>
       ) : active.isPending || pageEmptied ? (
         <div className="rounded-sm border border-border bg-card">
@@ -310,7 +310,7 @@ const DeploymentBoard = () => {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card">
+        <div className="flex flex-1 flex-col">
           {/* 🔴 필터 0건과 "기록 없음" 을 다르게 그린다(다른 목록 화면 규약) */}
           {hasFilter ? (
             <AppEmpty

@@ -180,7 +180,7 @@ const PatrolZonesPage = () => {
   )
 
   return (
-    <div className="flex flex-col gap-4 p-4 xl:p-8">
+    <div className="flex flex-1 flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader title="순찰이력" subtitle="코스·지점 단위 순찰 수행 이력을 확인합니다" />
 
       <PatrolHistoryTabs />
@@ -256,17 +256,17 @@ const PatrolZonesPage = () => {
       {list.isError ? (
         /* 🔴 조회 실패와 0건을 다르게 그린다 — 둘 다 "아무것도 없음" 이면 장애를
            **데이터 없음**으로 오해한다(022·027·023 승계) */
-        <div className="rounded-lg border border-border bg-card">
+        <div className="flex flex-1 flex-col">
           <AppEmpty
             icon={TriangleAlertIcon}
             title="순찰이력을 불러오지 못했습니다"
             description={list.error?.message}
+            action={
+              <AppButton variant="sub" onClick={() => void list.refetch()}>
+                다시 시도
+              </AppButton>
+            }
           />
-          <div className="flex justify-center pb-6">
-            <AppButton variant="sub" onClick={() => void list.refetch()}>
-              다시 시도
-            </AppButton>
-          </div>
         </div>
       ) : list.isPending ? (
         /**
@@ -284,7 +284,7 @@ const PatrolZonesPage = () => {
       ) : items.length === 0 ? (
         /* 🔴 **필터 0건과 "이력 없음" 도 다르다.** 필터 때문에 비었는데 "아직 순찰이
            없습니다" 라고 하면 사용자는 데이터가 없다고 믿는다 */
-        <div className="rounded-lg border border-border bg-card">
+        <div className="flex flex-1 flex-col">
           {hasFilter ? (
             /* 🔴 **빈 상태에 초기화 버튼을 두지 않는다**(사용자 결정 2026-10-16) —
                바로 위 필터 바에 초기화 아이콘이 **항상 보이는 자리**에 있어 같은 버튼이

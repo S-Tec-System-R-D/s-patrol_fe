@@ -96,7 +96,7 @@ const ServiceLayout = () => {
       {/* 🔴 `inert` — 오버레이는 클릭만 막는다. 키보드 포커스는 뒤를 통째로 꺼서 막는다 */}
       <div className="flex" inert={switching}>
         <RailSidebar menus={ServiceMenus} badges={{ deploymentPending }} siteSwitch={siteSwitch} />
-        <div className="flex-1 min-w-0 min-h-screen pb-24 xl:pb-0 bg-contents-background">
+        <div className="flex flex-1 flex-col min-w-0 min-h-screen pb-24 xl:pb-0 bg-contents-background">
           <Outlet key={siteSeq} />
         </div>
         <FloatingNav menus={ServiceMenus} badges={{ deploymentPending }} siteSwitch={siteSwitch} />

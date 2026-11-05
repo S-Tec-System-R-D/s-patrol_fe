@@ -112,13 +112,13 @@ const AdminsPage = () => {
     : undefined
 
   return (
-    <div className="flex flex-col gap-4 p-4 xl:p-8">
+    <div className="flex flex-1 flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader title="관리자" subtitle={subtitle} />
-      <div className="flex gap-4 items-start">
+      <div className="flex flex-1 gap-4 items-start">
         <div className="hidden xl:block shrink-0 sticky top-6 self-start">
           <GroupFilterPanel {...filterProps} />
         </div>
-        <div className="flex-1 min-w-0 flex flex-col gap-3">
+        <div className="flex-1 min-w-0 self-stretch flex flex-col gap-3">
           <div className="flex flex-wrap xl:flex-nowrap items-center gap-2">
             <div className="xl:hidden">
               <GroupFilterButton {...filterProps} />
@@ -190,17 +190,17 @@ const AdminsPage = () => {
           </div>
 
           {assignments.isError ? (
-            <div className="rounded-lg border border-border bg-card">
+            <div className="flex flex-1 flex-col">
               <AppEmpty
                 icon={TriangleAlertIcon}
                 title="관리자를 불러오지 못했습니다"
                 description={assignments.error?.message}
+                action={
+                  <AppButton variant="sub" onClick={assignments.refetch}>
+                    다시 시도
+                  </AppButton>
+                }
               />
-              <div className="flex justify-center pb-6">
-                <AppButton variant="sub" onClick={assignments.refetch}>
-                  다시 시도
-                </AppButton>
-              </div>
             </div>
           ) : assignments.isPending ? (
             <div
@@ -214,23 +214,21 @@ const AdminsPage = () => {
               ))}
             </div>
           ) : rows.length === 0 ? (
-            <div className="rounded-lg border border-border bg-card">
+            <div className="flex flex-1 flex-col">
               {/* 🔴 범위가 비었으면 그것이 먼저다 — 검색어가 있어도 "검색 결과 없음" 이 아니다 */}
               {scopedRows.length === 0 ? (
                 <AppEmpty icon={UsersIcon} title="이 그룹에 할당된 관리자가 없습니다" />
               ) : (
-                <>
-                  <AppEmpty
-                    icon={FilterXIcon}
-                    title="검색 결과가 없습니다"
-                    description="검색어나 권한을 바꿔보세요."
-                  />
-                  <div className="flex justify-center pb-6">
+                <AppEmpty
+                  icon={FilterXIcon}
+                  title="검색 결과가 없습니다"
+                  description="검색어나 권한을 바꿔보세요."
+                  action={
                     <AppButton variant="sub" onClick={resetFilters}>
                       필터 초기화
                     </AppButton>
-                  </div>
-                </>
+                  }
+                />
               )}
             </div>
           ) : (

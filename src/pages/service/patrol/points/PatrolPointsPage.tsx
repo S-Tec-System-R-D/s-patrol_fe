@@ -192,7 +192,7 @@ const PatrolPointsPage = () => {
   )
 
   return (
-    <div className="flex flex-col gap-4 p-4 xl:p-8">
+    <div className="flex flex-1 flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader title="순찰이력" subtitle="코스·지점 단위 순찰 수행 이력을 확인합니다" />
 
       <PatrolHistoryTabs />
@@ -270,17 +270,17 @@ const PatrolPointsPage = () => {
       {list.isError ? (
         /* 🔴 조회 실패와 0건을 다르게 그린다 — 둘 다 "아무것도 없음" 이면 장애를
            **데이터 없음**으로 오해한다(022·027·023·036 승계) */
-        <div className="rounded-lg border border-border bg-card">
+        <div className="flex flex-1 flex-col">
           <AppEmpty
             icon={TriangleAlertIcon}
             title="순찰이력을 불러오지 못했습니다"
             description={list.error?.message}
+            action={
+              <AppButton variant="sub" onClick={() => void list.refetch()}>
+                다시 시도
+              </AppButton>
+            }
           />
-          <div className="flex justify-center pb-6">
-            <AppButton variant="sub" onClick={() => void list.refetch()}>
-              다시 시도
-            </AppButton>
-          </div>
         </div>
       ) : list.isPending ? (
         /* 🔴 **로딩을 "데이터 없음" 으로 보여주지 않는다.** `AppTable` 은 행이 0개면
@@ -294,7 +294,7 @@ const PatrolPointsPage = () => {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card">
+        <div className="flex flex-1 flex-col">
           {hasFilter ? (
             <AppEmpty
               icon={FilterXIcon}

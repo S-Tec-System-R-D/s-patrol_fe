@@ -83,13 +83,13 @@ const LocationsPage = () => {
   const subtitle = selected && list.data ? `${selected.groupName} 하위 사업장 ${scopedRows.length}개` : undefined
 
   return (
-    <div className="flex flex-col gap-4 p-4 xl:p-8">
+    <div className="flex flex-1 flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader title="사업장" subtitle={subtitle} />
-      <div className="flex gap-4 items-start">
+      <div className="flex flex-1 gap-4 items-start">
         <div className="hidden xl:block shrink-0 sticky top-6 self-start">
           <GroupFilterPanel {...filterProps} />
         </div>
-        <div className="flex-1 min-w-0 flex flex-col gap-3">
+        <div className="flex-1 min-w-0 self-stretch flex flex-col gap-3">
           <div className="flex flex-wrap xl:flex-nowrap items-center gap-2">
             <div className="xl:hidden">
               <GroupFilterButton {...filterProps} />
@@ -142,17 +142,17 @@ const LocationsPage = () => {
 
           {list.isError ? (
             /* 🔴 조회 실패와 0건을 다르게 그린다 */
-            <div className="rounded-lg border border-border bg-card">
+            <div className="flex flex-1 flex-col">
               <AppEmpty
                 icon={TriangleAlertIcon}
                 title="사업장을 불러오지 못했습니다"
                 description={list.error?.message}
+                action={
+                  <AppButton variant="sub" onClick={() => void list.refetch()}>
+                    다시 시도
+                  </AppButton>
+                }
               />
-              <div className="flex justify-center pb-6">
-                <AppButton variant="sub" onClick={() => void list.refetch()}>
-                  다시 시도
-                </AppButton>
-              </div>
             </div>
           ) : list.isPending ? (
             /* 🔴 로딩을 "데이터 없음" 으로 보여주지 않는다 */
@@ -164,7 +164,7 @@ const LocationsPage = () => {
               ))}
             </div>
           ) : rows.length === 0 ? (
-            <div className="rounded-lg border border-border bg-card">
+            <div className="flex flex-1 flex-col">
               {scopedRows.length > 0 ? (
                 <AppEmpty
                   icon={FilterXIcon}

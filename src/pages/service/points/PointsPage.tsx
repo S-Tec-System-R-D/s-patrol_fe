@@ -94,7 +94,7 @@ const PointsPage = () => {
   const hasFilter = Boolean(params.search || params.authMethod || params.useYn)
 
   return (
-    <div className="flex flex-col gap-4 p-4 xl:p-8">
+    <div className="flex flex-1 flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader title="코스/지점" subtitle="순찰 코스와 지점을 구성하고 관리합니다" />
 
       <CourseTabs />
@@ -114,17 +114,17 @@ const PointsPage = () => {
       {list.isError ? (
         /* 🔴 조회 실패와 0건을 다르게 그린다 — 둘 다 "아무것도 없음" 이면 장애를
            데이터 없음으로 오해해 지점을 새로 만들려 한다(022 승계) */
-        <div className="rounded-lg border border-border bg-card">
+        <div className="flex flex-1 flex-col">
           <AppEmpty
             icon={TriangleAlertIcon}
             title="지점 목록을 불러오지 못했습니다"
             description={list.error?.message}
+            action={
+              <AppButton variant="sub" onClick={() => void list.refetch()}>
+                다시 시도
+              </AppButton>
+            }
           />
-          <div className="flex justify-center pb-6">
-            <AppButton variant="sub" onClick={() => void list.refetch()}>
-              다시 시도
-            </AppButton>
-          </div>
         </div>
       ) : list.isPending ? (
         /**
@@ -145,15 +145,13 @@ const PointsPage = () => {
       ) : items.length === 0 ? (
         /* 🔴 **필터 0건과 "등록된 지점 없음" 도 다르다.** 필터 때문에 비었는데
            "지점을 추가해주세요" 라고 하면 이미 있는 지점을 또 만들게 된다 */
-        <div className="rounded-lg border border-border bg-card">
+        <div className="flex flex-1 flex-col">
           {hasFilter ? (
-            <>
-              <AppEmpty
-                icon={FilterXIcon}
-                title="조건에 맞는 지점이 없습니다"
-                description="검색어나 필터를 바꿔보세요."
-              />
-              <div className="flex justify-center pb-6">
+            <AppEmpty
+              icon={FilterXIcon}
+              title="조건에 맞는 지점이 없습니다"
+              description="검색어나 필터를 바꿔보세요."
+              action={
                 <AppButton
                   variant="sub"
                   onClick={() =>
@@ -167,8 +165,8 @@ const PointsPage = () => {
                 >
                   필터 초기화
                 </AppButton>
-              </div>
-            </>
+              }
+            />
           ) : (
             <AppEmpty
               icon={MapPinIcon}

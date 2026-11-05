@@ -125,7 +125,7 @@ const UsersPage = () => {
     : undefined
 
   return (
-    <div className="flex flex-col gap-4 p-4 xl:p-8">
+    <div className="flex flex-1 flex-col gap-4 p-4 xl:p-8">
       <AppPageHeader title="근무자" subtitle={subtitle} />
 
       {/* 🔴 026 과 같은 한 줄 배치 — 검색 → 필터 → spacer → 생성 버튼(`PointTopNav` 모양).
@@ -198,17 +198,17 @@ const UsersPage = () => {
 
       {list.isError ? (
         /* 🔴 조회 실패와 0건을 다르게 그린다. 🔴 403(B-41)도 여기로 온다 — 권한을 단정하지 않는다 */
-        <div className="rounded-lg border border-border bg-card">
+        <div className="flex flex-1 flex-col">
           <AppEmpty
             icon={TriangleAlertIcon}
             title="근무자를 불러오지 못했습니다"
             description={list.error?.message}
+            action={
+              <AppButton variant="sub" onClick={() => void list.refetch()}>
+                다시 시도
+              </AppButton>
+            }
           />
-          <div className="flex justify-center pb-6">
-            <AppButton variant="sub" onClick={() => void list.refetch()}>
-              다시 시도
-            </AppButton>
-          </div>
         </div>
       ) : list.isPending ? (
         /* 🔴 로딩을 "데이터 없음" 으로 보여주지 않는다 */
@@ -220,7 +220,7 @@ const UsersPage = () => {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card">
+        <div className="flex flex-1 flex-col">
           {hasFilter ? (
             <AppEmpty
               icon={FilterXIcon}

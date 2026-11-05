@@ -15,7 +15,7 @@ const AdminLayout = () => {
   return (
     <div className="flex">
       <RailSidebar menus={AdminMenus} tag="ADMIN" />
-      <div className="flex-1 min-w-0 min-h-screen pb-24 xl:pb-0 bg-contents-background">
+      <div className="flex flex-1 flex-col min-w-0 min-h-screen pb-24 xl:pb-0 bg-contents-background">
         <Outlet />
       </div>
       <FloatingNav menus={AdminMenus} />
