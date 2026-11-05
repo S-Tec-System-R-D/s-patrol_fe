@@ -47,6 +47,7 @@ export const courseHistoryKeys = {
    * 🔴 **루트를 상세와 분리한다.** 한 요청으로 네 자리를 채우지만(표·지도·KPI·메모)
    * 상세와 **응답이 다르고 크기도 다르다** — 같은 키에 묶으면 한쪽만 다시 받을 수 없다.
    */
+  handOvers: (historySeq: number) => ['course-history-hand-overs', historySeq] as const,
   checkDetails: (historySeq: number) => ['course-history-check-details', historySeq] as const,
 
   /**

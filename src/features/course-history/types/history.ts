@@ -150,6 +150,18 @@ export const AUTH_METHOD = {
   NFC: 10,
 } as const
 
+/** 교대 기록 1건(실측 2026-11-04 — 회차 94 · 96) */
+export interface HandOverRow {
+  fromUserSeq: number
+  fromUserName: string
+  toUserSeq: number
+  toUserName: string
+  /** 넘긴 사람이 마지막으로 처리한 지점 순번 */
+  lastOrderNo: number | null
+  /** 넘겨받은 사람이 처리한 다음 지점 순번 — 처리 없이 끝나면 `null`(회차 94) */
+  nextOrderNo: number | null
+}
+
 /** 코스 상태 — 목록 `status` 와 요청 `eventType` 이 **같은 사전**을 쓴다(OQ-5 해소) */
 export const COURSE_HISTORY_STATUS = {
   IN_PROGRESS: 0,

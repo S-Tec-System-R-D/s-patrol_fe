@@ -20,7 +20,7 @@ import { cva } from 'class-variance-authority'
 export const cardBadge = 'px-1.5 py-0.5 text-[10.5px] leading-4'
 
 export const badgeVariants = cva(
-  'inline-flex w-fit items-center rounded-sm px-2 py-1 text-badge font-semibold whitespace-nowrap',
+  'inline-flex w-fit items-center rounded-md px-2 py-1 text-badge font-semibold whitespace-nowrap',
   {
     variants: {
       variant: {

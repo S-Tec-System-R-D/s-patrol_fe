@@ -48,7 +48,11 @@ const HistoryInfoCard = ({ detail, checks }: HistoryInfoCardProps) => {
           }
         />
         {/* 🔴 순찰자 없는 이력이 실측 35% 다 — 빈 칸으로 두지 않는다 */}
-        <AppDetailRow label="순찰자" value={detail.startUserName || '순찰자 미지정'} />
+        {/* 교대 회차는 이 값이 시작한 사람뿐이다 — 전체는 `교대 이력` 이 말한다(`spec 070`) */}
+        <AppDetailRow
+          label={detail.handoverCount > 0 ? '시작 순찰자' : '순찰자'}
+          value={detail.startUserName || '순찰자 미지정'}
+        />
         <AppDetailRow
           label="시작 일시"
           value={<span className="tabular-nums">{detail.startDt.replace('T', ' ')}</span>}

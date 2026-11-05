@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { fetchCourseHistoryDetail } from '../api/getCourseHistoryDetail'
 import { fetchCourseHistoryCheckDetails } from '../api/getCourseHistoryCheckDetails'
+import { fetchCourseHistoryHandOvers } from '../api/getCourseHistoryHandOvers'
 import { courseHistoryKeys } from '../queryKeys'
 
 /**
@@ -25,6 +26,14 @@ export const useCourseHistoryDetail = (historySeq: number | null) =>
   useQuery({
     queryKey: courseHistoryKeys.detail(historySeq ?? NO_HISTORY),
     queryFn: () => fetchCourseHistoryDetail(historySeq as number),
+    enabled: historySeq !== null,
+  })
+
+/** 교대 기록(`spec 070`) — 교대가 있는 회차만 부른다. 없으면 `historySeq` 에 `null` 을 넘긴다 */
+export const useCourseHistoryHandOvers = (historySeq: number | null) =>
+  useQuery({
+    queryKey: courseHistoryKeys.handOvers(historySeq ?? NO_HISTORY),
+    queryFn: () => fetchCourseHistoryHandOvers(historySeq as number),
     enabled: historySeq !== null,
   })
 

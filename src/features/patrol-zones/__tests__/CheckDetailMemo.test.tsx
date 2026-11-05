@@ -64,39 +64,20 @@ describe('CheckDetailMemo — 본문과 메타', () => {
 
   /**
    * 🔴 메모에는 작성자·시각이 **없다**(실측: `{memoSeq, memo, attaches}` 3필드가 전부).
-   * 행의 `userName`·`checkDt` 로 대체한다.
+   * 행의 `userName` 으로 대체한다.
    */
-  it('🔴 작성자·시각을 행에서 가져와 패널 머리에 한 번만 적는다', () => {
-    const memos = [memo({ memoSeq: 1 }), memo({ memoSeq: 2, memo: '누수' })]
-    render(<CheckDetailMemo row={row({ memos })} />)
-
-    // 메모가 2건이어도 메타는 1번만 — 메모마다 반복하면 메모별로 다른 값처럼 읽힌다
-    expect(screen.getAllByText(/김순찰/)).toHaveLength(1)
-    expect(screen.getByText(/10:06/)).toBeInTheDocument()
-  })
-
-  /**
-   * ✅ **OQ-15 해소(2026-10-19)** — `checkDt` 는 **지점 인증 시간**이다(사용자 DB 확인).
-   * 전에는 "인증이 찍힌 행만 시각을 적는다" 를 단정했는데 **그 규칙이 뒤집혔다**: 겹치던
-   * 시각은 테스트 환경 탓이었다(태그가 한 책상에 모여 있어 연달아 찍힌다).
-   * ⚠️ 미완료 행은 `authMethod` 가 `null` 이라 **수단만 빠지고 시각은 남는다**.
-   */
-  it('✅ 미완료 행도 checkDt 가 있으면 시각을 적는다 (OQ-15 해소)', () => {
-    const incomplete = row({
-      status: 3,
-      authMethod: null,
-      checkDt: '2026-05-01T10:06:00',
-      memos: [memo()],
-    })
-    render(<CheckDetailMemo row={incomplete} />)
-
-    expect(screen.getByText(/10:06/)).toBeInTheDocument()
-  })
-
-  it('checkDt 가 null 이면 시각이 없다 — 아예 가지 않은 행이다', () => {
-    const absent = row({ status: 3, authMethod: null, checkDt: null, memos: [memo()] })
-    render(<CheckDetailMemo row={absent} />)
-
+  it('🔴 작성자를 행에서 가져와 패널 머리에 한 번만 적는다 · 인증 시각은 다른 곳이 적어 뺐다', () => {
+    render(
+      <CheckDetailMemo
+        row={row({
+          memos: [
+            { memoSeq: 1, memo: '첫째', attaches: null },
+            { memoSeq: 2, memo: '둘째', attaches: null },
+          ],
+        })}
+      />
+    )
+    expect(screen.getAllByText(row().userName as string)).toHaveLength(1)
     expect(screen.queryByText(/10:06/)).not.toBeInTheDocument()
   })
 

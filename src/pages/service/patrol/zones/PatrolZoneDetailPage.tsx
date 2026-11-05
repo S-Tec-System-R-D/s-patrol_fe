@@ -9,6 +9,7 @@ import AppPageHeader from '@/components/app/AppPageHeader'
 import {
   useCourseHistoryCheckDetails,
   useCourseHistoryDetail,
+  useCourseHistoryHandOvers,
 } from '@/features/course-history/hooks/useCourseHistoryDetail'
 import { useCourseAverage } from '@/features/course-history/hooks/useCourseAverage'
 import { checkIntervals } from '@/features/course-history/lib/checkIntervals'
@@ -17,6 +18,7 @@ import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/
 import { useCourseDetail } from '@/features/courses/hooks/useCourseDetail'
 import CheckDetailTable from '@/features/patrol-zones/components/detail/CheckDetailTable'
 import HistoryMapCard from '@/features/patrol-zones/components/detail/HistoryMapCard'
+import HandOverTimelineCard from '@/features/patrol-zones/components/detail/HandOverTimelineCard'
 import HistoryInfoCard from '@/features/patrol-zones/components/detail/HistoryInfoCard'
 import HistoryKpiRow from '@/features/patrol-zones/components/detail/HistoryKpiRow'
 import { getSiteSeq } from '@/lib/auth/site'
@@ -47,6 +49,7 @@ const PatrolZoneDetailPage = () => {
 
   const detail = useCourseHistoryDetail(historySeq)
   const checkDetails = useCourseHistoryCheckDetails(historySeq)
+  const handOvers = useCourseHistoryHandOvers(detail.data?.handoverCount ? historySeq : null)
   const average = useCourseAverage(siteSeq, detail.data?.courseSeq ?? null)
 
   /* 🔴 **지도의 뒤인증 핸 좌표는 여기서 부른다**(T497 판단). 훅 안에서 부르면
@@ -269,8 +272,12 @@ const PatrolZoneDetailPage = () => {
           </div>
         </section>
 
-        <section className="order-1 lg:order-2 lg:col-span-1">
+        <section className="order-1 flex flex-col gap-4 lg:order-2 lg:col-span-1">
           <HistoryInfoCard detail={data} checks={checks} />
+          {/* 지점 내역을 받기 전엔 그리지 않는다 — 빈 내역이면 전부 `처리한 지점 없음` 으로 보인다 */}
+          {handOvers.data && handOvers.data.length > 0 && checkDetails.data && (
+            <HandOverTimelineCard rows={handOvers.data} checks={checkDetails.data} />
+          )}
         </section>
       </div>
     </div>

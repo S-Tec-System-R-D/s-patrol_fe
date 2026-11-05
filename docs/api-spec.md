@@ -1281,7 +1281,7 @@ data: {"link":"Patrol","siteSeq":6,"courseSeq":74,"historySeq":92,"endType":"com
 | `overTimeYn` 필터 | **지점 단위** `overTimeYn` 으로 거른다 — `true` + `false` 합 = 전체(사업장 6: 1 + 105 = 106). `status` 와 함께 쓰면 AND. KPI 는 회차 단위지만 **지점 사이 시간이 설정된 코스라면 둘이 함께 간다**(B-62 철회 — 테스트 코스 74 는 지점 사이 시간이 전부 0) |
 | 미인증 지점 | `checkDt` 가 없는 행은 목록에 **안 나온다** — 한 지점도 안 찍고 끝난 회차 87 은 KPI 미완료 1 인데 목록 0건(요청서 Q3) |
 | `GetCourseHandover` `handoverDetail` | 교대 없으면 순찰자 1명. 한 번 교대(회차 94, 13 → 14) → `[13, 14]` · `handoverCount 1` — 기존 `GetCourseHistoryHandOvers`(`{fromUserSeq 13, toUserSeq 14, lastOrderNo 4, nextOrderNo null}`) · 회차 상세 `handoverCount` 와 일치. 🟡 되돌린 교대(회차 93, 13 → 14 → 13)는 셋 다 **교대 0**(B-68). 회차 83 은 이력 `userList` 가 비었는데 여기선 1명이 나온다(OQ-17 과 같은 원인으로 추정) |
-| `GetCourseHistory` `userList` | 🟡 교대 받은 사람이 **빠진다**(회차 94: `[13]` 뿐) — 대시보드는 `users` · `GetCourseHandover` 를 쓰므로 무관, 코스이력 화면 순찰자 열에 걸린다 |
+| `GetCourseHistory` `userList` | 🟡 **지점을 처리한 사람만** 나오는 것으로 보인다(2026-11-04 정정, 2건 기준 추정) — 회차 96 은 교대 받은 14 가 5번을 인증해 `[13, 14]`, 회차 94 는 14 가 처리 없이 끝나 `[13]`. 교대 전체는 `GetCourseHistoryHandOvers` 로 본다 |
 | `GetNoticeList` 순서 | ✅ **고정 공지가 먼저**(사업장 6 · 3) — 요청서 Q4 해소 |
 
 #### 앱 동작 (회차 87~94 로 확인)
@@ -1690,7 +1690,16 @@ interface CourseHistoryAttach {
 }
 
 // ── 18. GetCourseHistoryHandOvers ───────────────
-// 🔴 빈 배열 [] 만 관측. 교대 기록이 있는 이력이 테스트 DB에 없음 : OQ-11
+// 배열 직접. 교대 없으면 [] (실측 2026-11-04 — 회차 94 · 96, OQ-11 해소)
+interface HandOverRow {
+  fromUserSeq: number
+  fromUserName: string
+  toUserSeq: number
+  toUserName: string
+  lastOrderNo: number | null    // 넘긴 사람이 마지막으로 처리한 지점(96: 4)
+  nextOrderNo: number | null    // 받은 사람이 처리한 다음 지점(96: 5). 처리 없이 끝나면 null(94)
+}
+// 🟡 진행 중 회차에서 바로 나오는지는 미측정
 
 // ── 19. GetPointHistory ─────────────────────────
 interface PointHistoryRow {
@@ -1954,7 +1963,7 @@ interface NoticeAttach {
 | OQ-10 | ✅ **해소(백엔드 전달 2026-10-12)** — `CourseHistoryMemo { memoSeq, memo, attaches }` + `CourseHistoryAttach { attachSeq, imagePath, fileName, fileExt }`. §5-2 17번 참조. ✅ **정정(실측 2026-10-16)** — 메모가 달린 데이터가 **있다**(`historySeq 67` 의 `memoSeq 49`·`50`, `historySeq 35` 의 `memoSeq 38`). 전수 166행 중 **메모 보유 27행**(완료 18 · 미완료 9). 🔴 다만 **첨부 파일은 받을 수 없다**(B-40) — 메모 텍스트는 보이고 사진은 빈 칸이 된다 |
 | OQ-14 | ✅ **해소(실측 2026-10-12)** — **다르다.** 같은 메모(`memoSeq 50`)인데 `memos`↔**`memoList`** / `attaches`↔**`attachList`** / `imagePath`↔**`attachPath`** 로 이름이 셋 다 다르고 지점 쪽엔 `fileExt` 가 없다 → **B-35** 등재. 지점 쪽을 쓰려면 어댑터가 하나 더 필요하다 |
 | OQ-13 | ✅ **해소(사용자 확인 + 실측 2026-10-12)** — **절대 URL 전체**다(`http://{API호스트}/UploadedFiles/patrols/{YYYYMM}/{uuid}.jpg`). 붙일 것이 없다. ⚠️ **스킴이 `http`** 라 운영이 HTTPS 면 **mixed content 로 차단**되고, `dev:real`(vite proxy)에서는 이미지가 프록시를 타지 않아 사내망 밖에서 안 보인다. 🔴 **그보다 먼저 — 그 URL 이 지금 404 다**(실측 2026-10-16, **B-40**). 경로 형태는 확정이지만 **파일이 오지 않는다** |
-| OQ-11 | `GetCourseHistoryHandOvers` 응답 구조 (빈 배열만 관측 — 교대 데이터 필요) |
+| OQ-11 | ✅ **해소(2026-11-04)** — `GetCourseHistoryHandOvers` 응답 구조 실측(§5-2 18번) |
 | ~~OQ-12~~ | ✅ **해소(실측 2026-10-21, `spec 040`)** — **확장자/내용 기준**이다. `png`·`jpg`·`gif`·`webp` → `imageList`, 그 외 허용 형식(`pdf`·`xlsx`·`docx`·`pptx`·`zip`·`txt`·`csv`) → `fileList`. 서버가 매직바이트까지 본다. §5-1-B 공지 3종 참조 |
 | OQ-15 | ✅ **해소(사용자 DB 확인 2026-10-19)** — **`checkDt` 는 지점 인증 시간이다.** 🔴 "코스 `endDt` 와 같은 것이 12건" 이라 의미를 의심했는데, **원인은 테스트 환경이었다**: 지금은 **모바일 개발자 책상에 NFC·QR 태그가 전부 모여 있어** 몇 초 안에 연달아 찍힌다. 즉 시각이 겹치는 것은 데이터 결함이 아니라 **실제로 그 시각에 찍힌 것**이다. → 화면이 **미완료(3) 행에도 인증시각을 보여준다**(사용자 결정). ⚠️ **남는 사실 하나**: 미완료 45건은 `checkDt` 만 있고 **`authMethod`·좌표가 0/45** 다(랜덤 누락이 아니라 깔끔한 0 — 수단·위치를 남기지 않는 다른 경로로 찍힌다). 그래서 그 행은 **인증수단 칸이 `-`** 로 남고, 그것이 036 이 미완료를 두 종류로 가른 근거와 맞아떨어진다(`checkDt` 없음 = 아예 안 감 / 있음 = **갔는데 인증이 안 끝남**). |
 | OQ-16 | 🔴 **`status 4 완료` 인데 `authMethod`·좌표·순찰자가 전부 `null` 인 행 3건**(실측 2026-10-16, `historySeq 13` 의 `detailSeq 24·25·26`). 셋이 **같은 `checkDt`(`2026-07-16T10:15:14`)** 라 일괄 삽입된 데이터로 보인다. **정상 경로로 생길 수 있는 상태인지**(앱이 인증수단 없이 완료 처리하는 경로가 있는지) 확인 필요 — 있다면 화면이 "완료인데 인증수단 없음" 을 표시할 수 있어야 한다 |

@@ -34,6 +34,7 @@ import type {
 const GET_COURSE_HISTORY_PATH = '/api/v1/History/W/sign/GetCourseHistory'
 const GET_COURSE_HISTORY_DETAIL_PATH = '/api/v1/History/W/sign/GetCourseHistoryDetail'
 const GET_CHECK_DETAILS_PATH = '/api/v1/History/W/sign/GetCourseHistoryCheckDetails'
+const GET_HAND_OVERS_PATH = '/api/v1/History/W/sign/GetCourseHistoryHandOvers'
 
 interface MockHistory extends CourseHistoryRow {
   siteSeq: number
@@ -482,6 +483,28 @@ export const historyHandlers = [
       message: '요청이 정상 처리되었습니다.',
       code: 200,
       data: toCourseHistoryDetail(found),
+    })
+  }),
+
+  // 순찰자가 둘인 회차 = 교대 1번(상세의 `handoverCount` 와 같은 판단)
+  http.get(GET_HAND_OVERS_PATH, ({ request }) => {
+    const historySeq = Number(new URL(request.url).searchParams.get('historySeq'))
+    const [from, to] = seeds.find((item) => item.historySeq === historySeq)?.userList ?? []
+    return HttpResponse.json({
+      message: '요청이 정상 처리되었습니다.',
+      code: 200,
+      data: to
+        ? [
+            {
+              fromUserSeq: from.userSeq,
+              fromUserName: from.userName,
+              toUserSeq: to.userSeq,
+              toUserName: to.userName,
+              lastOrderNo: 1,
+              nextOrderNo: 2,
+            },
+          ]
+        : [],
     })
   }),
 
