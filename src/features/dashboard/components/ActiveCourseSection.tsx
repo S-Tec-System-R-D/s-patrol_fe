@@ -5,6 +5,8 @@ import AppButton from '@/components/app/AppButton'
 import AppEmpty from '@/components/app/AppEmpty'
 import { cn } from '@/lib/utils'
 
+import type { HandOverRow } from '@/features/course-history/types'
+
 import { elapsedMinAt, sortActiveCourses } from '../lib/activeCourse'
 import type { AreaState, DashboardCourse } from '../types'
 import ActiveCourseCard from './ActiveCourseCard'
@@ -36,9 +38,11 @@ interface ActiveCourseSectionProps {
   /** 응답을 받은 시각(ms) — react-query `dataUpdatedAt` */
   receivedAt: number
   onRetry: () => void
+  /** 회차별 교대 기록 */
+  handOvers?: Record<number, HandOverRow[]>
 }
 
-const ActiveCourseSection = ({ courses, state, receivedAt, onRetry }: ActiveCourseSectionProps) => {
+const ActiveCourseSection = ({ courses, state, receivedAt, onRetry, handOvers = {} }: ActiveCourseSectionProps) => {
   // 새로 받은 직후에는 tick 이 받은 시각보다 앞일 수 있다 — 응답 값 그대로 보이게 받은 시각에 맞춘다
   const now = Math.max(useMinuteNow(), receivedAt)
 
@@ -84,6 +88,7 @@ const ActiveCourseSection = ({ courses, state, receivedAt, onRetry }: ActiveCour
               key={course.historySeq}
               course={course}
               elapsedMin={elapsedMinAt(course, receivedAt, now)}
+              handOvers={handOvers[course.historySeq]}
             />
           ))}
         </div>

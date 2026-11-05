@@ -105,6 +105,15 @@ describe('기준 · 시간초과', () => {
 })
 
 describe('currentUserName', () => {
+  it('A → B → A — `users` 는 [A, B] 라 교대 기록의 마지막 받은 사람을 쓴다(회차 101)', () => {
+    const users = [
+      { userSeq: 13, userName: 'A' },
+      { userSeq: 14, userName: 'B' },
+    ]
+    const row = { fromUserSeq: 14, fromUserName: 'B', toUserSeq: 13, toUserName: 'A', lastOrderNo: 4, nextOrderNo: null }
+    expect(currentUserName(course({ users }), [row])).toBe('A')
+  })
+
   it('users 마지막이 지금 순찰자, 비면 null', () => {
     expect(
       currentUserName(

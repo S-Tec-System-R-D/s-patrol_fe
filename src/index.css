@@ -135,22 +135,22 @@
   --ring: oklch(0.623 0.214 260); /* #3b82f6 */
 
   /* ── 커스텀 시맨틱 ── */
-  /* -bg/-foreground(뱃지 트리오)는 리디자인 목업 실제 CSS 값 그대로(010). 메인(--point 등)은 버튼·포커스링·폼 에러 등 기존 용처 유지 위해 별도 유지 */
+  /* 글자 대비 4.5 이상으로 -foreground 를 어둡게 조정(spec 070, 사용자 결정 2026-11-05). -bg/-foreground(뱃지 트리오)는 리디자인 목업 실제 CSS 값 그대로(010). 메인(--point 등)은 버튼·포커스링·폼 에러 등 기존 용처 유지 위해 별도 유지 */
   --point: oklch(0.623 0.214 260); /* #3b82f6 */
   --point-bg: oklch(0.955 0.025 260);
   --point-foreground: oklch(0.4 0.16 260);
 
   --success: oklch(0.723 0.191 150); /* #22c55e */
   --success-bg: oklch(0.955 0.035 155);
-  --success-foreground: oklch(0.62 0.14 155);
+  --success-foreground: oklch(0.5 0.14 155);
 
   --warning: oklch(0.769 0.188 70); /* #f59e0b */
   --warning-bg: oklch(0.96 0.03 70);
-  --warning-foreground: oklch(0.68 0.13 70);
+  --warning-foreground: oklch(0.52 0.13 70);
 
   --danger: oklch(0.637 0.237 25); /* #ef4444  destructive 동일*/
   --danger-bg: oklch(0.96 0.025 25);
-  --danger-foreground: oklch(0.58 0.19 25);
+  --danger-foreground: oklch(0.52 0.19 25);
 
   /* ── 사이드바 ── */
   --sidebar: oklch(0.984 0.003 247);
@@ -380,23 +380,22 @@
 }
 
 /**
- * NOTE: 대시보드 지점 단계의 **현재 위치** 퍼지는 원(`spec 067`).
- * 🔴 Tailwind `animate-ping` 은 2배로 커져 단계 줄(`overflow-hidden`)에 상하좌우가 잘렸다 —
- * 1.5배까지만 키운다(번호 원 20px → 30px, 사방 5px). 위아래는 감싼 쪽 여백, 왼쪽은 뱃지 안쪽 여백이 받는다(`CourseStepper`).
+ * NOTE: 대시보드 지점 단계의 **현재 위치** 링(`spec 070`, 사용자 결정 2026-11-05).
+ * 🔴 번호 원 안에서 퍼지면 거의 안 보인다(바깥으로 5px, 나올 때쯤 투명) — 뱃지 전체 바깥으로 4px 퍼뜨린다.
+ * 70% 에서 사라지고 남은 시간은 쉰다 — 카드가 여러 개여도 산만하지 않게. 위아래 · 오른쪽은 감싼 쪽 여백이 받는다(`CourseStepper`).
  */
 @keyframes step-pulse {
   0% {
-    transform: scale(1);
-    opacity: 0.55;
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--point) 70%, transparent);
   }
+  70%,
   100% {
-    transform: scale(1.5);
-    opacity: 0;
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--point) 0%, transparent);
   }
 }
 
 .step-pulse-anim {
-  animation: step-pulse 1.6s ease-out infinite;
+  animation: step-pulse 2s ease-out infinite;
 }
 
 /*

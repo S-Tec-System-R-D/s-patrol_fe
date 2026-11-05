@@ -486,10 +486,16 @@ export const historyHandlers = [
     })
   }),
 
-  // 순찰자가 둘인 회차 = 교대 1번(상세의 `handoverCount` 와 같은 판단)
+  // 순찰자가 둘인 회차 = 교대 1번(상세의 `handoverCount` 와 같은 판단) · 대시보드 B코스(회차 101)는 시드 밖이라 따로 둔다
   http.get(GET_HAND_OVERS_PATH, ({ request }) => {
     const historySeq = Number(new URL(request.url).searchParams.get('historySeq'))
-    const [from, to] = seeds.find((item) => item.historySeq === historySeq)?.userList ?? []
+    const [from, to] =
+      historySeq === 101
+        ? [
+            { userSeq: 14, userName: '최근무' },
+            { userSeq: 15, userName: '김철수' },
+          ]
+        : (seeds.find((item) => item.historySeq === historySeq)?.userList ?? [])
     return HttpResponse.json({
       message: '요청이 정상 처리되었습니다.',
       code: 200,
@@ -500,8 +506,8 @@ export const historyHandlers = [
               fromUserName: from.userName,
               toUserSeq: to.userSeq,
               toUserName: to.userName,
-              lastOrderNo: 1,
-              nextOrderNo: 2,
+              lastOrderNo: 2,
+              nextOrderNo: 3,
             },
           ]
         : [],

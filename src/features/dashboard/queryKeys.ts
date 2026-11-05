@@ -15,6 +15,8 @@ export const dashboardKeys = {
   pointHistories: (siteSeq: number) => ['dashboard-point-history', siteSeq] as const,
   pointHistory: (params: DashboardPointHistoryParams) =>
     ['dashboard-point-history', params.siteSeq, params] as const,
+  handOvers: (historySeq: number, handoverCount: number) =>
+    ['dashboard-hand-overs', historySeq, handoverCount] as const,
   /** 날짜가 키에 들어가 실시간 다시 받기는 앞부분으로 찾는다 */
   finishedCourses: (siteSeq: number) => ['dashboard-finished-courses', siteSeq] as const,
   finishedCourse: (params: CourseHistoryParams) =>

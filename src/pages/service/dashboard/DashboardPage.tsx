@@ -8,6 +8,7 @@ import DashboardUpdatedAt from '@/features/dashboard/components/DashboardUpdated
 import FinishedCoursePanel from '@/features/dashboard/components/FinishedCoursePanel'
 import RecentIssuePanel from '@/features/dashboard/components/RecentIssuePanel'
 import { useDashboardCourses } from '@/features/dashboard/hooks/useDashboardCourses'
+import { useDashboardHandOvers } from '@/features/dashboard/hooks/useDashboardHandOvers'
 import { useFinishedCourses } from '@/features/dashboard/hooks/useFinishedCourses'
 import { useRecentIssues } from '@/features/dashboard/hooks/useRecentIssues'
 import { useTodaySummary } from '@/features/dashboard/hooks/useTodaySummary'
@@ -36,6 +37,7 @@ const DashboardPage = () => {
 
   const summary = useTodaySummary(siteSeq)
   const courses = useDashboardCourses(siteSeq)
+  const handOvers = useDashboardHandOvers(courses.data ?? [])
   const finished = useFinishedCourses(siteSeq)
   const recent = useRecentIssues(siteSeq)
   const notices = useNoticeList(siteSeq === null ? null : { siteSeq, pageNumber: 1, pageSize: NOTICE_COUNT })
@@ -77,6 +79,7 @@ const DashboardPage = () => {
         courses={courses.data ?? []}
         state={areaState(courses)}
         receivedAt={courses.dataUpdatedAt}
+        handOvers={handOvers}
         onRetry={() => courses.refetch()}
       />
 

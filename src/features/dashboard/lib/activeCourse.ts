@@ -1,3 +1,4 @@
+import type { HandOverRow } from '@/features/course-history/types'
 import type { DashboardCourse, DashboardCoursePoint, PointStepStatus } from '../types'
 
 /**
@@ -51,8 +52,13 @@ export const elapsedRatio = (course: DashboardCourse, elapsedMin: number): numbe
 export const overtimeMin = (course: DashboardCourse, elapsedMin: number): number =>
   hasStandard(course) ? Math.max(elapsedMin - course.totalMin, 0) : 0
 
-/** 지금 순찰자 = `users` 마지막. 비어 올 때가 있다(회차 83 — OQ-17) */
-export const currentUserName = (course: DashboardCourse): string | null => course.users.at(-1)?.userName ?? null
+/**
+ * 지금 순찰자 = 마지막 교대를 받은 사람. 교대 기록이 없으면 `users` 마지막 · 비어 올 때가 있다(회차 83 — OQ-17).
+ *
+ * 🔴 **`users` 만 보면 틀린다** — 사람별로 한 번씩만 와서 A → B → A 는 `[A, B]` 다(회차 101). 마지막이 B 로 읽힌다.
+ */
+export const currentUserName = (course: DashboardCourse, handOvers: HandOverRow[] = []): string | null =>
+  handOvers.at(-1)?.toUserName ?? course.users.at(-1)?.userName ?? null
 
 /** 문제 있는 코스가 위로 — 시간초과 먼저, 그다음 경과 비율이 높은 순 */
 export const sortActiveCourses = (

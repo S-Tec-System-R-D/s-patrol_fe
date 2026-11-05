@@ -27,6 +27,7 @@ const PATHS = {
   history: '/api/v1/DashBoard/W/sign/GetDashboardPointHistory',
   notice: '/api/v1/Notice/W/sign/GetNoticeList',
   finished: '/api/v1/History/W/sign/GetCourseHistory',
+  handOvers: '/api/v1/History/W/sign/GetCourseHistoryHandOvers',
   sse: '/api/v1/Sse/subscribe',
 }
 
@@ -159,6 +160,36 @@ describe('DashboardPage — API 연결', () => {
     expect(night).toHaveTextContent('출발')
     expect(night).toHaveTextContent('0/4 지점')
     expect(night).not.toHaveTextContent('교대')
+  })
+
+  it('교대 — 일어난 지점 위에 표시 · 지금 순찰자는 마지막으로 받은 사람 · 이름 옆 뱃지는 뺀다', async () => {
+    const handOver = (fromUserName: string, toUserName: string, lastOrderNo: number) => ({
+      fromUserSeq: 1,
+      fromUserName,
+      toUserSeq: 2,
+      toUserName,
+      lastOrderNo,
+      nextOrderNo: null,
+    })
+    server.use(
+      http.get(PATHS.handOvers, () =>
+        HttpResponse.json({
+          message: 'ok',
+          code: 200,
+          data: [handOver('김철수', '이영희', 1), handOver('이영희', '김철수', 2)],
+        })
+      )
+    )
+    renderPage()
+    await screen.findByRole('heading', { name: 'B코스' })
+    const card = courseCard('B코스')
+    await waitFor(() => expect(within(card).getAllByRole('listitem')[0]).toHaveTextContent('교대'))
+
+    const steps = within(card).getAllByRole('listitem')
+    expect(steps[1]).toHaveTextContent('교대')
+    expect(steps[2]).not.toHaveTextContent('교대')
+    expect(within(card).getAllByText('교대')).toHaveLength(2)
+    expect(card).toHaveTextContent('김철수')
   })
 
   it('totalMin 0 — 기준 없음(막대 · 시간초과 없음)', async () => {
@@ -365,6 +396,22 @@ describe('ActiveCourseSection — 경과 1분 증가', () => {
 
     const two = renderCards([course({}), course({ historySeq: 2 })])
     expect(two.container.querySelector('.xl\\:grid-cols-2')).not.toBeNull()
+  })
+
+  it('현재 위치 링 — 진행 중만 · 멈춘 회차는 끈다', () => {
+    const points = [{ detailSeq: 1, pointSeq: 1, orderNo: 1, pointName: '정문', status: 1, checkDt: null }]
+    render(
+      <MemoryRouter>
+        <ActiveCourseSection
+          courses={[course({ points }), course({ historySeq: 2, courseName: '멈춤', pausedYn: true, points })]}
+          state="ready"
+          receivedAt={Date.now()}
+          onRetry={() => {}}
+        />
+      </MemoryRouter>
+    )
+    expect(within(courseCard('흐름')).getByTestId('step-pulse')).toBeInTheDocument()
+    expect(within(courseCard('멈춤')).queryByTestId('step-pulse')).toBeNull()
   })
 
   it('1분 뒤 경과가 늘고, 멈춘 회차는 그대로', () => {

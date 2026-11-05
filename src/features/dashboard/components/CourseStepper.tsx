@@ -1,3 +1,5 @@
+import { RepeatIcon } from 'lucide-react'
+
 import { cn } from '@/lib/utils'
 
 import { pointSteps } from '../lib/activeCourse'
@@ -17,7 +19,7 @@ import type { DashboardCoursePoint, PointStepStatus } from '../types'
 const pillStyles: Record<PointStepStatus, string> = {
   done: 'border-success/30 bg-success-bg text-success-foreground',
   skipped: 'border-warning/40 bg-warning-bg text-warning-foreground',
-  next: 'border-dashed border-point bg-point-bg font-semibold text-point',
+  next: 'border-dashed border-point bg-point-bg font-semibold text-point-foreground',
   pending: 'border-border bg-card text-muted-foreground',
 }
 
@@ -58,18 +60,22 @@ const Connector = ({ kind }: { kind: 'passed' | 'current' | 'rest' }) => (
 
 interface CourseStepperProps {
   points: DashboardCoursePoint[]
+  /** 교대가 일어난 지점 순번 — 그 뱃지 위에 `교대` 를 얹는다(`spec 070`) */
+  handOverOrders?: number[]
+  /** 멈춘 회차(교대 요청 중) — 진행 중이 아니라 현재 위치 링을 끈다 */
+  paused?: boolean
 }
 
-const CourseStepper = ({ points }: CourseStepperProps) => {
+const CourseStepper = ({ points, handOverOrders = [], paused = false }: CourseStepperProps) => {
   const steps = pointSteps(points)
   const nextIndex = steps.indexOf('next')
 
   return (
-    // `py-1.5` — 현재 위치 퍼지는 원(1.5배 = 사방 5px)이 위아래로 잘리지 않게. 왼쪽은 여백을 두지 않는다 —
-    // 선이 뱃지에 바로 붙어 여백을 두면 줄 첫머리에 선 끝이 보인다. 대신 번호 원을 뱃지 안쪽 5px
-    // (`pl-1` + 테두리)에 둬 퍼지는 원이 왼쪽에서도 잘리지 않는다
-    <div className="overflow-hidden py-1.5">
-      <ol className="-ml-[24px] flex flex-wrap items-center gap-y-3" aria-label="지점 진행">
+    // `pt-3` · `gap-y-5` — 뱃지 위 `교대` 표시가 잘리지 않게. `pb-1.5` · `pr-1` — 현재 위치 링(4px)이 잘리지 않게.
+    // 왼쪽은 여백을 두지 않는다 — 선이 뱃지에 바로 붙어 여백을 두면 줄 첫머리에 선 끝이 보인다.
+    // 그래서 줄 첫머리 뱃지의 링은 왼쪽이 잘린다
+    <div className="overflow-hidden pt-3 pr-1 pb-1.5">
+      <ol className="-ml-[24px] flex flex-wrap items-center gap-y-5" aria-label="지점 진행">
         {/* 아무 지점도 안 찍었으면 맨 앞에 출발 점 — 다음 지점까지 점선으로 잇는다 */}
         {nextIndex === 0 && (
           <li className="flex items-center text-caption text-muted-foreground">
@@ -87,28 +93,35 @@ const CourseStepper = ({ points }: CourseStepperProps) => {
               <Connector kind={connector} />
               <span
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full border py-0.5 pr-2.5 pl-1 text-body whitespace-nowrap',
+                  'relative inline-flex items-center gap-1.5 rounded-full border py-0.5 pr-2.5 pl-1 text-body font-medium whitespace-nowrap',
                   pillStyles[step]
                 )}
               >
+                {step === 'next' && !paused && (
+                  <span
+                    aria-hidden
+                    data-testid="step-pulse"
+                    className="step-pulse-anim pointer-events-none absolute -inset-px rounded-full motion-reduce:hidden"
+                  />
+                )}
                 {/* 🔴 **숫자 세로 중앙**(사용자 지적 2026-10-30) — 중앙 정렬만으로는 Pretendard 숫자가 위로
                     뜬다. 투명 1px 테두리 + 줄 높이 20px(`leading-5`)로 맞춘다(4배 캡처로 측정 — 18px 은 0.75px 위로 떴다) */}
                 <span
                   className={cn(
-                    'relative size-5 shrink-0 rounded-full border border-transparent text-center text-[10.5px] leading-5 font-bold tabular-nums',
+                    'size-5 shrink-0 rounded-full border border-transparent text-center text-[10.5px] leading-5 font-bold tabular-nums',
                     numberStyles[step]
                   )}
                 >
-                  {step === 'next' && (
-                    <span
-                      aria-hidden
-                      className="step-pulse-anim absolute inset-0 rounded-full bg-point/40 motion-reduce:hidden"
-                    />
-                  )}
                   {point.orderNo}
                 </span>
                 {point.pointName}
                 <span className="sr-only"> ({statusText[step]})</span>
+                {handOverOrders.includes(point.orderNo) && (
+                  <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-foreground/60 bg-card px-1.5 text-[10px] leading-3.5 font-bold text-foreground">
+                    <RepeatIcon size={10} strokeWidth={2.5} aria-hidden />
+                    교대
+                  </span>
+                )}
               </span>
             </li>
           )

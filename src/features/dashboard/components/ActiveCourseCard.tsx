@@ -16,6 +16,8 @@ import {
   overtimeMin,
   skippedCount,
 } from '../lib/activeCourse'
+import type { HandOverRow } from '@/features/course-history/types'
+
 import type { DashboardCourse } from '../types'
 import CourseStepper from './CourseStepper'
 
@@ -24,7 +26,8 @@ import CourseStepper from './CourseStepper'
  *
  * 1줄 = **무엇이 · 문제가 있나 · 얼마나**(코스명 · 시간초과/건너뜀 · `n/N 지점`),
  * 2줄 = **누가 · 언제 · 시간 · 다음**. 목업의 `4 ~ 5 순찰중` 은 아래 단계 표시와 같은 말이라 뺐다.
- * `spec 068` — 서버 이름 그대로: 순찰자 = `users` 마지막 · `교대` = `handoverCount > 0` · 기준 = `totalMin`.
+ * `spec 068` — 서버 이름 그대로: 기준 = `totalMin`. `spec 070` — 순찰자 = 마지막 교대를 받은 사람 · 교대는 일어난 지점 뱃지 위에
+ * 적는다. 위치를 모를 때(조회 전 · 실패)만 이름 옆 뱃지로 적는다.
  * 🔴 **`totalMin 0` 은 `기준 없음`** — 막대 · 시간초과를 그리지 않는다(0 분 기준이면 전부 초과로 보인다).
  */
 
@@ -37,14 +40,17 @@ interface ActiveCourseCardProps {
   course: DashboardCourse
   /** 지금의 경과 분 — 섹션이 1분마다 다시 센다(`elapsedMinAt`) */
   elapsedMin: number
+  /** 교대 기록 — 조회 전이면 없다 */
+  handOvers?: HandOverRow[]
 }
 
-const ActiveCourseCard = ({ course, elapsedMin }: ActiveCourseCardProps) => {
+const ActiveCourseCard = ({ course, elapsedMin, handOvers = [] }: ActiveCourseCardProps) => {
   const over = overtimeMin(course, elapsedMin)
   const skipped = skippedCount(course.points)
   const next = nextPoint(course.points)
   const ratio = Math.min(elapsedRatio(course, elapsedMin), 1)
-  const userName = currentUserName(course)
+  const userName = currentUserName(course, handOvers)
+  const handOverOrders = handOvers.flatMap((row) => (row.lastOrderNo === null ? [] : [row.lastOrderNo]))
 
   return (
     <Link
@@ -76,7 +82,7 @@ const ActiveCourseCard = ({ course, elapsedMin }: ActiveCourseCardProps) => {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span className="font-medium text-foreground">{userName ?? '-'}</span>
-          {course.handoverCount > 0 && (
+          {course.handoverCount > 0 && handOverOrders.length === 0 && (
             <AppBadge variant="muted" className={cn(cardBadge, 'gap-1')}>
               <RepeatIcon size={11} strokeWidth={2} />
               교대
@@ -106,7 +112,7 @@ const ActiveCourseCard = ({ course, elapsedMin }: ActiveCourseCardProps) => {
         )}
       </div>
 
-      <CourseStepper points={course.points} />
+      <CourseStepper points={course.points} handOverOrders={handOverOrders} paused={course.pausedYn} />
     </Link>
   )
 }
