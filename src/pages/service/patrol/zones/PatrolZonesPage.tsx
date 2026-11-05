@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import {
   FilterIcon,
   FilterXIcon,
-  HistoryIcon,
   LayoutListIcon,
   RotateCcwIcon,
   TriangleAlertIcon,
@@ -297,7 +296,7 @@ const PatrolZonesPage = () => {
             />
           ) : (
             <AppEmpty
-              icon={HistoryIcon}
+              illustration="route"
               title="순찰이력이 없습니다"
               description="순찰이 수행되면 여기에 기록됩니다."
             />

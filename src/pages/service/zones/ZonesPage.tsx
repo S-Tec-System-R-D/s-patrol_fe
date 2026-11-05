@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { FilterXIcon, RouteIcon, TriangleAlertIcon } from 'lucide-react'
+import { FilterXIcon, TriangleAlertIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import AppButton from '@/components/app/AppButton'
@@ -169,7 +169,7 @@ const ZonesPage = () => {
             </>
           ) : (
             <AppEmpty
-              icon={RouteIcon}
+              illustration="route"
               title="등록된 코스가 없습니다"
               description="순찰 코스를 추가해주세요."
             />

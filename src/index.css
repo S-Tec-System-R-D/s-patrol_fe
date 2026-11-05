@@ -364,21 +364,6 @@
   }
 }
 
-/* NOTE: 바운스 애니메이션 */
-@keyframes bounce-y {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.bounce-anim {
-  animation: bounce-y 1.5s ease-in-out infinite;
-}
-
 /**
  * NOTE: 대시보드 지점 단계의 **현재 위치** 링(`spec 070`, 사용자 결정 2026-11-05).
  * 🔴 번호 원 안에서 퍼지면 거의 안 보인다(바깥으로 5px, 나올 때쯤 투명) — 뱃지 전체 바깥으로 4px 퍼뜨린다.

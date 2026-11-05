@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import {
   FilterIcon,
   FilterXIcon,
-  HistoryIcon,
   LayoutListIcon,
   RotateCcwIcon,
   SmartphoneIcon,
@@ -307,7 +306,7 @@ const PatrolPointsPage = () => {
                (`api-spec.md` §4) 방문 기록이 없는 미완료는 애초에 오지 않는다 — "순찰이
                없었다" 가 아니라 **인증 기록이 아직 없다**가 사실이다 */
             <AppEmpty
-              icon={HistoryIcon}
+              illustration="route"
               title="인증 기록이 없습니다"
               description="지점 인증이 이뤄지면 여기에 기록됩니다."
             />

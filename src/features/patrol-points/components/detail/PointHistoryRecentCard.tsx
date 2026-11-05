@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ActivityIcon, TriangleAlertIcon } from 'lucide-react'
+import { TriangleAlertIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
@@ -117,13 +117,11 @@ const PointHistoryRecentCard = ({ detail, siteSeq }: PointHistoryRecentCardProps
 
           {summary.attempted === 0 ? (
             /* 🔴 기능은 있고 데이터가 없는 것이다 — placeholder 가 아니다(027 문구 계승) */
-            <div className="mt-4 flex flex-col items-center gap-1.5 py-6 text-center">
-              <ActivityIcon size={20} strokeWidth={1.5} className="text-muted-foreground/50" />
-              <p className="text-body font-medium text-foreground">최근 인증 기록이 없습니다</p>
-              <p className="max-w-[320px] text-caption text-muted-foreground">
-                이 인증 외에는 최근 {SUMMARY_DAYS}일 안에 기록이 없습니다.
-              </p>
-            </div>
+            <AppEmpty
+              illustration="route"
+              title="최근 인증 기록이 없습니다"
+              description={`이 인증 외에는 최근 ${SUMMARY_DAYS}일 안에 기록이 없습니다.`}
+            />
           ) : (
             <>
               <ul className="mt-4 flex flex-col">

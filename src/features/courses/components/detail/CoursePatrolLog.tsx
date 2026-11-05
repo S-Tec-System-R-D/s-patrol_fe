@@ -1,5 +1,4 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { HistoryIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppEmpty from '@/components/app/AppEmpty'
@@ -87,7 +86,7 @@ const CoursePatrolLog = ({ rows, totalCount, isPending }: CoursePatrolLogProps) 
       </div>
     ) : rows.length === 0 ? (
       <AppEmpty
-        icon={HistoryIcon}
+        illustration="route"
         title="순찰 기록이 없습니다"
         description={`최근 ${HISTORY_DAYS}일 동안 이 코스로 수행된 순찰이 없습니다.`}
       />

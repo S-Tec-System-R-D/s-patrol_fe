@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { format } from 'date-fns'
 import {
-  ActivityIcon,
   CheckIcon,
   ChevronRightIcon,
   ClockIcon,
@@ -67,16 +66,16 @@ const ResultIcon = ({ row }: { row: PointHistoryRow }) => {
   const { label } = pointCheckBadge(row.status, row.checkDt, row.hasMemo)
   const [Icon, tone] =
     row.status === POINT_HISTORY_STATUS.COMPLETED
-      ? [CheckIcon, 'bg-success-bg text-success-foreground']
+      ? [CheckIcon, 'border-success/35 bg-success-bg text-success-foreground']
       : row.status === POINT_HISTORY_STATUS.INCOMPLETE
-        ? [XIcon, 'bg-danger-bg text-danger-foreground']
-        : [MinusIcon, 'bg-muted text-muted-foreground']
+        ? [XIcon, 'border-danger/35 bg-danger-bg text-danger-foreground']
+        : [MinusIcon, 'border-border bg-muted text-muted-foreground']
   return (
     <span
       role="img"
       aria-label={label}
       title={label}
-      className={`flex size-5 shrink-0 items-center justify-center rounded-full ${tone}`}
+      className={`flex size-5 shrink-0 items-center justify-center rounded-full border ${tone}`}
     >
       <Icon size={12} strokeWidth={2.5} aria-hidden />
     </span>
@@ -137,13 +136,11 @@ const UserPatrolCard = ({ userSeq, userName, siteSeq }: UserPatrolCardProps) => 
         </div>
       ) : rows.length === 0 ? (
         /* 🔴 "순찰하지 않았다" 로 단정하지 않는다 — 이 사업장의 **인증 기록**이 없을 뿐이다 */
-        <div className="flex flex-col items-center gap-1.5 py-6 text-center">
-          <ActivityIcon size={20} strokeWidth={1.5} className="text-muted-foreground/50" />
-          <p className="text-body font-medium text-foreground">순찰 기록이 없습니다</p>
-          <p className="text-caption text-muted-foreground">
-            이 사업장에서 지점을 인증하면 여기에 기록됩니다.
-          </p>
-        </div>
+        <AppEmpty
+          illustration="route"
+          title="순찰 기록이 없습니다"
+          description="이 사업장에서 지점을 인증하면 여기에 기록됩니다."
+        />
       ) : (
         <div className="flex flex-col gap-3">
           {groupByDay(rows).map((group) => (

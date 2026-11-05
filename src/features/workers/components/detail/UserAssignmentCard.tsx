@@ -94,13 +94,11 @@ const UserAssignmentCard = ({ userSeq, homeSiteName }: UserAssignmentCardProps) 
           </div>
         </div>
       ) : rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-1.5 py-6 text-center">
-          <ArrowLeftRightIcon size={20} strokeWidth={1.5} className="text-muted-foreground/50" />
-          <p className="text-body font-medium text-foreground">배치 이력이 없습니다</p>
-          <p className="text-caption text-muted-foreground">
-            다른 사업장 배치가 승인되면 여기에 기록됩니다.
-          </p>
-        </div>
+        <AppEmpty
+          icon={ArrowLeftRightIcon}
+          title="배치 이력이 없습니다"
+          description="다른 사업장 배치가 승인되면 여기에 기록됩니다."
+        />
       ) : (
         <>
           <ul className="flex flex-col">

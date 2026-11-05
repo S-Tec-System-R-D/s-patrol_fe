@@ -376,6 +376,7 @@ import { MapIcon } from 'lucide-react'
 | Prop | 타입 | 기본 |
 |---|---|---|
 | `icon` | `LucideIcon` | `InboxIcon` |
+| `illustration` | `'cards' \| 'route'` | `'cards'` (`route` 는 `icon` 을 쓰지 않는다 · 기준은 `design-system.md` §4-3) |
 | `title` | `string` | `'데이터가 없습니다'` |
 | `description` | `string` | — |
 | `action` | `ReactNode` | — (선택적 액션 버튼) |
@@ -464,7 +465,7 @@ import { PlusIcon } from 'lucide-react'
 | `title` | `string` | (필수) |
 | `subtitle` | `string` | — |
 | `action` | `ReactNode` | — (우측 정렬 슬롯, 보통 주요 액션 버튼) |
-| `icon` | `LucideIcon` | — (제목 좌측, 상세 페이지) |
+| `icon` | `LucideIcon` | — (제목 · 부제 좌측 44px primary 타일, 상세 페이지) |
 | `titleSuffix` | `ReactNode` | — (제목 우측 상태 뱃지 등) |
 
 - 🔴 좁은 폭(`spec 053`): 제목 줄은 `flex-wrap`(뱃지가 다음 줄로) · 제목은 `break-keep`(한글이 띄어쓰기에서만 꺾임).

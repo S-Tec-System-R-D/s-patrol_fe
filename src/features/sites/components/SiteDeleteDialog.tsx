@@ -48,7 +48,7 @@ const SiteDeleteDialog = ({ siteName, impact, pending, onConfirm }: SiteDeleteDi
     onAction={onConfirm}
   >
     {/* 처리 중에도 잠근다 — 확인 창은 즉시 닫힌다(`UserDetailPage` 승계) */}
-    <AppButton icon={Trash2Icon} variant="destructive" className="flex-auto whitespace-nowrap bg-card" disabled={pending}>
+    <AppButton icon={Trash2Icon} variant="destructive" className="flex-auto whitespace-nowrap" disabled={pending}>
       삭제
     </AppButton>
   </AppAlertDialog>

@@ -230,7 +230,6 @@ const ZoneDetailPage = () => {
                   <AppButton
                     icon={Trash2Icon}
                     variant="destructive"
-                    className="bg-card"
                     disabled={removal.isPending}
                   >
                     삭제

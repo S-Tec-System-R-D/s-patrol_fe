@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react'
-import { ChevronDownIcon, MessageSquareTextIcon } from 'lucide-react'
+import { ChevronDownIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import { cardBadge as COMPACT_BADGE } from '@/components/app/AppBadge.variants'
@@ -73,7 +73,7 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
        장애가 아니라 사실이므로 실패 문구를 쓰지 않는다 */
     return (
       <AppEmpty
-        icon={MessageSquareTextIcon}
+        illustration="route"
         title="인증 내역이 없습니다"
         description="이 회차에는 기록된 지점 인증이 없습니다."
       />

@@ -1,5 +1,4 @@
 import { Fragment } from 'react'
-import { RouteIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppEmpty from '@/components/app/AppEmpty'
@@ -57,7 +56,7 @@ const CourseDiagramCard = ({ points }: { points: CourseDetailPoint[] }) => {
     return (
       <div className="rounded-lg border border-border bg-muted/40 p-8" style={diagramCanvasStyle}>
         <AppEmpty
-          icon={RouteIcon}
+          illustration="route"
           title="지점이 없습니다"
           description="코스에 지점을 추가하면 경로가 표시됩니다."
         />

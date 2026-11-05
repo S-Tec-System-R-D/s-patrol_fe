@@ -24,7 +24,7 @@ interface AppButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variantStyles: Record<AppButtonVariant, string> = {
   default: 'bg-primary text-primary-foreground py-2 px-4 hover:bg-primary/90',
   sub: 'bg-transparent text-foreground border border-border hover:bg-muted',
-  destructive: 'bg-transparent text-destructive border border-danger/40 hover:bg-danger/10',
+  destructive: 'bg-danger-bg text-danger-foreground border border-danger/40 hover:bg-danger/15',
   dash: 'bg-none border-1 border-dashed text-muted-foreground hover:border-point hover:bg-point-bg hover:text-point',
 }
 
@@ -39,7 +39,7 @@ const AppButton = ({
   icon: Icon,
   iconPosition = 'left',
   iconSize = 16,
-  iconStrokeWidth = 1.5,
+  iconStrokeWidth = 2,
   children,
   className,
   ...props

@@ -232,7 +232,7 @@ const UserDetailPage = () => {
               <AppButton
                 icon={Trash2Icon}
                 variant="destructive"
-                className="flex-auto whitespace-nowrap bg-card"
+                className="flex-auto whitespace-nowrap"
                 // 🔴 본인 계정은 지울 수 없다 — 목록에 관리자도 섞여 온다(038). 처리 중에도 잠근다(확인 창은 즉시 닫힌다)
                 disabled={isMe || deleteMutation.isPending}
                 title={isMe ? '본인 계정은 삭제할 수 없습니다' : undefined}

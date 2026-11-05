@@ -5,7 +5,7 @@ interface AppPageHeaderProps {
   title: string
   subtitle?: string
   action?: ReactNode
-  /** 제목 **좌측** 아이콘. 상세 페이지에서 "무엇의 상세인가" 를 한눈에 준다 */
+  /** 제목 · 부제 **좌측** 타일 아이콘. 상세 페이지에서 "무엇의 상세인가" 를 한눈에 준다 */
   icon?: LucideIcon
   /** 제목 **우측**에 붙는 것(상태 뱃지 등). `action`(헤더 맨 우측)과 자리가 다르다 */
   titleSuffix?: ReactNode
@@ -30,13 +30,20 @@ const AppPageHeader = ({
 }: AppPageHeaderProps) => {
   return (
     <div className="flex items-start justify-between gap-4">
-      <div className="flex min-w-0 flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          {Icon && <Icon size={18} strokeWidth={1.75} className="shrink-0 text-muted-foreground" />}
-          <h1 className="break-keep text-page-title font-bold text-foreground">{title}</h1>
-          {titleSuffix}
+      <div className="flex min-w-0 items-center gap-3">
+        {/* 근무자 상세 아바타(`size-11`)와 같은 자리 · 같은 크기 */}
+        {Icon && (
+          <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
+            <Icon size={20} strokeWidth={1.75} />
+          </span>
+        )}
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <h1 className="break-keep text-page-title font-bold text-foreground">{title}</h1>
+            {titleSuffix}
+          </div>
+          {subtitle && <p className="text-caption text-muted-foreground">{subtitle}</p>}
         </div>
-        {subtitle && <p className="text-caption text-muted-foreground">{subtitle}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>

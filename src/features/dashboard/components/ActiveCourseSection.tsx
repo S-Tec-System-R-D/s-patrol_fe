@@ -1,4 +1,4 @@
-import { FootprintsIcon, TriangleAlertIcon } from 'lucide-react'
+import { TriangleAlertIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import AppButton from '@/components/app/AppButton'
@@ -77,7 +77,7 @@ const ActiveCourseSection = ({ courses, state, receivedAt, onRetry, handOvers = 
         </div>
       ) : courses.length === 0 ? (
         <div className="rounded-lg border border-border bg-card">
-          <AppEmpty icon={FootprintsIcon} title="지금 진행 중인 순찰이 없습니다" />
+          <AppEmpty illustration="route" title="지금 진행 중인 순찰이 없습니다" />
         </div>
       ) : (
         /* 🔴 넓은 폭은 **2개부터 2열**(사용자 결정 2026-10-30 · 2026-11-04) — 1개면 전체 폭을 쓴다.

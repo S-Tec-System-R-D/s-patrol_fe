@@ -1,8 +1,8 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { ActivityIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import AppBadge from '@/components/app/AppBadge'
+import AppEmpty from '@/components/app/AppEmpty'
 import { paths } from '@/router/paths'
 
 import type { PatrolSummary } from '../../lib/patrolSummary'
@@ -69,13 +69,11 @@ const PointPatrolLog = ({
 
           {summary.total === 0 ? (
             /* 🔴 기능은 있고 데이터가 없는 것 — placeholder 가 아니다 */
-            <div className="mt-6 flex flex-col items-center gap-1.5 py-6 text-center">
-              <ActivityIcon size={20} strokeWidth={1.5} className="text-muted-foreground/50" />
-              <p className="text-body font-medium text-foreground">순찰 기록이 없습니다</p>
-              <p className="max-w-[320px] text-caption text-muted-foreground">
-                코스에 배정된 뒤 근무자가 인증하면 이곳에 시간순으로 표시됩니다.
-              </p>
-            </div>
+            <AppEmpty
+              illustration="route"
+              title="순찰 기록이 없습니다"
+              description="코스에 배정된 뒤 근무자가 인증하면 이곳에 시간순으로 표시됩니다."
+            />
           ) : (
             <ul className="mt-6 flex flex-col">
               {preview.map((row) => (

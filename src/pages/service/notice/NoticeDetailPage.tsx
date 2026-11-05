@@ -195,7 +195,6 @@ const NoticeDetailPage = () => {
               <AppButton
                 icon={Trash2Icon}
                 variant="destructive"
-                className="bg-card"
                 // 확인 창은 누르는 즉시 닫힌다 — 처리 중 다시 열어 두 번 보내지 않게 잠근다
                 disabled={deleteMutation.isPending}
               >
