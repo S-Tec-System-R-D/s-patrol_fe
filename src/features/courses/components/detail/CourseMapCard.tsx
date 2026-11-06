@@ -125,7 +125,7 @@ const CourseMapCard = ({ pins, missing }: CourseMapCardProps) => {
 
 /** 카드 셸 + 머리말. 🔴 **빠진 지점 수를 머리에 적는다**(조용히 빼지 않는다) */
 const Shell = ({ missing = 0, children }: { missing?: number; children: React.ReactNode }) => (
-  <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+  <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <span className="text-panel-title font-semibold">순찰 동선</span>
       {missing > 0 && (

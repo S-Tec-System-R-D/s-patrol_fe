@@ -75,7 +75,8 @@ describe('UsersPage — 서버 목록', () => {
     renderPage()
 
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
-    expect(inTable().getByText('사번')).toBeInTheDocument()
+    // 사번은 별도 열이 아니라 이름 아래 줄이다(사용자 결정 2026-11-06)
+    expect(inTable().queryByText('사번')).not.toBeInTheDocument()
     expect(inTable().getByText('권한')).toBeInTheDocument()
     expect(inTable().getByText('김민준')).toBeInTheDocument()
     // 헤더 1 + 시드 9

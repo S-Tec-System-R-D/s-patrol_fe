@@ -97,7 +97,7 @@ const CourseInfo = ({ course, onRequestToggle, onEdit, isSaving }: CourseInfoPro
   const siteName = getSiteName()
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
+    <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         <span className="text-panel-title font-semibold">기본정보</span>
         {onEdit && (

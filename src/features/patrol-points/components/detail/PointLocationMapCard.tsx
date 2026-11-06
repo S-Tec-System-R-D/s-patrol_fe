@@ -115,7 +115,7 @@ const PointLocationMapCard = ({ detail }: PointLocationMapCardProps) => {
   if (!TILE_URL || !hasCoord) return null
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         {/* 🔴 제목이 **무엇의 좌표인지** 말한다 — "지점 위치" 라고 쓰면 지점이 등록된 자리로
             읽히는데, 이 값은 **인증을 찍은 위치**다 */}

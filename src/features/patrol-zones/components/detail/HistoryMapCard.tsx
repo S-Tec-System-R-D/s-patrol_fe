@@ -203,7 +203,7 @@ const Legend = () => (
 
 /** 카드 셸 + 머리말. 🔴 **빠진 지점 수를 머리에 적는다**(조용히 빼지 않는다) */
 const Shell = ({ missing = 0, children }: { missing?: number; children: React.ReactNode }) => (
-  <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+  <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
       {/* 🔴 제목이 목적을 말한다 — **구성 + 현황**이다. "순찰 동선"(032)도 "인증 위치"도
           아니다: 앞은 코스 관리의 편성도고, 뒤는 "근무자가 어디서 눌렀나" 로 읽힌다 */}

@@ -71,7 +71,7 @@ const UserAssignmentCard = ({ userSeq, homeSiteName }: UserAssignmentCardProps) 
   const today = new Date()
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
+    <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
       <div className="flex flex-col gap-1">
         <h3 className="text-panel-title font-bold text-foreground">배치 이력</h3>
         <p className="text-caption text-muted-foreground">전체 사업장 배치 기록</p>

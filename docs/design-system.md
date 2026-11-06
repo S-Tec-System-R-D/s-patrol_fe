@@ -201,9 +201,9 @@
 
 | 크기 / weight | 유틸리티 클래스명 | 용도 | 적용 컴포넌트 예 |
 |---|---|---|---|
-| 17px / 700 | `text-page-title` | 페이지 타이틀 | `AppPageHeader` h1, `.panel__name`(근무자명 — 향후) |
+| 22px / 700 | `text-page-title` | 페이지 타이틀 | `AppPageHeader` h1, `.panel__name`(근무자명 — 향후) |
 | 15px / 700 | `text-panel-header` | 상세 패널 헤더 타이틀 | `.pointdetail__head`(코스/지점 페이지 — 향후) |
-| 14.5px / 700 | `text-panel-title` | 상세 패널 타이틀 | `AppDetailCard` title |
+| 16px / 700 | `text-panel-title` | 상세 패널 타이틀 | `AppDetailCard` title |
 | 14px / 700 | `text-section-title` | 섹션 타이틀 | 페이지 내 큰 섹션 헤딩(배치관리 등 — 향후) |
 | 13px / 400·600 | `text-tab` | 본문 규격 값(참고), 탭 라벨 | `PatrolHistoryTabs`(비활성 600, 활성 700) |
 | 12.5px | `text-body` | 테이블 셀·카드 kv 값·이름·필터 칩·버튼 라벨 | `AppDetailRow`, `AppFilterButton`, `AppTable` td(010에서 해소), `AppKpiCard` 값. ⚠️ **`PatrolTimeline`(036)·`PatrolRecordDialog`(037) 은 삭제됐다** — 둘 다 mock 셸이었고 서버 전환 때 사라졌다 |
@@ -238,7 +238,7 @@ Tailwind 기본 스케일 그대로 사용(별도 커스텀 없음). 자주 쓰�
 | 맥락 | 권장 |
 |---|---|
 | 페이지 패딩 | `p-8` |
-| 카드 패딩 | `p-4` |
+| 카드 패딩 | `p-5`(사용자 결정 2026-11-06) |
 | 리스트/세로 stack | `gap-2` ~ `gap-4` |
 | 아이콘-텍스트 | `gap-2` |
 | 필터 바 행 | `gap-3` |

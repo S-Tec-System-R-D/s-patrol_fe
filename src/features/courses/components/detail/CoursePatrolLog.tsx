@@ -65,7 +65,7 @@ const StatusBadge = ({ row }: { row: CourseHistoryRow }) => {
 }
 
 const CoursePatrolLog = ({ rows, totalCount, isPending }: CoursePatrolLogProps) => (
-  <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+  <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
     {/* 🔴 건수는 **제목 옆**이다 — 세 카드(지점 순서·순찰 기록·이상 이력)가 같은 모양을
         쓴다(사용자 결정 2026-10-12). 우측에 두면 버튼이 있는 카드에서는 버튼 라벨처럼
         읽히고, 없는 카드와 위치가 어긋나 눈이 한 화면에서 두 규칙을 따라가야 한다 */}

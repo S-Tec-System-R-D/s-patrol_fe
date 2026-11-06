@@ -5,7 +5,7 @@ import CourseKpiRow from '../CourseKpiRow'
 import type { CourseHistoryStats } from '@/features/course-history/lib/courseHistoryStats'
 
 /**
- * KPI 4종 (`spec 023` 코스 상세 B단).
+ * KPI 3종 (`spec 023` 코스 상세 B단).
  *
  * 🔴🔴 **가장 중요한 단정은 "인증률 미달을 경고로 바꾸지 않는다" 다.** 지점 상태에
  * **`순찰제외`(2)** 가 있고(백엔드 전달 2026-10-12) `pointCount` 가 그것을 빼고 센 값인지
@@ -25,18 +25,84 @@ const stats = (overrides: Partial<CourseHistoryStats> = {}): CourseHistoryStats 
   minElapsedSec: 42 * 60,
   maxElapsedSec: 58 * 60,
   partial: false,
+  lastRunDt: '2026-11-06T09:10:00',
+  overtimeCount: 1,
+  recentRuns: [
+    {
+      startDt: '2026-11-05T09:10:00',
+      elapsedSec: 3000,
+      overtime: true,
+      checkedCount: 1,
+      pointCount: 3,
+    },
+    {
+      startDt: '2026-11-06T09:10:00',
+      elapsedSec: 2400,
+      overtime: false,
+      checkedCount: 3,
+      pointCount: 3,
+    },
+  ],
   ...overrides,
 })
 
 describe('CourseKpiRow — 값', () => {
-  it('30일 수행 횟수·평균 소요·인증률을 적는다', () => {
-    render(<CourseKpiRow stats={stats()} uncheckedCount={7} />)
+  it('마지막 순찰·평균 소요·초과·인증률을 적는다', () => {
+    render(<CourseKpiRow stats={stats()} />)
 
-    expect(screen.getByText('30일 순찰 수행')).toBeInTheDocument()
-    expect(screen.getByText('60')).toBeInTheDocument()
+    expect(screen.getByText('마지막 순찰')).toBeInTheDocument()
+    expect(screen.getByText('11.06 09:10')).toBeInTheDocument()
     expect(screen.getByText('47분')).toBeInTheDocument()
+    expect(screen.getByText('초과 1/60')).toBeInTheDocument()
     expect(screen.getByText('96.7%')).toBeInTheDocument()
-    expect(screen.getByText('7')).toBeInTheDocument()
+    expect(screen.getByText('174/180')).toBeInTheDocument()
+  })
+
+  it('회차가 7개보다 적어도 소요시간 막대는 7칸이다', () => {
+    render(<CourseKpiRow stats={stats()} />)
+
+    expect(screen.getByRole('img', { name: '최근 2회 소요시간' }).children).toHaveLength(7)
+  })
+
+  it('인증률 선 그래프는 분모가 0 인 회차를 찍지 않는다', () => {
+    const recentRuns = [
+      { startDt: '2026-11-05T09:10:00', elapsedSec: 3000, overtime: false, checkedCount: 0, pointCount: 0 },
+      { startDt: '2026-11-06T09:10:00', elapsedSec: 2400, overtime: false, checkedCount: 3, pointCount: 3 },
+    ]
+    render(<CourseKpiRow stats={stats({ recentRuns })} />)
+
+    expect(screen.getByRole('img', { name: '최근 2회 인증률' }).querySelectorAll('circle')).toHaveLength(1)
+  })
+
+  it('마지막 순찰이 얼마 전인지 적는다', () => {
+    render(<CourseKpiRow stats={stats({ lastRunDt: '2020-01-01T09:00:00' })} />)
+
+    expect(screen.getByText(/^\d+일 전$/)).toBeInTheDocument()
+  })
+
+  it('🔴 유난히 긴 회차가 있어도 나머지 막대가 바닥에 붙지 않는다', () => {
+    const run = (elapsedSec: number) => ({
+      startDt: `2026-11-0${elapsedSec % 9 || 1}T09:00:00`,
+      elapsedSec,
+      overtime: false,
+      checkedCount: 3,
+      pointCount: 3,
+    })
+    render(<CourseKpiRow stats={stats({ recentRuns: [run(1000), run(1000), run(1000), run(9000)] })} />)
+
+    const filled = screen
+      .getByRole('img', { name: '최근 4회 소요시간' })
+      .querySelectorAll<HTMLElement>('.bg-point')
+    expect(filled[0].style.height).toBe('50%')
+    expect(filled[3].style.height).toBe('100%')
+  })
+
+  it('기준을 넘긴 회차만 주황이다', () => {
+    render(<CourseKpiRow stats={stats()} />)
+
+    const bars = screen.getByRole('img', { name: '최근 2회 소요시간' })
+    expect(bars.querySelectorAll('.bg-warning')).toHaveLength(1)
+    expect(bars.querySelectorAll('.bg-point')).toHaveLength(1)
   })
 
   it('🔴 시 단위 평균도 맞게 적는다', () => {
@@ -50,20 +116,15 @@ describe('CourseKpiRow — 🔴 빈 상태를 0 으로 적지 않는다', () => 
   it('🔴 이력이 없으면 평균·인증률이 — 다 — 0분·0% 는 "순찰했는데 결과가 0" 으로 읽힌다', () => {
     render(
       <CourseKpiRow
-        stats={stats({ runCount: 0, avgElapsedSec: null, authRate: null, pointSum: 0, checkedSum: 0 })}
+        stats={stats({ runCount: 0, sampledCount: 0, avgElapsedSec: null, authRate: null, pointSum: 0, checkedSum: 0, lastRunDt: null, recentRuns: [] })}
       />
     )
 
-    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(3)
+    expect(screen.queryByText(/초과/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
     expect(screen.queryByText('0분')).not.toBeInTheDocument()
     expect(screen.queryByText('0.0%')).not.toBeInTheDocument()
-  })
-
-  it('🔴 미인증 건수를 아직 못 받았으면 — 다. 0건으로 단정하지 않는다', () => {
-    render(<CourseKpiRow stats={stats()} uncheckedCount={undefined} />)
-
-    expect(screen.getByText('미인증 지점')).toBeInTheDocument()
-    expect(screen.getAllByText('-').length).toBeGreaterThan(0)
   })
 })
 
@@ -74,17 +135,7 @@ describe('CourseKpiRow — 🔴 순찰제외 때문에 인증률에 색을 입�
     expect(screen.getByText('40.0%')).toBeInTheDocument()
     // danger 톤이 어디에도 쓰이지 않는다
     expect(container.querySelector('.bg-danger-bg')).toBeNull()
-  })
-
-  it('미인증 건수는 경고색을 쓴다 — 그건 서버가 직접 센 값이다', () => {
-    const { container } = render(<CourseKpiRow stats={stats()} uncheckedCount={7} />)
-
-    expect(container.querySelector('.bg-warning-bg')).not.toBeNull()
-  })
-
-  it('미인증이 0건이면 경고색을 쓰지 않는다', () => {
-    const { container } = render(<CourseKpiRow stats={stats()} uncheckedCount={0} />)
-
-    expect(container.querySelector('.bg-warning-bg')).toBeNull()
+    // 회차 인증률이 달라도 그래프 색은 하나다
+    expect(screen.getByRole('img', { name: '최근 2회 인증률' })).toHaveClass('text-chart-2')
   })
 })

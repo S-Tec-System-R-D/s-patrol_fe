@@ -43,7 +43,7 @@ const AlertRow = ({ alert }: { alert: CourseAlert }) => {
   const { icon: Icon, className } = kindStyle[alert.kind]
 
   return (
-    <li className="flex items-start gap-3 border-b py-2 last:border-0">
+    <li className="flex items-start gap-3 py-3">
       <span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full ${className}`}>
         <Icon size={13} strokeWidth={2} />
       </span>
@@ -65,7 +65,7 @@ const AlertRow = ({ alert }: { alert: CourseAlert }) => {
 }
 
 const CourseAlertList = ({ alerts, isPending }: CourseAlertListProps) => (
-  <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+  <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
     {/* 🔴 건수는 **제목 옆**이다 — 세 카드가 같은 모양을 쓴다(`CoursePatrolLog` 주석) */}
     <div className="flex items-baseline gap-2">
       <span className="text-panel-title font-semibold">미인증 · 이상 이력</span>

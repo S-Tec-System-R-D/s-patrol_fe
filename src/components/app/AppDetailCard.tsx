@@ -19,7 +19,7 @@ interface AppDetailCardProps {
  */
 const AppDetailCard = ({ icon: Icon, title, badge, footer, children }: AppDetailCardProps) => {
   return (
-    <div className="flex h-full flex-col gap-4 rounded-lg border border-border bg-card p-4">
+    <div className="flex h-full flex-col gap-4 rounded-lg border border-border bg-card p-5">
       {/**
        * 🔴 **`badge` 는 제목 **바로 옆**이다**(2026-10-20, 사용자 판단).
        *

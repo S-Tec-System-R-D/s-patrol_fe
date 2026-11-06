@@ -28,7 +28,7 @@ import {
   useCourseHistory,
   useUncheckedPoints,
 } from '@/features/course-history/hooks/useCourseHistory'
-import { buildCourseAlerts, uncheckedByPoint } from '@/features/courses/lib/courseAlerts'
+import { buildCourseAlerts } from '@/features/courses/lib/courseAlerts'
 import { usableCoords } from '@/features/courses/lib/courseCoords'
 import { courseHistoryStats } from '@/features/course-history/lib/courseHistoryStats'
 import { recentRange } from '@/features/course-history/lib/historyRange'
@@ -117,21 +117,11 @@ const ZoneDetailPage = () => {
   // 🔴 이상 이력은 **위 두 응답에서 모은다** — 요청이 늘지 않는다(C단)
   const alerts = buildCourseAlerts(rows, unchecked.data?.items ?? [])
   /**
-   * 미인증 **지점별 분포** (`spec 031`). 🔴 **조회가 늘지 않는다** — 바로 위 `alerts` 와
-   * **같은 행**을 다시 센다. `useMemo` 로 묶는 이유는 `AppKpiCard` 가 배열 참조를 받기
-   * 때문이다(렌더마다 새 배열이면 그만큼 다시 그린다).
-   */
-  /**
    * 지도에 찍을 좌표 (`spec 032`). 🔴 **조회가 늘지 않는다** — 상세 응답을 다시 셀 뿐이다.
    * `useMemo` 인 이유: `CourseMapCard` 가 `pins` 참조로 지도를 다시 그린다(렌더마다 새
    * 배열이면 **지도가 매번 파괴·재생성**된다).
    */
   const coords = useMemo(() => usableCoords(course?.points ?? []), [course?.points])
-
-  const uncheckedParts = useMemo(
-    () => uncheckedByPoint(unchecked.data?.items ?? []),
-    [unchecked.data]
-  )
 
   /**
    * 토글 저장.
@@ -242,11 +232,7 @@ const ZoneDetailPage = () => {
           {/* 🔴 **KPI 는 전체 폭, 헤더 바로 아래**(목업). 코스 상세를 여는 세 번째 질문이
               "이 코스가 잘 돌고 있나" 다 — 동선·편성보다 먼저 읽힌다.
               ⚠️ 평균·인증률은 **프론트가 더한 값**이다(서버에 집계 엔드포인트 없음) */}
-          <CourseKpiRow
-            stats={stats}
-            uncheckedCount={unchecked.data?.totalCount}
-            uncheckedParts={uncheckedParts}
-          />
+          <CourseKpiRow stats={stats} />
 
           {/* **2열 골격**(목업 `코스상세-신규.html`, 사용자 결정 2026-10-12) — `xl` 미만 1단.
               좌 2/3 = 코스 자체를 보는 칸(동선 → 순서), 우 1/3 = 설정 칸.
@@ -264,17 +250,25 @@ const ZoneDetailPage = () => {
                   **좌표가 있으면 지도**, **하나도 없으면 다이어그램**이다. 그냥 교체하면
                   좌표 없는 코스가 **경로를 아무것도 못 보여준다** — 좌표 입력 수단이 아직
                   없어서(OQ-032-C) 비어 있는 지점이 실제로 있다 */}
-              {coords.pins.length > 0 ? (
-                <CourseMapCard pins={coords.pins} missing={coords.missing} />
-              ) : (
-                <CourseDiagramCard points={course.points} />
-              )}
+              {/* 🔴 **xl 읽기 화면은 지점 순서가 지도 위**(사용자 결정 2026-11-06) — 순서를 스크롤 없이 한눈에 읽고 지도는 전체 폭을 쓴다.
+                  편성 편집 · 다이어그램은 기존 순서 그대로다 */}
+              <div
+                className={`flex flex-col gap-4 ${
+                  !editingPoints && coords.pins.length > 0 ? 'xl:[&>:first-child]:order-2' : ''
+                }`}
+              >
+                {coords.pins.length > 0 ? (
+                  <CourseMapCard pins={coords.pins} missing={coords.missing} />
+                ) : (
+                  <CourseDiagramCard points={course.points} />
+                )}
 
-              {editingPoints ? (
-                <CoursePointEditor course={course} onClose={() => setEditingPoints(false)} />
-              ) : (
-                <CoursePointList points={course.points} onEdit={() => setEditingPoints(true)} />
-              )}
+                {editingPoints ? (
+                  <CoursePointEditor course={course} onClose={() => setEditingPoints(false)} />
+                ) : (
+                  <CoursePointList points={course.points} onEdit={() => setEditingPoints(true)} />
+                )}
+              </div>
 
               {/* 🔴 **순찰 기록은 맨 아래**다 — 편성(현재 상태)을 먼저 읽고 기록(과거)을
                   나중에 읽는다. 목업도 같은 순서다 */}

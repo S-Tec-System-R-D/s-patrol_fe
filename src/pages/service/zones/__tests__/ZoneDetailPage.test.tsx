@@ -384,14 +384,14 @@ describe('ZoneDetailPage — 변경계 조립 (Phase 4)', () => {
 })
 
 describe('ZoneDetailPage — 순찰 기록·KPI (B단)', () => {
-  it('KPI 4종과 최근 순찰 기록이 상세에 함께 그려진다', async () => {
+  it('KPI 3종과 최근 순찰 기록이 상세에 함께 그려진다', async () => {
     renderPage('/zones/1')
 
     await screen.findByText('A동 순찰코스')
-    expect(await screen.findByText('30일 순찰 수행')).toBeInTheDocument()
+    expect(await screen.findByText('마지막 순찰')).toBeInTheDocument()
     expect(screen.getByText('평균 소요시간')).toBeInTheDocument()
     expect(screen.getByText('지점 인증률')).toBeInTheDocument()
-    expect(screen.getByText('미인증 지점')).toBeInTheDocument()
+    expect(screen.queryByText('미인증 지점')).not.toBeInTheDocument()
     expect(await screen.findByText('최근 순찰 기록')).toBeInTheDocument()
   })
 
@@ -401,20 +401,6 @@ describe('ZoneDetailPage — 순찰 기록·KPI (B단)', () => {
     // mock 시드의 historySeq 108 은 45일 전이다. 기간이 안 걸리면 7건이 아니라 8건이 온다
     await screen.findByText('최근 순찰 기록')
     expect(await screen.findByText(/최근 30일 · 7건/)).toBeInTheDocument()
-  })
-
-  it('🔴 미인증 건수를 서버가 센 대로 보여준다 — 화면이 다시 세지 않는다', async () => {
-    renderPage('/zones/1')
-
-    // 🔴 **건수를 하드코딩하지 않는다.** mock 의 지점이력은 `coursesOfPoint` 에서 파생되고
-    // (단일 출처, 제약 7) 편성을 바꾸면 따라 변한다 — 숫자를 박으면 편성 시드를 건드릴
-    // 때마다 이 테스트가 깨진다. 여기서 고정하는 것은 **"— 가 아니라 숫자가 온다"** 다
-    const label = await screen.findByText('미인증 지점')
-    // 🔴 `spec 031` 에서 카드 구조가 바뀌었다 — 라벨의 **부모는 제목 줄**(라벨 + 아이콘)이고
-    //    값은 그 아래 블록에 있다. 카드 루트까지 올라가서 찾는다
-    const card = label.closest('div.rounded-lg') as HTMLElement
-    await waitFor(() => expect(within(card).getByText(/^\d+$/)).toBeInTheDocument())
-    expect(within(card).getByText('건')).toBeInTheDocument()
   })
 
   it('🔴 이력이 없는 코스는 빈 상태이고 KPI 가 — 다 — 0 으로 적지 않는다', async () => {

@@ -127,6 +127,15 @@ interface AppKpiCardProps {
    * `bar`·`foot`·`badge` 는 그리지 않는다(한 줄에 들어갈 자리가 없다). 그것이 필요한 칸이면 기본 모드다.
    */
   inline?: boolean
+  /**
+   * 🔴 **가로 얇은 카드**(사용자 결정 2026-11-06, 코스 상세) — `아이콘 라벨 / 값 ··· 작은 그림`.
+   * 세로로 쌓던 요소를 가로로 펼쳐 높이를 줄인다. `inline` 과 달리 **바를 유지**한다.
+   * `foot` 은 자리가 없어 마우스를 올리면 보이는 `title` 과 스크린리더 글자로 남긴다.
+   * ⚠️ 아이콘 타일이 없어 `tone` 을 그리지 않는다 — 경고 칸이 필요한 화면이면 먼저 표현을 정한다.
+   */
+  compact?: boolean
+  /** `compact` 오른쪽에 `bar` 대신 놓는 그림 — 화면이 자기 데이터로 그린 미니 그래프. 말풍선은 그림이 갖는다 */
+  aside?: ReactNode
 }
 
 /** 0~1 로 자른다 — 범위 밖 값이 바를 넘치게 하지 않는다 */
@@ -207,10 +216,44 @@ const AppKpiCard = ({
   tone = 'neutral',
   compactValue = false,
   inline = false,
+  compact = false,
+  aside,
 }: AppKpiCardProps) => {
+  if (compact) {
+    const footText = foot && [foot.left, foot.right].filter(Boolean).join(' · ')
+    return (
+      <div className="flex h-full items-center gap-3 rounded-lg border border-border bg-card px-5 py-3">
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-1.5 text-caption font-medium text-foreground/80">
+            <Icon size={14} strokeWidth={1.75} className="shrink-0 text-muted-foreground" />
+            <span className="truncate">{label}</span>
+          </p>
+          <p className="flex items-baseline gap-1">
+            <span className="text-xl font-bold whitespace-nowrap text-foreground tabular-nums">
+              {value}
+            </span>
+            {unit && (
+              <span className="truncate text-caption font-medium text-muted-foreground">{unit}</span>
+            )}
+          </p>
+        </div>
+        {aside ? (
+          <div className="shrink-0">{aside}</div>
+        ) : (
+          bar && (
+            <div className="w-16 shrink-0" title={footText}>
+              <KpiBar bar={bar} />
+            </div>
+          )
+        )}
+        {footText && <span className="sr-only">{footText}</span>}
+      </div>
+    )
+  }
+
   if (inline) {
     return (
-      <div className="flex h-full items-center gap-2 rounded-lg border border-border bg-card px-4 py-3">
+      <div className="flex h-full items-center gap-2 rounded-lg border border-border bg-card px-5 py-3">
         <span
           className={cn('grid size-8 shrink-0 place-items-center rounded-md', toneStyles[tone])}
         >
@@ -243,7 +286,7 @@ const AppKpiCard = ({
   return (
     /* 🔴 **높이를 맞춘다**(`h-full`). 라벨이 2줄인 칸이 섞이면 4칸이 들쭉날쭉해지고,
        그 자체가 정돈되지 않은 인상을 준다 */
-    <div className="flex h-full flex-col gap-3 rounded-lg border border-border bg-card p-4">
+    <div className="flex h-full flex-col gap-3 rounded-lg border border-border bg-card p-5">
       {/* 🔴 **아이콘이 제목 줄 왼쪽에 붙는다**(사용자 결정 2026-10-14) — 우상단에 떨어져
           있으면 제목 줄 가운데가 비어 카드가 헐거워 보인다. 라운드 사각은 유지한다
           (원형 컬러 뱃지가 "유치해 보인다" 의 주범이었다) */}

@@ -99,7 +99,7 @@ const UserPatrolCard = ({ userSeq, userName, siteSeq }: UserPatrolCardProps) => 
   const today = format(new Date(), 'yyyy-MM-dd')
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
+    <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h3 className="text-panel-title font-bold text-foreground">최근 순찰 기록</h3>

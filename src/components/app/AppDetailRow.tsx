@@ -27,27 +27,20 @@ interface AppDetailRowProps {
 
 const AppDetailRow = ({ label, value, variant = 'between' }: AppDetailRowProps) => {
   if (variant === 'fixed') {
-    /* ⚠️ **`last:border-0`** (사용자 결정 2026-10-19) — 마지막 행은 선을 그리지 않는다.
-       코스·지점 상세 모두 **마지막 행이 컨테이너의 마지막 자식**이라(뒤에 아무것도 없다)
-       선이 받칠 것 없이 떠 있었다. `between` 과 같은 규칙이 됐다 */
     return (
-      <div className="flex items-start gap-4 border-b py-2 last:border-0">
+      <div className="flex items-start gap-4 py-2">
         <span className="w-24 shrink-0 text-muted-foreground">{label}</span>
         <span className="min-w-0 flex-1 break-words">{value}</span>
       </div>
     )
   }
 
-  /* 🔴 **`border-b` 를 둔다**(사용자 결정 2026-10-19). 전에는 `fixed` 에만 있어서
-     **구분선 유무가 variant 마다 갈려 있었다** — 배치가 다른 것은 폭 때문에 근거가
-     있지만(위 표), 구분선 유무는 근거가 없는 차이였다. 이제 **두 variant 가 같은 규칙**이다:
-     행 사이에 선, **마지막 행은 선 없음**(`last:border-0`).
-     ⚠️ 이력(8행)·근무자(5행)·공지(2행) 세 화면이 함께 바뀐다. 이력만 예외로 두면
-     variant 나 prop 이 또 늘어난다(A6).
+  /* 🔴 **행 사이 구분선을 두지 않는다**(사용자 결정 2026-11-06 — 10-19 의 "선 있음" 을 뒤집었다).
+     라벨과 값의 정렬 · 행 간격만으로 줄이 읽히고, 선이 많으면 카드가 표처럼 무거워진다.
      🔴 **`py-3` 다**(사용자 결정 2026-10-26, `spec 050`) — `py-1.5` 는 행 사이 12px 라
      브라우저에서 빽빽했다(`py-2.5` 도 거쳐 봤다). 같은 이유로 between 을 쓰는 카드가 함께 넓어진다(코스·지점 기본정보 포함 7곳) */
   return (
-    <div className="flex items-center justify-between gap-4 border-b py-3 text-sm last:border-0">
+    <div className="flex items-center justify-between gap-4 py-3 text-sm">
       {/* 라벨은 줄지 않는다 — 긴 값이 오면 값 쪽이 접힌다 */}
       <span className="shrink-0 text-body text-muted-foreground">{label}</span>
       {/* 🔴 **긴 값은 칸 안에서 오른쪽 정렬로 접는다**(`spec 050`) — 코스·지점 `설명` 처럼

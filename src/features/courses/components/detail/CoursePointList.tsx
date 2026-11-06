@@ -1,11 +1,9 @@
-import { MapPinIcon, PlusIcon, SquarePenIcon } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { PlusIcon, SquarePenIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppLinkButton from '@/components/app/AppLinkButton'
 import AppEmpty from '@/components/app/AppEmpty'
 import { toAuthMethodLabel } from '@/features/points/lib/authMethod'
-import { paths } from '@/router/paths'
 
 import type { CourseDetailPoint } from '../../types'
 
@@ -56,7 +54,7 @@ const CoursePointList = ({ points, onEdit }: CoursePointListProps) => {
   const sorted = [...points].sort((a, b) => a.orderNo - b.orderNo)
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         {/* 🔴 **건수는 제목 옆이다**(사용자 결정 2026-10-12). 우측에 두면 아이콘 버튼과
             한 덩어리로 보여 "총 3개" 가 버튼의 라벨처럼 읽혔다 — 건수는 제목을 **수식하는
@@ -92,72 +90,57 @@ const CoursePointList = ({ points, onEdit }: CoursePointListProps) => {
           description="코스에 지점을 추가하면 순서대로 표시됩니다."
         />
       ) : (
-        <ol className="flex flex-col gap-2">
-          {sorted.map((point) => {
+        /* 🔴 **`xl` 은 가로 칸 + 줄바꿈, 그 아래는 세로 타임라인 + 최대 320px 스크롤**(사용자 결정 2026-11-06).
+           `xl` 은 지도 위에서 순서를 스크롤 없이 한눈에 읽고, 좁은 화면은 목록이 끝없이 길어지지 않는다 */
+        <ol className="max-h-80 overflow-y-auto xl:grid xl:max-h-none xl:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] xl:gap-y-4 xl:overflow-visible">
+          {sorted.map((point, index) => {
             const method = toAuthMethodLabel(point.authMethod)
+            const isLast = index === sorted.length - 1
             return (
-              <li
-                key={point.coursePointSeq}
-                // 미사용 지점은 행 전체를 톤다운한다 — 셀 글자만 흐리면 눈에 안 띈다(027)
-                className={`flex items-center gap-3 rounded-md border border-border px-3 py-2 ${
-                  point.useYn ? 'bg-card' : 'bg-muted/40'
-                }`}
-              >
-                <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-label font-bold ${
-                    point.useYn
-                      ? 'bg-point-bg text-point-foreground'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {point.orderNo}
-                </span>
+              <li key={point.coursePointSeq} className="flex gap-3 xl:flex-col xl:gap-2">
+                {/* 번호 = 지도 마커와 같은 모양 — 같은 지점이라는 대응이 바로 읽힌다 */}
+                <div className="flex shrink-0 flex-col items-center xl:flex-row">
+                  <span
+                    className={`grid size-6 place-items-center rounded-full text-[11px] font-bold ${
+                      point.useYn ? 'bg-point text-white' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {point.orderNo}
+                  </span>
+                  {!isLast && <span aria-hidden className="my-1 w-px flex-1 bg-border xl:mx-1 xl:my-0 xl:h-px xl:w-auto" />}
+                </div>
 
-                <MapPinIcon
-                  size={14}
-                  strokeWidth={1.75}
-                  className="shrink-0 text-muted-foreground"
-                />
-                <span
-                  className={`truncate text-body font-semibold ${
-                    point.useYn ? 'text-foreground' : 'text-muted-foreground'
-                  }`}
-                >
-                  {point.pointName}
-                </span>
+                <div className={`min-w-0 flex-1 ${isLast ? '' : 'pb-5 xl:pb-0'} xl:pr-4`}>
+                  <div className="flex min-h-6 items-center gap-2">
+                    <span
+                      className={`truncate text-body font-semibold ${
+                        point.useYn ? 'text-foreground' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {point.pointName}
+                    </span>
 
-                {/* 🔴 사용여부는 뱃지로 글자를 준다 — 색·명도만으로 전달하지 않는다.
-                    🔴 **이름 바로 옆이다**(사용자 결정 2026-10-13) — 행 끝에 두면 인증수단·
-                    구간시간을 지나야 보여서 "무엇이 미사용인지" 가 늦게 읽힌다 */}
-                {!point.useYn && <AppBadge variant="muted">미사용</AppBadge>}
+                    {/* 🔴 사용여부는 뱃지로 글자를 준다 — 색·명도만으로 전달하지 않는다.
+                        🔴 **이름 바로 옆이다**(사용자 결정 2026-10-13) — 행 끝에 두면 인증수단·
+                        구간시간을 지나야 보여서 "무엇이 미사용인지" 가 늦게 읽힌다 */}
+                    {!point.useYn && <AppBadge variant="muted">미사용</AppBadge>}
+                  </div>
 
-                <span className="flex-1" />
-
-                {method && (
-                  <AppBadge variant={!point.useYn ? 'muted' : method === 'QR' ? 'point' : 'success'}>
-                    {method}
-                  </AppBadge>
-                )}
-
-                <span className="w-16 shrink-0 text-right tabular-nums text-caption text-muted-foreground">
-                  {point.courseMin}분
-                </span>
+                  <p className="flex items-center gap-1.5 text-caption tabular-nums text-muted-foreground">
+                    {method && (
+                      <>
+                        <span>{method}</span>
+                        <span aria-hidden>·</span>
+                      </>
+                    )}
+                    <span>{point.courseMin}분</span>
+                  </p>
+                </div>
               </li>
             )
           })}
         </ol>
       )}
-
-      {/* 🔴 "준비 중" 이 아니다 — 편성은 이제 **편성 편집**에서 한다. 남겨 둘 안내는
-          **지점 자체의 관리 위치**뿐이다(코스에서 제거해도 지점은 지워지지 않는다) */}
-      <p className="text-caption text-muted-foreground">
-        순서·구간시간은 <strong className="font-medium">편성 편집</strong>에서 바꿉니다. 지점
-        자체는{' '}
-        <Link to={paths.service.points} className="underline hover:text-foreground">
-          순찰지점
-        </Link>{' '}
-        에서 관리합니다.
-      </p>
     </div>
   )
 }

@@ -131,7 +131,7 @@ const DashboardKpiRow = ({ summary, state, onRetry }: DashboardKpiRowProps) => {
 
 /** 숫자 영역 오류 — 한 줄로(카드 높이를 크게 바꾸지 않는다) */
 const KpiError = ({ onRetry }: { onRetry: () => void }) => (
-  <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
+  <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-5 py-3">
     <CircleAlertIcon size={16} className="shrink-0 text-muted-foreground" />
     <p className="min-w-0 flex-1 text-caption text-muted-foreground">오늘 숫자를 불러오지 못했습니다</p>
     <AppButton variant="sub" onClick={onRetry}>

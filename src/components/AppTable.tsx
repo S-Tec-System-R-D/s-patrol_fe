@@ -143,7 +143,7 @@ const AppTable = <TData,>({
           `relative` 가 없으면 셀 안 `sr-only`(absolute)가 상자를 빠져나가 문서를 다시 넓힌다 */}
       <div className={`relative border rounded-sm overflow-x-auto ${renderCard ? 'hidden xl:block' : ''}`}>
         <table className="w-full text-sm">
-          <thead className="border-b bg-muted">
+          <thead className="border-b bg-card">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (

@@ -56,7 +56,7 @@ const ActiveCourseCard = ({ course, elapsedMin, handOvers = [] }: ActiveCourseCa
     <Link
       to={paths.service.patrolZoneDetail(course.historySeq)}
       className={cn(
-        'flex flex-col gap-3 rounded-lg border bg-card p-4 transition-colors hover:bg-muted/40',
+        'flex flex-col gap-3 rounded-lg border bg-card p-5 transition-colors hover:bg-muted/40',
         over > 0 ? 'border-danger' : 'border-border'
       )}
     >

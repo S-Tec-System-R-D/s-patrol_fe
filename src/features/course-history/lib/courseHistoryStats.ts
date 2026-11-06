@@ -16,6 +16,19 @@ import type { CourseHistoryRow } from '../types'
  * 없음", "시 단위 소요시간" 같은 **실측된 예외**를 테스트로 고정할 수 없다.
  */
 
+/** KPI 미니 그래프에 그리는 회차 수 */
+export const RECENT_RUN_LIMIT = 7
+
+/** 미니 그래프의 한 회차 */
+export interface RecentRun {
+  startDt: string
+  /** 🔴 읽을 수 없으면 `null` — 0 으로 그리면 "0분" 으로 읽힌다 */
+  elapsedSec: number | null
+  overtime: boolean
+  checkedCount: number
+  pointCount: number
+}
+
 export interface CourseHistoryStats {
   /** 조회 기간의 순찰 횟수. 🔴 **집계에 쓴 행 수가 아니라 서버의 `totalCount`** 다 */
   runCount: number
@@ -47,6 +60,12 @@ export interface CourseHistoryStats {
    */
   minElapsedSec: number | null
   maxElapsedSec: number | null
+  /** 가장 최근 회차. 🔴 **행이 없으면 `null`** — 응답 순서에 기대지 않고 시작 시각으로 고른다 */
+  lastRunDt: string | null
+  /** 기준 시간을 넘긴 회차 수 — 서버 `overtimeYn` 을 센다. `partial` 이면 표본 기준이다 */
+  overtimeCount: number
+  /** 최근 회차 — 🔴 **오래된 순**이다(그래프의 왼쪽 → 오른쪽). 시작 시각으로 고른다 */
+  recentRuns: RecentRun[]
 }
 
 /**
@@ -75,6 +94,17 @@ export const courseHistoryStats = (
     failed: rows.filter((row) => row.status === 2).length,
   }
 
+  const recentRuns = [...rows]
+    .sort((a, b) => a.startDt.localeCompare(b.startDt))
+    .slice(-RECENT_RUN_LIMIT)
+    .map((row) => ({
+      startDt: row.startDt,
+      elapsedSec: toSeconds(row.actualElapsedTime),
+      overtime: row.overtimeYn,
+      checkedCount: row.checkedCount,
+      pointCount: row.pointCount,
+    }))
+
   return {
     runCount: totalCount,
     avgElapsedSec:
@@ -90,6 +120,9 @@ export const courseHistoryStats = (
     statusCounts,
     minElapsedSec: elapsed.length === 0 ? null : Math.min(...elapsed),
     maxElapsedSec: elapsed.length === 0 ? null : Math.max(...elapsed),
+    lastRunDt: recentRuns.at(-1)?.startDt ?? null,
+    overtimeCount: rows.filter((row) => row.overtimeYn).length,
+    recentRuns,
   }
 }
 

@@ -25,7 +25,7 @@ interface DashboardNoticePanelProps {
 }
 
 const DashboardNoticePanel = ({ rows, state, onRetry }: DashboardNoticePanelProps) => (
-  <section className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
+  <section className="flex flex-col gap-2 rounded-lg border border-border bg-card p-5">
     <div className="flex items-center gap-2">
       <h2 className="text-panel-title font-bold text-foreground">공지사항</h2>
       <Link

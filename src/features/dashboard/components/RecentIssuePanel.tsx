@@ -37,7 +37,7 @@ interface RecentIssuePanelProps {
 }
 
 const RecentIssuePanel = ({ rows, state, onRetry }: RecentIssuePanelProps) => (
-  <section className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
+  <section className="flex flex-col gap-2 rounded-lg border border-border bg-card p-5">
     <div className="flex items-center gap-2">
       <h2 className="text-panel-title font-bold text-foreground">최근 미완료 · 시간초과</h2>
       <Link

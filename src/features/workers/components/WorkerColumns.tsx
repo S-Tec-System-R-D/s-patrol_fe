@@ -35,14 +35,12 @@ export const workerColumns = (): ColumnDef<UserRow>[] =>
         <div className="flex items-center gap-2">
           {/* ⚠️ `WorkerAvatar` 는 색 해시용 `id` 를 문자열로 받는다 — 컴포넌트는 고치지 않는다 */}
           <WorkerAvatar id={String(row.original.userSeq)} name={row.original.userName} />
-          <span className="font-medium">{row.original.userName}</span>
+          <div className="flex min-w-0 flex-col">
+            <span className="font-medium">{row.original.userName}</span>
+            <span className="text-meta tabular-nums text-muted-foreground">{row.original.loginId}</span>
+          </div>
         </div>
       ),
-    },
-    {
-      accessorKey: 'loginId',
-      header: '사번',
-      cell: ({ getValue }) => <span className="tabular-nums">{getValue<string>()}</span>,
     },
     {
       accessorKey: 'codeName',

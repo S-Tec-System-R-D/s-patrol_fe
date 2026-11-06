@@ -211,7 +211,7 @@ const CoursePointEditor = ({ course, onClose }: CoursePointEditorProps) => {
   const locked = mutation.isPending
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-point/40 bg-card p-4">
+    <div className="flex flex-col gap-3 rounded-lg border border-point/40 bg-card p-5">
       <div className="flex items-center justify-between">
         <span className="text-panel-title font-semibold">지점 순서 편집</span>
         <span className="text-caption text-muted-foreground">총 {drafts.length}개</span>

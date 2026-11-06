@@ -165,3 +165,40 @@ describe('courseHistoryStats — 상태 분포와 최단·최장', () => {
     expect(stats.partial).toBe(true)
   })
 })
+
+describe('courseHistoryStats — 마지막 순찰 · 기준 초과', () => {
+  it('응답 순서와 상관없이 시작 시각이 가장 늦은 회차를 고른다', () => {
+    const stats = courseHistoryStats(
+      [
+        row({ startDt: '2026-11-01T09:00:00' }),
+        row({ startDt: '2026-11-06T09:00:00' }),
+        row({ startDt: '2026-11-03T09:00:00' }),
+      ],
+      3
+    )
+
+    expect(stats.lastRunDt).toBe('2026-11-06T09:00:00')
+  })
+
+  it('최근 회차는 7개까지, 오래된 순으로 준다', () => {
+    const rows = Array.from({ length: 9 }, (_, index) =>
+      row({ startDt: `2026-11-0${9 - index}T09:00:00` })
+    )
+
+    const { recentRuns } = courseHistoryStats(rows, 9)
+
+    expect(recentRuns).toHaveLength(7)
+    expect(recentRuns[0].startDt).toBe('2026-11-03T09:00:00')
+    expect(recentRuns[6].startDt).toBe('2026-11-09T09:00:00')
+  })
+
+  it('행이 없으면 마지막 순찰은 null 이다', () => {
+    expect(courseHistoryStats([], 0).lastRunDt).toBeNull()
+  })
+
+  it('기준 초과는 overtimeYn 인 회차만 센다', () => {
+    const stats = courseHistoryStats([row({ overtimeYn: true }), row({ overtimeYn: false })], 2)
+
+    expect(stats.overtimeCount).toBe(1)
+  })
+})
