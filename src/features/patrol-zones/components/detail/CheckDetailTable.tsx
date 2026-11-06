@@ -97,7 +97,7 @@ const CheckDetailTable = ({ rows }: CheckDetailTableProps) => {
       {/* 🔴 표는 `xl` 이상만 — 그 아래는 세로 타임라인(`spec 055`). 7칸 표는 좁은 폭에서 옆으로 밀어야 읽혔다 */}
       <div className="hidden overflow-x-auto xl:block">
         <table className="w-full text-body">
-          <thead className="border-b bg-muted">
+          <thead className="border-b bg-card">
             <tr className="text-left text-xs font-medium text-muted-foreground whitespace-nowrap">
               <th className="px-3 py-3 w-12">순서</th>
               <th className="px-3 py-3">순찰지점</th>

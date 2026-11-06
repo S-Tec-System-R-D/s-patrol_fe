@@ -324,7 +324,13 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
   ],
   // 🔴 미완료 회차 — 미인증(무방문) 1건 + 미완료(방문) 1건이 섞여 있다
   103: [
-    checkDetail({ detailSeq: 1031, pointSeq: 60, orderNo: 1, pointName: '정문 입구' }),
+    checkDetail({
+      detailSeq: 1031,
+      pointSeq: 60,
+      orderNo: 1,
+      pointName: '정문 입구',
+      checkDt: daysAgo(3, '02:45:00'),
+    }),
     checkDetail({
       detailSeq: 1032,
       pointSeq: 61,

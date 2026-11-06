@@ -104,15 +104,6 @@ export const summarizePatrolHistory = (
 }
 
 /**
- * 버킷 → **날짜별 점등 배열** (`spec 031`). 오래된 날 → 최근 날 순.
- *
- * 🔴 **안 한 날도 칸을 남긴다**(`false`). 빼면 칸 수가 들쭉날쭉해 **"쉰 날" 이 보이지
- * 않는다** — 그게 이 바가 존재하는 이유다.
- */
-export const toPatrolTicks = (summary: PatrolSummary): boolean[] =>
-  summary.buckets.map((bucket) => bucket.count > 0)
-
-/**
  * 마지막 인증으로부터 **얼마나 지났는지** — `9시간 전` · `3일 전` · `방금`.
  *
  * 🔴 **"얼마 전" 은 시각보다 먼저 읽힌다.** `10.14 10:14` 만 있으면 오늘인지 지난주인지

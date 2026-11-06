@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom'
 
 import AppDetailCard from '@/components/app/AppDetailCard'
 import AppDetailRow from '@/components/app/AppDetailRow'
-import { formatElapsed } from '@/features/course-history/lib/elapsed'
+import type { CourseAverage } from '@/features/course-history/lib/courseAverage'
+import { formatDuration, formatElapsed } from '@/features/course-history/lib/elapsed'
 import { AUTH_METHOD, type CheckDetailRow, type CourseHistoryDetail } from '@/features/course-history/types'
 import { paths } from '@/router/paths'
 
@@ -15,21 +16,40 @@ import { paths } from '@/router/paths'
  *
  * 🔴 **"기준 충족" 판정을 하지 않는다** — 소요시간 옆에 기준을 **적기만** 한다(B-31).
  * ⚠️ `totalMin: 0` 인 코스가 실재해 **"기준 0분" 으로 쓰지 않는다**(설정 안 됨과 0분은 다르다).
+ *
+ * 🔴 **KPI 줄을 없애고 고유한 값만 여기로 옮겼다**(사용자 결정 2026-11-06) — 코스 평균 · 메모 · 사진.
+ * 지점 인증 · 소요시간은 이 카드 · 지도 · 인증 내역과 겹쳤고, 구간 평균은 표의 `구간` 칸이 대신한다.
  */
 
 interface HistoryInfoCardProps {
   detail: CourseHistoryDetail
   /** 인증수단 집계에 쓴다. 조회 전이면 빈 배열 */
   checks: CheckDetailRow[]
+  /** 같은 코스의 완료 건 평균. 조회 전이면 `undefined` */
+  average?: CourseAverage
 }
 
-const HistoryInfoCard = ({ detail, checks }: HistoryInfoCardProps) => {
+/** `(기준 45분 · 평균 1시간 5분)`. 🔴 기준과 평균을 나란히 적기만 한다 */
+const elapsedNote = (totalMin: number, average?: CourseAverage): string => {
+  const target = totalMin > 0 ? `기준 ${totalMin}분` : '기준 미설정'
+  if (average?.averageSeconds === null || average?.averageSeconds === undefined) return ` (${target})`
+  const label = average.partial ? '최근 100회 평균' : '평균'
+  return ` (${target} · ${label} ${formatDuration(average.averageSeconds)})`
+}
+
+const HistoryInfoCard = ({ detail, checks, average }: HistoryInfoCardProps) => {
   /**
    * 🔴 **인증수단 집계는 `CheckDetails` 에서 센다** — 상세 응답에는 없다. 요청은 늘지
    * 않는다(인증 내역을 이미 받는다).
    */
   const qr = checks.filter((row) => row.authMethod === AUTH_METHOD.QR).length
   const nfc = checks.filter((row) => row.authMethod === AUTH_METHOD.NFC).length
+
+  const memoCount = checks.reduce((sum, row) => sum + row.memos.length, 0)
+  const photoCount = checks.reduce(
+    (sum, row) => sum + row.memos.reduce((n, memo) => n + (memo.attaches?.length ?? 0), 0),
+    0
+  )
 
   return (
     <AppDetailCard title="순찰 정보">
@@ -73,9 +93,7 @@ const HistoryInfoCard = ({ detail, checks }: HistoryInfoCardProps) => {
           value={
             <span>
               {formatElapsed(detail.elapsedTime)}
-              <span className="text-muted-foreground">
-                {detail.totalMin > 0 ? ` (기준 ${detail.totalMin}분)` : ' (기준 미설정)'}
-              </span>
+              <span className="text-muted-foreground">{elapsedNote(detail.totalMin, average)}</span>
             </span>
           }
         />
@@ -85,6 +103,13 @@ const HistoryInfoCard = ({ detail, checks }: HistoryInfoCardProps) => {
         />
         {/* 🔴 인증이 하나도 없으면 집계 줄을 만들지 않는다 — `QR 0 · NFC 0` 은 정보가 없다 */}
         {qr + nfc > 0 && <AppDetailRow label="인증수단" value={`QR ${qr} · NFC ${nfc}`} />}
+        {/* 🔴 인증 내역을 받기 전에는 `없음` 으로 단정하지 않는다 */}
+        {checks.length > 0 && (
+          <AppDetailRow
+            label="특이사항"
+            value={memoCount === 0 ? '없음' : `메모 ${memoCount} · 사진 ${photoCount}`}
+          />
+        )}
         {/* 교대가 있으면 적는다 — 목업에는 없지만 서버가 세어 준다(실측 2명 6건) */}
         {detail.handoverCount > 0 && (
           <AppDetailRow label="교대" value={`${detail.handoverCount}회`} />

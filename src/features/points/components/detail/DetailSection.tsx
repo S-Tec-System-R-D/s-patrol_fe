@@ -6,11 +6,14 @@
  */
 const DetailSection = ({
   title,
+  count,
   description,
   action,
   children,
 }: {
   title: string
+  /** 제목 옆 건수 — `총 3개`. 코스 상세 카드와 같은 자리다 */
+  count?: string
   description?: string
   /** 제목 줄 **우측**에 붙는 것(수정 아이콘 등). `spec 029` — 제목을 두 번 그리지 않으려고 둔다 */
   action?: React.ReactNode
@@ -20,7 +23,10 @@ const DetailSection = ({
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
-          <span className="text-muted-foreground text-xs">{title}</span>
+          <span className="flex items-baseline gap-2">
+            <span className="text-panel-title font-semibold text-foreground">{title}</span>
+            {count && <span className="text-caption text-muted-foreground">{count}</span>}
+          </span>
           {description && <p className="text-caption text-muted-foreground/80">{description}</p>}
         </div>
         {action}

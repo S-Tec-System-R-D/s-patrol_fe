@@ -30,25 +30,39 @@ const formatCheckDt = (value: string): string => {
   return isValid(parsed) ? format(parsed, 'MM.dd HH:mm') : '-'
 }
 
+/**
+ * 🔴 **요약 값은 이 카드 머리에 둔다**(사용자 결정 2026-11-06) — 지점 상세의 KPI 줄을 없앴다.
+ * 최근 순찰 · 인증률은 모두 이 기록의 요약이라, 근거인 그래프 바로 위가 제자리다.
+ * 🔴 인증률에 색을 입히지 않는다 — 분모를 확신할 수 없다(`spec 023`).
+ */
+const summaryLine = (summary: PatrolSummary, sinceLabel: string | null): string => {
+  const rate =
+    summary.attempted > 0
+      ? `인증 ${summary.total}/${summary.attempted} (${Math.round((summary.total / summary.attempted) * 100)}%)`
+      : '순찰 기록 없음'
+  return ['최근 2주', rate, sinceLabel && `최근 순찰 ${sinceLabel}`].filter(Boolean).join(' · ')
+}
+
 const PointPatrolLog = ({
   summary,
+  sinceLabel,
   rows,
   isPending,
 }: {
   summary: PatrolSummary
+  /** `9시간 전` 같은 경과 표기. 기록이 없거나 미래 시각이면 `null` */
+  sinceLabel: string | null
   rows: PointHistoryRow[]
   isPending: boolean
 }) => {
   const preview = rows.slice(0, PREVIEW_COUNT)
 
   return (
-    <section className="rounded-lg border border-border bg-card p-6">
+    <section className="rounded-lg border border-border bg-card p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <span className="text-muted-foreground text-xs">순찰 인증 기록</span>
-          <p className="text-caption text-muted-foreground/80">
-            최근 2주 · 이 지점에서 발생한 인증 내역
-          </p>
+          <span className="text-panel-title font-semibold text-foreground">순찰 인증 기록</span>
+          <p className="text-caption text-muted-foreground">{summaryLine(summary, sinceLabel)}</p>
         </div>
         <Link
           to={paths.service.patrolPoints}

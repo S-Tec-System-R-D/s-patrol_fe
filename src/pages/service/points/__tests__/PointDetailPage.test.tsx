@@ -88,8 +88,7 @@ describe('PointDetailPage — 진입', () => {
     renderAt('/points/1')
 
     await screen.findByRole('heading', { name: '정문 입구' })
-    // '소속 코스' 는 통계 칸과 섹션 제목 두 곳에 나온다
-    expect(screen.getAllByText('소속 코스').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getByText('소속 코스')).toBeInTheDocument()
     // 🔴 인증수단은 별도 섹션이 아니라 기본정보 행이다(2026-10-10)
     expect(screen.getByText('인증수단')).toBeInTheDocument()
     expect(screen.queryByText('인증 수단')).not.toBeInTheDocument()
@@ -252,15 +251,13 @@ describe('PointDetailPage — 수정 모달', () => {
 
 /** 🔴 `spec 027` Phase 3 — 목업 8섹션 중 6개 구현 / 2개 placeholder */
 describe('PointDetailPage — 상세 확장(Phase 3)', () => {
-  it('통계 3칸을 그린다 — QR 발행 칸은 없다(B-23)', async () => {
+  it('KPI 줄 없이 인증 요약을 순찰 인증 기록 머리에 적는다', async () => {
     renderAt('/points/1')
 
     await screen.findByRole('heading', { name: '정문 입구' })
-    expect(screen.getByText('2주 인증')).toBeInTheDocument()
-    // '최근 순찰' 은 통계에만 있다 — 기본정보에서 뺐다(같은 값 두 번)
-    expect(screen.getByText('최근 순찰')).toBeInTheDocument()
-    // '소속 코스' 는 통계 칸과 섹션 제목 두 곳
-    expect(screen.getAllByText('소속 코스').length).toBeGreaterThanOrEqual(2)
+    expect(await screen.findByText(/최근 2주 · 인증 \d+\/\d+ \(\d+%\)/)).toBeInTheDocument()
+    expect(screen.queryByText('지점 인증률')).not.toBeInTheDocument()
+    expect(screen.getAllByText('소속 코스')).toHaveLength(1)
     expect(screen.queryByText('QR 발행')).not.toBeInTheDocument()
   })
 

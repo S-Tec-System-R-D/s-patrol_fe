@@ -36,7 +36,7 @@ import type { PointDetail as PointDetailData } from '../../types'
 
 /** 섹션 카드 — 경계를 나누는 것이 목적이라 공용으로 뽑지 않고 여기 둔다(A6) */
 const Card = ({ className = '', children }: { className?: string; children: React.ReactNode }) => (
-  <div className={`rounded-lg border border-border bg-card p-6 ${className}`}>{children}</div>
+  <div className={`rounded-lg border border-border bg-card p-5 ${className}`}>{children}</div>
 )
 
 /**
@@ -116,7 +116,10 @@ const PointDetail = ({ point, onEdit }: { point: PointDetailData; onEdit?: () =>
  */
 export const PointCourseList = ({ point }: { point: PointDetailData }) => (
   <Card>
-    <DetailSection title="소속 코스" description="이 지점이 포함된 순찰 코스입니다.">
+    <DetailSection
+      title="소속 코스"
+      count={`총 ${point.courseList.length}개`}
+    >
       <div className="flex flex-col gap-2">
         {point.courseList.length === 0 ? (
           /* 🔴 **"인증 기록이 쌓이기 시작합니다" 를 뺐다**(사용자 결정 2026-10-13) —

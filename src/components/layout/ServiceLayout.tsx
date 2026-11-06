@@ -83,8 +83,13 @@ const ServiceLayout = () => {
     const releaseIfIdle = () => {
       if (queryClient.isFetching() === 0) setSwitching(false)
     }
-    const unsubscribe = queryClient.getQueryCache().subscribe(releaseIfIdle)
-    const check = window.setTimeout(releaseIfIdle)
+    let check = window.setTimeout(releaseIfIdle)
+    /* 🔴 **구독 콜백에서 바로 상태를 바꾸지 않는다** — 자식의 `useQuery` 가 렌더 중에 쿼리를 만들면
+       이 콜백이 그 렌더 안에서 불려 "다른 컴포넌트 렌더 중 갱신" 콘솔 에러가 난다 */
+    const unsubscribe = queryClient.getQueryCache().subscribe(() => {
+      window.clearTimeout(check)
+      check = window.setTimeout(releaseIfIdle)
+    })
     return () => {
       unsubscribe()
       window.clearTimeout(check)

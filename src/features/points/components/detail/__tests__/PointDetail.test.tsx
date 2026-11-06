@@ -71,7 +71,7 @@ describe('PointDetail — 레이아웃 결정(027)', () => {
     expect(screen.queryByText('미사용')).not.toBeInTheDocument()
   })
 
-  it('🔴 "최근 순찰" 행이 없다 — 통계 칸과 같은 값이다', () => {
+  it('🔴 "최근 순찰" 행이 없다 — 순찰 인증 기록 머리와 같은 값이다', () => {
     renderDetail()
 
     expect(screen.queryByText('최근 순찰')).not.toBeInTheDocument()

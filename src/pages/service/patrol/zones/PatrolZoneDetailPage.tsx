@@ -12,7 +12,6 @@ import {
   useCourseHistoryHandOvers,
 } from '@/features/course-history/hooks/useCourseHistoryDetail'
 import { useCourseAverage } from '@/features/course-history/hooks/useCourseAverage'
-import { checkIntervals } from '@/features/course-history/lib/checkIntervals'
 import { historyPins } from '@/features/patrol-zones/lib/historyCoords'
 import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
 import { useCourseDetail } from '@/features/courses/hooks/useCourseDetail'
@@ -20,7 +19,6 @@ import CheckDetailTable from '@/features/patrol-zones/components/detail/CheckDet
 import HistoryMapCard from '@/features/patrol-zones/components/detail/HistoryMapCard'
 import HandOverTimelineCard from '@/features/patrol-zones/components/detail/HandOverTimelineCard'
 import HistoryInfoCard from '@/features/patrol-zones/components/detail/HistoryInfoCard'
-import HistoryKpiRow from '@/features/patrol-zones/components/detail/HistoryKpiRow'
 import { getSiteSeq } from '@/lib/auth/site'
 import { paths } from '@/router/paths'
 
@@ -59,7 +57,6 @@ const PatrolZoneDetailPage = () => {
   const course = useCourseDetail(detail.data?.courseSeq ?? null)
 
   const checks = useMemo(() => checkDetails.data ?? [], [checkDetails.data])
-  const intervals = useMemo(() => checkIntervals(checks), [checks])
   const coords = useMemo(
     () => historyPins(checks, course.data?.points ?? []),
     [checks, course.data?.points]
@@ -184,8 +181,6 @@ const PatrolZoneDetailPage = () => {
         }
       />
 
-      <HistoryKpiRow detail={data} checks={checks} intervals={intervals} average={average.data} />
-
       {/* 🔴 **2열 골격**(목업 `02`) — 좌: 지도 + 인증 내역 / 우: 순찰 정보.
           좁은 폭에서는 한 줄로 쌓인다.
           🔴 **`items-start` 다**(사용자 확인 2026-10-19) — 기본값 `stretch` 면 우측 순찰 정보
@@ -238,8 +233,8 @@ const PatrolZoneDetailPage = () => {
           )}
 
           <div className="rounded-lg border border-border bg-card">
-            <div className="flex items-center justify-between border-b px-4 py-3">
-              <h3 className="text-body font-semibold">지점 인증 내역</h3>
+            <div className="flex items-center justify-between border-b px-5 py-4">
+              <h3 className="text-panel-title font-semibold">지점 인증 내역</h3>
               <span className="text-caption text-muted-foreground">
                 {data.totalPointCount}개 지점 · {data.completedPointCount}개 인증
               </span>
@@ -273,7 +268,7 @@ const PatrolZoneDetailPage = () => {
         </section>
 
         <section className="order-1 flex flex-col gap-4 lg:order-2 lg:col-span-1">
-          <HistoryInfoCard detail={data} checks={checks} />
+          <HistoryInfoCard detail={data} checks={checks} average={average.data} />
           {/* 지점 내역을 받기 전엔 그리지 않는다 — 빈 내역이면 전부 `처리한 지점 없음` 으로 보인다 */}
           {handOvers.data && handOvers.data.length > 0 && checkDetails.data && (
             <HandOverTimelineCard rows={handOvers.data} checks={checkDetails.data} />

@@ -20,7 +20,7 @@ const ZoneRow = ({ courseSeq, title }: { courseSeq: number; title: string }) => 
   return (
     <Link
       to={paths.service.courseDetail(courseSeq)}
-      className="group flex items-center justify-between gap-4 border-b py-2 hover:text-point"
+      className="group flex items-center justify-between gap-4 border-b py-2 last:border-0 hover:text-point"
     >
       <span className="min-w-0 truncate">{title}</span>
       <ChevronRightIcon

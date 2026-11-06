@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { SUMMARY_DAYS, summarizePatrolHistory, summaryFromDate, summaryToDate, toPatrolTicks, formatSinceLabel } from '../patrolSummary'
+import { SUMMARY_DAYS, summarizePatrolHistory, summaryFromDate, summaryToDate, formatSinceLabel } from '../patrolSummary'
 import type { PointHistoryRow } from '@/features/course-history/types'
 
 /**
@@ -166,27 +166,6 @@ describe('summarizePatrolHistory — 인증(완료)과 대상(전체)을 가른�
 
     expect(summary.total).toBe(2)
     expect(summary.attempted).toBe(2)
-  })
-})
-
-/** 🔴 **점등 배열과 "얼마 전"** (`spec 031`) */
-describe('toPatrolTicks', () => {
-  const today = new Date('2026-10-14T10:00:00')
-
-  it('인증한 날만 켠다 — 안 한 날도 **칸은 남긴다**', () => {
-    const summary = summarizePatrolHistory(
-      [row('2026-10-14T09:00:00', { status: 4 }), row('2026-10-12T09:00:00', { status: 4 })],
-      today,
-      3
-    )
-
-    // 오래된 날 → 최근 날: 10/12 ✓, 10/13 ✗, 10/14 ✓
-    expect(toPatrolTicks(summary)).toEqual([true, false, true])
-  })
-
-  it('기록이 없으면 전부 꺼져 있다 — 길이는 그대로다', () => {
-    expect(toPatrolTicks(summarizePatrolHistory([], today, 14))).toHaveLength(14)
-    expect(toPatrolTicks(summarizePatrolHistory([], today, 14)).every((on) => !on)).toBe(true)
   })
 })
 

@@ -58,10 +58,10 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
     expect(await screen.findByRole('heading', { name: 'A동 순찰코스' })).toBeInTheDocument()
     // ⚠️ `지점 인증`·`소요시간` 은 **KPI 와 순찰 정보 양쪽에** 있다(목업 `02` 도 그렇다) —
     //    KPI 는 구성을 보여주고 정보 카드는 값을 적는다
-    expect(screen.getAllByText('지점 인증').length).toBeGreaterThanOrEqual(2)
-    expect(screen.getAllByText('소요시간').length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByText('특이사항')).toBeInTheDocument()
-    expect(screen.getByText('구간 평균 간격')).toBeInTheDocument()
+    expect(screen.getByText('지점 인증')).toBeInTheDocument()
+    expect(screen.getByText('소요시간')).toBeInTheDocument()
+    expect(await screen.findByText('특이사항')).toBeInTheDocument()
+    expect(screen.queryByText('구간 평균 간격')).not.toBeInTheDocument()
     expect(screen.getByText('지점 인증 내역')).toBeInTheDocument()
     expect(screen.getByText('순찰 정보')).toBeInTheDocument()
   })

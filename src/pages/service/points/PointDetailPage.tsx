@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { format, isValid, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
 import { ChevronRightIcon, MapPinIcon, Trash2Icon } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -16,14 +15,12 @@ import PointDetail, {
   PointCredentialCard,
 } from '@/features/points/components/detail/PointDetail'
 import PointPatrolLog from '@/features/points/components/detail/PointPatrolLog'
-import PointStats from '@/features/points/components/detail/PointStats'
 import { usePointHistory } from '@/features/points/hooks/usePointHistory'
 import {
   formatSinceLabel,
   summarizePatrolHistory,
   summaryFromDate,
   summaryToDate,
-  toPatrolTicks,
 } from '@/features/points/lib/patrolSummary'
 import { getSiteSeq } from '@/lib/auth/site'
 import EditPointForm from '@/features/points/form/EditPointForm'
@@ -52,16 +49,6 @@ import { paths } from '@/router/paths'
  * (`"잘못된 요청입니다."`)를 주는데, 이는 "경로가 없다" 가 아니라 **삭제됐거나 다른
  * 사업장의 지점**이라는 뜻이다. 목록으로 돌아갈 수단과 함께 안내한다.
  */
-
-/**
- * 통계 칸의 "최근 순찰" 문구. 기록이 없으면 `null` 을 돌려 호출부가 `—` 로 그린다.
- * 🔴 상세 본문(`PointDetail`)과 같은 포맷을 쓰되 **이름은 뺀다** — 통계 칸이 좁다.
- */
-const lastPatrolLabel = (point: { lastPatrolDt: string | null }): string | null => {
-  if (!point.lastPatrolDt) return null
-  const parsed = parseISO(point.lastPatrolDt)
-  return isValid(parsed) ? format(parsed, 'MM.dd HH:mm') : null
-}
 
 /** `코스/지점 › 지점 상세` — 첫 조각이 목록 링크를 겸한다 */
 const Breadcrumb = () => (
@@ -160,16 +147,6 @@ const PointDetailPage = () => {
             }
           />
 
-          <PointStats
-            patrolCount={summary.total}
-            attemptedCount={summary.attempted}
-            ticks={toPatrolTicks(summary)}
-            lastPatrol={lastPatrolLabel(point)}
-            sinceLabel={formatSinceLabel(point.lastPatrolDt, today)}
-            courseCount={point.courseList.length}
-            firstCourseName={point.courseList[0]?.courseName ?? null}
-          />
-
           {/* **좌 2/3** 소속 코스·순찰 기록 / **우 1/3** 기본정보·자격증명 — `xl` 미만 1단.
               🔴 **기본정보가 우측으로 갔다**(사용자 결정 2026-10-13). 변경 이력을 치우면서
               우측이 자격증명 하나만 남아 비어 보였고, 기본정보와 자격증명은 **같은 지점을
@@ -183,6 +160,7 @@ const PointDetailPage = () => {
               <PointCourseList point={point} />
               <PointPatrolLog
                 summary={summary}
+                sinceLabel={formatSinceLabel(point.lastPatrolDt, today)}
                 rows={historyRows}
                 isPending={history.isPending && pointSeq !== null}
               />
