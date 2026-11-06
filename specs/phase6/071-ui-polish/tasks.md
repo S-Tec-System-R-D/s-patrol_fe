@@ -34,3 +34,4 @@
 - [x] T1194 지점 상세 KPI 줄 삭제 — 값은 `순찰 인증 기록` 머리 · `소속 코스` 제목 옆 · 제목 16px · 여백 20px · `PointStats` · `toPatrolTicks` 삭제
 - [x] T1195 순찰 이력 상세 KPI 줄 삭제 — 코스 평균 · 특이사항은 `순찰 정보` 로 · 구간 평균 간격 삭제 · 인증 내역 표 머리 흰 배경 · 제목 16px · `HistoryKpiRow` · `checkIntervals` 삭제 · mock 회차 103 시각 수정
 - [x] T1196 사업장 전환 콘솔 에러 수정 — `ServiceLayout` 쿼리 구독 콜백이 자식 렌더 중 상태를 바꾸던 문제(e2e S8)
+- [x] T1197 `AppKpiCard` 정리 — 세로 큰 카드 · 값 아래 바 4종 · 뱃지 · `compactValue` · `point` · `danger` 톤 삭제 · 한 줄 카드를 기본으로(`inline` prop 삭제)

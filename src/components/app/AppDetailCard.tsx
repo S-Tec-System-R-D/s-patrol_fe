@@ -31,7 +31,7 @@ const AppDetailCard = ({ icon: Icon, title, badge, footer, children }: AppDetail
        * 탭·필터처럼 보이고, 이 앱은 **오른쪽 가장자리 = 액션** 으로 일관돼 있다
        * (`AppPageHeader` 버튼 · `전체 기록` 링크 · 지도 카드의 상태 표시).
        *
-       * ⚠️ 소비처가 **1곳뿐**이라(`PointHistoryMemoCard`. 다른 `badge=` 둘은 `AppKpiCard` 다)
+       * ⚠️ 소비처가 **1곳뿐**이라(`PointHistoryMemoCard`)
        * 옮겨도 번지지 않는다.
        */}
       <div className="flex items-baseline gap-2">

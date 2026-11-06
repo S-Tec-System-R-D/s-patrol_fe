@@ -77,13 +77,12 @@ const DeploymentKpiRow = () => {
   const pendingReturn = data?.pendingReturnCount ?? 0
 
   return (
-    /* 🔴 **한 줄 얇은 카드**(`inline`, 사용자 요청 2026-10-21) — 숫자 하나에 카드가 너무 두꺼웠다.
+    /* 🔴 **한 줄 얇은 카드**(사용자 요청 2026-10-21) — 숫자 하나에 카드가 너무 두꺼웠다.
        🔴 `spec 031`: tone 은 **대기중 요청(배치·복귀)에만** 색을 남긴다 — 세 칸이 다른 색이면 무엇이 급한지가 사라진다.
        ⚠️ 보조 줄(`hint`)은 나간/온 인원에만 — "배치예정도 센다" 는 화면만으로 알 수 없는 집계 규칙이다 */
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <KpiButton label="전출 이력" onClick={() => goTo('out')}>
         <AppKpiCard
-          inline
           // 이력 탭과 같은 아이콘 — 사업장(네모)에서 나간다 / 들어온다(사용자 요청 2026-10-21)
           icon={SquareArrowRightExitIcon}
           label="배치 나간 인원"
@@ -94,7 +93,6 @@ const DeploymentKpiRow = () => {
       </KpiButton>
       <KpiButton label="전입 이력" onClick={() => goTo('in')}>
         <AppKpiCard
-          inline
           icon={SquareArrowRightEnterIcon}
           label="배치 온 인원"
           value={valueOf(summary.isPending, summary.isError, data?.inCount)}
@@ -104,7 +102,6 @@ const DeploymentKpiRow = () => {
       </KpiButton>
       <KpiButton label="배치 요청" onClick={() => goTo('requests')}>
         <AppKpiCard
-          inline
           icon={ClockIcon}
           label="대기중인 배치요청"
           value={valueOf(summary.isPending, summary.isError, data?.pendingCount)}
@@ -114,7 +111,6 @@ const DeploymentKpiRow = () => {
       </KpiButton>
       <KpiButton label="복귀 요청" onClick={() => goTo('returns')}>
         <AppKpiCard
-          inline
           // 복귀 요청 탭과 같은 아이콘
           icon={Undo2Icon}
           label="대기중인 복귀요청"
