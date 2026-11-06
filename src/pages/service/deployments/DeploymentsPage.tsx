@@ -1,6 +1,6 @@
 import AppPageHeader from '@/components/app/AppPageHeader'
-import DeploymentKpiRow from '@/features/deployments/components/DeploymentKpiRow'
 import DeploymentBoard from '@/features/deployments/components/DeploymentBoard'
+import DeploymentPeopleStats from '@/features/deployments/components/DeploymentPeopleStats'
 import { getSiteName } from '@/lib/auth/site'
 
 const DeploymentsPage = () => {
@@ -12,14 +12,17 @@ const DeploymentsPage = () => {
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 xl:p-8">
-      <AppPageHeader
-        title="배치관리"
-        subtitle={
-          siteName ? `${siteName} 소속 근무자의 배치 이력과 요청을 확인합니다` : undefined
-        }
-      />
+      {/* 🔴 헤더 `action` 이 아니라 나란히 둔다 — 좁은 폭에서 부제가 눌리지 않고 아래로 내려간다 */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <AppPageHeader
+          title="배치관리"
+          subtitle={
+            siteName ? `${siteName} 소속 근무자의 배치 이력과 요청을 확인합니다` : undefined
+          }
+        />
+        <DeploymentPeopleStats />
+      </div>
 
-      <DeploymentKpiRow />
       {/* 🔴 요청 · 전출 · 전입을 **탭 3개 + 표 1개**로(T649g) — 다른 목록 화면 틀(헤더 → 탭 → 표) */}
       <DeploymentBoard />
     </div>

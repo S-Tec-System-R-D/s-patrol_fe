@@ -207,7 +207,7 @@
 | 14px / 700 | `text-section-title` | 섹션 타이틀 | 페이지 내 큰 섹션 헤딩(배치관리 등 — 향후) |
 | 13px / 400·600 | `text-tab` | 본문 규격 값(참고), 탭 라벨 | `PatrolHistoryTabs`(비활성 600, 활성 700) |
 | 12.5px | `text-body` | 테이블 셀·카드 kv 값·이름·필터 칩·버튼 라벨 | `AppDetailRow`, `AppFilterButton`, `AppTable` td(010에서 해소), `AppKpiCard` 값. ⚠️ **`PatrolTimeline`(036)·`PatrolRecordDialog`(037) 은 삭제됐다** — 둘 다 mock 셸이었고 서버 전환 때 사라졌다 |
-| 12px | `text-caption` | 페이지 설명·보조 한 줄·footer | `AppPageHeader` subtitle, `AppKpiCard` hint, 카드 지표 줄(034) |
+| 12px | `text-caption` | 페이지 설명·보조 한 줄·footer | `AppPageHeader` subtitle, 카드 지표 줄(034) |
 | 11.5px | `text-meta` | 보조 텍스트(시각 등) | ⚠️ **소비처가 0곳이다** — 유일한 소비처였던 `PatrolTimeline` 이 036 에서 삭제됐다. 토큰은 남기되 새 소비처가 생길 때 다시 본다 |
 | 11px | `text-badge` | 뱃지·pill | `AppBadge` |
 | 10.5px uppercase | `text-label` | 테이블 헤더 라벨·섹션 라벨 | 섹션 `<h4>`(순찰 정보·인증 내역·순찰 기록), `AppTable` thead(이월 — §6 Open Q) |

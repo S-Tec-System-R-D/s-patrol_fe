@@ -37,7 +37,6 @@ const formatLastRun = (value: string): string => {
 const CourseKpiRow = ({ stats }: CourseKpiRowProps) => (
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:[&>:last-child]:col-span-2 xl:grid-cols-3 xl:[&>:last-child]:col-span-1">
     <AppKpiCard
-      compact
       icon={FootprintsIcon}
       label="마지막 순찰"
       value={stats.lastRunDt ? formatLastRun(stats.lastRunDt) : '-'}
@@ -51,7 +50,6 @@ const CourseKpiRow = ({ stats }: CourseKpiRowProps) => (
       }
     />
     <AppKpiCard
-      compact
       icon={ClockIcon}
       label="평균 소요시간"
       value={formatDuration(stats.avgElapsedSec)}
@@ -71,7 +69,6 @@ const CourseKpiRow = ({ stats }: CourseKpiRowProps) => (
       }
     />
     <AppKpiCard
-      compact
       icon={CheckCircle2Icon}
       label="지점 인증률"
       value={formatRate(stats.authRate)}

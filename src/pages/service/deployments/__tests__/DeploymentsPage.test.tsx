@@ -22,6 +22,9 @@ import DeploymentsPage from '../DeploymentsPage'
  * 앱과 같은 **전역 MutationCache 오류 토스트**를 붙인다 — 실패 토스트가 그 경로로 나간다(`queryClient.ts`).
  */
 
+const SUMMARY_PATH = '/api/v1/Assignment/W/sign/GetAssignmentCount'
+const IN_HISTORY_PATH = '/api/v1/Assignment/W/sign/GetAssignmentInHistory'
+const OUT_HISTORY_PATH = '/api/v1/Assignment/W/sign/GetAssignmentOutHistory'
 const APPROVE_PATH = '/api/v1/Assignment/W/sign/AssignmentApprove'
 const LIST_PATH = '/api/v1/Assignment/W/sign/GetAssignmentList'
 
@@ -61,9 +64,11 @@ const renderPage = (initialEntry = '/deployments') => {
   )
 }
 
-/** KPI 카드에서 라벨로 숫자를 찾는다 */
-const kpiValue = (label: string) =>
-  within(screen.getByText(label).closest('div[class*="rounded"]') as HTMLElement)
+/** 탭 뱃지까지 읽는다 — 뱃지는 탭 이름에 붙는다 */
+const requestTab = () => screen.getByRole('tab', { name: /배치 요청/ })
+
+/** 제목 줄 오른쪽 칸에서 라벨로 값을 찾는다 */
+const stat = (label: string) => screen.getByText(label).parentElement as HTMLElement
 
 /** 처리 API 로 나간 바디를 모은다 */
 const captureApproveBodies = () => {
@@ -106,25 +111,63 @@ describe('DeploymentsPage — 요청 목록', () => {
   })
 })
 
-describe('DeploymentsPage — KPI → 탭', () => {
-  it('🔴 KPI 카드를 누르면 해당 탭으로만 간다 — 상태 필터 없이 기록 전체', async () => {
+describe('DeploymentsPage — 배치 요약', () => {
+  it('🔴 KPI 줄이 없고 전출 · 전입 인원을 제목 줄에 적는다', async () => {
+    renderPage()
+
+    await waitFor(() => expect(stat('전출 인원')).toHaveTextContent('1명'))
+    await waitFor(() => expect(stat('전입 인원')).toHaveTextContent('1명'))
+    expect(screen.queryByText('대기중인 배치요청')).not.toBeInTheDocument()
+    expect(requestTab()).toHaveTextContent('2')
+    expect(screen.getByRole('tab', { name: /복귀 요청/ })).toHaveTextContent('1')
+  })
+
+  it('🔴 배치중만 센다 — 요약의 숫자는 시작 전 배치까지 들어 있다', async () => {
+    const queries: URLSearchParams[] = []
+    server.events.on('request:start', ({ request }) => {
+      const url = new URL(request.url)
+      if (url.pathname === IN_HISTORY_PATH || url.pathname === OUT_HISTORY_PATH) {
+        queries.push(url.searchParams)
+      }
+    })
+    renderPage()
+
+    await waitFor(() => expect(stat('전입 인원')).toHaveTextContent('1명'))
+    expect(queries).toHaveLength(2)
+    queries.forEach((query) => expect(query.get('status')).toBe('1'))
+  })
+
+  it('🔴 인원 조회 실패는 0 이 아니라 - 다', async () => {
+    const fail = () => HttpResponse.json({ message: 'x' }, { status: 500 })
+    server.use(http.get(IN_HISTORY_PATH, fail), http.get(OUT_HISTORY_PATH, fail))
+    renderPage()
+
+    await waitFor(() => expect(stat('전출 인원')).toHaveTextContent('-'))
+    await waitFor(() => expect(stat('전입 인원')).toHaveTextContent('-'))
+  })
+
+  it('🔴 요약 실패는 탭 뱃지가 - 다 — 뱃지가 사라지면 "대기 0건" 으로 읽힌다', async () => {
+    server.use(http.get(SUMMARY_PATH, () => HttpResponse.json({ message: 'x' }, { status: 500 })))
+    renderPage()
+
+    await waitFor(() => expect(requestTab()).toHaveTextContent('-'))
+    expect(screen.getByRole('tab', { name: /복귀 요청/ })).toHaveTextContent('-')
+    expect(screen.getByRole('tab', { name: /전입 이력/ })).not.toHaveTextContent('-')
+  })
+
+  it('🔴 이력 탭은 상태 필터 없이 기록 전체다 — 복귀완료도 나온다', async () => {
     const user = userEvent.setup()
     renderPage()
     await findInTable('최범수')
 
-    await user.click(screen.getByRole('button', { name: '전입 이력 보기' }))
+    await user.click(screen.getByRole('tab', { name: /전입 이력/ }))
     expect(await findInTable('오준혁')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /전입 이력/ })).toHaveAttribute('aria-selected', 'true')
-    // 복귀완료한 한지민도 나온다 — KPI 클릭은 상태 필터를 비운다(숫자 = 배치예정 + 배치중)
     expect(getInTable('한지민')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: '배치 요청 보기' }))
-    expect(await findInTable('최범수')).toBeInTheDocument()
   })
 })
 
 describe('DeploymentsPage — 승인 (🔴 A급)', () => {
-  it('승인하면 approved: true · 행이 사라지고 KPI 대기 -1 · 배치 온 +1 · 성공 토스트', async () => {
+  it('승인하면 approved: true · 행이 사라지고 대기 -1 · 배치 온 +1 · 성공 토스트', async () => {
     const bodies = captureApproveBodies()
     const success = vi.spyOn(notify, 'success')
     const user = userEvent.setup()
@@ -135,8 +178,8 @@ describe('DeploymentsPage — 승인 (🔴 A급)', () => {
     await waitFor(() => expect(queryInTable('배수진')).not.toBeInTheDocument())
     expect(bodies).toEqual([{ assignmentSeq: 502, approved: true }])
     expect(success).toHaveBeenCalledWith('배수진님의 배치 요청을 승인했습니다.')
-    await waitFor(() => expect(kpiValue('대기중인 배치요청').getByText('1')).toBeInTheDocument())
-    expect(kpiValue('배치 온 인원').getByText('2')).toBeInTheDocument()
+    await waitFor(() => expect(requestTab()).toHaveTextContent('1'))
+    await waitFor(() => expect(stat('전입 인원')).toHaveTextContent('2명'))
   })
 
   it('🔴 연타해도 요청은 1번만 나간다 — 처리 중 두 버튼이 막힌다', async () => {
@@ -197,8 +240,8 @@ describe('DeploymentsPage — 반려 (🔴 A급)', () => {
     await waitFor(() => expect(queryInTable('배수진')).not.toBeInTheDocument())
     expect(bodies).toEqual([{ assignmentSeq: 502, approved: false }])
     expect(success).toHaveBeenCalledWith('배수진님의 배치 요청을 반려했습니다.')
-    await waitFor(() => expect(kpiValue('대기중인 배치요청').getByText('1')).toBeInTheDocument())
-    expect(kpiValue('배치 온 인원').getByText('1')).toBeInTheDocument()
+    await waitFor(() => expect(requestTab()).toHaveTextContent('1'))
+    expect(stat('전입 인원')).toHaveTextContent('1명')
   })
 
   it('🔴 확인창에서 취소하면 요청이 나가지 않는다', async () => {

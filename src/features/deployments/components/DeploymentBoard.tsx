@@ -126,6 +126,8 @@ const DeploymentBoard = () => {
   const [pageSize, setPageSize] = useState(DEPLOYMENT_PAGE_SIZE)
 
   const summary = useDeploymentSummary(siteSeq)
+  /** 🔴 **실패는 `-` 다, 0 이 아니다** — 뱃지가 사라지면 "대기 0건" 이라는 거짓 안심을 준다 */
+  const summaryFailed = summary.isError && !summary.data
 
   /** 🔴 요청 목록 2종은 **배열**이다(실측 — 페이징 없음). 화면이 `?page` 로 잘라 보인다 */
   const requests = useDeploymentRequests(tab === 'requests' ? siteSeq : null)
@@ -212,7 +214,7 @@ const DeploymentBoard = () => {
       >
         {TABS.map(({ key, label, icon: Icon }) => {
           const selected = tab === key
-          /* 배치 요청 = `pendingCount`(KPI·사이드바와 같은 숫자) · 복귀 요청 = `pendingReturnCount`(탭에만) */
+          /* 배치 요청 = `pendingCount`(사이드바와 같은 숫자) · 복귀 요청 = `pendingReturnCount`(탭에만) */
           const pending =
             key === 'requests'
               ? summary.data?.pendingCount
@@ -234,6 +236,14 @@ const DeploymentBoard = () => {
               <Icon size={14} strokeWidth={1.75} />
               {label}
               {/* 🔴 대기 건수 — 0 이거나 모르면 그리지 않는다(숫자를 지어내지 않는다) */}
+              {summaryFailed && (key === 'requests' || key === 'returns') && (
+                <span
+                  title="건수를 불러오지 못했습니다"
+                  className="min-w-[18px] rounded-full bg-muted px-1.5 text-center text-label font-semibold leading-[18px] text-muted-foreground"
+                >
+                  -
+                </span>
+              )}
               {!!pending && (
                 /* 🔴 **사이드바 뱃지와 같은 빨강**(사용자 요청 2026-10-21) — 연한 주황은 탭 글자에 묻혔다.
                    같은 숫자가 두 곳에서 같은 모양이어야 같은 것으로 읽힌다 */

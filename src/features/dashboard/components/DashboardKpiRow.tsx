@@ -20,7 +20,7 @@ import type { AreaState, TodaySummary } from '../types'
 
 type Tone = 'neutral' | 'point' | 'danger'
 
-/** 아이콘 칩 색 — `AppKpiCard` 와 같은 토큰 */
+/** 아이콘 칩 색 */
 const toneStyles: Record<Tone, string> = {
   neutral: 'bg-muted text-muted-foreground',
   point: 'bg-point-bg text-point',
