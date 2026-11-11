@@ -143,7 +143,7 @@ const AppTable = <TData,>({
           `relative` 가 없으면 셀 안 `sr-only`(absolute)가 상자를 빠져나가 문서를 다시 넓힌다 */}
       <div className={`relative border rounded-sm overflow-x-auto ${renderCard ? 'hidden xl:block' : ''}`}>
         <table className="w-full text-sm">
-          <thead className="border-b bg-card">
+          <thead className="border-b bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -151,7 +151,7 @@ const AppTable = <TData,>({
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
                     className={`
-                      text-left text-xs px-3 py-3 font-medium text-muted-foreground
+                      text-left text-xs px-3 py-3 font-medium text-foreground/70
                       ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-foreground' : ''}
                       ${header.column.columnDef.meta?.className ?? ''}
                     `}

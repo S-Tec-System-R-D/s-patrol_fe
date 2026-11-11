@@ -36,3 +36,5 @@
 - [x] T1196 사업장 전환 콘솔 에러 수정 — `ServiceLayout` 쿼리 구독 콜백이 자식 렌더 중 상태를 바꾸던 문제(e2e S8)
 - [x] T1197 `AppKpiCard` 정리 — 세로 큰 카드 · 값 아래 바 4종 · 뱃지 · `compactValue` · `point` · `danger` 톤 삭제 · 한 줄 카드를 기본으로(`inline` prop 삭제)
 - [x] T1198 배치관리 KPI 줄 삭제 — 전출 · 전입 인원은 제목 줄 오른쪽 `DeploymentPeopleStats` 로(배치중만, 이력 `status=1` 의 `totalCount`) · 요약 실패는 탭 뱃지도 `-` · `DeploymentKpiRow` 삭제 · `AppKpiCard` 코스 상세 모양 하나로(`compact` · `hint` · `tone` 삭제)
+- [x] T1200 표 머리 연한 회색 — 흰 머리가 행과 같아 흐린 데이터 줄처럼 보였다(사용자 2026-11-11) · `bg-card` → `bg-muted/50` · 머리 글자 `text-foreground/70` · `AppTable` · `CheckDetailTable`(T1195 흰 머리 뒤집음). 카드 안 작은 표(코스 순찰 기록 · 비상연락망)는 띠가 없어 그대로
+- [x] T1201 탭 글자 13px → 14px(`--text-tab`) · 탭 위아래 여백 `py-2.5` — 순찰코스/지점 · 순찰이력 · 배치관리 탭. 관리그룹 트리 큰 행 · 편집 창 본부 이름도 같은 값이라 함께 커짐(사용자 결정 2026-11-11)

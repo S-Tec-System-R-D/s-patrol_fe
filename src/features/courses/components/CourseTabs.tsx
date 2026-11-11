@@ -33,7 +33,7 @@ const CourseTabs = () => {
           to={to}
           className={({ isActive }) =>
             cn(
-              '-mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-3 py-2 text-tab font-semibold text-muted-foreground transition-colors hover:text-foreground',
+              '-mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-3 py-2.5 text-tab font-semibold text-muted-foreground transition-colors hover:text-foreground',
               isActive && 'border-point font-bold text-foreground'
             )
           }

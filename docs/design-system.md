@@ -205,7 +205,7 @@
 | 15px / 700 | `text-panel-header` | 상세 패널 헤더 타이틀 | `.pointdetail__head`(코스/지점 페이지 — 향후) |
 | 16px / 700 | `text-panel-title` | 상세 패널 타이틀 | `AppDetailCard` title |
 | 14px / 700 | `text-section-title` | 섹션 타이틀 | 페이지 내 큰 섹션 헤딩(배치관리 등 — 향후) |
-| 13px / 400·600 | `text-tab` | 본문 규격 값(참고), 탭 라벨 | `PatrolHistoryTabs`(비활성 600, 활성 700) |
+| 14px / 600·700 | `text-tab` | 탭 라벨 · 관리그룹 본부 이름 | `CourseTabs` · `PatrolHistoryTabs` · 배치관리 탭(비활성 600, 활성 700) · `GroupTree` 큰 행 · `GroupEditDialog` 본부(13px → 14px, 071 T1201 — 제목을 키울 때 탭만 남아 작았다) |
 | 12.5px | `text-body` | 테이블 셀·카드 kv 값·이름·필터 칩·버튼 라벨 | `AppDetailRow`, `AppFilterButton`, `AppTable` td(010에서 해소), `AppKpiCard` 값. ⚠️ **`PatrolTimeline`(036)·`PatrolRecordDialog`(037) 은 삭제됐다** — 둘 다 mock 셸이었고 서버 전환 때 사라졌다 |
 | 12px | `text-caption` | 페이지 설명·보조 한 줄·footer | `AppPageHeader` subtitle, 카드 지표 줄(034) |
 | 11.5px | `text-meta` | 보조 텍스트(시각 등) | ⚠️ **소비처가 0곳이다** — 유일한 소비처였던 `PatrolTimeline` 이 036 에서 삭제됐다. 토큰은 남기되 새 소비처가 생길 때 다시 본다 |

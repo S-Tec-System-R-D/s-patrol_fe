@@ -229,7 +229,7 @@ const DeploymentBoard = () => {
               aria-selected={selected}
               onClick={() => selectTab(key)}
               className={cn(
-                'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-tab font-semibold text-muted-foreground transition-colors hover:text-foreground',
+                'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-3 py-2.5 text-tab font-semibold text-muted-foreground transition-colors hover:text-foreground',
                 selected && 'border-point font-bold text-foreground'
               )}
             >
