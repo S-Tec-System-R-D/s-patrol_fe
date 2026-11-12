@@ -1,7 +1,5 @@
 import type { CourseHistoryParams } from '@/features/course-history/types'
 
-import type { DashboardPointHistoryParams } from './api/getDashboardPointHistory'
-
 /**
  * 대시보드 react-query 키 (`spec 068` T1129). 규약은 `data-model.md` §8 그대로(`noticeKeys` 와 같은 모양).
  *
@@ -11,14 +9,10 @@ import type { DashboardPointHistoryParams } from './api/getDashboardPointHistory
 export const dashboardKeys = {
   summary: (siteSeq: number) => ['dashboard-summary', siteSeq] as const,
   courses: (siteSeq: number) => ['dashboard-courses', siteSeq] as const,
-  /** 최근 기록 2번 호출을 한꺼번에 다시 받을 때(`spec 069` 실시간) — 아래 키의 앞부분 */
-  pointHistories: (siteSeq: number) => ['dashboard-point-history', siteSeq] as const,
-  pointHistory: (params: DashboardPointHistoryParams) =>
-    ['dashboard-point-history', params.siteSeq, params] as const,
   handOvers: (historySeq: number, handoverCount: number) =>
     ['dashboard-hand-overs', historySeq, handoverCount] as const,
-  /** 날짜가 키에 들어가 실시간 다시 받기는 앞부분으로 찾는다 */
-  finishedCourses: (siteSeq: number) => ['dashboard-finished-courses', siteSeq] as const,
-  finishedCourse: (params: CourseHistoryParams) =>
-    ['dashboard-finished-courses', params.siteSeq, params] as const,
+  /** 최근 회차 100건(최근 종료 · 최근 미완료). 날짜가 키에 들어가 실시간 다시 받기는 앞부분으로 찾는다 */
+  recentCourses: (siteSeq: number) => ['dashboard-recent-courses', siteSeq] as const,
+  recentCourse: (params: CourseHistoryParams) =>
+    ['dashboard-recent-courses', params.siteSeq, params] as const,
 }

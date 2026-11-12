@@ -1,7 +1,6 @@
-import { format, subDays } from 'date-fns'
+import { format } from 'date-fns'
 import { http, HttpResponse } from 'msw'
 
-import type { PointHistoryRow } from '@/features/course-history/types'
 import type { DashboardCourse, TodaySummary } from '@/features/dashboard/types'
 
 /**
@@ -10,23 +9,18 @@ import type { DashboardCourse, TodaySummary } from '@/features/dashboard/types'
  * 🔴 **어떤 `siteSeq` 로 불러도 같은 값을 준다** — 실서버도 없는 사업장에 200 을 주고(§5-1-D), 사업장별로
  * 나누면 mock 로그인 사업장에 따라 대시보드가 비어 보인다(사용자 결정 2026-11-03).
  * 🔴 **시각은 오늘 날짜로 만든다** — 파일에 날짜를 박으면 다음 날 "오늘" 이 틀어진다.
- * 🔴 **링크 키는 mock 서버에 있는 값이다**: `historySeq` 101~105 · 107(`handlers/history.ts`), 최근 기록
- * `detailSeq` = `pointSeq × 1000`(`handlers/points.ts` `buildHistory` 의 오늘 행). ⚠️ 상세 화면은 그쪽 값을 그린다.
+ * 🔴 **링크 키는 mock 서버에 있는 값이다**: `historySeq` 101~105 · 107(`handlers/history.ts`). ⚠️ 상세 화면은 그쪽 값을 그린다.
+ * 최근 기록은 `GetCourseHistory`(`handlers/history.ts` 오늘 행)에서 고른다(`spec 073`).
  * 🔴 **화면이 갈리는 경우를 전부 심는다** — 지점 `status` 0·1·3·4 · 교대 · 시간초과 · 멈춤(`pausedYn`) ·
- * 기준 없음(`totalMin 0`) · 미완료이면서 시간초과(두 호출에 겹치는 행).
+ * 기준 없음(`totalMin 0`).
  */
 
 const GET_TODAY_SUMMARY_PATH = '/api/v1/DashBoard/W/sign/GetTodaySummary'
 const GET_DASHBOARD_COURSE_LIST_PATH = '/api/v1/DashBoard/W/sign/GetDashboardCourseList'
-const GET_DASHBOARD_POINT_HISTORY_PATH = '/api/v1/DashBoard/W/sign/GetDashboardPointHistory'
-/** 🔴 서버 상한 — mock 이 관대하면 그만큼 결함이 숨는다(`handlers/points.ts` 와 같은 판단) */
-const MAX_PAGE_SIZE = 100
 
 const ok = (data: unknown) => HttpResponse.json({ message: '요청이 정상 처리되었습니다.', data, code: 200 })
 
 const todayAt = (time: string): string => `${format(new Date(), 'yyyy-MM-dd')}T${time}:00`
-const daysAgoAt = (days: number, time: string): string =>
-  `${format(subDays(new Date(), days), 'yyyy-MM-dd')}T${time}:00`
 
 const summary: TodaySummary = {
   completedCount: 12,
@@ -131,29 +125,6 @@ const courses = (): DashboardCourse[] => [
   },
 ]
 
-const historyRow = (
-  row: Pick<PointHistoryRow, 'detailSeq' | 'checkDt' | 'pointName' | 'courseName' | 'userName' | 'status' | 'overTimeYn' | 'hasMemo'>
-): PointHistoryRow => ({
-  courseSeq: 1,
-  pointSeq: Math.floor(row.detailSeq / 1000),
-  userSeq: 100,
-  authMethod: row.status === 4 ? 1 : null,
-  authMethodName: row.status === 4 ? 'QR' : '',
-  statusName: row.status === 4 ? '완료' : '미완료',
-  pauseTime: '00:00:00',
-  ...row,
-})
-
-const historyRows = (): PointHistoryRow[] => [
-  historyRow({ detailSeq: 1000, checkDt: todayAt('09:12'), pointName: '3층', courseName: 'A코스', userName: '홍길동', status: 3, overTimeYn: false, hasMemo: true }),
-  historyRow({ detailSeq: 2000, checkDt: todayAt('08:47'), pointName: '창고', courseName: 'B코스', userName: '김철수', status: 4, overTimeYn: true, hasMemo: false }),
-  // 미완료 + 시간초과 — 두 호출에 다 나온다(화면은 하나로 합친다)
-  historyRow({ detailSeq: 4000, checkDt: todayAt('08:41'), pointName: '옥상', courseName: 'C코스', userName: '박민수', status: 3, overTimeYn: true, hasMemo: true }),
-  historyRow({ detailSeq: 5000, checkDt: daysAgoAt(1, '22:05'), pointName: '지하 주차장 B1', courseName: '미배정 코스', userName: '김근무', status: 4, overTimeYn: true, hasMemo: false }),
-  historyRow({ detailSeq: 7000, checkDt: daysAgoAt(2, '07:52'), pointName: '후문', courseName: 'B코스', userName: '최근무', status: 3, overTimeYn: false, hasMemo: true }),
-  historyRow({ detailSeq: 8000, checkDt: daysAgoAt(3, '15:20'), pointName: '정문', courseName: 'A코스', userName: '홍길동', status: 3, overTimeYn: false, hasMemo: false }),
-]
-
 /**
  * 실시간 알림(SSE) — `spec 069` T1144. 🔴 **연결만 흉내 낸다**(사용자 결정 2026-11-03): `retry` + `connected`
  * 를 보내고 스트림을 열어 둔다. 이벤트는 보내지 않는다 — 처리는 단위 테스트, 실제 흐름은 실서버 + 앱 순찰로 본다.
@@ -177,33 +148,4 @@ export const dashboardHandlers = [
   http.get(GET_TODAY_SUMMARY_PATH, () => ok(summary)),
 
   http.get(GET_DASHBOARD_COURSE_LIST_PATH, () => ok(courses())),
-
-  http.get(GET_DASHBOARD_POINT_HISTORY_PATH, ({ request }) => {
-    const query = new URL(request.url).searchParams
-    const pageNumber = Number(query.get('pageNumber') ?? 1)
-    const pageSize = Number(query.get('pageSize') ?? 20)
-    if (!Number.isFinite(pageSize) || pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
-      return HttpResponse.json(
-        { message: '페이지 사이즈는 1~100 사이여야 합니다.', data: null, code: 400 },
-        { status: 400 }
-      )
-    }
-
-    const status = query.get('status')
-    const overTimeYn = query.get('overTimeYn')
-    // 둘을 함께 주면 AND(실측)
-    const filtered = historyRows()
-      .filter((row) => (status === null ? true : row.status === Number(status)))
-      .filter((row) => (overTimeYn === null ? true : row.overTimeYn === (overTimeYn === 'true')))
-      .sort((a, b) => b.checkDt.localeCompare(a.checkDt))
-
-    const start = (pageNumber - 1) * pageSize
-    return ok({
-      items: filtered.slice(start, start + pageSize),
-      page: pageNumber,
-      pageSize,
-      totalCount: filtered.length,
-      totalPages: Math.ceil(filtered.length / pageSize),
-    })
-  }),
 ]

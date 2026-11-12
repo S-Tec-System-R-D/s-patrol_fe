@@ -48,14 +48,8 @@ const ActiveCourseSection = ({ courses, state, receivedAt, onRetry, handOvers = 
 
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <h2 className="text-panel-title font-bold text-foreground">진행 중인 순찰</h2>
-        {state === 'ready' && (
-          <span className="rounded-sm bg-muted px-1.5 py-0.5 text-label font-semibold text-muted-foreground tabular-nums">
-            {courses.length}
-          </span>
-        )}
-      </div>
+      {/* 개수 없음 — 바로 위 KPI `진행 중` 과 같은 값(사용자 결정 2026-11-12, `spec 073` T1226) */}
+      <h2 className="text-panel-title font-bold text-foreground">진행 중인 순찰</h2>
 
       {state === 'loading' ? (
         <div className="flex flex-col gap-3" aria-label="불러오는 중">
@@ -80,9 +74,10 @@ const ActiveCourseSection = ({ courses, state, receivedAt, onRetry, handOvers = 
           <AppEmpty illustration="route" title="지금 진행 중인 순찰이 없습니다" />
         </div>
       ) : (
-        /* 🔴 넓은 폭은 **2개부터 2열**(사용자 결정 2026-10-30 · 2026-11-04) — 1개면 전체 폭을 쓴다.
+        /* 🔴 **2개부터 2열 · `2xl` 부터**(사용자 결정 2026-10-30 · 2026-11-04 → `spec 073`) — xl 에서는 이 섹션이
+           화면 절반 열이라 2열이면 카드가 좁아 지점 뱃지가 여러 줄로 꺾인다. 1개면 전체 폭을 쓴다.
            정렬 순서는 왼쪽 → 오른쪽, 위 → 아래로 읽힌다(시간초과가 맨 왼쪽 위) */
-        <div className={cn('grid grid-cols-1 gap-3', courses.length > 1 && 'xl:grid-cols-2')}>
+        <div className={cn('grid grid-cols-1 gap-3', courses.length > 1 && '2xl:grid-cols-2')}>
           {sortActiveCourses(courses, receivedAt, now).map((course) => (
             <ActiveCourseCard
               key={course.historySeq}

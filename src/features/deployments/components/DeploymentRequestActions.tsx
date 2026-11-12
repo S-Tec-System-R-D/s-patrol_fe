@@ -7,6 +7,9 @@ import type { RequestKind } from '../types/deployment'
 
 /** 필터 트리거와 같은 치수 — `h-8` · `px-3` · `rounded-md` */
 const ROW_BUTTON_CLASS = 'h-8 gap-1.5 rounded-md px-3 py-0'
+/** 대시보드 배치 대기(`spec 073`) — 440px 패널에서 버튼이 요청 내용을 밀어내지 않게 글자만 · 낮게 */
+// `text-caption` 은 tailwind-merge 가 글자색으로 읽어 버튼 글자색을 지운다 — 같은 12px 인 `text-xs`
+const COMPACT_BUTTON_CLASS = 'h-7 rounded-md px-2.5 py-0 text-xs'
 
 interface DeploymentRequestActionsProps {
   /** 배치 · 복귀 — 버튼·확인창은 같고 API 만 다르다(T659) */
@@ -14,6 +17,8 @@ interface DeploymentRequestActionsProps {
   assignmentSeq: number
   userName: string
   siteSeq: number
+  /** 아이콘 없이 낮은 버튼 — 대시보드 패널용 */
+  compact?: boolean
 }
 
 /**
@@ -34,16 +39,18 @@ const DeploymentRequestActions = ({
   assignmentSeq,
   userName,
   siteSeq,
+  compact = false,
 }: DeploymentRequestActionsProps) => {
   const process = useApproveDeployment(siteSeq, kind)
   const label = REQUEST_KIND_LABEL[kind]
+  const buttonClass = compact ? COMPACT_BUTTON_CLASS : ROW_BUTTON_CLASS
 
   return (
-    <div className="flex items-center justify-end gap-3">
+    <div className={compact ? 'flex items-center justify-end gap-1.5' : 'flex items-center justify-end gap-3'}>
       <AppButton
-        icon={CheckIcon}
+        icon={compact ? undefined : CheckIcon}
         iconSize={14}
-        className={ROW_BUTTON_CLASS}
+        className={buttonClass}
         onClick={() => process.mutate({ assignmentSeq, userName, approved: true })}
         disabled={process.isPending}
         aria-label={`${userName} 승인`}
@@ -60,9 +67,9 @@ const DeploymentRequestActions = ({
         onAction={() => process.mutate({ assignmentSeq, userName, approved: false })}
       >
         <AppButton
-          icon={XIcon}
+          icon={compact ? undefined : XIcon}
           iconSize={14}
-          className={ROW_BUTTON_CLASS}
+          className={buttonClass}
           variant="destructive"
           disabled={process.isPending}
           aria-label={`${userName} 반려`}

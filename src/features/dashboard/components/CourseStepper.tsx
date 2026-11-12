@@ -60,7 +60,7 @@ const Connector = ({ kind }: { kind: 'passed' | 'current' | 'rest' }) => (
 
 interface CourseStepperProps {
   points: DashboardCoursePoint[]
-  /** 교대가 일어난 지점 순번 — 그 뱃지 위에 `교대` 를 얹는다(`spec 070`) */
+  /** 교대가 일어난 지점 순번 — 그 뱃지 안에 `교대` 를 적는다(`spec 070` → `spec 073`) */
   handOverOrders?: number[]
   /** 멈춘 회차(교대 요청 중) — 진행 중이 아니라 현재 위치 링을 끈다 */
   paused?: boolean
@@ -71,11 +71,11 @@ const CourseStepper = ({ points, handOverOrders = [], paused = false }: CourseSt
   const nextIndex = steps.indexOf('next')
 
   return (
-    // `pt-3` · `gap-y-5` — 뱃지 위 `교대` 표시가 잘리지 않게. `pb-1.5` · `pr-1` — 현재 위치 링(4px)이 잘리지 않게.
+    // `pt-1.5` · `pb-1.5` · `pr-1` · `gap-y-3` — 현재 위치 링(4px)이 잘리지 않게.
     // 왼쪽은 여백을 두지 않는다 — 선이 뱃지에 바로 붙어 여백을 두면 줄 첫머리에 선 끝이 보인다.
     // 그래서 줄 첫머리 뱃지의 링은 왼쪽이 잘린다
-    <div className="overflow-hidden pt-3 pr-1 pb-1.5">
-      <ol className="-ml-[24px] flex flex-wrap items-center gap-y-5" aria-label="지점 진행">
+    <div className="overflow-hidden pt-1.5 pr-1 pb-1.5">
+      <ol className="-ml-[24px] flex flex-wrap items-center gap-y-3" aria-label="지점 진행">
         {/* 아무 지점도 안 찍었으면 맨 앞에 출발 점 — 다음 지점까지 점선으로 잇는다 */}
         {nextIndex === 0 && (
           <li className="flex items-center text-caption text-muted-foreground">
@@ -116,8 +116,10 @@ const CourseStepper = ({ points, handOverOrders = [], paused = false }: CourseSt
                 </span>
                 {point.pointName}
                 <span className="sr-only"> ({statusText[step]})</span>
+                {/* 🔴 **교대는 뱃지 안**(`spec 073` — 070 의 "뱃지 위" 를 바꿨다): 위에 떠 있으면 줄 간격을 벌려야 하고
+                    어느 뱃지 것인지 흐려진다(분석 문서 §2) */}
                 {handOverOrders.includes(point.orderNo) && (
-                  <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-foreground/60 bg-card px-1.5 text-[10px] leading-3.5 font-bold text-foreground">
+                  <span className="inline-flex items-center gap-0.5 rounded-full border border-foreground/40 bg-card px-1.5 text-[10px] leading-3.5 font-bold text-foreground">
                     <RepeatIcon size={10} strokeWidth={2.5} aria-hidden />
                     교대
                   </span>

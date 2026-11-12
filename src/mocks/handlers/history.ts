@@ -148,6 +148,16 @@ const seeds: MockHistory[] = [
     checkedCount: 1,
     actualElapsedTime: '00:40:00',
   }),
+  // 오늘 끝난 시간초과 회차(완료) — 대시보드 `최근 미완료 · 시간초과` 에 놓친 지점 없이 `시간초과` 만(`spec 073`)
+  row({
+    historySeq: 192,
+    courseSeq: 900,
+    courseName: '오늘 초과 코스',
+    startDt: todayAt('00:05:00'),
+    endDt: todayAt('00:45:00'),
+    overtimeYn: true,
+    actualElapsedTime: '00:40:00',
+  }),
   // 🔴 진행 중(`endDt: null`) — `eventType=0` 이 거르는 상태다
   row({
     historySeq: 107,
@@ -442,6 +452,12 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
       gpsLng: null,
       overtimeYn: null,
     }),
+  ],
+  // 오늘 중단 회차(191) — 3곳 중 1곳만 인증. 대시보드 `놓친 지점`(`spec 073`)
+  191: [
+    checkDetail({ detailSeq: 1911, pointSeq: 60, orderNo: 1, pointName: '정문 입구', checkDt: todayAt('00:15:00') }),
+    checkDetail({ detailSeq: 1912, pointSeq: 61, orderNo: 2, pointName: '로비 1층', status: 3, checkDt: null, authMethod: null }),
+    checkDetail({ detailSeq: 1913, pointSeq: 62, orderNo: 3, pointName: '지하 주차장 B1', status: 3, checkDt: null, authMethod: null }),
   ],
 }
 

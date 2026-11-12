@@ -7,24 +7,27 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ActiveCourseSection from '@/features/dashboard/components/ActiveCourseSection'
-import DashboardKpiRow from '@/features/dashboard/components/DashboardKpiRow'
+import DashboardKpiCard from '@/features/dashboard/components/DashboardKpiCard'
 import type { DashboardCourse } from '@/features/dashboard/types'
 import { setSite } from '@/lib/auth/site'
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
+import { resetDeploymentStore } from '@/mocks/handlers/deployments'
 import { resetNoticeStore } from '@/mocks/handlers/notices'
 import { server } from '@/mocks/server'
 import { makeAccessToken } from '@/test/jwt'
 import DashboardPage from '../DashboardPage'
 
 /**
- * `/dashboard` — `spec 068`(API 연결). 값은 `mocks/handlers/dashboard.ts` 응답 기준.
- * 정렬 · 단계 · 기준 없음 · 경과 증가 · 최근 기록 합치기 · 영역별 오류 · 새로고침.
+ * `/dashboard` — `spec 068`(API 연결) → `spec 073`(개편). 값은 `mocks/handlers/dashboard.ts` · `history.ts` · `deployments.ts` 기준.
+ * 정렬 · 단계 · 기준 없음 · 경과 증가 · 최근 기록(회차 단위) · 배치 대기 · 영역별 오류 · 새로고침.
  */
 
 const PATHS = {
   summary: '/api/v1/DashBoard/W/sign/GetTodaySummary',
   courses: '/api/v1/DashBoard/W/sign/GetDashboardCourseList',
-  history: '/api/v1/DashBoard/W/sign/GetDashboardPointHistory',
+  pointHistory: '/api/v1/DashBoard/W/sign/GetDashboardPointHistory',
+  requests: '/api/v1/Assignment/W/sign/GetAssignmentList',
+  returns: '/api/v1/Assignment/W/sign/GetAssignmentReturnList',
   notice: '/api/v1/Notice/W/sign/GetNoticeList',
   finished: '/api/v1/History/W/sign/GetCourseHistory',
   handOvers: '/api/v1/History/W/sign/GetCourseHistoryHandOvers',
@@ -78,10 +81,12 @@ const liveSse = () => {
 const updatedAtText = () => screen.getByText('마지막 갱신', { exact: false }).textContent
 
 const section = (heading: string) => screen.getByRole('heading', { name: heading }).closest('section')!
+const recentList = (name: string) => screen.getByRole('list', { name })
 const courseCard = (name: string) => screen.getByRole('heading', { name }).closest('a')!
 
 beforeEach(() => {
   resetNoticeStore()
+  resetDeploymentStore()
   clearTokens()
   setAccessToken(makeAccessToken())
   // 공지 mock 시드가 사업장 7 이다
@@ -94,7 +99,7 @@ afterEach(() => {
 })
 
 describe('DashboardPage — API 연결', () => {
-  it('선택한 사업장으로 4개 영역을 부른다 — 최근 기록은 미완료 · 시간초과 2번', async () => {
+  it('선택한 사업장으로 영역을 부른다 — 지점 이력(GetDashboardPointHistory)은 부르지 않는다', async () => {
     const calls = captureRequests()
     renderPage()
     await screen.findByRole('heading', { name: 'C코스' })
@@ -102,26 +107,29 @@ describe('DashboardPage — API 연결', () => {
     const of = (path: string) => calls.filter((url) => url.pathname === path)
     expect(of(PATHS.summary)[0].searchParams.get('siteSeq')).toBe('7')
     expect(of(PATHS.courses)[0].searchParams.get('siteSeq')).toBe('7')
-    const history = of(PATHS.history).map((url) => url.searchParams)
-    expect(history).toHaveLength(2)
-    expect(history.map((p) => [p.get('status'), p.get('overTimeYn'), p.get('pageSize')])).toEqual([
-      ['3', null, '5'],
-      [null, 'true', '5'],
-    ])
+    expect(of(PATHS.requests)[0].searchParams.get('siteSeq')).toBe('7')
+    expect(of(PATHS.returns)[0].searchParams.get('siteSeq')).toBe('7')
+    expect(of(PATHS.pointHistory)).toHaveLength(0)
     expect(of(PATHS.notice)[0].searchParams.get('pageSize')).toBe('3')
   })
 
-  it('KPI — 응답 숫자 그대로 · 묶음 2개 · 누를 수 없다', async () => {
+  it('KPI — 카드 하나 4칸 · 진행 중은 목록 개수 · 배치 숫자 없음 · 누를 수 없다', async () => {
     renderPage()
-    const patrol = await screen.findByRole('region', { name: '오늘 순찰' })
+    await screen.findByRole('heading', { name: 'C코스' })
+    const patrol = screen.getByRole('region', { name: '오늘 순찰' })
     expect(within(patrol).getAllByRole('term').map((el) => el.textContent)).toEqual([
-      '오늘 완료',
-      '오늘 미완료',
+      '진행 중',
+      '완료',
+      '미완료',
       '시간초과',
     ])
-    expect(within(patrol).getAllByRole('definition').map((el) => el.textContent)).toEqual(['12건', '1건', '2건'])
-    const deploy = screen.getByRole('region', { name: '배치 대기' })
-    expect(within(deploy).getAllByRole('definition').map((el) => el.textContent)).toEqual(['2건', '1건'])
+    expect(within(patrol).getAllByRole('definition').map((el) => el.textContent)).toEqual([
+      '6건',
+      '12건',
+      '1건',
+      '2건',
+    ])
+    expect(patrol).not.toHaveTextContent('배치')
     expect(patrol.closest('a')).toBeNull()
   })
 
@@ -149,7 +157,7 @@ describe('DashboardPage — API 연결', () => {
     expect(card).toHaveTextContent('김철수')
     expect(card).not.toHaveTextContent('최근무')
     expect(card).toHaveTextContent('교대')
-    expect(card).toHaveTextContent('다음: 옥상')
+    expect(card).not.toHaveTextContent('다음:')
     expect(card).toHaveTextContent('건너뜀 1')
     const steps = within(card).getAllByRole('listitem')
     expect(steps).toHaveLength(5)
@@ -201,27 +209,39 @@ describe('DashboardPage — API 연결', () => {
     expect(card).not.toHaveTextContent('/ 0분')
   })
 
-  it('최근 미완료 · 시간초과 — 2번 호출을 합쳐 최근 순 5건 · 겹친 행 하나 · 완료 행은 시간초과만', async () => {
+  it('최근 미완료 · 시간초과 — 회차 1건 = 1행 · 놓친 지점 이름 · 미완료 N / 시간초과', async () => {
     renderPage()
-    const history = await waitFor(() => {
-      const el = section('최근 미완료 · 시간초과')
-      expect(within(el).getAllByRole('listitem')).toHaveLength(5)
+    const rows = await waitFor(() => {
+      const items = within(recentList('미완료 · 시간초과')).getAllByRole('listitem')
+      expect(items).toHaveLength(2)
+      return items
+    })
+    expect(rows[0]).toHaveTextContent('오늘 중단 코스')
+    expect(rows[0]).toHaveTextContent('미완료 2')
+    await waitFor(() => expect(rows[0]).toHaveTextContent('놓친 지점 로비 1층, 지하 주차장 B1'))
+    expect(within(rows[0]).getByRole('link')).toHaveAttribute('href', '/patrol/zones/191')
+    expect(rows[1]).toHaveTextContent('오늘 초과 코스')
+    expect(rows[1]).toHaveTextContent('시간초과')
+    expect(rows[1]).not.toHaveTextContent('미완료')
+  })
+
+  it('배치 대기 — 배치 요청 · 복귀 요청 묶음 · 대기 일수 · 승인하면 목록에서 빠진다', async () => {
+    renderPage()
+    const panel = await waitFor(() => {
+      const el = section('배치 대기')
+      expect(within(el).getAllByRole('listitem')).toHaveLength(3)
       return el
     })
-    const rows = within(history).getAllByRole('listitem')
-    expect(rows.map((row) => row.querySelector('.font-semibold')?.textContent)).toEqual([
-      '3층',
-      '창고',
-      '옥상',
-      '지하 주차장 B1',
-      '후문',
-    ])
-    expect(within(rows[2]).getByText('미완료')).toBeInTheDocument()
-    expect(within(rows[2]).getByText('시간초과')).toBeInTheDocument()
-    expect(within(history).getByRole('link', { name: /3층/ })).toHaveAttribute('href', '/patrol/points/1000')
-    expect(within(history).getByRole('link', { name: /전체 보기/ })).toHaveAttribute('href', '/patrol/points')
-    expect(within(history).queryByText('이상없음')).toBeNull()
-    expect(within(rows[1]).getByText('시간초과')).toBeInTheDocument()
+    expect(panel).toHaveTextContent('배치 요청 2')
+    expect(panel).toHaveTextContent('복귀 요청 1')
+    expect(panel).toHaveTextContent('해운대 마린시티')
+    expect(panel).toHaveTextContent('강서 스퀘어타워')
+    expect(within(panel).getAllByText(/일 대기$/).length).toBeGreaterThan(0)
+    expect(within(panel).getByRole('link', { name: /배치관리/ })).toHaveAttribute('href', '/deployments')
+
+    await userEvent.click(within(panel).getByRole('button', { name: '최범수 승인' }))
+    await waitFor(() => expect(within(section('배치 대기')).getAllByRole('listitem')).toHaveLength(2))
+    expect(section('배치 대기')).not.toHaveTextContent('최범수')
   })
 
   it('공지 — 앞 3건 · 고정 공지만 핀', async () => {
@@ -252,17 +272,6 @@ describe('DashboardPage — API 연결', () => {
     expect(await screen.findByRole('heading', { name: 'C코스' })).toBeInTheDocument()
   })
 
-  it('최근 기록 2번 중 하나만 실패해도 영역 전체가 오류다(반쪽 목록 없음)', async () => {
-    server.use(
-      http.get(PATHS.history, ({ request }) =>
-        new URL(request.url).searchParams.get('overTimeYn') === 'true' ? serverError() : undefined
-      )
-    )
-    renderPage()
-    expect(await screen.findByText('최근 기록을 불러오지 못했습니다')).toBeInTheDocument()
-    expect(within(section('최근 미완료 · 시간초과')).queryAllByRole('listitem')).toHaveLength(0)
-  })
-
   it('KPI 실패 — 0 을 그리지 않고 오류 · 다시 시도', async () => {
     server.use(http.get(PATHS.summary, serverError))
     renderPage()
@@ -270,7 +279,7 @@ describe('DashboardPage — API 연결', () => {
     expect(screen.queryByRole('region', { name: '오늘 순찰' })).toBeNull()
   })
 
-  it('새로고침 — 5개 영역을 다시 부른다 · 30초 자동 문구 없음', async () => {
+  it('새로고침 — 영역을 전부 다시 부른다 · 30초 자동 문구 없음', async () => {
     const calls = captureRequests()
     const count = (path: string) => calls.filter((url) => url.pathname === path).length
     renderPage()
@@ -287,9 +296,10 @@ describe('DashboardPage — API 연결', () => {
       count(PATHS.summary),
       count(PATHS.courses),
       count(PATHS.finished),
-      count(PATHS.history),
+      count(PATHS.requests),
+      count(PATHS.returns),
       count(PATHS.notice),
-    ]).toEqual([1, 1, 1, 2, 1])
+    ]).toEqual([1, 1, 1, 1, 1, 1])
   })
 
   it('실시간 연결 — mock 연결이 붙으면 `실시간`', async () => {
@@ -307,12 +317,12 @@ describe('DashboardPage — API 연결', () => {
 })
 
 describe('DashboardPage — 최근 종료된 순찰', () => {
-  const finishedRows = () => within(section('최근 종료된 순찰')).getAllByRole('listitem')
+  const finishedRows = () => within(recentList('종료된 순찰')).getAllByRole('listitem')
 
   it('어제~오늘 100건을 받아 오늘 끝난 회차를 종료 시각 순으로 · 회차 상세로 간다', async () => {
     const calls = captureRequests()
     renderPage()
-    await screen.findByRole('link', { name: /오늘 중단 코스/ })
+    await screen.findAllByRole('link', { name: /오늘 중단 코스/ })
 
     const query = calls.find((url) => url.pathname === PATHS.finished)!.searchParams
     expect(query.get('pageSize')).toBe('100')
@@ -320,13 +330,15 @@ describe('DashboardPage — 최근 종료된 순찰', () => {
     expect(query.get('fromDt')).toBe(format(subDays(new Date(), 1), 'yyyy-MM-dd'))
 
     const rows = finishedRows()
-    expect(rows).toHaveLength(2)
+    expect(rows).toHaveLength(3)
     expect(rows[0]).toHaveTextContent('00:50')
-    expect(rows[0]).toHaveTextContent('1/3 인증')
+    expect(rows[0]).toHaveTextContent('1/3')
     expect(rows[0]).toHaveTextContent('미완료')
-    expect(rows[1]).toHaveTextContent('오늘 완료 코스')
+    expect(rows[2]).toHaveTextContent('오늘 완료 코스')
+    // 예외만 뱃지 — 정상 완료 행에는 결과 뱃지가 없다
+    expect(within(rows[2]).queryByText('완료')).toBeNull()
     expect(within(rows[0]).getByRole('link')).toHaveAttribute('href', '/patrol/zones/191')
-    expect(within(section('최근 종료된 순찰')).getByRole('link', { name: /전체 보기/ })).toHaveAttribute(
+    expect(within(section('최근 기록')).getAllByRole('link', { name: /전체 보기/ })[0]).toHaveAttribute(
       'href',
       '/patrol/zones'
     )
@@ -341,11 +353,11 @@ describe('DashboardPage — 최근 종료된 순찰', () => {
   it('실패해도 나머지는 그리고 다시 시도하면 그 영역만 다시 받는다', async () => {
     server.use(http.get(PATHS.finished, serverError, { once: true }))
     renderPage()
-    expect(await screen.findByText('최근 종료된 순찰을 불러오지 못했습니다')).toBeInTheDocument()
+    expect((await screen.findAllByText('최근 기록을 불러오지 못했습니다')).length).toBeGreaterThan(0)
     expect(await screen.findByRole('heading', { name: 'C코스' })).toBeInTheDocument()
 
-    await userEvent.click(within(section('최근 종료된 순찰')).getByRole('button', { name: '다시 시도' }))
-    expect(await screen.findByRole('link', { name: /오늘 중단 코스/ })).toBeInTheDocument()
+    await userEvent.click(within(section('최근 기록')).getAllByRole('button', { name: '다시 시도' })[0])
+    expect((await screen.findAllByRole('link', { name: /오늘 중단 코스/ })).length).toBeGreaterThan(0)
   })
 
   it('종료 알림 — 행이 나타나고 `마지막 갱신` 이 바뀐다', async () => {
@@ -361,7 +373,7 @@ describe('DashboardPage — 최근 종료된 순찰', () => {
 
     send('course-ended', { link: 'Patrol', siteSeq: 7, courseSeq: 1, historySeq: 191, endType: 'aborted' })
 
-    expect(await screen.findByRole('link', { name: /오늘 중단 코스/ }, { timeout: 2000 })).toBeInTheDocument()
+    expect((await screen.findAllByRole('link', { name: /오늘 중단 코스/ }, { timeout: 2000 })).length).toBeGreaterThan(0)
     expect(updatedAtText()).not.toBe(before)
   }, 10_000)
 })
@@ -383,7 +395,7 @@ describe('ActiveCourseSection — 경과 1분 증가', () => {
     ...overrides,
   })
 
-  it('넓은 폭 — 1개면 1열 · 2개부터 2열', () => {
+  it('2xl — 1개면 1열 · 2개부터 2열(xl 은 열이 절반이라 1열)', () => {
     const renderCards = (courses: DashboardCourse[]) =>
       render(
         <MemoryRouter>
@@ -391,11 +403,11 @@ describe('ActiveCourseSection — 경과 1분 증가', () => {
         </MemoryRouter>
       )
     const one = renderCards([course({})])
-    expect(one.container.querySelector('.xl\\:grid-cols-2')).toBeNull()
+    expect(one.container.querySelector('[class*="grid-cols-2"]')).toBeNull()
     one.unmount()
 
     const two = renderCards([course({}), course({ historySeq: 2 })])
-    expect(two.container.querySelector('.xl\\:grid-cols-2')).not.toBeNull()
+    expect(two.container.querySelector('[class~="2xl:grid-cols-2"]')).not.toBeNull()
   })
 
   it('현재 위치 링 — 진행 중만 · 멈춘 회차는 끈다', () => {
@@ -436,21 +448,25 @@ describe('ActiveCourseSection — 경과 1분 증가', () => {
   })
 })
 
-describe('DashboardKpiRow — 색', () => {
-  it('값이 0 이면 색을 빼고, 있으면 미완료 · 시간초과는 danger · 배치는 point', () => {
-    const zero = { completedCount: 0, incompleteCount: 0, overtimeCount: 0, pendingAssignmentCount: 0, pendingReturnCount: 0 }
-    const { container, unmount } = render(<DashboardKpiRow summary={zero} state="ready" onRetry={() => {}} />)
-    expect(container.querySelector('.bg-danger-bg, .bg-point-bg')).toBeNull()
+describe('DashboardKpiCard — 색', () => {
+  const zero = { completedCount: 0, incompleteCount: 0, overtimeCount: 0, pendingAssignmentCount: 0, pendingReturnCount: 0 }
+
+  it('0 이면 회색 · 미완료 · 시간초과만 빨강 · 진행 중을 모르면 -', () => {
+    const { container, unmount } = render(
+      <DashboardKpiCard summary={zero} activeCount={null} state="ready" onRetry={() => {}} />
+    )
+    expect(container.querySelector('.text-danger-foreground')).toBeNull()
+    expect(screen.getAllByRole('definition')[0]).toHaveTextContent('-건')
     unmount()
 
     const filled = render(
-      <DashboardKpiRow
-        summary={{ ...zero, completedCount: 3, incompleteCount: 1, overtimeCount: 2, pendingReturnCount: 1 }}
+      <DashboardKpiCard
+        summary={{ ...zero, completedCount: 3, incompleteCount: 1, overtimeCount: 2 }}
+        activeCount={2}
         state="ready"
         onRetry={() => {}}
       />
     )
-    expect(filled.container.querySelectorAll('.bg-danger-bg')).toHaveLength(2)
-    expect(filled.container.querySelectorAll('.bg-point-bg')).toHaveLength(1)
+    expect(filled.container.querySelectorAll('.text-danger-foreground')).toHaveLength(2)
   })
 })

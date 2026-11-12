@@ -12,7 +12,6 @@ import {
   currentUserName,
   elapsedRatio,
   hasStandard,
-  nextPoint,
   overtimeMin,
   skippedCount,
 } from '../lib/activeCourse'
@@ -25,7 +24,8 @@ import CourseStepper from './CourseStepper'
  * 진행 중 회차 카드 — `spec 067`. 누르면 회차 상세로 간다.
  *
  * 1줄 = **무엇이 · 문제가 있나 · 얼마나**(코스명 · 시간초과/건너뜀 · `n/N 지점`),
- * 2줄 = **누가 · 언제 · 시간 · 다음**. 목업의 `4 ~ 5 순찰중` 은 아래 단계 표시와 같은 말이라 뺐다.
+ * 2줄 = **누가 · 언제 · 시간**. 목업의 `4 ~ 5 순찰중` 은 아래 단계 표시와 같은 말이라 뺐다.
+ * `spec 073` — `다음: 지점` 문구를 뺐다(칩의 파란 `다음` 과 같은 말 · 분석 문서 §2) · 시간 막대를 길게(짧아 비율이 안 읽혔다).
  * `spec 068` — 서버 이름 그대로: 기준 = `totalMin`. `spec 070` — 순찰자 = 마지막 교대를 받은 사람 · 교대는 일어난 지점 뱃지 위에
  * 적는다. 위치를 모를 때(조회 전 · 실패)만 이름 옆 뱃지로 적는다.
  * 🔴 **`totalMin 0` 은 `기준 없음`** — 막대 · 시간초과를 그리지 않는다(0 분 기준이면 전부 초과로 보인다).
@@ -47,7 +47,6 @@ interface ActiveCourseCardProps {
 const ActiveCourseCard = ({ course, elapsedMin, handOvers = [] }: ActiveCourseCardProps) => {
   const over = overtimeMin(course, elapsedMin)
   const skipped = skippedCount(course.points)
-  const next = nextPoint(course.points)
   const ratio = Math.min(elapsedRatio(course, elapsedMin), 1)
   const userName = currentUserName(course, handOvers)
   const handOverOrders = handOvers.flatMap((row) => (row.lastOrderNo === null ? [] : [row.lastOrderNo]))
@@ -95,7 +94,7 @@ const ActiveCourseCard = ({ course, elapsedMin, handOvers = [] }: ActiveCourseCa
             <span className={cn('tabular-nums', over > 0 && 'font-semibold text-danger-foreground')}>
               {elapsedMin}분 / {course.totalMin}분
             </span>
-            <span aria-hidden className="h-1 w-16 overflow-hidden rounded-full bg-muted">
+            <span aria-hidden className="h-1 w-20 overflow-hidden rounded-full bg-muted sm:w-32">
               <span
                 className={cn('block h-full rounded-full', over > 0 ? 'bg-danger' : 'bg-point')}
                 style={{ width: `${ratio * 100}%` }}
@@ -104,11 +103,6 @@ const ActiveCourseCard = ({ course, elapsedMin, handOvers = [] }: ActiveCourseCa
           </span>
         ) : (
           <span className="tabular-nums">{elapsedMin}분 · 기준 없음</span>
-        )}
-        {next && (
-          <span>
-            다음: <span className="font-medium text-foreground">{next.pointName}</span>
-          </span>
         )}
       </div>
 

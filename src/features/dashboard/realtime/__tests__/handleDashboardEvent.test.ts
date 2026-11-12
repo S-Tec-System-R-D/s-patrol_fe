@@ -19,8 +19,7 @@ const connected: SseMessage = { event: 'connected', data: 'conn-1', id: null }
 
 const COURSES = JSON.stringify(dashboardKeys.courses(SITE))
 const SUMMARY = JSON.stringify(dashboardKeys.summary(SITE))
-const HISTORIES = JSON.stringify(dashboardKeys.pointHistories(SITE))
-const FINISHED = JSON.stringify(dashboardKeys.finishedCourses(SITE))
+const RECENT = JSON.stringify(dashboardKeys.recentCourses(SITE))
 
 let invalidate: MockInstance<QueryClient['invalidateQueries']>
 
@@ -55,7 +54,7 @@ describe('createDashboardEventHandler — 다시 받는 영역', () => {
     const { handle } = setup()
     handle(message(event))
     flush()
-    expect(invalidated()).toEqual([COURSES, SUMMARY, HISTORIES, FINISHED])
+    expect(invalidated()).toEqual([COURSES, SUMMARY, RECENT])
   })
 
   it('첫 연결 = 목록만 · 재연결 = 셋 다', () => {
@@ -67,7 +66,7 @@ describe('createDashboardEventHandler — 다시 받는 영역', () => {
     invalidate.mockClear()
     handle(connected)
     flush()
-    expect(invalidated()).toEqual([COURSES, SUMMARY, HISTORIES, FINISHED])
+    expect(invalidated()).toEqual([COURSES, SUMMARY, RECENT])
   })
 })
 
@@ -111,7 +110,7 @@ describe('createDashboardEventHandler — 묶기', () => {
     handle(message('course-ended', { endType: 'completed' }))
     handle(message('point-checked', { detailSeq: 4, detailStatus: 4 }))
     flush()
-    expect(invalidated()).toEqual([COURSES, SUMMARY, HISTORIES, FINISHED])
+    expect(invalidated()).toEqual([COURSES, SUMMARY, RECENT])
   })
 
   it('마지막 알림부터 다시 0.5초를 센다', () => {
@@ -130,7 +129,7 @@ describe('createDashboardEventHandler — 묶기', () => {
     handle(message('course-handover'))
     handle(message('course-ended'))
     flush()
-    expect(invalidated()).toEqual([COURSES, SUMMARY, HISTORIES, FINISHED])
+    expect(invalidated()).toEqual([COURSES, SUMMARY, RECENT])
   })
 
   it('한 번 다시 받은 뒤엔 새로 센다 — 앞 묶음의 결과 영역이 남지 않는다', () => {

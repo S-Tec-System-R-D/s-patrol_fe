@@ -20,7 +20,7 @@ export const DASHBOARD_EVENT_BATCH_MS = 500
 
 /** 진행 중 목록만 */
 const COURSE_EVENTS = new Set(['course-started', 'course-paused', 'course-handover'])
-/** 진행 중 목록 + 오늘 숫자 · 최근 기록 · 최근 종료 */
+/** 진행 중 목록 + 오늘 숫자 · 최근 회차(최근 종료 · 최근 미완료) */
 const RESULT_EVENTS = new Set(['point-checked', 'course-ended'])
 
 const parseEvent = (data: string): SseEventBase | null => {
@@ -43,8 +43,8 @@ export const createDashboardEventHandler = (queryClient: QueryClient, siteSeq: n
     if (refetchCourses) void queryClient.invalidateQueries({ queryKey: dashboardKeys.courses(siteSeq) })
     if (refetchResults) {
       void queryClient.invalidateQueries({ queryKey: dashboardKeys.summary(siteSeq) })
-      void queryClient.invalidateQueries({ queryKey: dashboardKeys.pointHistories(siteSeq) })
-      void queryClient.invalidateQueries({ queryKey: dashboardKeys.finishedCourses(siteSeq) })
+      // 최근 종료 · 최근 미완료는 같은 100건 쿼리다(`spec 073`)
+      void queryClient.invalidateQueries({ queryKey: dashboardKeys.recentCourses(siteSeq) })
     }
     refetchCourses = false
     refetchResults = false

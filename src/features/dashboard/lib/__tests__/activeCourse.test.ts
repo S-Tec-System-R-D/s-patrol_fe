@@ -7,7 +7,6 @@ import {
   elapsedMinAt,
   elapsedRatio,
   hasStandard,
-  nextPoint,
   overtimeMin,
   pointSteps,
   skippedCount,
@@ -57,12 +56,7 @@ describe('pointSteps — 서버 status 그대로', () => {
   })
 })
 
-describe('nextPoint · skippedCount · checkedCount', () => {
-  it('다음 = status 1 지점, 없으면 null', () => {
-    expect(nextPoint(pts([4, 1, 0]))?.orderNo).toBe(2)
-    expect(nextPoint(pts([4, 3]))).toBeNull()
-  })
-
+describe('skippedCount · checkedCount', () => {
   it('건너뜀 = status 3 개수, 인증 = status 4 개수', () => {
     const points = pts([4, 3, 4, 3, 1, 0])
     expect(skippedCount(points)).toBe(2)

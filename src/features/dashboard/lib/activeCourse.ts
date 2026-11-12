@@ -20,10 +20,6 @@ export const pointStep = (status: number): PointStepStatus => STEP_BY_STATUS[sta
 export const pointSteps = (points: DashboardCoursePoint[]): PointStepStatus[] =>
   points.map((point) => pointStep(point.status))
 
-/** 다음 지점 = `status 1`(진행중). 없으면 `null` */
-export const nextPoint = (points: DashboardCoursePoint[]): DashboardCoursePoint | null =>
-  points.find((point) => pointStep(point.status) === 'next') ?? null
-
 export const skippedCount = (points: DashboardCoursePoint[]): number =>
   points.filter((point) => pointStep(point.status) === 'skipped').length
 

@@ -24,7 +24,7 @@ test.beforeEach(async ({ page }) => {
   await loginField(page)
 })
 
-test('대시보드 — 로그인 착지(현장 홈, spec 066) · 본문(spec 067) · API 연결(spec 068)', async ({ page }) => {
+test('대시보드 — 로그인 착지(현장 홈, spec 066) · 본문(spec 067 → 073) · API 연결(spec 068)', async ({ page }) => {
   await expect(page).toHaveURL(/\/dashboard$/)
   await expectHeading(page, '대시보드')
   // 값은 mock 핸들러(`mocks/handlers/dashboard.ts`) 응답
@@ -32,12 +32,14 @@ test('대시보드 — 로그인 착지(현장 홈, spec 066) · 본문(spec 067
   await expect(page.getByRole('heading', { name: '진행 중인 순찰' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'C코스' })).toBeVisible()
   await expect(page.getByRole('link', { name: /임시코스/ })).toContainText('기준 없음')
-  const recent = page.locator('section', { has: page.getByRole('heading', { name: '최근 미완료 · 시간초과' }) })
-  await expect(recent.getByRole('listitem')).toHaveCount(5)
+  // 배치 대기(spec 073) — 값은 mock 핸들러(`mocks/handlers/deployments.ts`)
+  const deploy = page.locator('section', { has: page.getByRole('heading', { name: '배치 대기' }) })
+  await expect(deploy.getByRole('listitem')).toHaveCount(3)
   await expect(page.getByRole('heading', { name: '공지사항' })).toBeVisible()
-  // 최근 종료된 순찰(spec 069) — 값은 mock 핸들러(`mocks/handlers/history.ts`) 오늘 시드
-  const finished = page.locator('section', { has: page.getByRole('heading', { name: '최근 종료된 순찰' }) })
-  await expect(finished.getByRole('listitem')).toHaveCount(2)
+  // 최근 기록(spec 073) — 2xl 미만은 탭. 값은 mock 핸들러(`mocks/handlers/history.ts`) 오늘 시드
+  await expect(page.getByRole('list', { name: '미완료 · 시간초과' }).getByRole('listitem')).toHaveCount(2)
+  await page.getByRole('tab', { name: /종료된 순찰/ }).click()
+  await expect(page.getByRole('list', { name: '종료된 순찰' }).getByRole('listitem')).toHaveCount(3)
   // 실시간 연결(spec 069) — mock 은 연결만 흉내 낸다. 좁은 폭에서도 보인다
   await expect(page.getByRole('status').filter({ hasText: '실시간' })).toBeVisible()
   await expectNoOverflowNow(page)
