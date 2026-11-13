@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import AppBadge from '@/components/app/AppBadge'
 import AppDetailCard from '@/components/app/AppDetailCard'
 import AppDetailRow from '@/components/app/AppDetailRow'
-import { formatElapsed } from '@/features/course-history/lib/elapsed'
 import type { PointHistoryDetail } from '@/features/course-history/types'
 import { paths } from '@/router/paths'
 
@@ -22,13 +21,16 @@ import { paths } from '@/router/paths'
  * 모른다** — 메모는 서버가 인증 1건에 묶어서 준다) · `원본 다운로드`(첨부 URL 이 404 다,
  * B-40). 셋 다 적으면 **지어낸 값**이 된다(A1).
  *
- * 🔴 **`인증수단 · 구간` 을 한 행에 합치지 않았다**(목업은 합쳤다). `구간`(`pauseTime`)은
- * **무엇을 센 시간인지 확정되지 않았고**(OQ-037-A) 인증수단 옆에 붙이면 **그 부속처럼**
- * 읽힌다. 뜻을 모르는 값일수록 **자기 행**에 둔다.
+ * 🔄 **`spec 078`: `구간` 행을 뺐다**(사용자 결정 2026-11-13). `pauseTime` 은 무엇을 센 시간인지
+ * 확정되지 않았고(OQ-037-A) 시안은 `이전 지점에서 N분 이동` 으로 이름을 붙였는데 그 근거가 없다.
+ * 시안의 `순찰 회차` 링크도 없다 — 회차 번호(`historySeq`)가 응답에 없다(037 US4).
+ * 🔄 특이사항이 있으면 페이지가 `map` 으로 지도를 넘긴다 — 카드 맨 위에 틀 없이 붙는다(시안).
  */
 
 interface PointHistoryInfoCardProps {
   detail: PointHistoryDetail
+  /** 카드 맨 위에 붙일 지도(특이사항이 있을 때만) */
+  map?: React.ReactNode
 }
 
 /** 🔴 상세의 `authMethodName` 은 null 일 때 `'Unknown'` 이다(B-6) — 화면에 내보내지 않는다 */
@@ -37,48 +39,41 @@ const UNKNOWN_AUTH = 'Unknown'
 /** 값 없음은 하이픈이다(`design-system.md` §4-5A) */
 const Dash = () => <span className="text-muted-foreground">-</span>
 
-const PointHistoryInfoCard = ({ detail }: PointHistoryInfoCardProps) => {
+const PointHistoryInfoCard = ({ detail, map }: PointHistoryInfoCardProps) => {
   const hasAuth = detail.authMethod !== null && detail.authMethodName !== UNKNOWN_AUTH
 
   return (
-    <AppDetailCard title="인증 정보">
-      {/* 🔴 **행을 한 번 감싼다**(`spec 050`) — `AppDetailCard` 의 `gap-4` 가 행 사이에 끼면
-          구분선이 윗행 밑에 붙는다(위 6px · 아래 22px). `SiteInfoCard` · `UserInfoCard` 와 같은 모양 */}
-      <div className="flex flex-col">
-        <AppDetailRow
-          label="순찰코스"
-          value={
-            /* ✅ 코스 **관리** 상세로 간다 — 회차(`historySeq`)를 모르므로 "코스 순찰 상세" 로는
-               보낼 수 없다(US4) */
-            <Link
-              to={paths.service.courseDetail(detail.courseSeq)}
-              className="text-point-foreground hover:underline"
-            >
-              {detail.courseName}
-            </Link>
-          }
-        />
-        {/* ⚠️ 완료인데 순찰자가 null 인 행이 실재한다(OQ-16, 실측 3건) */}
-        <AppDetailRow label="순찰자" value={detail.userName || '순찰자 미지정'} />
-        <AppDetailRow
-          label="인증시각"
-          /* ✅ **미완료 행에도 적는다** — `checkDt` 는 지점 인증 시간이다(OQ-15 해소).
-             🔴 **초를 버리지 않는다** — 테스트 환경에서 태그가 한 책상에 모여 **같은 분에
-             연달아 찍힌다**(OQ-15 실측). 초가 두 인증을 가르는 유일한 값일 수 있다 */
-          value={<span className="tabular-nums">{detail.checkDt.replace('T', ' ')}</span>}
-        />
-        <AppDetailRow
-          label="인증수단"
-          value={hasAuth ? <AppBadge variant="point">{detail.authMethodName}</AppBadge> : <Dash />}
-        />
-        <AppDetailRow
-          label="구간"
-          /* 🔴 의미가 확정되지 않아(OQ-037-A) **값만 보여주고 판정하지 않는다** —
-             목업의 `상한 +6분` 같은 비교 문구를 적지 않는다 */
-          value={<span className="tabular-nums">{formatElapsed(detail.pauseTime)}</span>}
-        />
+    /* 🔴 지도를 받으면 카드 틀은 이 바깥 상자가 갖는다 — 안쪽 `AppDetailCard` 의 테두리 · 모서리를 지운다 */
+    <div className="overflow-hidden rounded-lg border border-border bg-card">
+      {map}
+      <div className="[&>div]:rounded-none [&>div]:border-0">
+        <AppDetailCard title="인증 정보">
+          {/* 🔴 **행을 한 번 감싼다**(`spec 050`) — `AppDetailCard` 의 `gap-4` 가 행 사이에 끼면 구분선이 윗행 밑에 붙는다 */}
+          <div className="flex flex-col">
+            <AppDetailRow
+              label="순찰코스"
+              value={
+                /* ✅ 코스 **관리** 상세로 간다 — 회차(`historySeq`)를 몰라 "순찰 상세" 로는 보낼 수 없다(US4) */
+                <Link to={paths.service.courseDetail(detail.courseSeq)} className="text-point-foreground hover:underline">
+                  {detail.courseName}
+                </Link>
+              }
+            />
+            {/* ⚠️ 완료인데 순찰자가 null 인 행이 실재한다(OQ-16, 실측 3건) */}
+            <AppDetailRow label="순찰자" value={detail.userName || '순찰자 미지정'} />
+            <AppDetailRow
+              label="인증시각"
+              /* ✅ 미완료 행에도 적는다(OQ-15 해소). 🔴 초를 버리지 않는다 — 같은 분에 연달아 찍히는 경우가 있다 */
+              value={<span className="tabular-nums">{detail.checkDt.replace('T', ' ')}</span>}
+            />
+            <AppDetailRow
+              label="인증수단"
+              value={hasAuth ? <AppBadge variant="point">{detail.authMethodName}</AppBadge> : <Dash />}
+            />
+          </div>
+        </AppDetailCard>
       </div>
-    </AppDetailCard>
+    </div>
   )
 }
 

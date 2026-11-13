@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -84,33 +84,35 @@ afterEach(() => {
 })
 
 describe('PatrolPointDetailPage — 인증 1건', () => {
-  it('🔴 순찰 상세와 같은 머리다 — 지점명 제목 + 결과 뱃지 + 부제 (사용자 결정 2026-10-26)', async () => {
+  it('🔴 머리 — 지점명 + 부제(순찰자 · 시각 · 수단) + 지점 상세 (spec 078)', async () => {
     seed()
     renderPage()
 
     await waitDetail()
-    expect(screen.getByText('이 인증 1건의 수행 내역입니다')).toBeInTheDocument()
+    expect(screen.getByText('김근무 · 05.01 (금) 09:07 · QR')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /지점 상세$/ })).toHaveAttribute('href', '/points/12')
     // 🔴 지점명은 제목에서만 — 인증 정보 카드에 `순찰지점` 행이 없다
     expect(screen.getAllByText('정문 입구')).toHaveLength(1)
     expect(screen.queryByText('순찰지점')).not.toBeInTheDocument()
   })
 
-  it('인증 정보 카드가 값 5개를 요청 1개로 채운다', async () => {
+  it('인증 정보 카드는 4행 — 🔴 구간은 뺐다 (spec 078 D2)', async () => {
     seed()
     renderPage()
 
     await waitDetail()
     expect(screen.getByText('인증 정보')).toBeInTheDocument()
     expect(screen.getByText('A동 순찰코스')).toBeInTheDocument()
-    // 인증 정보 카드 + 메모 머리 — 메모 머리는 이름만 적는다(`spec 070`)
+    // 인증 정보 카드 + 메모 머리 — 메모 머리는 이름만 적는다(`spec 070`). 부제는 한 줄 글이라 따로다
     expect(screen.getAllByText('김근무')).toHaveLength(2)
     // 🔴 초를 버리지 않는다 — 같은 분에 연달아 찍힌 인증을 가르는 값이다(OQ-15)
     expect(screen.getByText('2026-05-01 09:07:00')).toBeInTheDocument()
-    // 🔴 `인증수단 · 구간` 을 한 행에 합치지 않는다 — 구간은 의미 미확정이라(OQ-037-A)
-    //    인증수단 옆에 붙이면 그 부속처럼 읽힌다
     expect(screen.getByText('인증수단')).toBeInTheDocument()
-    expect(screen.getByText('구간')).toBeInTheDocument()
-    expect(screen.getByText('7분')).toBeInTheDocument()
+    // 🔴 `pauseTime` 의 뜻이 확정되지 않았고(OQ-037-A) 시안의 `이전 지점에서` 도 근거가 없다 — 뺐다
+    expect(screen.queryByText('구간')).not.toBeInTheDocument()
+    expect(screen.queryByText(/이전 지점에서/)).not.toBeInTheDocument()
+    // 🔴 회차 번호가 없어 `순찰 회차` 링크를 만들 수 없다(037 US4)
+    expect(screen.queryByText('순찰 회차')).not.toBeInTheDocument()
   })
 
   it('🔴 목업에 있지만 근거가 없는 3가지를 만들지 않는다', async () => {
@@ -151,12 +153,24 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     expect(screen.getByText('메모 2건 · 사진 1장')).toBeInTheDocument()
   })
 
-  it('🔴 메모가 없으면 "불러오지 못했다" 가 아니라 "남긴 기록이 없다" 다', async () => {
+  it('🔴 메모가 없으면 순찰 기록 카드 대신 지도가 본문이다 (spec 078 시안)', async () => {
     seed({ hasMemo: false, memoList: [] })
     renderPage()
 
-    expect(await screen.findByText('남긴 기록이 없습니다')).toBeInTheDocument()
-    expect(screen.queryByText('인증 상세를 불러오지 못했습니다')).not.toBeInTheDocument()
+    await waitDetail()
+    expect(screen.queryByText('순찰 기록')).not.toBeInTheDocument()
+    expect(screen.queryByText('남긴 기록이 없습니다')).not.toBeInTheDocument()
+    expect(screen.getByText('인증 위치')).toBeInTheDocument()
+  })
+
+  it('이 지점 최근 14일 한 줄 — 지점 상세로 가는 길 (spec 078)', async () => {
+    seed()
+    renderPage()
+
+    const line = await screen.findByRole('region', { name: '이 지점 최근 14일' })
+    // 조회가 끝나야 숫자가 뜬다(그 전엔 자리표시)
+    await waitFor(() => expect(line).toHaveTextContent(/인증 \d+ · 건너뜀 \d+ · 특이사항 \d+/))
+    expect(screen.getByRole('link', { name: /지점 상세에서 보기/ })).toHaveAttribute('href', '/points/12')
   })
 
   it('🔴 authMethodName 의 "Unknown" 을 화면에 내보내지 않는다 (B-6)', async () => {
@@ -180,9 +194,10 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     renderPage()
 
     expect(await screen.findByText('시간초과')).toBeInTheDocument()
-    // 🔴 결과는 `이상없음` 이 아니라 **`순찰기록`** 이다 — 시드가 `hasMemo: true` 고,
-    //    `완료`(4)는 메모 유무로 갈린다. 시간초과는 그와 **독립 축**이라 함께 뜬다
-    expect(screen.getByText('순찰기록')).toBeInTheDocument()
+    // 🔄 spec 078 D3 — 결과(`인증`)와 `특이사항` 을 나눠 적는다(목록의 `순찰기록` 대신). 시간초과는 독립 축
+    expect(screen.getByText('인증')).toBeInTheDocument()
+    expect(screen.getByText('특이사항')).toBeInTheDocument()
+    expect(screen.queryByText('순찰기록')).not.toBeInTheDocument()
   })
 
   it('🔴 US4 자리를 비워 두지 않는다 — historySeq 가 없어 만들 수 없는 것들', async () => {
@@ -222,9 +237,8 @@ describe('PatrolPointDetailPage — KPI 섹션을 두지 않는다 (2026-10-20)'
     renderPage()
 
     await waitDetail()
-    // 🔴 결과는 **제목 옆 뱃지**에서만 말한다(`spec 050` — 인증 정보 카드에 결과 행이 없다).
-    //    ⚠️ 시드가 `hasMemo: true` 라 `완료`(4)는 `순찰기록` 으로 갈린다
-    expect(screen.getAllByText('순찰기록')).toHaveLength(1)
+    // 🔴 결과는 **제목 옆 뱃지**에서만 말한다(`spec 050` — 인증 정보 카드에 결과 행이 없다)
+    expect(screen.getAllByText('인증')).toHaveLength(1)
     expect(screen.queryByText('결과')).not.toBeInTheDocument()
     expect(screen.queryByText('인증 결과')).not.toBeInTheDocument()
     expect(screen.queryByText('최근 14일 인증')).not.toBeInTheDocument()
@@ -242,18 +256,26 @@ describe('PatrolPointDetailPage — KPI 섹션을 두지 않는다 (2026-10-20)'
     seed({ hasMemo: false, memoList: [] })
     renderPage()
 
-    await screen.findByText('남긴 기록이 없습니다')
+    await waitDetail()
     expect(screen.queryByText(/메모 0건/)).not.toBeInTheDocument()
   })
 })
 
 describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
-  it('좌표가 있으면 좌측 맨 위에 지도를 그린다', async () => {
-    seed()
+  it('메모가 없으면 지도가 왼쪽 본문 맨 위다', async () => {
+    seed({ hasMemo: false, memoList: [] })
     renderPage()
 
     expect(await screen.findByText('인증 위치')).toBeInTheDocument()
     expect(screen.getByText('인증 시점 좌표')).toBeInTheDocument()
+  })
+
+  it('🔴 메모가 있으면 지도는 오른쪽 인증 정보 패널 맨 위로 — 카드 제목 없이 좌표 한 줄 (spec 078)', async () => {
+    seed()
+    renderPage()
+
+    expect(await screen.findByText('인증 시점 좌표 · 37.4936, 127.0286')).toBeInTheDocument()
+    expect(screen.queryByText('인증 위치')).not.toBeInTheDocument()
   })
 
   it('🔴 좌표가 없으면 카드 자체가 없다 — 미완료 인증은 좌표가 구조적으로 null 이다', async () => {
@@ -274,7 +296,7 @@ describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
   })
 
   it('🔴 거리·오차를 판정하지 않는다 — 좌표는 앱이 채우는 값이다(spec 035 P3)', async () => {
-    seed()
+    seed({ hasMemo: false, memoList: [] })
     renderPage()
 
     await screen.findByText('인증 위치')

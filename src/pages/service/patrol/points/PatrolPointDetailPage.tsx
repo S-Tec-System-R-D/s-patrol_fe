@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, ChevronRightIcon, HistoryIcon, TriangleAlertIcon } from 'lucide-react'
+import { ArrowLeftIcon, ChevronRightIcon, HistoryIcon, MapPinIcon, StickyNoteIcon, TriangleAlertIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
@@ -9,8 +9,9 @@ import { usePointHistoryDetail } from '@/features/course-history/hooks/usePointH
 import { overtimeBadge, pointCheckBadge } from '@/features/course-history/lib/historyBadge'
 import PointHistoryInfoCard from '@/features/patrol-points/components/detail/PointHistoryInfoCard'
 import PointHistoryMemoCard from '@/features/patrol-points/components/detail/PointHistoryMemoCard'
-import PointHistoryRecentCard from '@/features/patrol-points/components/detail/PointHistoryRecentCard'
 import PointLocationMapCard from '@/features/patrol-points/components/detail/PointLocationMapCard'
+import PointRecentSummaryLine from '@/features/patrol-points/components/detail/PointRecentSummaryLine'
+import { POINT_HISTORY_STATUS } from '@/features/course-history/types'
 import { getSiteSeq } from '@/lib/auth/site'
 import { paths } from '@/router/paths'
 
@@ -133,52 +134,79 @@ const PatrolPointDetailPage = () => {
   }
 
   const data = detail.data
-  const result = pointCheckBadge(data.status, data.checkDt, data.hasMemo)
+  /* 🔄 `spec 078` D3 — 결과 하나 + `특이사항` + `시간초과`. 완료는 메모와 상관없이 `인증`(한 건만 보는 상세라
+     정상도 적는다 — 목록의 `순찰기록` 은 결과와 특이사항을 한 말에 묶은 것이라 여기서는 나눈다) */
+  const result =
+    data.status === POINT_HISTORY_STATUS.COMPLETED
+      ? { variant: 'success' as const, label: '인증' }
+      : pointCheckBadge(data.status, data.checkDt, data.hasMemo)
   // 🔴 상세는 `overtimeYn`(**소문자 t**) 다 — 코스 상세와 다르다(B-4)
   const overtime = overtimeBadge(data.overtimeYn)
+  const hasMemo = data.memoList.length > 0
+  const subtitle = [
+    data.userName || '순찰자 미지정',
+    formatWhen(data.checkDt),
+    // 🔴 `authMethodName` 은 null 일 때 `'Unknown'` 이다(B-6) — 화면에 내보내지 않는다
+    data.authMethod !== null && data.authMethodName !== 'Unknown' ? data.authMethodName : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
   return (
     <div className="flex flex-col gap-4 p-4 xl:p-8">
       {crumb}
 
-      {/* 🔴 **순찰 상세(036)와 같은 골격이다**(사용자 결정 2026-10-26 — 10-20 의 "타이틀 줄
-          없음 + 가로 요약 스트립" 을 뒤집었다). 두 상세가 달라 보였다.
-          🔴 **KPI 줄은 두지 않는다**(2026-10-20 판단 유지) — 인증 1건은 집계 단위가 아니다.
-          🔴 **결과는 제목 옆 뱃지에서만** 말한다 — 인증 정보 카드에 결과 행이 없다 */}
       <AppPageHeader
         icon={HistoryIcon}
         title={data.pointName}
-        subtitle="이 인증 1건의 수행 내역입니다"
+        subtitle={subtitle}
         titleSuffix={
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             <AppBadge variant={result.variant}>{result.label}</AppBadge>
+            {hasMemo && (
+              <AppBadge variant="warning" className="gap-1">
+                <StickyNoteIcon size={12} aria-hidden />
+                특이사항
+              </AppBadge>
+            )}
             {/* 🔴 시간초과는 결과와 **독립 축**이라 병기한다(목록과 같은 규칙) */}
             {overtime && <AppBadge variant={overtime.variant}>{overtime.label}</AppBadge>}
           </div>
         }
+        action={
+          <Link
+            to={paths.service.pointDetail(data.pointSeq)}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-body font-medium hover:bg-muted"
+          >
+            <MapPinIcon size={14} aria-hidden />
+            지점 상세
+          </Link>
+        }
       />
 
-      {/* 🔴 **2열 골격**(순찰 상세와 같다) — 좌: 지도 → 순찰 기록 → 최근 인증 / 우: 인증 정보.
-          🔴 **`items-start` 다** — 기본값 `stretch` 면 우측 카드가 좌측 높이만큼 늘어나
-          아래에 큰 여백이 생긴다(036 브라우저 확인 2026-10-19에서 고친 자리) */}
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
-        {/* 🔴 **좁은 폭에서는 인증 정보가 먼저다**(순찰 상세와 같은 `order` 규칙) — 접히면
-            읽는 순서가 되고, "어떤 인증을 보고 있는지"(코스·순찰자·시각)가 맨 아래로 밀리면
-            안 된다. DOM 을 뒤집지 않는 이유는 `col-span-2` 가 먼저 와야 2칸을 먹어서다 */}
-        <section className="order-2 flex flex-col gap-4 lg:order-1 lg:col-span-2">
-          {/* 🔴 **지도가 위다**(순찰 상세와 같은 순서 — 사용자 결정 2026-10-26).
-              ⚠️ **좌표가 없으면 카드 자체가 없다**(미완료 인증은 좌표가 구조적으로 null —
-              실측 45/45). 그때는 순찰 기록이 맨 위로 올라온다 */}
-          <PointLocationMapCard detail={data} />
-          <PointHistoryMemoCard detail={data} />
-          <PointHistoryRecentCard detail={data} siteSeq={siteSeq} />
+      {/* 🔄 **`spec 078` 시안** — 이 화면의 고유 정보(순찰 기록)를 맨 위로.
+          - 특이사항 있음: 왼쪽 **순찰 기록** → 최근 14일 / 오른쪽 **지도 + 인증 정보** 한 패널
+          - 없음: 왼쪽 **지도**(인증 위치 카드) → 최근 14일 / 오른쪽 인증 정보. `남긴 기록이 없습니다` 카드는 그리지 않는다
+          🔴 `items-start` — 오른쪽이 왼쪽 높이만큼 늘어나지 않게(036). `xl` 미만 1단 — DOM 순서대로 본문이 먼저 */}
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_440px]">
+        <section className="flex min-w-0 flex-col gap-4">
+          {hasMemo ? <PointHistoryMemoCard detail={data} /> : <PointLocationMapCard detail={data} />}
+          <PointRecentSummaryLine siteSeq={siteSeq} pointSeq={data.pointSeq} />
         </section>
-        <section className="order-1 lg:order-2 lg:col-span-1">
-          <PointHistoryInfoCard detail={data} />
+        <section className="min-w-0">
+          <PointHistoryInfoCard detail={data} map={hasMemo ? <PointLocationMapCard detail={data} bare /> : undefined} />
         </section>
       </div>
     </div>
   )
+}
+
+/** `11.07 (토) 10:53` — 부제용 */
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+const formatWhen = (value: string): string | null => {
+  const date = new Date(value)
+  if (!Number.isFinite(date.getTime())) return null
+  return `${value.slice(5, 7)}.${value.slice(8, 10)} (${WEEKDAYS[date.getDay()]}) ${value.slice(11, 16)}`
 }
 
 export default PatrolPointDetailPage

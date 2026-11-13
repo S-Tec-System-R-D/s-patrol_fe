@@ -47,9 +47,14 @@ const authLabel = (authMethod: number | null): string | null =>
 
 interface PointLocationMapCardProps {
   detail: PointHistoryDetail
+  /**
+   * 🔄 `spec 078` — 특이사항이 있으면 지도는 **오른쪽 인증 정보 패널 맨 위**로 간다(시안). 그때는 카드 틀 ·
+   * 제목 없이 지도와 좌표 한 줄만 그린다(패널이 틀을 갖는다)
+   */
+  bare?: boolean
 }
 
-const PointLocationMapCard = ({ detail }: PointLocationMapCardProps) => {
+const PointLocationMapCard = ({ detail, bare = false }: PointLocationMapCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
 
   /* 🔴 **범위 검사를 공유한다** — 순수 함수는 세 지도가 같은 것을 쓴다(B-33 방어) */
@@ -113,6 +118,17 @@ const PointLocationMapCard = ({ detail }: PointLocationMapCardProps) => {
    * 했다). 여기는 1건이라 있거나 없거나다.
    */
   if (!TILE_URL || !hasCoord) return null
+
+  if (bare) {
+    return (
+      <div className="relative">
+        <div ref={containerRef} className="h-[260px] w-full" />
+        <span className="pointer-events-none absolute bottom-2 left-2 z-[400] rounded-sm bg-card/90 px-1.5 py-0.5 text-label text-muted-foreground tabular-nums">
+          인증 시점 좌표 · {lat?.toFixed(4)}, {lng?.toFixed(4)}
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
