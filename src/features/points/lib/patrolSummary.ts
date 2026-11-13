@@ -27,6 +27,8 @@ export interface PatrolDayBucket {
   /** 'yyyy-MM-dd' */
   date: string
   count: number
+  /** 그날 **누락**(미완료 3) 수 — `spec 076` 쌓은 막대의 주황 칸 */
+  missed: number
 }
 
 export interface PatrolSummary {
@@ -46,12 +48,16 @@ export interface PatrolSummary {
    * 다른 사실이다(`spec 031` 목업의 `인증 7 / 대상 순찰 9회`).
    */
   attempted: number
+  /** 기간 내 **누락**(미완료 3) 수 — `spec 076` */
+  missed: number
   /** 오래된 날 → 최근 날 순. **기록이 없는 날도 `count: 0` 으로 포함**한다 */
   buckets: PatrolDayBucket[]
 }
 
 /** 🔴 지점이력 `status` 사전에서 **완료**(코스이력은 1·2로 체계가 다르다 — B-7) */
 const STATUS_DONE = 4
+/** 지점이력 **미완료** — 화면에서는 `누락`(`spec 076` D2) */
+const STATUS_MISSED = 3
 
 /** 집계 기간의 시작일(포함). 서버 `fromDt` 로 그대로 쓴다 */
 export const summaryFromDate = (today: Date, days = SUMMARY_DAYS): string =>
@@ -73,12 +79,16 @@ export const summarizePatrolHistory = (
   days = SUMMARY_DAYS
 ): PatrolSummary => {
   const counts = new Map<string, number>()
+  const misses = new Map<string, number>()
   for (let i = 0; i < days; i += 1) {
-    counts.set(format(subDays(today, days - 1 - i), 'yyyy-MM-dd'), 0)
+    const key = format(subDays(today, days - 1 - i), 'yyyy-MM-dd')
+    counts.set(key, 0)
+    misses.set(key, 0)
   }
 
   let total = 0
   let attempted = 0
+  let missed = 0
   for (const row of rows) {
     const parsed = parseISO(row.checkDt)
     if (!isValid(parsed)) continue
@@ -89,9 +99,13 @@ export const summarizePatrolHistory = (
 
     // 🔴 **미완료도 "대상" 에는 든다** — 돌기로 돼 있었는데 못 한 것이다
     attempted += 1
+    const key = format(parsed, 'yyyy-MM-dd')
+    if (row.status === STATUS_MISSED) {
+      misses.set(key, (misses.get(key) ?? 0) + 1)
+      missed += 1
+    }
     if (row.status !== STATUS_DONE) continue
 
-    const key = format(parsed, 'yyyy-MM-dd')
     counts.set(key, (counts.get(key) ?? 0) + 1)
     total += 1
   }
@@ -99,8 +113,52 @@ export const summarizePatrolHistory = (
   return {
     total,
     attempted,
-    buckets: [...counts.entries()].map(([date, count]) => ({ date, count })),
+    missed,
+    buckets: [...counts.entries()].map(([date, count]) => ({
+      date,
+      count,
+      missed: misses.get(date) ?? 0,
+    })),
   }
+}
+
+export interface PatrolDayGroup {
+  /** 'yyyy-MM-dd' */
+  date: string
+  /** 그날 기록 — 최근 시각 먼저 */
+  rows: PointHistoryRow[]
+  /** 그날 누락(미완료 3) 수 — 묶음 머리 오른쪽 `누락 n` */
+  missed: number
+}
+
+/**
+ * 기록 → **날짜별 묶음**(최근 날 먼저) — `spec 076` 활동 타임라인.
+ *
+ * 🔴 기간 밖 · 깨진 날짜는 버린다(`summarizePatrolHistory` 와 같은 규칙 — 막대와 목록이
+ * 다른 수를 말하면 안 된다). 기록이 없는 날은 **묶음을 만들지 않는다**(막대가 빈 날을 보여 준다).
+ */
+export const groupHistoryByDay = (
+  rows: PointHistoryRow[],
+  today: Date,
+  days = SUMMARY_DAYS
+): PatrolDayGroup[] => {
+  const groups = new Map<string, PointHistoryRow[]>()
+  for (const row of rows) {
+    const parsed = parseISO(row.checkDt)
+    if (!isValid(parsed)) continue
+    const ago = differenceInCalendarDays(today, parsed)
+    if (ago < 0 || ago > days - 1) continue
+    const key = format(parsed, 'yyyy-MM-dd')
+    groups.set(key, [...(groups.get(key) ?? []), row])
+  }
+
+  return [...groups.entries()]
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([date, dayRows]) => ({
+      date,
+      rows: [...dayRows].sort((a, b) => b.checkDt.localeCompare(a.checkDt)),
+      missed: dayRows.filter((row) => row.status === STATUS_MISSED).length,
+    }))
 }
 
 /**

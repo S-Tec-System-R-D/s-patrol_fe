@@ -42,9 +42,15 @@ const renderAt = (path: string) => {
   )
 }
 
-/** 삭제 버튼 → 확인 모달 → 삭제(060 — 확인 버튼은 액션 이름 그대로) */
+/** 머리 `⋯` → `삭제` (076 — 코스 상세와 같은 메뉴) */
+const openDelete = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(await screen.findByRole('button', { name: '지점 메뉴' }))
+  await user.click(await screen.findByRole('menuitem', { name: '삭제' }))
+}
+
+/** 메뉴 → 확인 모달 → 삭제(060 — 확인 버튼은 액션 이름 그대로) */
 const confirmDelete = async (user: ReturnType<typeof userEvent.setup>) => {
-  await user.click(await screen.findByRole('button', { name: '삭제' }))
+  await openDelete(user)
   await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: '삭제' }))
 }
 
@@ -84,14 +90,12 @@ describe('PointDetailPage — 진입', () => {
     expect(screen.getByText('사용')).toBeInTheDocument()
   })
 
-  it('소속 코스 섹션과 인증수단 행을 그린다', async () => {
+  it('속성 패널에 소속 코스 · 인증수단 행을 그린다 (076)', async () => {
     renderAt('/points/1')
 
     await screen.findByRole('heading', { name: '정문 입구' })
     expect(screen.getByText('소속 코스')).toBeInTheDocument()
-    // 🔴 인증수단은 별도 섹션이 아니라 기본정보 행이다(2026-10-10)
     expect(screen.getByText('인증수단')).toBeInTheDocument()
-    expect(screen.queryByText('인증 수단')).not.toBeInTheDocument()
     expect(screen.getAllByText('A동 순찰코스').length).toBeGreaterThan(0)
   })
 
@@ -162,7 +166,7 @@ describe('PointDetailPage — 삭제 후 이동', () => {
 
     await confirmDelete(user)
 
-    await waitFor(() => expect(screen.getByRole('button', { name: '삭제' })).toBeEnabled())
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
     expect(screen.queryByText('LIST_ROUTE')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '정문 입구' })).toBeInTheDocument()
   })
@@ -179,7 +183,7 @@ describe('PointDetailPage — 삭제 후 이동', () => {
     renderAt('/points/4')
     await screen.findByRole('heading', { name: '지하 주차장 B1' })
 
-    await user.click(screen.getByRole('button', { name: '삭제' }))
+    await openDelete(user)
     await user.click(await screen.findByRole('button', { name: '취소' }))
 
     expect(requested).toBe(false)
@@ -190,13 +194,12 @@ describe('PointDetailPage — 삭제 후 이동', () => {
 describe('PointDetailPage — 수정 모달', () => {
   const UPDATE_POINT_PATH = '/api/v1/Point/W/sign/UpdatePoint'
 
-  it('🔴 헤더에는 삭제만 있다 — 수정은 기본정보 카드로 갔다 (spec 029)', async () => {
+  it('🔴 머리에는 `⋯`(삭제)만 — 수정은 속성 패널의 기본정보 제목 줄 (076 · 029)', async () => {
     renderAt('/points/1')
     await screen.findByRole('heading', { name: '정문 입구' })
 
-    // 고치려는 값을 **보여 주는 카드**에 수단을 둔다(코스 상세와 같은 규칙).
-    // 삭제만 남는 이유: 지점 **전체**에 대한 동작이라 어느 카드에도 속하지 않는다
-    expect(screen.getByRole('button', { name: '삭제' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '지점 메뉴' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '삭제' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '기본정보 수정' })).toBeInTheDocument()
   })
 
@@ -249,26 +252,24 @@ describe('PointDetailPage — 수정 모달', () => {
   })
 })
 
-/** 🔴 `spec 027` Phase 3 — 목업 8섹션 중 6개 구현 / 2개 placeholder */
-describe('PointDetailPage — 상세 확장(Phase 3)', () => {
-  it('KPI 줄 없이 인증 요약을 순찰 인증 기록 머리에 적는다', async () => {
+/** 🔄 `spec 076` — 인증 기록(요약 3칸 · 14일 쌓은 막대 · 날짜별 묶음) */
+describe('PointDetailPage — 인증 기록 (076)', () => {
+  it('요약 3칸(인증 · 누락 · 최근 순찰)과 날짜별 묶음을 그린다', async () => {
     renderAt('/points/1')
 
-    await screen.findByRole('heading', { name: '정문 입구' })
-    expect(await screen.findByText(/최근 2주 · 인증 \d+\/\d+ \(\d+%\)/)).toBeInTheDocument()
-    expect(screen.queryByText('지점 인증률')).not.toBeInTheDocument()
-    expect(screen.getAllByText('소속 코스')).toHaveLength(1)
-    expect(screen.queryByText('QR 발행')).not.toBeInTheDocument()
+    expect(await screen.findByText('인증 기록')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getAllByRole('region', { name: /기록$/ }).length).toBeGreaterThan(0))
+    expect(screen.getAllByText('누락').length).toBeGreaterThan(0)
+    expect(screen.getByText('최근 순찰')).toBeInTheDocument()
+    expect(screen.getByText('최근 14일 전체 · 막대를 누르면 해당 일자만 표시')).toBeInTheDocument()
   })
 
-  it('순찰 인증 기록 섹션에 이력이 들어온다', async () => {
+  it('🔴 행은 지점 인증 상세로 간다 — 회차 번호(historySeq)가 없어 회차 모달은 못 연다 (D1)', async () => {
     renderAt('/points/1')
 
-    expect(await screen.findByText('순찰 인증 기록')).toBeInTheDocument()
-    // mock 은 3의 배수가 아닌 지점에 기록을 준다
-    await waitFor(() =>
-      expect(screen.queryByText('순찰 기록이 없습니다')).not.toBeInTheDocument()
-    )
+    const groups = await screen.findAllByRole('region', { name: /기록$/ })
+    const link = within(groups[0]).getAllByRole('link')[0]
+    expect(link.getAttribute('href')).toMatch(/^\/patrol\/points\/\d+$/)
   })
 
   it('🔴 기록이 0건이면 빈 상태다 — placeholder 가 아니다', async () => {
@@ -276,40 +277,17 @@ describe('PointDetailPage — 상세 확장(Phase 3)', () => {
     renderAt('/points/3')
 
     expect(await screen.findByText('순찰 기록이 없습니다')).toBeInTheDocument()
-    // 기능은 있고 데이터가 없는 것이므로 "준비 중" 이 아니다.
-    // 🔴 `spec 029` 에서 **화면의 placeholder 가 전부 사라졌다** — 변경 이력은 치웠고
-    //    기본정보 4칸은 좌표로 대체·제거됐다. 이제 "준비 중" 은 화면에 없다
     expect(screen.queryByText('준비 중')).not.toBeInTheDocument()
   })
 
-  it('🔴 변경 이력 섹션을 제거했다 — OQ-027-E 종결 (spec 029)', async () => {
+  it('🔴 변경 이력 · 같은 사업장의 다른 지점 · QR/NFC 전환 카드는 없다', async () => {
     renderAt('/points/1')
 
     await screen.findByRole('heading', { name: '정문 입구' })
-    // API(B-22)가 없고 생길 일정도 없다. 언제 풀릴지 모르는 빈 카드가 화면 1/3 을
-    // 차지하는 쪽이 더 나쁘다(사용자 결정 2026-10-13)
     expect(screen.queryByText('변경 이력')).not.toBeInTheDocument()
-    // 지점 1은 QR 이라 자격증명 카드가 **실물 QR** 로 그려진다
-    expect(screen.getByText('QR 코드')).toBeInTheDocument()
-    expect(screen.queryByText(/발행 메타가 없고/)).not.toBeInTheDocument()
-  })
-
-  it('🔴 기본정보 placeholder 4개를 치우고 좌표를 넣었다 (spec 029)', async () => {
-    renderAt('/points/1')
-
-    await screen.findByRole('heading', { name: '정문 입구' })
-    // 지점 코드·등록·최근 수정 — 서버에 없고 쓰임도 없다. **B-19 도 함께 철회**했다
-    expect(screen.queryByText('지점 코드')).not.toBeInTheDocument()
-    expect(screen.queryByText('등록')).not.toBeInTheDocument()
-    // 상세 위치는 좌표로 대체 — 이건 서버에 **실제로 있는 값**이다
-    expect(screen.queryByText('상세 위치')).not.toBeInTheDocument()
-    expect(screen.getByText('좌표')).toBeInTheDocument()
-  })
-
-  it('🔴 "같은 사업장의 다른 지점" 섹션은 없다 — 불필요 판단(2026-10-10)', async () => {
-    renderAt('/points/1')
-
-    await screen.findByRole('heading', { name: '정문 입구' })
     expect(screen.queryByText('같은 사업장의 다른 지점')).not.toBeInTheDocument()
+    expect(screen.queryByText('출력 후 현장 부착')).not.toBeInTheDocument()
+    // 지점 1은 QR — 내려받기만(029 보안)
+    expect(screen.getByRole('button', { name: /QR 코드 내려받기/ })).toBeInTheDocument()
   })
 })

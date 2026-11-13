@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { SUMMARY_DAYS, summarizePatrolHistory, summaryFromDate, summaryToDate, formatSinceLabel } from '../patrolSummary'
+import {
+  SUMMARY_DAYS,
+  groupHistoryByDay,
+  summarizePatrolHistory,
+  summaryFromDate,
+  summaryToDate,
+  formatSinceLabel,
+} from '../patrolSummary'
 import type { PointHistoryRow } from '@/features/course-history/types'
 
 /**
@@ -72,7 +79,7 @@ describe('summarizePatrolHistory', () => {
     )
 
     expect(result.total).toBe(3)
-    expect(result.buckets.at(-1)).toEqual({ date: '2026-10-09', count: 3 })
+    expect(result.buckets.at(-1)).toEqual({ date: '2026-10-09', count: 3, missed: 0 })
   })
 
   it('경계 — 시작일(14일 전)은 포함된다', () => {
@@ -191,5 +198,34 @@ describe('formatSinceLabel', () => {
   it('값이 없거나 깨졌으면 null', () => {
     expect(formatSinceLabel(null, now)).toBeNull()
     expect(formatSinceLabel('깨진 값', now)).toBeNull()
+  })
+})
+
+describe('누락 · 날짜별 묶음 (spec 076)', () => {
+  const rows = [
+    row('2026-10-09T09:00:00', { detailSeq: 1 }),
+    row('2026-10-09T14:30:00', { detailSeq: 2 }),
+    row('2026-10-08T10:00:00', { detailSeq: 3, status: 3, statusName: '미완료' }),
+    row('2026-10-08T11:00:00', { detailSeq: 4, status: 2, statusName: '순찰제외' }),
+    row('2026-09-01T10:00:00', { detailSeq: 5, status: 3, statusName: '미완료' }), // 기간 밖
+  ]
+
+  it('미완료(3)만 누락으로 센다 — 순찰제외 · 기간 밖은 아니다', () => {
+    const result = summarizePatrolHistory(rows, TODAY)
+
+    expect(result.missed).toBe(1)
+    expect(result.buckets.find((b) => b.date === '2026-10-08')).toEqual({
+      date: '2026-10-08',
+      count: 0,
+      missed: 1,
+    })
+  })
+
+  it('날짜별로 묶는다 — 최근 날 먼저, 그날 안에서도 최근 시각 먼저 · 기간 밖은 버린다', () => {
+    const groups = groupHistoryByDay(rows, TODAY)
+
+    expect(groups.map((g) => g.date)).toEqual(['2026-10-09', '2026-10-08'])
+    expect(groups[0].rows.map((r) => r.detailSeq)).toEqual([2, 1])
+    expect(groups[1].missed).toBe(1)
   })
 })
