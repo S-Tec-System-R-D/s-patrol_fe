@@ -46,6 +46,9 @@ const statusIcon = (row: PointHistoryRow) => {
   return { icon: CircleDashedIcon, className: 'text-muted-foreground' }
 }
 
+/** 정상 인증(완료 · 메모 없음) — 뱃지 없이 아이콘만 */
+const isPlain = (row: PointHistoryRow) => row.status === STATUS.DONE && !row.hasMemo
+
 const timeOf = (row: PointHistoryRow): string => {
   // 🔴 인증한 행만 시각을 적는다 — 미완료의 checkDt 는 인증 시각이 아니다(OQ-15)
   if (row.status !== STATUS.DONE) return '—'
@@ -244,9 +247,13 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                               <span className="shrink-0 text-body font-semibold">{row.userName || '근무자 없음'}</span>
                               <span className="min-w-0 truncate text-caption text-muted-foreground">{row.courseName}</span>
                             </span>
-                            <AppBadge variant={badge.variant} className={cn('shrink-0', cardBadge)}>
-                              {badge.label}
-                            </AppBadge>
+                            {/* 🔴 **`이상없음` 은 뱃지를 달지 않는다**(사용자 결정 2026-11-13) — 정상이 대부분이라
+                                같은 뱃지가 줄마다 반복되면 뱃지가 아무것도 알리지 못한다. 초록 체크 아이콘이 이미 말한다 */}
+                            {!isPlain(row) && (
+                              <AppBadge variant={badge.variant} className={cn('shrink-0', cardBadge)}>
+                                {badge.label}
+                              </AppBadge>
+                            )}
                             <ChevronRightIcon size={14} className="shrink-0 text-muted-foreground/60 group-hover:text-foreground" aria-hidden />
                           </Link>
                         </li>
