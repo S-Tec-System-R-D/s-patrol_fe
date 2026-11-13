@@ -92,13 +92,17 @@ import { POINT_HISTORY_STATUS, type CheckDetailRow } from '@/features/course-his
  */
 
 /**
- * 핀 3종. 🔴 **표의 결과 뱃지(7종)를 그대로 옮기지 않는다** — 지도에서 갈려야 하는 것은
- * "기록이 어떤 종류로 남았나" 세 가지다. 라벨·심각도는 표가 말한다.
+ * 핀 5종(🔄 `spec 077` — 3종에서). 범례를 타임라인 뱃지와 같은 말로 맞췄다:
+ * 인증(완료) · 미완료(시각 있음) · 미인증(시각 없음) · 다음(진행 중 회차의 다음 지점) · 대기(그 외).
+ * 예전 `norecord` 는 미인증과 대기를 한데 묶어, 진행 중 회차에서 **아직 안 간 것**과
+ * **건너뛴 것**이 같은 핀이었다.
  */
-export type HistoryPinKind = 'checked' | 'incomplete' | 'norecord'
+export type HistoryPinKind = 'checked' | 'incomplete' | 'unvisited' | 'next' | 'waiting'
 
 /** 지도에 찍을 핀 하나 */
 export interface HistoryPin {
+  /** 타임라인 행과 짝 — 서로 강조할 때 키(`spec 077`) */
+  detailSeq: number
   /** 🔴 **`orderNo` 다** — 인증 내역 표의 "순서" 컬럼과 같은 번호여야 한다 */
   order: number
   name: string
@@ -133,14 +137,18 @@ export interface HistoryCoords {
    * **현재 편성에서 빠졌다**(그래서 `GetCourseDetail` 에 없다).
    */
   missing: number
+  /** 좌표를 못 구한 지점 — 지도 밑에 이름으로 적는다(`spec 077` 시안) */
+  missingPoints: { order: number; name: string }[]
 }
 
-const pinKind = (row: CheckDetailRow): HistoryPinKind => {
+const pinKind = (row: CheckDetailRow, nextDetailSeq?: number): HistoryPinKind => {
   if (row.status === POINT_HISTORY_STATUS.COMPLETED) return 'checked'
+  if (row.detailSeq === nextDetailSeq) return 'next'
   // 🔴 `checkDt` 가 미완료 2종을 가른다 — 값이 있으면 **방문 흔적**이다(실측 45/124).
   //    ✅ 그 값은 **지점 인증 시각**이다(OQ-15 해소) — 여기서는 종류를 가르는 데만 쓴다
   if (row.status === POINT_HISTORY_STATUS.INCOMPLETE && row.checkDt !== null) return 'incomplete'
-  return 'norecord'
+  if (row.status === POINT_HISTORY_STATUS.INCOMPLETE) return 'unvisited'
+  return 'waiting'
 }
 
 /**
@@ -152,7 +160,9 @@ const pinKind = (row: CheckDetailRow): HistoryPinKind => {
  */
 export const historyPins = (
   rows: CheckDetailRow[],
-  coursePoints: CourseDetailPoint[]
+  coursePoints: CourseDetailPoint[],
+  /** 진행 중 회차의 다음 지점(`runTimeline` 이 정한다) */
+  nextDetailSeq?: number
 ): HistoryCoords => {
   // 🔴 **`pointSeq` → 등록 좌표.** 유효한 좌표만 담는다 — 담아 두고 나중에 거르면
   //    호출부마다 검사를 되풀이한다
@@ -167,6 +177,7 @@ export const historyPins = (
   const ordered = [...rows].sort((a, b) => a.orderNo - b.orderNo)
 
   const pins: HistoryPin[] = []
+  const missingPoints: HistoryCoords['missingPoints'] = []
   let missing = 0
 
   ordered.forEach((row) => {
@@ -180,6 +191,7 @@ export const historyPins = (
 
     if (coord === null) {
       missing += 1
+      missingPoints.push({ order: row.orderNo, name: row.pointName })
       return
     }
 
@@ -187,17 +199,18 @@ export const historyPins = (
        ⚠️ **수단은 따로다** — 미완료 45건은 `authMethod` 가 0/45 라 시각만 남는다 */
 
     pins.push({
+      detailSeq: row.detailSeq,
       order: row.orderNo,
       name: row.pointName,
       lat: coord.lat,
       lng: coord.lng,
       // 좌표 출처가 아니라 **상태**로 정한다(OQ-16)
-      kind: pinKind(row),
+      kind: pinKind(row, nextDetailSeq),
       source: point === null ? 'check' : 'point',
       checkedAt: row.checkDt,
       authMethod: row.authMethod,
     })
   })
 
-  return { pins, missing }
+  return { pins, missing, missingPoints }
 }

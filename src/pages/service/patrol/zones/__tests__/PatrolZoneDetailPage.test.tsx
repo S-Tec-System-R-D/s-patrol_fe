@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -38,7 +39,7 @@ const renderPage = (historySeq: number | string) => {
   )
 }
 
-const inCheckTable = () => within(screen.getByRole('table'))
+const inTimeline = () => within(screen.getByRole('list', { name: '지점 인증 내역' }))
 
 beforeEach(() => {
   clearTokens()
@@ -48,77 +49,83 @@ beforeEach(() => {
 
 afterEach(() => clearTokens())
 
-describe('PatrolZoneDetailPage — 회차 상세', () => {
-  it('헤더·KPI·인증 내역·순찰 정보를 조립한다', async () => {
+describe('PatrolZoneDetailPage — 회차 상세 (spec 077)', () => {
+  it('머리(순찰자) · 요약 4칸 · 수행 타임라인 · 코스 경로를 조립한다', async () => {
     renderPage(101)
 
-    /* 🔴 **제목은 코스명뿐이다**(2026-10-20 — 시작 시각을 뺐다). 같은 값이 우측 `순찰 정보`
-       카드의 `시작 일시` 행에 이미 있다. 🔴 **`findByText` 가 아니라 역할로 찾는다** —
-       코스명은 그 카드의 `순찰 코스` 행에도 있어 텍스트로 찾으면 둘이 잡힌다 */
     expect(await screen.findByRole('heading', { name: 'A동 순찰코스' })).toBeInTheDocument()
-    // ⚠️ `지점 인증`·`소요시간` 은 **KPI 와 순찰 정보 양쪽에** 있다(목업 `02` 도 그렇다) —
-    //    KPI 는 구성을 보여주고 정보 카드는 값을 적는다
-    expect(screen.getByText('지점 인증')).toBeInTheDocument()
-    expect(screen.getByText('소요시간')).toBeInTheDocument()
-    expect(await screen.findByText('특이사항')).toBeInTheDocument()
-    expect(screen.queryByText('구간 평균 간격')).not.toBeInTheDocument()
-    expect(screen.getByText('지점 인증 내역')).toBeInTheDocument()
-    expect(screen.getByText('순찰 정보')).toBeInTheDocument()
+    const summary = within(screen.getByRole('region', { name: '순찰 요약' }))
+    for (const label of ['시작', '종료', '소요시간', '특이사항']) {
+      expect(summary.getByText(label)).toBeInTheDocument()
+    }
+    expect(await screen.findByText('수행 타임라인')).toBeInTheDocument()
+    expect(screen.getByText('순찰 시작')).toBeInTheDocument()
+    expect(screen.getByText('순찰 종료')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /코스 상세/ })).toHaveAttribute('href', '/zones/1')
+    // 🔴 036 의 순찰 정보 카드 · 7칸 표 · 평균 소요는 없다
+    expect(screen.queryByText('순찰 정보')).not.toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expect(screen.queryByText(/평균/)).not.toBeInTheDocument()
   })
 
   it('🔴 미완료를 두 종류로 구분한다 — 미인증(무방문) ↔ 미완료(인증 실패)', async () => {
     renderPage(103)
 
     // 103 시드: 무방문 1건(비상구 A) + 방문했으나 인증 실패 1건(로비 1층)
-    await screen.findByRole('table')
-    expect(inCheckTable().getByText('비상구 A')).toBeInTheDocument()
-    expect(inCheckTable().getByText('미인증')).toBeInTheDocument()
-    expect(inCheckTable().getByText('미완료')).toBeInTheDocument()
+    await screen.findByRole('list', { name: '지점 인증 내역' })
+    expect(inTimeline().getByText('비상구 A')).toBeInTheDocument()
+    expect(inTimeline().getAllByText('미인증').length).toBeGreaterThan(0)
+    expect(inTimeline().getAllByText('미완료').length).toBeGreaterThan(0)
   })
 
-  it('🔴 미완료 행의 checkDt 를 인증 시각으로 보여주지 않는다 (OQ-15)', async () => {
-    renderPage(103)
+  it('🔴 정상 인증(이상없음)은 뱃지를 달지 않는다 (D2)', async () => {
+    renderPage(101)
 
-    await screen.findByRole('table')
-    // 시드의 미완료 행은 checkDt 가 있지만 authMethod 는 null 이다.
-    // 의미가 확정되지 않아(코스 endDt 와 같은 것 12건 / 다른 것 33건) 숨긴다
-    const row = inCheckTable().getByText('로비 1층').closest('tr')
-    expect(row).not.toBeNull()
-    expect(within(row as HTMLElement).getAllByText('-').length).toBeGreaterThan(0)
+    await screen.findByRole('list', { name: '지점 인증 내역' })
+    // 화면 낭독기용 글자는 남는다 — 눈에 보이는 뱃지만 없다
+    expect(inTimeline().queryAllByText('이상없음').every((el) => el.classList.contains('sr-only'))).toBe(true)
   })
 
   it('🔴 전 필드가 null 인 행(대기중·진행중)에서 터지지 않는다', async () => {
     renderPage(107)
 
-    // 107 시드: status 0·1 이 checkDt·authMethod·좌표·순찰자·overtimeYn 전부 null
-    await screen.findByRole('table')
-    expect(inCheckTable().getByText('대기중')).toBeInTheDocument()
-    expect(inCheckTable().getByText('진행중')).toBeInTheDocument()
+    await screen.findByRole('list', { name: '지점 인증 내역' })
+    expect(inTimeline().getAllByText('대기').length).toBeGreaterThan(0)
   })
 
   it('🔴 "기준 충족" 판정을 하지 않는다 — 값만 나란히 적는다', async () => {
     renderPage(101)
 
     await screen.findByRole('heading', { name: 'A동 순찰코스' })
-    // totalMin 이 검증되지 않고(B-31) 어긋난 데이터가 전수 18건이다
     expect(screen.queryByText(/충족/)).not.toBeInTheDocument()
-    expect(screen.queryByText(/초과 달성/)).not.toBeInTheDocument()
     expect(screen.getAllByText(/기준 45분/).length).toBeGreaterThan(0)
   })
 
   it('🔴 totalMin 이 0 이면 "기준 0분" 이 아니라 "기준 미설정" 이다', async () => {
     renderPage(104)
 
-    // 설정이 안 된 것과 0분은 다르다
     expect((await screen.findAllByText(/기준 미설정/)).length).toBeGreaterThan(0)
     expect(screen.queryByText(/기준 0분/)).not.toBeInTheDocument()
   })
 
-  it('인증수단 집계를 CheckDetails 에서 센다 — 요청은 늘지 않는다', async () => {
+  it('특이사항 n건을 누르면 첫 기록이 펼쳐진다 (D3)', async () => {
+    const user = userEvent.setup()
+    renderPage(104)
+
+    const summary = within(await screen.findByRole('region', { name: '순찰 요약' }))
+    await user.click(await summary.findByRole('button', { name: /건/ }))
+
+    expect(screen.getAllByRole('button', { name: /기록 접기$/ }).length).toBeGreaterThan(0)
+  })
+
+  it('지점 줄을 누르면 고른 상태가 된다 — 지도와 서로 강조 (D3)', async () => {
+    const user = userEvent.setup()
     renderPage(101)
 
-    // 101 시드: NFC 2 + QR 1
-    expect(await screen.findByText('QR 1 · NFC 2')).toBeInTheDocument()
+    const button = await screen.findByRole('button', { name: /정문 입구 지도에서 보기/ })
+    await user.click(button)
+
+    expect(button).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('🔴 인증 행이 0건인 회차도 실패가 아니라 사실로 그린다', async () => {
@@ -126,7 +133,7 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
     renderPage(105)
 
     // 완료인데 checkedCount 0 인 이력이 실재한다
-    expect(await screen.findByText('인증 내역이 없습니다')).toBeInTheDocument()
+    expect(await screen.findByText('이 회차에는 기록된 지점 인증이 없습니다.')).toBeInTheDocument()
     expect(screen.queryByText('인증 내역을 불러오지 못했습니다')).not.toBeInTheDocument()
   })
 
@@ -135,7 +142,7 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
     renderPage(101)
 
     expect(await screen.findByText('인증 내역을 불러오지 못했습니다')).toBeInTheDocument()
-    expect(screen.queryByText('인증 내역이 없습니다')).not.toBeInTheDocument()
+    expect(screen.queryByText('이 회차에는 기록된 지점 인증이 없습니다.')).not.toBeInTheDocument()
   })
 
   it('🔴 없는 회차를 "삭제됐다" 로 단정하지 않고 복귀 수단을 준다', async () => {
@@ -176,9 +183,10 @@ describe('PatrolZoneDetailPage — 회차 상세', () => {
   it('🔴 순서는 orderNo 를 그대로 쓴다 — 배열 위치로 다시 매기지 않는다', async () => {
     renderPage(101)
 
-    await screen.findByRole('table')
-    const first = inCheckTable().getByText('정문 입구').closest('tr')
+    await screen.findByRole('list', { name: '지점 인증 내역' })
+    const first = inTimeline().getAllByRole('listitem')[0]
     // 같은 지점을 화면마다 다른 번호로 부르지 않는다(032 선례)
-    expect(within(first as HTMLElement).getByText('1')).toBeInTheDocument()
+    expect(within(first).getByText('정문 입구')).toBeInTheDocument()
+    expect(within(first).getByText('1')).toBeInTheDocument()
   })
 })

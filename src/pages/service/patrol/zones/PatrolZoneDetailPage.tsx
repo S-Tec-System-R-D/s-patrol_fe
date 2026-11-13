@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, ChevronRightIcon, HistoryIcon, TriangleAlertIcon } from 'lucide-react'
+import { ArrowLeftIcon, ChevronRightIcon, HistoryIcon, RouteIcon, TriangleAlertIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
@@ -11,15 +11,14 @@ import {
   useCourseHistoryDetail,
   useCourseHistoryHandOvers,
 } from '@/features/course-history/hooks/useCourseHistoryDetail'
-import { useCourseAverage } from '@/features/course-history/hooks/useCourseAverage'
 import { historyPins } from '@/features/patrol-zones/lib/historyCoords'
+import { memoRowCount, runTimeline } from '@/features/patrol-zones/lib/runTimeline'
 import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
 import { useCourseDetail } from '@/features/courses/hooks/useCourseDetail'
-import CheckDetailTable from '@/features/patrol-zones/components/detail/CheckDetailTable'
 import HistoryMapCard from '@/features/patrol-zones/components/detail/HistoryMapCard'
 import HandOverTimelineCard from '@/features/patrol-zones/components/detail/HandOverTimelineCard'
-import HistoryInfoCard from '@/features/patrol-zones/components/detail/HistoryInfoCard'
-import { getSiteSeq } from '@/lib/auth/site'
+import RunSummaryStrip from '@/features/patrol-zones/components/detail/RunSummaryStrip'
+import RunTimeline from '@/features/patrol-zones/components/detail/RunTimeline'
 import { paths } from '@/router/paths'
 
 /**
@@ -43,12 +42,13 @@ const PatrolZoneDetailPage = () => {
   const { historySeq: raw } = useParams<{ historySeq: string }>()
   const parsed = Number(raw)
   const historySeq = Number.isInteger(parsed) ? parsed : null
-  const siteSeq = getSiteSeq()
 
   const detail = useCourseHistoryDetail(historySeq)
   const checkDetails = useCourseHistoryCheckDetails(historySeq)
   const handOvers = useCourseHistoryHandOvers(detail.data?.handoverCount ? historySeq : null)
-  const average = useCourseAverage(siteSeq, detail.data?.courseSeq ?? null)
+  /* 🔄 `spec 077` — 행 ↔ 핀 서로 강조 · 펼친 기록. 타임라인 · 지도 · 요약이 함께 쓴다 */
+  const [selected, setSelected] = useState<number | null>(null)
+  const [expanded, setExpanded] = useState<Set<number>>(new Set())
 
   /* 🔴 **지도의 뒤인증 핸 좌표는 여기서 부른다**(T497 판단). 훅 안에서 부르면
      `course-history → courses` **역방향 의존**이 생긴다 — 페이지는 양쪽을 import 해도 정상이다.
@@ -57,10 +57,32 @@ const PatrolZoneDetailPage = () => {
   const course = useCourseDetail(detail.data?.courseSeq ?? null)
 
   const checks = useMemo(() => checkDetails.data ?? [], [checkDetails.data])
-  const coords = useMemo(
-    () => historyPins(checks, course.data?.points ?? []),
-    [checks, course.data?.points]
+  const steps = useMemo(
+    () => (detail.data ? runTimeline(checks, detail.data.startDt, detail.data.endDt === null) : []),
+    [checks, detail.data]
   )
+  const nextDetailSeq = steps.find((step) => step.isNext)?.row.detailSeq
+  const coords = useMemo(
+    () => historyPins(checks, course.data?.points ?? [], nextDetailSeq),
+    [checks, course.data?.points, nextDetailSeq]
+  )
+
+  const toggle = (detailSeq: number) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(detailSeq)) next.delete(detailSeq)
+      else next.add(detailSeq)
+      return next
+    })
+  const toggleAll = (open: boolean) =>
+    setExpanded(open ? new Set(checks.filter((row) => row.memos.length > 0).map((row) => row.detailSeq)) : new Set())
+  /** 요약 `특이사항 n건` → 첫 기록을 고르고 펼친다(타임라인이 그 행으로 스크롤) */
+  const showMemos = () => {
+    const first = steps.find((step) => step.row.memos.length > 0)
+    if (!first) return
+    setExpanded((prev) => new Set(prev).add(first.row.detailSeq))
+    setSelected(first.row.detailSeq)
+  }
 
   const crumb = (
     <nav className="flex items-center gap-1 text-caption text-muted-foreground">
@@ -168,52 +190,75 @@ const PatrolZoneDetailPage = () => {
 
       <AppPageHeader
         icon={HistoryIcon}
-        /* 🔴 **시작 시각을 빼 둔다**(사용자 결정 2026-10-20). 같은 값이 우측 `순찰 정보`
-           카드의 **`시작 일시` 행에 이미 있다** — 제목에 붙이면 같은 화면에서 두 번 읽고,
-           코스명이 긴 경우 제목이 두 줄로 접힌다. 회차 식별은 그 카드가 맡는다 */
         title={data.courseName}
-        subtitle="이 회차의 순찰 수행 내역입니다"
+        /* 🔄 `spec 077`: 부제 = **순찰자**(교대가 있으면 `· 교대 n`) — 036 의 `순찰 정보` 카드가 하던 일.
+           🔴 순찰자 없는 이력이 실측 35% 다 — 빈 칸으로 두지 않는다 */
+        subtitle={`${data.startUserName || '순찰자 미지정'}${data.handoverCount > 0 ? ` · 교대 ${data.handoverCount}` : ''}`}
         titleSuffix={
           <div className="flex items-center gap-1">
             <AppBadge variant={result.variant}>{result.label}</AppBadge>
             {overtime && <AppBadge variant={overtime.variant}>{overtime.label}</AppBadge>}
           </div>
         }
+        action={
+          <Link
+            to={paths.service.courseDetail(data.courseSeq)}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-body font-medium hover:bg-muted"
+          >
+            <RouteIcon size={14} aria-hidden />
+            코스 상세
+          </Link>
+        }
       />
 
-      {/* 🔴 **2열 골격**(목업 `02`) — 좌: 지도 + 인증 내역 / 우: 순찰 정보.
-          좁은 폭에서는 한 줄로 쌓인다.
-          🔴 **`items-start` 다**(사용자 확인 2026-10-19) — 기본값 `stretch` 면 우측 순찰 정보
-          카드가 **좌측 컬럼 높이만큼 늘어나** 아래에 큰 여백이 생긴다. 카드 높이는 내용이 정한다 */}
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
-        {/**
-         * 🔴 **좁은 폭에서는 순찰 정보가 먼저다**(사용자 제안 2026-10-20 — 동의).
-         *
-         * 넓은 폭에서는 두 컬럼이 **나란히 보여 순서가 없지만**, 접히는 순간 **읽는 순서**가
-         * 된다. 그때 지도·인증 내역이 먼저 오면 **"어느 회차를 보고 있는지" 가 맨 아래**로
-         * 밀린다 — 특히 제목에서 시작 시각을 뺀 뒤로 **회차를 식별하는 값(코스·순찰자·시작/
-         * 종료)이 순찰 정보 카드에만** 있다. 맥락 → 전체 그림(지도) → 행별 확인(표) 순이
-         * 좁은 폭에서 맞다.
-         *
-         * ⚠️ **DOM 순서가 아니라 `order` 로 바꾼다** — DOM 을 뒤집으면 넓은 폭에서 순찰
-         * 정보가 좌측 컬럼에 놓인다(`col-span-2` 가 먼저 와야 2칸을 먹는다).
-         */}
-        <section className="order-2 flex flex-col gap-4 lg:order-1 lg:col-span-2">
-          {/* 🔴 **지도가 인증 내역보다 위다**(사용자 결정 2026-10-19 — 순서를 바꿨다).
-              지도는 "어느 지점이 비었나" 를 한눈에 주고, 표는 그 다음 단계인 행별 확인이다.
-              표를 먼저 두면 메모를 펼칠수록 지도가 아래로 밀려 **처음 보는 그림이 안 보인다**.
-              🔴 **항목이 생길 때만 보여준다**(T519 기준: 좌표 0개 → 비표시) — 빈 회색 박스는
-              화면만 차지하고 아무 판단에도 안 쓰인다. 지점 목록은 아래 표가 이미 말한다 */}
+      <RunSummaryStrip
+        detail={data}
+        memoRows={checkDetails.data ? memoRowCount(checks) : null}
+        onShowMemos={showMemos}
+      />
+
+      {/* 🔄 **`spec 077` 2열** — 왼쪽 수행 타임라인(나머지 폭) / 오른쪽 코스 경로 지도 + 교대 이력(D1).
+          `xl` 미만 1단 — 타임라인이 먼저(이 화면의 본문), 지도는 그 아래.
+          🔴 `items-start` — 오른쪽 열이 왼쪽 높이만큼 늘어나지 않게(036) */}
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_440px]">
+        {checkDetails.isPending ? (
+          /* 🔴 로딩을 "없음" 으로 보여주지 않는다 — 인증 행이 0건인 회차가 실재한다 */
+          <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-10 animate-pulse rounded-md bg-muted" />
+            ))}
+          </div>
+        ) : checkDetails.isError ? (
+          <div className="rounded-lg border border-border bg-card">
+            <AppEmpty
+              icon={TriangleAlertIcon}
+              title="인증 내역을 불러오지 못했습니다"
+              description={checkDetails.error?.message}
+            />
+            <div className="flex justify-center pb-6">
+              <AppButton variant="sub" onClick={() => void checkDetails.refetch()}>
+                다시 시도
+              </AppButton>
+            </div>
+          </div>
+        ) : (
+          <RunTimeline
+            detail={data}
+            steps={steps}
+            selected={selected}
+            onSelect={setSelected}
+            expanded={expanded}
+            onToggle={toggle}
+            onToggleAll={toggleAll}
+          />
+        )}
+
+        <div className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-4">
           {course.isPending ? (
-            /* 🔴 **조회 중에는 지도를 그리지 않는다**(T523). 그리면 등록 좌표가 아직 없어
-               **인증 좌표가 있는 핀만** 찍히고, 응답이 도착하는 순간 나머지 핀이 튀어나와
-               **코스 모양이 눈앞에서 바뀐다**. 실측상 인증 좌표를 가진 행은 20% 뿐이라
-               그 사이 화면은 "거의 빈 코스" 로 보인다 — 사실과 다르다 */
-            <div className="h-[380px] animate-pulse rounded-lg bg-muted" />
+            /* 🔴 조회 중에는 지도를 그리지 않는다(T523) — 등록 좌표가 없어 핀이 튀어나온다 */
+            <div className="h-[420px] animate-pulse rounded-lg bg-muted" />
           ) : course.isError ? (
-            /* 🔴 **조용히 넘어가면 지도가 거짓말을 한다.** 코스 조회가 실패하면 등록 좌표를
-               못 구해 `missing` 이 커지는데, 화면은 그것을 **"지점에 좌표가 등록되지 않았다"**
-               로 적는다(`HistoryMapCard` 의 문구). 원인이 전혀 다르므로 분기한다 */
+            /* 🔴 조용히 넘어가면 "좌표가 등록되지 않았다" 로 거짓말을 한다 — 원인이 다르다 */
             <div className="rounded-lg border border-border bg-card">
               <AppEmpty
                 icon={TriangleAlertIcon}
@@ -227,53 +272,19 @@ const PatrolZoneDetailPage = () => {
               </div>
             </div>
           ) : (
-            coords.pins.length > 0 && (
-              <HistoryMapCard pins={coords.pins} missing={coords.missing} />
-            )
+            <HistoryMapCard
+              pins={coords.pins}
+              missing={coords.missing}
+              missingPoints={coords.missingPoints}
+              selected={selected}
+              onSelect={setSelected}
+            />
           )}
-
-          <div className="rounded-lg border border-border bg-card">
-            <div className="flex items-center justify-between border-b px-5 py-4">
-              <h3 className="text-panel-title font-semibold">지점 인증 내역</h3>
-              <span className="text-caption text-muted-foreground">
-                {data.totalPointCount}개 지점 · {data.completedPointCount}개 인증
-              </span>
-            </div>
-
-            {checkDetails.isPending ? (
-              /* 🔴 로딩을 "없음" 으로 보여주지 않는다 — 인증 행이 0건인 회차가 실재해서
-                 둘을 섞으면 **사실과 장애를 구분할 수 없다** */
-              <div className="flex flex-col gap-2 p-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-8 animate-pulse rounded-md bg-muted" />
-                ))}
-              </div>
-            ) : checkDetails.isError ? (
-              <div>
-                <AppEmpty
-                  icon={TriangleAlertIcon}
-                  title="인증 내역을 불러오지 못했습니다"
-                  description={checkDetails.error?.message}
-                />
-                <div className="flex justify-center pb-6">
-                  <AppButton variant="sub" onClick={() => void checkDetails.refetch()}>
-                    다시 시도
-                  </AppButton>
-                </div>
-              </div>
-            ) : (
-              <CheckDetailTable rows={checks} />
-            )}
-          </div>
-        </section>
-
-        <section className="order-1 flex flex-col gap-4 lg:order-2 lg:col-span-1">
-          <HistoryInfoCard detail={data} checks={checks} average={average.data} />
           {/* 지점 내역을 받기 전엔 그리지 않는다 — 빈 내역이면 전부 `처리한 지점 없음` 으로 보인다 */}
           {handOvers.data && handOvers.data.length > 0 && checkDetails.data && (
             <HandOverTimelineCard rows={handOvers.data} checks={checkDetails.data} />
           )}
-        </section>
+        </div>
       </div>
     </div>
   )

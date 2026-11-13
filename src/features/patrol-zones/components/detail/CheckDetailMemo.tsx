@@ -46,9 +46,11 @@ import type {
 interface CheckDetailMemoProps {
   /** 🔴 **행을 그대로 받는다** — 지점 상세도 같은 행 모양으로 넘긴다 */
   row: CheckDetailRow
+  /** 메모마다 사진을 이만큼만 보이고 나머지는 `+N`(누르면 전부) — `spec 077` 시안. 없으면 전부 */
+  photoLimit?: number
 }
 
-const CheckDetailMemo = ({ row }: CheckDetailMemoProps) => (
+const CheckDetailMemo = ({ row, photoLimit }: CheckDetailMemoProps) => (
   <div className="flex flex-col gap-1.5 rounded-lg bg-muted/60 p-3">
     {/* 값 없음은 하이픈이다(`design-system.md` §4-5A) */}
     <p className="text-caption text-muted-foreground">{row.userName ?? '-'}</p>
@@ -59,7 +61,7 @@ const CheckDetailMemo = ({ row }: CheckDetailMemoProps) => (
         <li key={memo.memoSeq} className="flex flex-col gap-2 py-2 first:pt-0 last:pb-0">
           {/* 🔴 `whitespace-pre-line` — 줄바꿈이 들어온 메모를 한 줄로 뭉개지 않는다 */}
           <p className="whitespace-pre-line text-body text-foreground">{memo.memo}</p>
-          <MemoAttaches memo={memo} />
+          <MemoAttaches memo={memo} limit={photoLimit} />
         </li>
       ))}
     </ul>
@@ -67,9 +69,12 @@ const CheckDetailMemo = ({ row }: CheckDetailMemoProps) => (
 )
 
 /** 첨부 목록. ⚠️ **`attaches` 는 nullable 이다** — 빈 배열이 아니라 `null` 이 온다 */
-const MemoAttaches = ({ memo }: { memo: CheckDetailMemoData }) => {
-  const attaches = memo.attaches ?? []
-  if (attaches.length === 0) return null
+const MemoAttaches = ({ memo, limit }: { memo: CheckDetailMemoData; limit?: number }) => {
+  const [showAll, setShowAll] = useState(false)
+  const all = memo.attaches ?? []
+  if (all.length === 0) return null
+  const hidden = limit !== undefined && !showAll ? Math.max(0, all.length - limit) : 0
+  const attaches = hidden > 0 ? all.slice(0, limit) : all
 
   return (
     <ul className="flex flex-wrap gap-2">
@@ -78,6 +83,18 @@ const MemoAttaches = ({ memo }: { memo: CheckDetailMemoData }) => {
           <MemoAttach attach={attach} />
         </li>
       ))}
+      {hidden > 0 && (
+        <li>
+          <button
+            type="button"
+            onClick={() => setShowAll(true)}
+            aria-label={`사진 ${hidden}장 더 보기`}
+            className="grid size-24 place-items-center rounded-md border border-border bg-card text-body font-semibold text-muted-foreground hover:bg-muted"
+          >
+            +{hidden}
+          </button>
+        </li>
+      )}
     </ul>
   )
 }

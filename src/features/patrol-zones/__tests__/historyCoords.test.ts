@@ -60,7 +60,7 @@ describe('historyPins — 좌표 출처 (🔴 등록 좌표가 1순위)', () => 
   it('🔴 미인증 행도 같은 등록 좌표에 찍힌다 — 색만 다르다', () => {
     const { pins } = historyPins([row()], [coursePoint()])
 
-    expect(pins[0]).toMatchObject({ lat: 37.49, lng: 127.07, source: 'point', kind: 'norecord' })
+    expect(pins[0]).toMatchObject({ lat: 37.49, lng: 127.07, source: 'point', kind: 'unvisited' })
   })
 
   it('등록 좌표가 없으면 인증 좌표로 폴백한다 — 핀을 잃지 않는다', () => {
@@ -182,7 +182,7 @@ describe('historyPins — 🔴 핀 번호는 orderNo 다', () => {
   })
 })
 
-describe('historyPins — 🔴 핀 3종 (사용자 결정 2026-10-19)', () => {
+describe('historyPins — 🔴 핀 5종 (2026-10-19 3종 → spec 077)', () => {
   it('완료(4) → checked', () => {
     const { pins } = historyPins(
       [row({ status: 4, checkDt: '2026-05-01T10:06:00', authMethod: 9, gpsLat: 37.5, gpsLng: 127.1 })],
@@ -202,18 +202,32 @@ describe('historyPins — 🔴 핀 3종 (사용자 결정 2026-10-19)', () => {
     expect(pins[0].kind).toBe('incomplete')
   })
 
-  it('🔴 미완료(3) + checkDt 없음 → norecord — 아예 가지 않았다', () => {
+  it('🔴 미완료(3) + checkDt 없음 → unvisited(미인증) — 아예 가지 않았다', () => {
     const { pins } = historyPins([row({ status: 3, checkDt: null })], [coursePoint()])
 
-    expect(pins[0].kind).toBe('norecord')
+    expect(pins[0].kind).toBe('unvisited')
   })
 
-  it('🔴 대기중(0)·진행중(1)·순찰제외(2)도 norecord 다 — 빨갛게 칠하지 않는다', () => {
+  it('진행 중 회차의 다음 지점은 next · 좌표 없는 지점은 이름으로 남는다 (spec 077)', () => {
+    const { pins, missingPoints } = historyPins(
+      [
+        row({ status: 0 }),
+        row({ detailSeq: 2, orderNo: 2, pointSeq: 99, pointName: '옥상', gpsLat: null, gpsLng: null }),
+      ],
+      [coursePoint()],
+      1
+    )
+
+    expect(pins[0].kind).toBe('next')
+    expect(missingPoints).toEqual([{ order: 2, name: '옥상' }])
+  })
+
+  it('🔴 대기중(0)·진행중(1)·순찰제외(2)는 waiting 이다 — 빨갛게 칠하지 않는다', () => {
     // 진행 중인 회차에서 아직 안 간 지점을 danger 로 칠하면 **없는 문제를 만든다**
     const statuses = [0, 1, 2]
     statuses.forEach((status) => {
       const { pins } = historyPins([row({ status })], [coursePoint()])
-      expect(pins[0].kind).toBe('norecord')
+      expect(pins[0].kind).toBe('waiting')
     })
   })
 

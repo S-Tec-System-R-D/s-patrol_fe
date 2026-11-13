@@ -1,11 +1,10 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import type { CheckDetailRow } from '@/features/course-history/types'
 
 import CheckDetailMemo from '../components/detail/CheckDetailMemo'
-import CheckDetailTable from '../components/detail/CheckDetailTable'
+
 
 /**
  * 메모 펼침 패널 + 사진 폴백 (`spec 036` T520~T522).
@@ -151,75 +150,6 @@ describe('CheckDetailMemo — 🔴 사진 폴백 (B-40)', () => {
     expect(screen.getByText('조명 고장')).toBeInTheDocument()
   })
 })
-
-/** 표(`xl` 이상)만 본다 — jsdom 은 미디어쿼리가 없어 타임라인(`xl` 미만)도 함께 그려진다 */
-const inTable = () => within(screen.getByRole('table'))
-const inTimeline = () => within(screen.getByRole('list', { name: '지점 인증 내역' }))
-
-describe('CheckDetailTable — 기록 칸 건수 (2026-10-20)', () => {
-  /**
-   * 🔴 **아이콘이 아니라 건수다**(목업 `코스상세 - 지점인증내역 수정안`). 메시지 아이콘은
-   * "뭔가 있다" 까지만 말해서, 어느 행을 펼쳐 볼지 고를 수가 없었다.
-   *
-   * ⚠️ **목록(`ZoneColumn`)은 그대로 아이콘이다** — 거기는 응답에 `hasMemo` boolean 뿐이라
-   * 셀 수가 없다(세려면 행마다 `CheckDetails` 조회 = N+1). 같은 화면이 아니다.
-   */
-  it('사진과 메모 건수를 함께 적는다', () => {
-    const memos = [memo({ attaches: [attach({ attachSeq: 1 }), attach({ attachSeq: 2 })] })]
-    render(<CheckDetailTable rows={[row({ memos })]} />)
-
-    expect(inTable().getByText(/사진 2 · 메모 1/)).toBeInTheDocument()
-  })
-
-  /** 🔴 **`사진 0` 을 적지 않는다** — 첨부 없는 메모가 흔하고, `0` 은 빈 값이지 사실이 아니다 */
-  it('🔴 사진이 없으면 메모 건수만 적는다', () => {
-    render(<CheckDetailTable rows={[row({ memos: [memo({ attaches: null })] })]} />)
-
-    expect(inTable().getByText(/메모 1/)).toBeInTheDocument()
-    expect(screen.queryByText(/사진 0/)).not.toBeInTheDocument()
-  })
-
-  /** ⚠️ `attaches` 는 **nullable** 이다 — 섞여 와도 합이 깨지지 않아야 한다 */
-  it('메모가 여러 건이면 첨부를 합쳐 센다', () => {
-    const memos = [
-      memo({ memoSeq: 1, attaches: [attach({ attachSeq: 1 })] }),
-      memo({ memoSeq: 2, attaches: null }),
-    ]
-    render(<CheckDetailTable rows={[row({ memos })]} />)
-
-    expect(inTable().getByText(/사진 1 · 메모 2/)).toBeInTheDocument()
-  })
-})
-
-describe('CheckDetailTimeline — xl 미만 (spec 055)', () => {
-  it('orderNo 순서로 그리고 구간을 노드에 적는다', () => {
-    render(
-      <CheckDetailTable
-        rows={[
-          row({ detailSeq: 2, orderNo: 2, pointName: '로비', checkDt: '2026-05-01T10:18:00' }),
-          row({ detailSeq: 1, orderNo: 1, pointName: '정문', checkDt: '2026-05-01T10:06:00' }),
-        ]}
-      />
-    )
-
-    const items = inTimeline().getAllByRole('listitem')
-    expect(items.map((item) => within(item).getByText(/정문|로비/).textContent)).toEqual(['정문', '로비'])
-    expect(within(items[1]).getByText(/구간 \+/)).toBeInTheDocument()
-    expect(within(items[0]).queryByText(/구간/)).not.toBeInTheDocument()
-  })
-
-  it('기록 버튼으로 메모를 펼치고 접는다 — 행 전체가 아니라 버튼이다', async () => {
-    render(<CheckDetailTable rows={[row({ memos: [memo({ memo: '누수 발견' })] })]} />)
-    const user = userEvent.setup()
-
-    await user.click(inTimeline().getByRole('button', { name: '정문 기록 펼치기' }))
-    expect(inTimeline().getByText('누수 발견')).toBeInTheDocument()
-
-    await user.click(inTimeline().getByRole('button', { name: '정문 기록 접기' }))
-    expect(inTimeline().queryByText('누수 발견')).not.toBeInTheDocument()
-  })
-})
-
 describe('CheckDetailMemo — 사진 캡션 (2026-10-20)', () => {
   /**
    * 🔴 **파일명을 썸네일 아래 적는다** — 전에는 `alt`·`title` 에만 있어 **마우스를 올려야**
@@ -253,69 +183,13 @@ describe('CheckDetailMemo — 사진 캡션 (2026-10-20)', () => {
   })
 })
 
-describe('CheckDetailTable — 펼침 (T520)', () => {
-  it('🔴 메모 0건 행에는 토글이 걸리지 않는다', () => {
-    render(<CheckDetailTable rows={[row({ memos: [] })]} />)
+describe('CheckDetailMemo — 사진 +N (spec 077)', () => {
+  it('photoLimit 을 넘는 사진은 +N 으로 접고, 누르면 전부 보인다', () => {
+    const attaches = [1, 2, 3, 4, 5].map((n) => attach({ attachSeq: n, fileName: `p${n}.jpg` }))
+    render(<CheckDetailMemo row={row({ memos: [memo({ attaches })] })} photoLimit={3} />)
 
-    // 헤더 행에도 `기록` 컬럼명이 있어 `/기록/` 만으로는 그쪽이 잡힌다 — 라벨 전체를 건다
-    expect(screen.queryByRole('row', { name: /기록 펼치기/ })).not.toBeInTheDocument()
-    // 🔴 토글이 아닌 행에는 `aria-expanded` 가 아예 없어야 한다
-    expect(document.querySelector('tbody tr[aria-expanded]')).toBeNull()
-  })
-
-  it('메모가 있으면 행이 토글이 되고, 접힌 상태로 시작한다', () => {
-    render(<CheckDetailTable rows={[row({ memos: [memo()] })]} />)
-
-    const toggleRow = screen.getByRole('row', { name: /정문 기록 펼치기/ })
-    expect(toggleRow).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByText('조명 고장')).not.toBeInTheDocument()
-  })
-
-  it('누르면 본문이 보이고 다시 누르면 접힌다', async () => {
-    const user = userEvent.setup()
-    render(<CheckDetailTable rows={[row({ memos: [memo()] })]} />)
-
-    await user.click(screen.getByRole('row', { name: /정문 기록 펼치기/ }))
-    expect(screen.getByText('조명 고장')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('row', { name: /정문 기록 접기/ }))
-    expect(screen.queryByText('조명 고장')).not.toBeInTheDocument()
-  })
-
-  /**
-   * 🔴 **아코디언이 아니다.** 하나만 열리게 하면 두 지점의 메모를 나란히 비교할 수 없고,
-   * "닫으려 하지 않았는데 닫혔다" 가 된다.
-   */
-  it('🔴 두 행을 동시에 펼칠 수 있다', async () => {
-    const user = userEvent.setup()
-    const rows = [
-      row({ detailSeq: 1, orderNo: 1, pointName: '정문', memos: [memo({ memo: '조명 고장' })] }),
-      row({
-        detailSeq: 2,
-        orderNo: 2,
-        pointSeq: 12,
-        pointName: '주차장',
-        memos: [memo({ memoSeq: 2, memo: '누수' })],
-      }),
-    ]
-    render(<CheckDetailTable rows={rows} />)
-
-    await user.click(screen.getByRole('row', { name: /정문 기록 펼치기/ }))
-    await user.click(screen.getByRole('row', { name: /주차장 기록 펼치기/ }))
-
-    expect(screen.getByText('조명 고장')).toBeInTheDocument()
-    expect(screen.getByText('누수')).toBeInTheDocument()
-  })
-
-  /** 🔴 행이 여러 개라 이름이 겹치면 스크린리더에서 구분이 안 된다(030 선례) */
-  it('🔴 토글 행의 접근성 이름에 지점명이 들어간다', () => {
-    const rows = [
-      row({ detailSeq: 1, orderNo: 1, pointName: '정문', memos: [memo()] }),
-      row({ detailSeq: 2, orderNo: 2, pointName: '주차장', memos: [memo({ memoSeq: 2 })] }),
-    ]
-    render(<CheckDetailTable rows={rows} />)
-
-    expect(screen.getByRole('row', { name: /정문 기록 펼치기/ })).toBeInTheDocument()
-    expect(screen.getByRole('row', { name: /주차장 기록 펼치기/ })).toBeInTheDocument()
+    expect(screen.getAllByRole('img')).toHaveLength(3)
+    fireEvent.click(screen.getByRole('button', { name: '사진 2장 더 보기' }))
+    expect(screen.getAllByRole('img')).toHaveLength(5)
   })
 })
