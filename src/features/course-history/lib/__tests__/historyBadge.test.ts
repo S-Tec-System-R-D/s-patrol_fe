@@ -38,7 +38,9 @@ describe('pointCheckBadge — 지점 사전(0~4)', () => {
   it('🔴 미완료(3)는 checkDt 로 두 종류로 갈린다', () => {
     // 실측 124건이 79(무방문) / 45(방문)로 갈린다 — 관리자가 할 일이 다르다
     expect(pointCheckBadge(3, null, false).label).toBe('미인증')
-    expect(pointCheckBadge(3, '2026-10-12T10:41:07', false).label).toBe('미완료')
+    // 🔄 spec 077 — 시각 있는 미완료 = 서버가 건너뛴 지점(대시보드와 같은 말 · 주황)
+    expect(pointCheckBadge(3, '2026-10-12T10:41:07', false)).toEqual({ variant: 'warning', label: '건너뜀' })
+    expect(pointCheckBadge(3, null, false).variant).toBe('warning')
   })
 
   it('🔴 완료(4)는 hasMemo 로 이상없음 ↔ 순찰기록이 갈린다', () => {

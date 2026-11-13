@@ -63,10 +63,10 @@ describe('HistoryMapCard — 그릴 수 없는 경우', () => {
 })
 
 describe('HistoryMapCard — 🔴 범례가 핀 5종을 적는다 (077)', () => {
-  it('인증 · 미완료 · 미인증 · 다음 · 대기 — 타임라인 뱃지와 같은 말', () => {
+  it('인증 · 건너뜀 · 미인증 · 다음 · 대기 — 타임라인 뱃지 · 대시보드와 같은 말', () => {
     render(<HistoryMapCard pins={[pin(1, 'checked')]} missing={0} />)
 
-    for (const label of ['인증', '미완료', '미인증', '다음', '대기']) {
+    for (const label of ['인증', '건너뜀', '미인증', '다음', '대기']) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
   })

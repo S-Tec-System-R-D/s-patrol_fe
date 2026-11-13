@@ -23,7 +23,8 @@ import { groupHistoryByDay, type PatrolDayBucket, type PatrolSummary } from '../
 /**
  * 지점 상세 **인증 기록** — 활동 타임라인 (`spec 076` 시안 개선 B).
  *
- * 요약 3칸(인증 n/m · 미완료 · 최근 순찰) → 14일 **쌓은 막대**(인증 · 미완료) → **날짜별 묶음** 목록.
+ * 요약 3칸(인증 n/m · 건너뜀 · 최근 순찰) → 14일 **쌓은 막대**(인증 · 건너뜀) → **날짜별 묶음** 목록.
+ * 🔄 `미완료` → **`건너뜀` · 주황**(2026-11-13 — 대시보드와 같은 말 · 색. 지점 기록 목록은 시각 있는 행만 와서 늘 건너뜀이다).
  * 데이터는 그대로 `GetPointHistory` 한 번(14일 · 100건 상한)이다.
  *
  * - 🔴 **막대를 누르면 그날만** 보인다 — 한 번 더 누르거나 `전체 보기` 로 풀린다.
@@ -41,7 +42,7 @@ const STATUS = { EXCLUDED: 2, MISSED: 3, DONE: 4 } as const
 /** 행 앞 아이콘 — 눈으로 훑는 용도. 이름은 오른쪽 뱃지가 말한다(`pointCheckBadge`) */
 const statusIcon = (row: PointHistoryRow) => {
   if (row.status === STATUS.DONE) return { icon: CheckCircle2Icon, className: 'text-success' }
-  if (row.status === STATUS.MISSED) return { icon: CircleAlertIcon, className: 'text-danger' }
+  if (row.status === STATUS.MISSED) return { icon: CircleAlertIcon, className: 'text-warning-foreground' }
   if (row.status === STATUS.EXCLUDED) return { icon: CircleMinusIcon, className: 'text-muted-foreground' }
   return { icon: CircleDashedIcon, className: 'text-muted-foreground' }
 }
@@ -69,7 +70,7 @@ const ChartTooltip = ({ active, payload }: { active?: boolean; payload?: { paylo
       <p className="text-muted-foreground">{format(parseISO(date), 'yyyy.MM.dd')}</p>
       <p className="font-semibold text-foreground">
         인증 {count}
-        {missed > 0 && <span className="text-danger"> · 미완료 {missed}</span>}
+        {missed > 0 && <span className="text-warning-foreground"> · 건너뜀 {missed}</span>}
       </p>
     </div>
   )
@@ -132,8 +133,8 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
               {summary.total}/{summary.attempted}
               {rate !== null && <span className="ml-1.5 text-caption font-semibold text-muted-foreground">{rate}%</span>}
             </Stat>
-            <Stat label="미완료">
-              <span className={cn(summary.missed > 0 && 'text-danger')}>{summary.missed}</span>
+            <Stat label="건너뜀">
+              <span className={cn(summary.missed > 0 && 'text-warning-foreground')}>{summary.missed}</span>
             </Stat>
             <Stat label="최근 순찰">{sinceLabel ?? '-'}</Stat>
           </div>
@@ -158,7 +159,7 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                   tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
                 />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-muted)', opacity: 0.6 }} />
-                {/* 🔴 쌓기 — 인증(파랑) 위에 미완료(빨강 — 행 뱃지 `미완료` 와 같은 색). 고른 날 말고는 흐리게 */}
+                {/* 🔴 쌓기 — 인증(파랑) 위에 건너뜀(주황 — 행 뱃지 · 대시보드와 같은 색). 고른 날 말고는 흐리게 */}
                 <Bar
                   dataKey="count"
                   stackId="day"
@@ -187,7 +188,7 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                   {summary.buckets.map((bucket) => (
                     <Cell
                       key={bucket.date}
-                      fill="var(--color-danger)"
+                      fill="var(--color-warning)"
                       fillOpacity={selected && selected !== bucket.date ? 0.25 : 1}
                     />
                   ))}
@@ -202,8 +203,8 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
               인증
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-xs bg-danger" aria-hidden />
-              미완료
+              <span className="size-2 rounded-xs bg-warning" aria-hidden />
+              건너뜀
             </span>
             <span className="ml-auto">
               {selected ? (

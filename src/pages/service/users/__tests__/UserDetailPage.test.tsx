@@ -256,10 +256,10 @@ describe('UserDetailPage — 최근 순찰 기록', () => {
     await screen.findAllByRole('link', { name: /\d{2}:\d{2}/ })
     expect(screen.getAllByRole('heading', { level: 4, name: /^\d+월 \d+일 \(.\)/ }).length).toBeGreaterThan(0)
     // 시드 101: 미완료 · 완료(메모 없음) 행이 섞여 있다 — 5종 문구는 아이콘의 접근 이름으로 남는다
-    expect(screen.getAllByRole('img', { name: '미완료' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('img', { name: '건너뜀' }).length).toBeGreaterThan(0)
     expect(screen.getAllByRole('img', { name: '이상없음' }).length).toBeGreaterThan(0)
     expect(screen.queryByText('이상없음')).not.toBeInTheDocument()
-    expect(screen.queryByText('미완료')).not.toBeInTheDocument()
+    expect(screen.queryByText('건너뜀')).not.toBeInTheDocument()
   })
 
   it('🔴 기록 조회 실패는 "기록 없음" 이 아니다 — 상세 본문은 그대로 있다', async () => {

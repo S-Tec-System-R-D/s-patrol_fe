@@ -68,14 +68,14 @@ describe('PatrolZoneDetailPage — 회차 상세 (spec 077)', () => {
     expect(screen.queryByText(/평균/)).not.toBeInTheDocument()
   })
 
-  it('🔴 미완료를 두 종류로 구분한다 — 미인증(무방문) ↔ 미완료(인증 실패)', async () => {
+  it('🔴 미완료(3)를 두 종류로 구분한다 — 미인증(도달 못 함) ↔ 건너뜀(시각 있음)', async () => {
     renderPage(103)
 
-    // 103 시드: 무방문 1건(비상구 A) + 방문했으나 인증 실패 1건(로비 1층)
+    // 103 시드: 시각 없음 1건(비상구 A → 미인증) + 시각 있음 1건(로비 1층 → 건너뜀)
     await screen.findByRole('list', { name: '지점 인증 내역' })
     expect(inTimeline().getByText('비상구 A')).toBeInTheDocument()
     expect(inTimeline().getAllByText('미인증').length).toBeGreaterThan(0)
-    expect(inTimeline().getAllByText('미완료').length).toBeGreaterThan(0)
+    expect(inTimeline().getAllByText('건너뜀').length).toBeGreaterThan(0)
   })
 
   it('🔴 정상 인증(이상없음)은 뱃지를 달지 않는다 (D2)', async () => {
@@ -108,14 +108,20 @@ describe('PatrolZoneDetailPage — 회차 상세 (spec 077)', () => {
     expect(screen.queryByText(/기준 0분/)).not.toBeInTheDocument()
   })
 
-  it('특이사항 n건을 누르면 첫 기록이 펼쳐진다 (D3)', async () => {
-    const user = userEvent.setup()
+  it('🔴 특이사항은 글자만 — 누르는 동작이 없다 (2026-11-13)', async () => {
     renderPage(104)
 
     const summary = within(await screen.findByRole('region', { name: '순찰 요약' }))
-    await user.click(await summary.findByRole('button', { name: /건/ }))
+    expect(await summary.findByText(/\d+건/)).toBeInTheDocument()
+    expect(summary.queryByRole('button')).not.toBeInTheDocument()
+  })
 
-    expect(screen.getAllByRole('button', { name: /기록 접기$/ }).length).toBeGreaterThan(0)
+  it('🔴 머리 숫자는 아래 행에서 센다 — 103: 인증 1 / 3 · 건너뜀 1 · 미인증 1 (2026-11-13)', async () => {
+    renderPage(103)
+
+    await screen.findByRole('list', { name: '지점 인증 내역' })
+    expect(screen.getByText('/ 3 인증', { exact: false })).toBeInTheDocument()
+    expect(screen.getByText('건너뜀 1 · 미인증 1')).toBeInTheDocument()
   })
 
   it('지점 줄을 누르면 고른 상태가 된다 — 지도와 서로 강조 (D3)', async () => {

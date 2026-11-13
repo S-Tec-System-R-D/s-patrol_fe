@@ -76,13 +76,7 @@ const PatrolZoneDetailPage = () => {
     })
   const toggleAll = (open: boolean) =>
     setExpanded(open ? new Set(checks.filter((row) => row.memos.length > 0).map((row) => row.detailSeq)) : new Set())
-  /** 요약 `특이사항 n건` → 첫 기록을 고르고 펼친다(타임라인이 그 행으로 스크롤) */
-  const showMemos = () => {
-    const first = steps.find((step) => step.row.memos.length > 0)
-    if (!first) return
-    setExpanded((prev) => new Set(prev).add(first.row.detailSeq))
-    setSelected(first.row.detailSeq)
-  }
+
 
   const crumb = (
     <nav className="flex items-center gap-1 text-caption text-muted-foreground">
@@ -214,7 +208,6 @@ const PatrolZoneDetailPage = () => {
       <RunSummaryStrip
         detail={data}
         memoRows={checkDetails.data ? memoRowCount(checks) : null}
-        onShowMemos={showMemos}
       />
 
       {/* 🔄 **`spec 077` 2열** — 왼쪽 수행 타임라인(나머지 폭) / 오른쪽 코스 경로 지도 + 교대 이력(D1).

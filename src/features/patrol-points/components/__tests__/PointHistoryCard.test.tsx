@@ -67,7 +67,7 @@ describe('PointHistoryCard', () => {
       <PointHistoryCard {...row({ status: 3, authMethod: null, authMethodName: '' })} />
     )
 
-    expect(screen.getByText('미완료')).toBeInTheDocument()
+    expect(screen.getByText('건너뜀')).toBeInTheDocument()
     expect(screen.getByText('2026-10-13 09:07')).toBeInTheDocument()
     expect(screen.queryByText('QR')).not.toBeInTheDocument()
   })

@@ -17,9 +17,8 @@ import type { HistoryPin, HistoryPinKind } from '../../lib/historyCoords'
  *
  * 🔄 **077 에서 바뀐 것**
  * - 오른쪽 열로 옮겼다(타임라인이 왼쪽 넓은 칸). 제목 `코스 경로`.
- * - **핀 5종** — 타임라인 뱃지와 같은 말(인증 · 미완료 · 미인증 · 다음 · 대기).
- *   🔴 예전엔 `danger` 를 쓰지 않았다 — 대기 지점이 같은 핀에 섞여 "아직 안 간 지점" 을 빨갛게
- *   칠할 수 있어서였다. 대기를 따로 떼었으므로 미완료 · 미인증은 뱃지와 같은 `danger` 다.
+ * - **핀 5종** — 타임라인 뱃지 · 대시보드 단계와 같은 말(인증 · 건너뜀 · 미인증 · 다음 · 대기).
+ *   🔴 `danger` 를 쓰지 않는다 — 건너뜀 · 미인증은 대시보드처럼 `warning`(주황)이다.
  * - **행 ↔ 핀 서로 강조**: 핀을 누르면 `onSelect`, 고른 핀은 테두리 고리 + 지도가 그 핀으로 옮긴다.
  *   🔴 고를 때마다 지도를 다시 만들지 않는다 — 마커만 아이콘을 바꾼다(타일이 깜빡이지 않게).
  * - 좌표 없는 지점은 **수가 아니라 이름으로** 지도 밑에 적는다(시안).
@@ -36,9 +35,9 @@ const SINGLE_PIN_ZOOM = 17
 /** 핀 모양 — 🔴 **색과 채움이 함께 바뀐다**(034 선례: 색만으로 전하지 않는다) */
 const PIN_STYLE: Record<HistoryPinKind, { className: string; label: string }> = {
   checked: { className: 'bg-success text-white', label: '인증' },
-  incomplete: { className: 'bg-danger text-white', label: '미완료' },
-  // 빈 원 + 빨강 테두리 — 아예 가지 않았다(시각 없음)
-  unvisited: { className: 'border-2 border-danger bg-card text-danger', label: '미인증' },
+  // 🔄 대시보드 단계와 같은 말 · 같은 주황(2026-11-13) — 시각 있음 = 건너뜀, 없음 = 미인증(빈 원)
+  incomplete: { className: 'bg-warning text-white', label: '건너뜀' },
+  unvisited: { className: 'border-2 border-warning bg-card text-warning-foreground', label: '미인증' },
   next: { className: 'border-2 border-point bg-card text-point', label: '다음' },
   waiting: {
     className: 'border border-dashed border-muted-foreground bg-card text-muted-foreground',

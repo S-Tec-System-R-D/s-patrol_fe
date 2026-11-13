@@ -163,7 +163,7 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     seed({ status: 3, statusName: '미완료', authMethod: null, authMethodName: 'Unknown' })
     renderPage()
 
-    expect(await screen.findByText('미완료')).toBeInTheDocument()
+    expect(await screen.findByText('건너뜀')).toBeInTheDocument()
     expect(screen.queryByText('Unknown')).not.toBeInTheDocument()
   })
 

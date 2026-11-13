@@ -1,5 +1,3 @@
-import { ChevronRightIcon } from 'lucide-react'
-
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
 import type { CourseHistoryDetail } from '@/features/course-history/types'
 
@@ -20,9 +18,12 @@ const dateLabel = (value: string): string => {
 }
 
 const Cell = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="flex min-w-0 flex-col gap-1 px-5 py-4">
+  <div className="flex min-w-0 flex-col gap-1 px-4 py-3 xl:px-5 xl:py-4">
     <span className="text-caption text-muted-foreground">{label}</span>
-    <span className="flex items-baseline gap-1.5 text-xl font-bold tabular-nums">{children}</span>
+    {/* 🔴 `xl` 미만은 **줄바꿈** — 한 줄에 시각 + 날짜(기준)를 우겨 넣으면 좁은 칸에서 잘렸다(사용자 지적 2026-11-13) */}
+    <span className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-lg font-bold tabular-nums xl:flex-nowrap xl:text-xl">
+      {children}
+    </span>
   </div>
 )
 
@@ -30,14 +31,14 @@ interface RunSummaryStripProps {
   detail: CourseHistoryDetail
   /** 메모가 있는 지점 수 — 인증 내역을 받기 전이면 `null`(없다고 단정하지 않는다) */
   memoRows: number | null
-  /** `특이사항 n건` 을 누르면 — 첫 기록으로 이동 · 펼침 */
-  onShowMemos: () => void
 }
 
-const RunSummaryStrip = ({ detail, memoRows, onShowMemos }: RunSummaryStripProps) => (
+/* 🔴 **특이사항은 글자만**(사용자 결정 2026-11-13) — 누르는 동작을 뺐다. 기록은 타임라인에서 바로 보인다 */
+const RunSummaryStrip = ({ detail, memoRows }: RunSummaryStripProps) => (
   <section
     aria-label="순찰 요약"
-    className="grid grid-cols-2 divide-border rounded-lg border border-border bg-card lg:grid-cols-4 lg:divide-x [&>*:nth-child(-n+2)]:border-b [&>*:nth-child(-n+2)]:lg:border-b-0"
+    /* `xl` 미만 2×2(가운데 세로선 · 첫 줄 아래 가로선) · `xl` 이상 한 줄 4칸 */
+    className="grid grid-cols-2 rounded-lg border border-border bg-card xl:grid-cols-4 [&>*]:border-border [&>*:nth-child(-n+2)]:border-b xl:[&>*:nth-child(-n+2)]:border-b-0 [&>*:nth-child(odd)]:border-r xl:[&>*:nth-child(2)]:border-r"
   >
     <Cell label="시작">
       {detail.startDt.slice(11, 16)}
@@ -67,14 +68,7 @@ const RunSummaryStrip = ({ detail, memoRows, onShowMemos }: RunSummaryStripProps
       ) : memoRows === 0 ? (
         '없음'
       ) : (
-        <button
-          type="button"
-          onClick={onShowMemos}
-          className="inline-flex items-center gap-0.5 text-warning-foreground hover:underline"
-        >
-          {memoRows}건
-          <ChevronRightIcon size={16} aria-hidden />
-        </button>
+        <span className="text-warning-foreground">{memoRows}건</span>
       )}
     </Cell>
   </section>

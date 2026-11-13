@@ -30,11 +30,11 @@ import CheckDetailMemo from './CheckDetailMemo'
  *   고르면 이 목록이 그 행으로 스크롤한다.
  */
 
-/** 순번 원 색 — 완료 녹색 · 미완료 빨강 · 다음 파랑 테두리 · 그 외 회색(055 · 070 과 같은 옅은 바탕 + 테두리) */
+/** 순번 원 색 — 완료 녹색 · 건너뜀 주황 채움 · 미인증 주황 테두리 · 다음 파랑 테두리 · 그 외 회색(대시보드 단계와 같은 색) */
 const chipClass = (step: RunStep): string => {
   if (step.row.status === POINT_HISTORY_STATUS.COMPLETED) return 'border-success bg-success text-white'
   if (step.row.status === POINT_HISTORY_STATUS.INCOMPLETE)
-    return step.row.checkDt === null ? 'border-danger bg-card text-danger' : 'border-danger bg-danger text-white'
+    return step.row.checkDt === null ? 'border-warning bg-card text-warning-foreground' : 'border-warning bg-warning text-white'
   if (step.isNext) return 'border-point bg-card text-point ring-4 ring-point/15'
   return 'border-border bg-card text-muted-foreground'
 }
@@ -152,8 +152,13 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
 
   const memoRows = steps.filter((step) => step.row.memos.length > 0)
   const allOpen = memoRows.length > 0 && memoRows.every((step) => expanded.has(step.row.detailSeq))
-  const missed = steps.filter((step) => step.row.status === POINT_HISTORY_STATUS.INCOMPLETE).length
-  const rate = detail.totalPointCount > 0 ? (detail.completedPointCount / detail.totalPointCount) * 100 : 0
+  /* 🔴 **머리 숫자는 아래 행에서 센다**(사용자 지적 2026-11-13) — 서버 집계(`completedPointCount`)를 쓰면
+     행과 어긋난 회차에서 `2 / 3 인증` 아래에 인증 행이 1개뿐인 화면이 된다. 건너뜀 · 미인증도 따로 센다 */
+  const checked = steps.filter((step) => step.row.status === POINT_HISTORY_STATUS.COMPLETED).length
+  const incomplete = steps.filter((step) => step.row.status === POINT_HISTORY_STATUS.INCOMPLETE)
+  const skipped = incomplete.filter((step) => step.row.checkDt !== null).length
+  const unvisited = incomplete.length - skipped
+  const rate = steps.length > 0 ? (checked / steps.length) * 100 : 0
   const inProgress = detail.endDt === null
   const startMove = moveText(steps[0])
 
@@ -162,13 +167,17 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <h3 className="text-panel-title font-semibold">수행 타임라인</h3>
         <span className="text-body tabular-nums">
-          <span className="font-semibold">{detail.completedPointCount}</span>
-          <span className="text-muted-foreground"> / {detail.totalPointCount} 인증</span>
+          <span className="font-semibold">{checked}</span>
+          <span className="text-muted-foreground"> / {steps.length} 인증</span>
         </span>
         <span aria-hidden className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
           <span className="block h-full rounded-full bg-success" style={{ width: `${rate}%` }} />
         </span>
-        {missed > 0 && <span className="text-caption font-semibold text-danger">미완료 {missed}</span>}
+        {(skipped > 0 || unvisited > 0) && (
+          <span className="text-caption font-semibold text-warning-foreground">
+            {[skipped > 0 && `건너뜀 ${skipped}`, unvisited > 0 && `미인증 ${unvisited}`].filter(Boolean).join(' · ')}
+          </span>
+        )}
         {memoRows.length > 0 && (
           <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-caption text-muted-foreground">
             <input

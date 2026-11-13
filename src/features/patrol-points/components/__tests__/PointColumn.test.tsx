@@ -65,7 +65,7 @@ describe('pointHistoryColumns', () => {
   it('🔴 미완료 행도 인증시각을 보여준다 (OQ-15 해소) — checkDt 는 인증 시간이다', () => {
     renderRows([row({ status: 3, statusName: '미완료', authMethod: null, authMethodName: '' })])
 
-    expect(screen.getByText('미완료')).toBeInTheDocument()
+    expect(screen.getByText('건너뜀')).toBeInTheDocument()
     expect(screen.getByText('09:07')).toBeInTheDocument()
   })
 

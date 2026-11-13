@@ -19,3 +19,7 @@
 - [x] T1286 테스트 — runTimeline · RunTimeline · HistoryMapCard · 페이지
 - [x] T1287 verify · test · e2e · 캡처(1280 · 390)
 - [x] T1288 문서 — screens.md 순찰 상세 행 · roadmap 077 행
+
+## Phase 4 — 검토 반영(2026-11-13)
+
+- [x] T1289 지점 `미완료`(시각 있음) → `건너뜀` · 건너뜀 · 미인증 `warning`(대시보드와 같은 말 · 색 — `pointCheckBadge` · 지도 핀 · 타임라인 원 · 지점 상세 요약/막대) · 특이사항 글자만 · 타임라인 머리 숫자를 행에서 셈 · `xl` 미만 요약 칸 줄바꿈 · 테스트 · design-system · screens
