@@ -68,6 +68,12 @@ const renderEditor = (onClose = vi.fn(), detail: CourseDetail = course) => {
   return { onClose }
 }
 
+/** 행 `⋯` → `편성에서 제거` (spec 074 — × 버튼을 메뉴로 옮겼다) */
+const removePoint = async (user: ReturnType<typeof userEvent.setup>, name: string) => {
+  await user.click(screen.getByRole('button', { name: `${name} 메뉴` }))
+  await user.click(await screen.findByRole('menuitem', { name: '편성에서 제거' }))
+}
+
 const captureBody = () => {
   const captured: UpdateCourseRequest[] = []
   server.use(
@@ -106,12 +112,12 @@ describe('CoursePointEditor — 화면', () => {
     expect(rows[1]).toContain('주차장')
   })
 
-  it('드래그 핸들·구간시간·제거 수단이 행마다 있다', () => {
+  it('드래그 핸들·구간시간·메뉴(이동 · 제거)가 행마다 있다', () => {
     renderEditor()
 
     expect(screen.getByRole('button', { name: '정문 입구 순서 변경' })).toBeInTheDocument()
     expect(screen.getByLabelText('정문 입구 구간시간(분)')).toHaveValue(10)
-    expect(screen.getByRole('button', { name: '정문 입구 편성 제거' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '정문 입구 메뉴' })).toBeInTheDocument()
   })
 
   it('🔴 지점별 활성 토글이 없다 — 코스에서 바꿀 값이 아니다 (B-29 철회)', () => {
@@ -141,12 +147,32 @@ describe('CoursePointEditor — 제거·구간시간', () => {
     const captured = captureBody()
     renderEditor()
 
-    await user.click(screen.getByRole('button', { name: '정문 입구 편성 제거' }))
+    await removePoint(user, '정문 입구')
     await user.click(screen.getByRole('button', { name: '저장' }))
 
     await waitFor(() => expect(captured).toHaveLength(1))
     expect(captured[0].points).toEqual([
       { pointSeq: 2, coursePointSeq: 102, orderNo: 1, memo: null, courseMin: 35 },
+    ])
+  })
+
+  it('🔴 끌지 않고도 순서를 바꾼다 — 메뉴 `위로 이동` · 맨 위는 `위로` 가 꺼져 있다 (spec 074 · WCAG 2.2)', async () => {
+    const user = userEvent.setup()
+    const captured = captureBody()
+    renderEditor()
+
+    await user.click(screen.getByRole('button', { name: '정문 입구 메뉴' }))
+    expect(await screen.findByRole('menuitem', { name: '위로 이동' })).toHaveAttribute('data-disabled')
+    await user.keyboard('{Escape}')
+
+    await user.click(screen.getByRole('button', { name: '주차장 메뉴' }))
+    await user.click(await screen.findByRole('menuitem', { name: '위로 이동' }))
+    await user.click(screen.getByRole('button', { name: '저장' }))
+
+    await waitFor(() => expect(captured).toHaveLength(1))
+    expect(captured[0].points.map((point) => [point.pointSeq, point.orderNo])).toEqual([
+      [2, 1],
+      [1, 2],
     ])
   })
 
@@ -168,8 +194,8 @@ describe('CoursePointEditor — 제거·구간시간', () => {
     const captured = captureBody()
     renderEditor()
 
-    await user.click(screen.getByRole('button', { name: '정문 입구 편성 제거' }))
-    await user.click(screen.getByRole('button', { name: '주차장 편성 제거' }))
+    await removePoint(user, '정문 입구')
+    await removePoint(user, '주차장')
 
     expect(screen.getByText(/편성된 지점이 없습니다/)).toBeInTheDocument()
     expect(screen.queryByText(/비활성/)).not.toBeInTheDocument()
@@ -186,7 +212,7 @@ describe('CoursePointEditor — 저장 바디', () => {
     const captured = captureBody()
     renderEditor()
 
-    await user.click(screen.getByRole('button', { name: '정문 입구 편성 제거' }))
+    await removePoint(user, '정문 입구')
     await user.click(screen.getByRole('button', { name: '저장' }))
 
     await waitFor(() => expect(captured).toHaveLength(1))
@@ -198,7 +224,7 @@ describe('CoursePointEditor — 저장 바디', () => {
     const captured = captureBody()
     renderEditor()
 
-    await user.click(screen.getByRole('button', { name: '주차장 편성 제거' }))
+    await removePoint(user, '주차장')
     await user.click(screen.getByRole('button', { name: '저장' }))
 
     await waitFor(() => expect(captured[0]?.courseName).toBe('A동 순찰코스'))
@@ -220,7 +246,7 @@ describe('CoursePointEditor — 저장 바디', () => {
     )
     renderEditor()
 
-    await user.click(screen.getByRole('button', { name: '주차장 편성 제거' }))
+    await removePoint(user, '주차장')
     await user.click(screen.getByRole('button', { name: '저장' }))
 
     // 요청이 떠 있는 동안에는 글자부터 바뀌고 두 버튼이 모두 꺼진다
@@ -236,7 +262,7 @@ describe('CoursePointEditor — 저장 바디', () => {
     captureBody()
     const { onClose } = renderEditor()
 
-    await user.click(screen.getByRole('button', { name: '주차장 편성 제거' }))
+    await removePoint(user, '주차장')
     await user.click(screen.getByRole('button', { name: '저장' }))
 
     await waitFor(() => expect(onClose).toHaveBeenCalled())
@@ -249,7 +275,7 @@ describe('CoursePointEditor — 🔴 실패 복구 (T368)', () => {
     failOnSave()
     const { onClose } = renderEditor()
 
-    await user.click(screen.getByRole('button', { name: '정문 입구 편성 제거' }))
+    await removePoint(user, '정문 입구')
     await user.click(screen.getByRole('button', { name: '저장' }))
 
     // 🔴 전량 전송이라 **부분 반영이 없다** — 서버는 저장 직전 그대로다
@@ -264,7 +290,7 @@ describe('CoursePointEditor — 🔴 실패 복구 (T368)', () => {
     const user = userEvent.setup()
     const { onClose } = renderEditor()
 
-    await user.click(screen.getByRole('button', { name: '정문 입구 편성 제거' }))
+    await removePoint(user, '정문 입구')
     await user.click(screen.getByRole('button', { name: '취소' }))
 
     expect(onClose).toHaveBeenCalled()
@@ -275,7 +301,7 @@ describe('CoursePointEditor — 🔴 실패 복구 (T368)', () => {
     const captured = captureBody()
     renderEditor()
 
-    await user.click(screen.getByRole('button', { name: '정문 입구 편성 제거' }))
+    await removePoint(user, '정문 입구')
     await user.click(screen.getByRole('button', { name: '취소' }))
 
     expect(captured).toHaveLength(0)

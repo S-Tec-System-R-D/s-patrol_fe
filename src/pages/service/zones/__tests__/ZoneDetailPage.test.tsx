@@ -332,7 +332,8 @@ describe('ZoneDetailPage — 변경계 조립 (Phase 4)', () => {
     await screen.findByText('A동 순찰코스')
     await user.click(screen.getByRole('button', { name: '지점 편성 편집' }))
     const dialog = await screen.findByRole('dialog', { name: '지점 순서 편집' })
-    await user.click(within(dialog).getAllByRole('button', { name: /편성 제거/ })[0])
+    await user.click(within(dialog).getAllByRole('button', { name: / 메뉴$/ })[0])
+    await user.click(await screen.findByRole('menuitem', { name: '편성에서 제거' }))
     await user.keyboard('{Escape}')
 
     expect(await screen.findByText('변경 내용을 버리시겠습니까?')).toBeInTheDocument()
@@ -398,5 +399,9 @@ describe('ZoneDetailPage — 순찰 기록·KPI (B단)', () => {
     const before = screen.getByText(/^\d+ \/ 7/).textContent
     await user.click(screen.getByRole('button', { name: '다음 회차' }))
     await waitFor(() => expect(screen.getByText(/^\d+ \/ 7/).textContent).not.toBe(before))
+
+    // ← 키로 되돌아간다
+    await user.keyboard('{ArrowLeft}')
+    await waitFor(() => expect(screen.getByText(/^\d+ \/ 7/).textContent).toBe(before))
   })
 })

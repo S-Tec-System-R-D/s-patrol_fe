@@ -171,7 +171,8 @@ const ZoneDetailPage = () => {
                 {/* modal={false} — 메뉴 항목에서 확인 창을 열 때 body pointer-events 가 남는 Radix 문제 회피(GroupEditDialog 와 같음) */}
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
-                    <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="코스 메뉴" />
+                    {/* 🔴 흰 배경 — 회색 페이지 위에서 투명 버튼은 테두리만 떠 보인다(2026-11-13) */}
+                    <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="코스 메뉴" className="bg-card" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-auto">
                     <DropdownMenuItem

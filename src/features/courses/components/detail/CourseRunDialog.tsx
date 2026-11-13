@@ -1,10 +1,10 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { ChevronLeftIcon, ChevronRightIcon, NfcIcon, QrCodeIcon } from 'lucide-react'
+import { ArrowRightIcon, ChevronLeftIcon, ChevronRightIcon, NfcIcon, QrCodeIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import AppBadge from '@/components/app/AppBadge'
-import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
+import AppIconButton from '@/components/app/AppIconButton'
 import { useCourseHistoryCheckDetails } from '@/features/course-history/hooks/useCourseHistoryDetail'
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
 import { COURSE_HISTORY_STATUS, POINT_HISTORY_STATUS, type CourseHistoryRow } from '@/features/course-history/types'
@@ -25,6 +25,8 @@ import { checkRatio } from '../../lib/courseRunStats'
  * 🔄 사용자 검토(2026-11-13): 상태 뱃지는 제목 오른쪽 · 🔴 **순번 동그라미는 회색**(주황이면 `초과` 뱃지와 헷갈린다 —
  *    색은 결과 칸만 쓴다) · 🔴 **진행 중 회차의 남은 지점은 누락이 아니다**(기록 표의 `-` 와 같은 규칙) ·
  *    지점 기록 0건(회차는 있는데 행이 없다, 실존)은 빈 안내.
+ * 🔄 아래 줄(2026-11-13): `‹ ›` 아이콘 + `i / n` 은 왼쪽, `상세 보기` 는 오른쪽 끝 버튼 — 모달에서 나가는 유일한 동작이다.
+ *    키보드 ← / → 로도 넘긴다(입력칸이 없는 모달이라 가로챌 것이 없다).
  */
 
 interface CourseRunDialogProps {
@@ -165,6 +167,8 @@ const RunBody = ({ row, totalMin }: { row: CourseHistoryRow; totalMin: number })
 const CourseRunDialog = ({ rows, index, totalMin, onIndexChange }: CourseRunDialogProps) => {
   const row = index === null ? undefined : rows[index]
   const position = index ?? 0
+  const hasPrev = position > 0
+  const hasNext = position < rows.length - 1
 
   return (
     <AppDialog
@@ -176,38 +180,41 @@ const CourseRunDialog = ({ rows, index, totalMin, onIndexChange }: CourseRunDial
       contentClassName="sm:max-w-[560px]"
     >
       {row && (
-        <div className="flex min-h-0 flex-col gap-4">
+        <div
+          className="flex min-h-0 flex-col gap-4"
+          onKeyDown={(event) => {
+            if (event.key === 'ArrowLeft' && hasPrev) onIndexChange(position - 1)
+            if (event.key === 'ArrowRight' && hasNext) onIndexChange(position + 1)
+          }}
+        >
           <RunBody key={row.historySeq} row={row} totalMin={totalMin} />
 
-          <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
-            <AppButton
-              variant="sub"
+          <div className="flex items-center gap-2 border-t border-border pt-3">
+            <AppIconButton
               icon={ChevronLeftIcon}
-              iconSize={14}
-              disabled={position === 0}
+              aria-label="이전 회차"
+              className="bg-card"
+              disabled={!hasPrev}
               onClick={() => onIndexChange(position - 1)}
-            >
-              이전 회차
-            </AppButton>
-            <span className="flex flex-col items-center gap-0.5 text-caption text-muted-foreground tabular-nums">
-              {position + 1} / {rows.length}
-              <Link
-                to={paths.service.patrolZoneDetail(row.historySeq)}
-                className="font-medium text-foreground underline-offset-2 hover:underline"
-              >
-                상세 보기
-              </Link>
-            </span>
-            <AppButton
-              variant="sub"
+            />
+            <AppIconButton
               icon={ChevronRightIcon}
-              iconPosition="right"
-              iconSize={14}
-              disabled={position >= rows.length - 1}
+              aria-label="다음 회차"
+              className="bg-card"
+              disabled={!hasNext}
               onClick={() => onIndexChange(position + 1)}
+            />
+            <span className="text-caption text-muted-foreground tabular-nums">
+              {position + 1} / {rows.length}
+            </span>
+            {/* 🔴 링크로 둔다(새 탭으로 열 수 있다) — 모양은 `AppLinkButton`(편성 편집 · 수정)과 같다(2026-11-13) */}
+            <Link
+              to={paths.service.patrolZoneDetail(row.historySeq)}
+              className="ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-meta font-semibold text-point-foreground hover:bg-point-bg"
             >
-              다음 회차
-            </AppButton>
+              상세 보기
+              <ArrowRightIcon size={13} aria-hidden />
+            </Link>
           </div>
         </div>
       )}

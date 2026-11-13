@@ -33,3 +33,11 @@
 - [x] T1247 회차 모달 — 제목 `text-lg` + 상태 뱃지는 제목 오른쪽(AppDialog `titleSuffix` · `titleClassName`) · 순번 회색 · 누락은 빨강 · 진행 중이면 `남은 지점 n`(누락 아님) · 지점 기록 0건이면 `이 회차의 지점 기록이 없습니다` · mock 102 지점 3건 채움
 - [x] T1248 근무자별 — 🔴 인증률은 혼자 끝낸 회차만 · 교대 회차는 회차 수에만(`· 교대 n`) — 회차 합계를 양쪽에 넣으면 3곳 찍고 넘긴 사람도 6/6 이 된다(사용자 결정 ③) in courseRunStats.ts
 - [x] T1249 verify 0 · test 1,526 · e2e 39 · 캡처(scratchpad course/r2-*)
+
+## Phase 5 — 2차 검토 반영 (2026-11-13)
+
+- [x] T1250 회차 모달 아래 줄 — `‹ ›` 아이콘 버튼 + `i / n` 왼쪽 · `상세 보기 →` 는 오른쪽 끝(AppLinkButton 모양 · 링크 유지) · 키보드 ← / → in CourseRunDialog.tsx
+- [x] T1251 머리 `⋯` 흰 배경(이 화면만 · 공용 AppIconButton 그대로) in ZoneDetailPage.tsx
+- [x] T1252 편성 편집 행 개편(Atlassian · PatternFly · WCAG 2.2 끌기 대안 참고) — 경로 카드와 같은 번호 동그라미 · 미사용 🔒 + 행 회색 · 인증수단 작은 글자 · 상자 → 구분선 · 행 `⋯` 메뉴(위로 · 아래로 이동 · 편성에서 제거) · 끄는 행은 그림자 카드(DragOverlay, 🔴 body 포털 — 모달 transform 때문에 어긋남) + 놓일 자리 점선 칸 · 번호는 끄는 동안 바로 바뀜 · 구간시간 `[ n 분 ]` · 640px 미만 두 줄 in CoursePointEditor.tsx + 테스트(메뉴 이동)
+- [x] T1254 편성 편집에서 인증수단 삭제(여기서 못 바꾸는 지점 속성 · 순서와 무관 — 경로 카드 · 지점 추가 후보에는 남김) · 모든 폭 한 줄(390 에서 이름 약 120px)
+- [x] T1253 verify 0 · test 1,527 · e2e 39 · 캡처(scratchpad course/r4-*)
