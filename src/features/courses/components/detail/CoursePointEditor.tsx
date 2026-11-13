@@ -16,7 +16,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { GripVerticalIcon, PlusIcon, XIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
@@ -40,6 +40,8 @@ import AddCoursePointDialog from './AddCoursePointDialog'
 
 /**
  * 지점 편성 — **편집 모드** (`spec 023` Phase 4, T367·T368).
+ * 🔄 **`spec 074`(사용자 결정 2026-11-13) — 페이지가 모달 안에 그린다.** 카드 틀 · 제목은 모달 몫이라 여기 없다.
+ * 바뀐 내용이 있는지는 `onDirtyChange` 로 올린다 — 모달 바깥 클릭 · Esc 로 닫을 때 페이지가 버릴지 묻는다.
  *
  * 🔴 **드래그마다 저장하지 않는다 — 명시적인 편집 모드다.** 이유가 세 개다:
  * 1. `UpdateCourse` 는 **전량 전송**(B-25)이다. 드래그 한 번마다 코스 전체를 PUT 하면
@@ -161,9 +163,11 @@ interface CoursePointEditorProps {
   course: CourseDetail
   /** 편집 종료(저장 성공 또는 취소) */
   onClose: () => void
+  /** 초안이 서버 편성과 달라졌는지 */
+  onDirtyChange?: (dirty: boolean) => void
 }
 
-const CoursePointEditor = ({ course, onClose }: CoursePointEditorProps) => {
+const CoursePointEditor = ({ course, onClose, onDirtyChange }: CoursePointEditorProps) => {
   const queryClient = useQueryClient()
   // 🔴 상세 응답에 `siteSeq` 가 없다(OQ-9) — 021 저장값으로 보충한다
   const siteSeq = getSiteSeq()
@@ -210,12 +214,13 @@ const CoursePointEditor = ({ course, onClose }: CoursePointEditorProps) => {
   const dirty = isDirty(drafts, course.points)
   const locked = mutation.isPending
 
+  useEffect(() => {
+    onDirtyChange?.(dirty)
+  }, [dirty, onDirtyChange])
+
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-point/40 bg-card p-5">
-      <div className="flex items-center justify-between">
-        <span className="text-panel-title font-semibold">지점 순서 편집</span>
-        <span className="text-caption text-muted-foreground">총 {drafts.length}개</span>
-      </div>
+    <div className="flex flex-col gap-3">
+      <span className="text-caption text-muted-foreground">총 {drafts.length}개</span>
 
       {drafts.length === 0 ? (
         /* 🔴 **경고가 아니다**(규칙 12). 전부 지우고 다시 짜는 것은 정상 작업이고,

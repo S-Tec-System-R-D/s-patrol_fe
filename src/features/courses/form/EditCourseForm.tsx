@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 
 import AppButton from '@/components/app/AppButton'
 import AppInput from '@/components/app/AppInput'
+import { Switch } from '@/components/ui/switch'
 import { getSiteSeq } from '@/lib/auth/site'
 
 import { updateCourse } from '../api/updateCourse'
@@ -25,6 +26,9 @@ import { courseSchema, type CourseFormDataType } from './schema'
  * 🔴 **`memo: null` 이 반영된다**(규칙 6 — 지점도 B-15 해소 2026-10-28 뒤로 같다). 즉 설명을 지우는 것이
  * 실제로 동작하므로, 빈 입력을 "변경 없음" 으로 바꿔치기하면 **사용자 의도를 거스른다.**
  *
+ * 🔴 **교대 허용 · 사용 여부도 여기서 바꾼다**(`spec 074`, 사용자 결정 2026-11-12) — 기본정보 카드의 스위치와
+ * 확인 모달(`CourseToggleDialog`)을 걷었다. 저장 버튼이 곧 확인이다. 같은 `UpdateCourse` 한 번에 함께 실린다.
+ *
  * 🔴 **`courseSeq` 를 모달이 열릴 때 값으로 고정한다**(022 `EditPointForm` 선례). 상세
  * 페이지는 한 코스만 보여 주지만, 그렇다고 `course` prop 이 안 바뀐다는 보장은 없다
  * (재조회·무효화). 고정하지 않으면 저장이 엉뚱한 코스에 적용될 수 있다.
@@ -42,6 +46,8 @@ const EditCourseForm = ({
 
   // 🔴 모달이 열린 시점의 코스. 아래 `defaultValues` 도 같은 시점에 한 번만 읽힌다
   const [opened] = useState(course)
+  const [switchYn, setSwitchYn] = useState(course.switchYn)
+  const [useYn, setUseYn] = useState(course.useYn)
 
   const {
     register,
@@ -76,6 +82,8 @@ const EditCourseForm = ({
         courseName: data.name,
         // 🔴 빈 입력은 `null` 로 보낸다 — 코스는 실제로 비워진다(규칙 6)
         memo: data.description.trim() || null,
+        switchYn,
+        useYn,
       })
     )
   }
@@ -96,8 +104,21 @@ const EditCourseForm = ({
         {...register('description')}
       />
 
-      {/* 🔴 이 모달에서 **지점 편성·활성화·교대 허용을 다루지 않는다** — 각자 상세에
-          자리가 있다. 같은 값을 두 곳에서 고치게 하면 어느 쪽이 최신인지 알 수 없다 */}
+      {/* 🔴 지점 편성은 다루지 않는다 — `순찰 경로` 카드의 `편성 편집` 이 맡는다 */}
+      <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+        <label className="flex items-center justify-between gap-3 text-body">
+          <span className="font-medium">교대 허용</span>
+          <Switch checked={switchYn} onCheckedChange={setSwitchYn} aria-label="교대 허용" />
+        </label>
+        <label className="flex items-center justify-between gap-3 text-body">
+          <span className="flex flex-col">
+            <span className="font-medium">코스 사용</span>
+            {/* ✅ OQ-023-F — 끄면 근무자 앱 코스 목록에서 숨는다 */}
+            <span className="text-caption text-muted-foreground">끄면 근무자 앱 코스 목록에서 숨겨집니다</span>
+          </span>
+          <Switch checked={useYn} onCheckedChange={setUseYn} aria-label="코스 사용" />
+        </label>
+      </div>
 
       {siteSeq === null && (
         <p className="text-xs text-danger">사업장이 선택되지 않아 저장할 수 없습니다.</p>

@@ -146,10 +146,12 @@ describe('EditCourseForm — 🔴 전량 전송 (B-25)', () => {
     await waitFor(() => expect(captured[0]?.memo).toBeNull())
   })
 
-  it('🔴 활성화·교대 허용을 이 모달에서 바꾸지 않는다 — 각자 토글이 있다', () => {
+  it('🔄 교대 허용 · 코스 사용을 이 모달에서 바꾼다 (spec 074) — 지금 값으로 시작한다', () => {
     renderForm()
 
-    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('switch')).toHaveLength(2)
+    expect(screen.getByRole('switch', { name: '교대 허용' })).toHaveAttribute('aria-checked', String(course.switchYn))
+    expect(screen.getByRole('switch', { name: '코스 사용' })).toHaveAttribute('aria-checked', String(course.useYn))
   })
 })
 

@@ -332,6 +332,25 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
       checkDt: daysAgo(1, '02:58:00'),
     }),
   ],
+  // 정상 3건 — 야간 회차(코스 상세 회차 모달 · `spec 074`)
+  102: [
+    checkDetail({ detailSeq: 1021, pointSeq: 60, orderNo: 1, pointName: '정문 입구', checkDt: daysAgo(2, '23:10:00') }),
+    checkDetail({
+      detailSeq: 1022,
+      pointSeq: 61,
+      orderNo: 2,
+      pointName: '로비 1층',
+      checkDt: daysAgo(2, '23:24:00'),
+      authMethod: 9,
+    }),
+    checkDetail({
+      detailSeq: 1023,
+      pointSeq: 62,
+      orderNo: 3,
+      pointName: '지하 주차장 B1',
+      checkDt: daysAgo(2, '23:47:00'),
+    }),
+  ],
   // 🔴 미완료 회차 — 미인증(무방문) 1건 + 미완료(방문) 1건이 섞여 있다
   103: [
     checkDetail({

@@ -1,14 +1,16 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
+import { describe, expect, it, vi } from 'vitest'
 
 import CoursePatrolLog from '../CoursePatrolLog'
 import type { CourseHistoryRow } from '@/features/course-history/types'
 
 /**
- * 최근 순찰 기록 (`spec 023` 코스 상세 B단).
+ * 최근 순찰 기록 (`spec 023` 코스 상세 B단 → `spec 074` 개편).
  *
- * 🔴🔴 **여기서 고정하는 것은 목업에 없던 실측 예외 세 가지다**(2026-10-12). 목업은 전부
- * "완료 · 3/3 · 44분" 이라, 그림대로 만들면 아래 행들에서 화면이 거짓을 말하거나 깨진다.
+ * 🔴🔴 **목업에 없던 실측 예외 세 가지를 고정한다**(2026-10-12) — 근무자 없는 이력 · `완료` 인데 `0/3` ·
+ * 소요시간 시 단위. 074 에서 더한 것: 10건 · 누락 열 · 초과는 상태 옆 · 행 클릭 · 전체 보기 링크.
  */
 
 const row = (overrides: Partial<CourseHistoryRow> = {}): CourseHistoryRow => ({
@@ -30,69 +32,128 @@ const row = (overrides: Partial<CourseHistoryRow> = {}): CourseHistoryRow => ({
   ...overrides,
 })
 
+const renderLog = (
+  rows: CourseHistoryRow[],
+  totalCount = rows.length,
+  extra: { isPending?: boolean; onSelect?: (row: CourseHistoryRow) => void } = {}
+) =>
+  render(
+    <MemoryRouter>
+      <CoursePatrolLog
+        courseSeq={1}
+        rows={rows}
+        totalCount={totalCount}
+        isPending={extra.isPending}
+        onSelect={extra.onSelect ?? (() => {})}
+      />
+    </MemoryRouter>
+  )
+
+const dataRows = () => screen.getAllByRole('row', { name: /회차 상세/ })
+
 describe('CoursePatrolLog — 기본', () => {
-  it('행을 표로 그린다 — 시작·근무자·인증·소요·상태', () => {
-    render(<CoursePatrolLog rows={[row()]} totalCount={1} />)
+  it('행을 표로 그린다 — 시작·근무자·인증·누락·소요·상태', () => {
+    renderLog([row()])
 
     expect(screen.getByText('10.11 02:40')).toBeInTheDocument()
     expect(screen.getByText('박성민')).toBeInTheDocument()
     expect(screen.getByText('3/3')).toBeInTheDocument()
     expect(screen.getByText('44분')).toBeInTheDocument()
     expect(screen.getByText('완료')).toBeInTheDocument()
+    expect(screen.getAllByRole('columnheader').map((th) => th.textContent)).toEqual([
+      '시작',
+      '근무자',
+      '인증',
+      '누락',
+      '소요',
+      '상태',
+    ])
   })
 
   it('최근 30일 건수를 적는다', () => {
-    render(<CoursePatrolLog rows={[row()]} totalCount={46} />)
+    renderLog([row()], 46)
 
     expect(screen.getByText(/최근 30일 · 46건/)).toBeInTheDocument()
+  })
+
+  it('🔴 앞 10건만 그리고 나머지는 순찰이력 화면 — 코스 필터로 넘긴다', () => {
+    const rows = Array.from({ length: 12 }, (_, i) => row({ historySeq: i + 1 }))
+    renderLog(rows, 28)
+
+    expect(dataRows()).toHaveLength(10)
+    expect(screen.getByRole('link', { name: /전체 기록 28건 보기/ })).toHaveAttribute('href', '/patrol/zones?course=1')
+  })
+
+  it('다 보이면 전체 보기 링크가 없다', () => {
+    renderLog([row()])
+
+    expect(screen.queryByRole('link', { name: /전체 기록/ })).toBeNull()
+  })
+
+  it('🔴 행을 누르면 그 회차를 올려 보낸다 — Enter 도 같다', async () => {
+    const onSelect = vi.fn()
+    renderLog([row({ historySeq: 7 })], 1, { onSelect })
+
+    await userEvent.click(dataRows()[0])
+    dataRows()[0].focus()
+    await userEvent.keyboard('{Enter}')
+
+    expect(onSelect).toHaveBeenCalledTimes(2)
+    expect(onSelect.mock.calls[0][0].historySeq).toBe(7)
+  })
+})
+
+describe('CoursePatrolLog — 누락', () => {
+  it('하나도 못 찍었으면 `전체`, 일부면 개수, 다 찍었으면 `-`', () => {
+    renderLog([
+      row({ historySeq: 1, checkedCount: 0, status: 2, statusName: '미완료' }),
+      row({ historySeq: 2, checkedCount: 1, status: 2, statusName: '미완료' }),
+      row({ historySeq: 3 }),
+    ])
+
+    const missedCells = dataRows().map((tr) => tr.querySelectorAll('td')[3].textContent)
+    expect(missedCells).toEqual(['전체', '2', '-'])
   })
 })
 
 describe('CoursePatrolLog — 🔴 실측 예외', () => {
-  it('🔴 근무자가 없는 이력이 실존한다 — 아바타·이름을 항상 그릴 수 없다', () => {
-    render(<CoursePatrolLog rows={[row({ userList: [] })]} totalCount={1} />)
+  it('🔴 근무자가 없는 이력이 실존한다 — `근무자 없음`', () => {
+    renderLog([row({ userList: [] })])
 
-    // 이름 자리가 비는 것이 정상이다. 깨지거나 "undefined" 가 나오면 안 된다
     expect(screen.queryByText('undefined')).not.toBeInTheDocument()
-    expect(screen.getAllByText('-').length).toBeGreaterThan(0)
+    expect(screen.getByText('근무자 없음')).toBeInTheDocument()
   })
 
   it('🔴 "완료" 인데 인증 0/3 인 행을 그대로 보여준다 — 상태와 인증은 독립이다', () => {
-    // 실측(사업장 10): status 1(완료) + checkedCount 0. "완료 = 3/3" 으로 묶으면
-    // 화면이 **없는 보장**을 약속한다
-    render(<CoursePatrolLog rows={[row({ status: 1, statusName: '완료', checkedCount: 0 })]} totalCount={1} />)
+    renderLog([row({ status: 1, statusName: '완료', checkedCount: 0 })])
 
     expect(screen.getByText('완료')).toBeInTheDocument()
     expect(screen.getByText('0/3')).toBeInTheDocument()
   })
 
   it('🔴 소요시간에 시 단위가 온다 — 분으로 읽으면 2분이 된다', () => {
-    render(<CoursePatrolLog rows={[row({ actualElapsedTime: '02:17:40' })]} totalCount={1} />)
+    renderLog([row({ actualElapsedTime: '02:17:40' })])
 
     expect(screen.getByText('2시간 18분')).toBeInTheDocument()
     expect(screen.queryByText('2분')).not.toBeInTheDocument()
   })
 
-  it('초과 이력은 별도 뱃지다 — 상태 뱃지를 덮어쓰지 않는다', () => {
-    render(<CoursePatrolLog rows={[row({ overtimeYn: true })]} totalCount={1} />)
+  it('초과는 상태 옆 뱃지다 — 상태 뱃지를 덮어쓰지 않는다 · 기준 초과 열은 없다', () => {
+    renderLog([row({ overtimeYn: true })])
 
     expect(screen.getByText('완료')).toBeInTheDocument()
     expect(screen.getByText('초과')).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: '기준 초과' })).toBeNull()
   })
 
-  it('진행 중(endDt: null)도 그린다 — eventType=0 이 거르는 상태다', () => {
-    render(
-      <CoursePatrolLog
-        rows={[row({ status: 0, statusName: '진행중', endDt: null, checkedCount: 1 })]}
-        totalCount={1}
-      />
-    )
+  it('진행 중(endDt: null)도 그린다', () => {
+    renderLog([row({ status: 0, statusName: '진행중', endDt: null, checkedCount: 1 })])
 
     expect(screen.getByText('진행중')).toBeInTheDocument()
   })
 
   it('🔴 statusName 이 비면 코스 사전으로 메운다 — 빈 뱃지를 그리지 않는다', () => {
-    render(<CoursePatrolLog rows={[row({ status: 2, statusName: '  ' })]} totalCount={1} />)
+    renderLog([row({ status: 2, statusName: '  ' })])
 
     expect(screen.getByText('미완료')).toBeInTheDocument()
   })
@@ -100,35 +161,21 @@ describe('CoursePatrolLog — 🔴 실측 예외', () => {
 
 describe('CoursePatrolLog — 상태 구분', () => {
   it('🔴 조회 중에는 빈 상태가 아니라 스켈레톤이다 — 빈 상태는 "순찰 안 했다" 로 읽힌다', () => {
-    render(<CoursePatrolLog rows={[]} totalCount={0} isPending />)
+    renderLog([], 0, { isPending: true })
 
     expect(screen.queryByText('순찰 기록이 없습니다')).not.toBeInTheDocument()
   })
 
   it('이력이 없으면 빈 상태다 — "준비 중" 이 아니다', () => {
-    render(<CoursePatrolLog rows={[]} totalCount={0} />)
+    renderLog([], 0)
 
     expect(screen.getByText('순찰 기록이 없습니다')).toBeInTheDocument()
     expect(screen.queryByText(/준비 중/)).not.toBeInTheDocument()
   })
-})
 
-describe('CoursePatrolLog — 🔴 수치의 출처를 밝힌다', () => {
-  it('🔴 "화면에서 계산한 값" 이라고 적는다 — 서버 집계가 아니다', () => {
-    render(<CoursePatrolLog rows={[row()]} totalCount={1} />)
-
-    expect(screen.getByText(/화면에서 계산한 값/)).toBeInTheDocument()
-  })
-
-  it('🔴 한 페이지로 다 못 받으면 **몇 건 기준**인지 적는다', () => {
-    render(<CoursePatrolLog rows={[row()]} totalCount={46} />)
+  it('🔴 한 페이지로 다 못 받으면 **몇 건 기준**인지 적는다(서버 집계 없음)', () => {
+    renderLog([row()], 146)
 
     expect(screen.getByText(/최근 1건 기준/)).toBeInTheDocument()
-  })
-
-  it('🔴 비고 칸을 만들지 않았다 — 미인증 지점명은 행에 없다(N+1 회피, 사용자 결정)', () => {
-    render(<CoursePatrolLog rows={[row()]} totalCount={1} />)
-
-    expect(screen.queryByText('비고')).not.toBeInTheDocument()
   })
 })

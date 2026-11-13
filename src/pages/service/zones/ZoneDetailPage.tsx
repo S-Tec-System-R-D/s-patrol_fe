@@ -1,38 +1,34 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeftIcon, ChevronRightIcon, RouteIcon, Trash2Icon } from 'lucide-react'
+import { ArrowLeftIcon, ChevronRightIcon, EllipsisIcon, RouteIcon, Trash2Icon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
 import AppBadge from '@/components/app/AppBadge'
-import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
+import AppIconButton from '@/components/app/AppIconButton'
 import AppPageHeader from '@/components/app/AppPageHeader'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { deleteCourse } from '@/features/courses/api/deleteCourse'
-import { updateCourse } from '@/features/courses/api/updateCourse'
-import CourseDiagramCard from '@/features/courses/components/detail/CourseDiagramCard'
-import CourseMapCard from '@/features/courses/components/detail/CourseMapCard'
 import CourseInfo from '@/features/courses/components/detail/CourseInfo'
 import CoursePointEditor from '@/features/courses/components/detail/CoursePointEditor'
 import CourseKpiRow from '@/features/courses/components/detail/CourseKpiRow'
-import CourseAlertList from '@/features/courses/components/detail/CourseAlertList'
 import CoursePatrolLog from '@/features/courses/components/detail/CoursePatrolLog'
-import CoursePointList from '@/features/courses/components/detail/CoursePointList'
-import CourseToggleDialog, {
-  type CourseToggleKind,
-} from '@/features/courses/components/detail/CourseToggleDialog'
+import CourseRouteCard from '@/features/courses/components/detail/CourseRouteCard'
+import CourseRunDialog from '@/features/courses/components/detail/CourseRunDialog'
+import { CourseHourlyCard, CourseWorkerCard } from '@/features/courses/components/detail/CourseRunStatCards'
 import EditCourseForm from '@/features/courses/form/EditCourseForm'
 import { useCourseDetail } from '@/features/courses/hooks/useCourseDetail'
-import {
-  useCourseHistory,
-  useUncheckedPoints,
-} from '@/features/course-history/hooks/useCourseHistory'
-import { buildCourseAlerts } from '@/features/courses/lib/courseAlerts'
+import { useCourseHistory } from '@/features/course-history/hooks/useCourseHistory'
 import { usableCoords } from '@/features/courses/lib/courseCoords'
 import { courseHistoryStats } from '@/features/course-history/lib/courseHistoryStats'
 import { recentRange } from '@/features/course-history/lib/historyRange'
-import { toUpdateCourseBody } from '@/features/courses/lib/updateCourseBody'
 import { courseKeys } from '@/features/courses/queryKeys'
 import { getSiteSeq } from '@/lib/auth/site'
 import { paths } from '@/router/paths'
@@ -42,6 +38,10 @@ import { paths } from '@/router/paths'
  *
  * **Phase 4 에서 변경계가 들어왔다**: 기본정보 수정 모달 · 삭제 · 토글 2종 확인 모달 ·
  * 지점 편성 편집 모드. 조회 섹션(다이어그램 · 지점 순서 · 기본정보)은 Phase 3 그대로다.
+ *
+ * 🔄 **`spec 074` 개편**(시안 `개선 · 코스 상세`, 사용자 결정 2026-11-12) — 머리 `수정` + `⋯`(삭제) · 순찰 경로 카드
+ * 하나(지도 + 지점 목록) · 기본정보 글자만 · 오른쪽 시간대별 · 근무자별 · 기록 10건 + 회차 상세 모달.
+ * 이상 이력 카드 · 미인증 조회 · 토글 확인 모달은 걷었다.
  *
  * 🔴 **액션(수정·삭제)은 헤더 우측**이다(027 `PointDetailPage` 와 같은 조립).
  * `patterns.md` §11(액션 풋터)은 **우측 패널**을 전제한 패턴이고, 전체 폭 페이지에서는
@@ -89,8 +89,12 @@ const ZoneDetailPage = () => {
 
   const [editOpen, setEditOpen] = useState(false)
   const [editingPoints, setEditingPoints] = useState(false)
-  /** 열려 있는 토글 확인 모달. `null` 이면 닫혀 있다 */
-  const [toggle, setToggle] = useState<{ kind: CourseToggleKind; nextValue: boolean } | null>(null)
+  /** 편성 편집 모달 — 초안이 바뀌었는지 · 바깥 클릭 / Esc 로 닫을 때 버릴지 묻는 창 */
+  const [pointsDirty, setPointsDirty] = useState(false)
+  const [discardOpen, setDiscardOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  /** 회차 상세 모달 — 받은 회차 목록 안의 위치. `null` 이면 닫혀 있다 */
+  const [runIndex, setRunIndex] = useState<number | null>(null)
 
   // URL 세그먼트는 문자열이다. 숫자가 아니면 조회하지 않는다(`/zones/abc`).
   const parsed = Number(courseSeqParam)
@@ -110,50 +114,15 @@ const ZoneDetailPage = () => {
    */
   const range = useMemo(() => recentRange(), [])
   const history = useCourseHistory(siteSeq, courseSeq, range)
-  const unchecked = useUncheckedPoints(siteSeq, courseSeq, range)
 
   const rows = history.data?.items ?? []
   const stats = courseHistoryStats(rows, history.data?.totalCount ?? 0)
-  // 🔴 이상 이력은 **위 두 응답에서 모은다** — 요청이 늘지 않는다(C단)
-  const alerts = buildCourseAlerts(rows, unchecked.data?.items ?? [])
   /**
    * 지도에 찍을 좌표 (`spec 032`). 🔴 **조회가 늘지 않는다** — 상세 응답을 다시 셀 뿐이다.
    * `useMemo` 인 이유: `CourseMapCard` 가 `pins` 참조로 지도를 다시 그린다(렌더마다 새
    * 배열이면 **지도가 매번 파괴·재생성**된다).
    */
   const coords = useMemo(() => usableCoords(course?.points ?? []), [course?.points])
-
-  /**
-   * 토글 저장.
-   *
-   * 🔴 **옵티미스틱이 아니다** — 모달에서 의도를 확인했으므로 응답을 기다린다. 스위치는
-   * 재조회 뒤에 움직이고, 그래서 확인 직후 잠깐 이전 위치에 남아 있는 것이 정상이다
-   * (`CourseToggleDialog` 주석 — `patterns.md` §10 과 어긋나는 부분은 T374 에서 갱신).
-   */
-  const toggleMutation = useMutation({
-    mutationFn: updateCourse,
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: courseKeys.lists }),
-        queryClient.invalidateQueries({ queryKey: courseKeys.detail(courseSeq ?? 0) }),
-      ])
-    },
-  })
-
-  const confirmToggle = () => {
-    if (!course || siteSeq === null || !toggle) return
-    // 🔴 계산된 키(`{ [kind]: value }`)로 만들지 않는다 — 타입이 `{ [x: string]: boolean }`
-    // 로 넓어져 **필드명 오타를 타입이 못 잡는다**. 두 갈래를 그대로 적는다
-    const overrides =
-      toggle.kind === 'useYn' ? { useYn: toggle.nextValue } : { switchYn: toggle.nextValue }
-
-    toggleMutation.mutate(
-      // 🔴 `points` 를 넘기지 않는다 = 현재 편성 전량이 실린다(B-25). 토글 한 번에
-      // 지점이 사라지는 사고가 여기서 막힌다
-      toUpdateCourseBody(course, siteSeq, overrides)
-    )
-    setToggle(null)
-  }
 
   const removal = useMutation({
     mutationFn: deleteCourse,
@@ -189,136 +158,135 @@ const ZoneDetailPage = () => {
                     질문이 "얼마나 큰 코스인가" 다. 두 값이 아래 두 카드에 흩어져 있어
                     제목 줄에서 한 번에 읽히게 한다. ⚠️ `pointCount` 는 상세 응답에 없어
                     (목록 전용) **편성 배열의 길이**로 센다 — 같은 값이다 */}
-                <AppBadge variant="muted">
-                  지점 {course.points.length}개 · {course.totalMin}분
-                </AppBadge>
+                {/* 🔄 뱃지 → 글자(`spec 074` 시안) · `기준` 을 붙여 실제 소요와 구분한다 */}
+                <span className="text-caption text-muted-foreground tabular-nums">
+                  지점 {course.points.length}개 · 기준 {course.totalMin}분
+                </span>
               </>
             }
             action={
               <div className="flex items-center gap-2">
-                {/* 🔴 **헤더에는 `삭제` 만 둔다**(사용자 결정 2026-10-12). A단에서 변경 수단
-                    셋을 헤더로 모았다가, **카드마다 자기 편집 수단 하나**로 되돌렸다 —
-                    기본정보는 `수정`, 지점 순서는 `편성 편집`. 고치려는 값을 **보여 주는
-                    자리**에 버튼이 있는 쪽이 찾기 쉽고, 한 카드에 하나뿐이라 "어느 쪽이
-                    정식인지" 를 묻지 않게 된다.
-                    🔴 **삭제만 헤더에 남는 이유**: 코스 **전체**에 대한 동작이라 어느 카드에도
-                    속하지 않는다. 파괴적 동작을 편집 버튼들과 떼어 놓는 효과도 있다 */}
-
-                {/* 🔴 **편성된 지점이 있어도 선제 차단하지 않는다** — 서버가 거부하지
-                    않는다(실측). 없는 규칙을 프론트가 만들지 않는다(A1) */}
+                {/* 🔄 **`spec 074`**: 머리에는 `⋯`(삭제)만. 삭제는 파괴적이라 메뉴 안에 숨긴다(시안).
+                    `수정` 은 기본정보 카드 · `편성 편집` 은 순찰 경로 카드 — 고치는 값이 있는 카드에 둔다(2026-11-13) */}
+                {/* modal={false} — 메뉴 항목에서 확인 창을 열 때 body pointer-events 가 남는 Radix 문제 회피(GroupEditDialog 와 같음) */}
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="코스 메뉴" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-auto">
+                    <DropdownMenuItem
+                      variant="destructive"
+                      className="cursor-pointer"
+                      disabled={removal.isPending}
+                      onSelect={() => setDeleteOpen(true)}
+                    >
+                      <Trash2Icon />
+                      삭제
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {/* 🔴 편성된 지점이 있어도 선제 차단하지 않는다 — 서버가 거부하지 않는다(실측, A1) */}
                 <AppAlertDialog
+                  open={deleteOpen}
+                  onOpenChange={setDeleteOpen}
                   size="sm"
                   icon={Trash2Icon}
                   variant="destructive"
                   title="코스를 삭제하시겠습니까?"
                   description="삭제된 코스와 지점 편성은 복구할 수 없습니다. 지점 자체는 삭제되지 않습니다."
                   actionLabel="삭제"
-                  // 🔴 인자 이름이 `courseId` 다 — `courseSeq` 로 보내면 400
-                  // ProblemDetails 가 온다(B-12). api 함수의 인자명이 그것을 지킨다
+                  // 🔴 인자 이름이 `courseId` 다 — `courseSeq` 로 보내면 400 ProblemDetails(B-12)
                   onAction={() => removal.mutate(course.courseSeq)}
-                >
-                  <AppButton
-                    icon={Trash2Icon}
-                    variant="destructive"
-                    disabled={removal.isPending}
-                  >
-                    삭제
-                  </AppButton>
-                </AppAlertDialog>
+                />
               </div>
             }
           />
 
-          {/* 🔴 **KPI 는 전체 폭, 헤더 바로 아래**(목업). 코스 상세를 여는 세 번째 질문이
-              "이 코스가 잘 돌고 있나" 다 — 동선·편성보다 먼저 읽힌다.
-              ⚠️ 평균·인증률은 **프론트가 더한 값**이다(서버에 집계 엔드포인트 없음) */}
+          {/* 🔴 **KPI 는 전체 폭, 헤더 바로 아래** — 평균 · 인증률은 프론트가 더한 값(서버 집계 없음) */}
           <CourseKpiRow stats={stats} />
 
-          {/* **2열 골격**(목업 `코스상세-신규.html`, 사용자 결정 2026-10-12) — `xl` 미만 1단.
-              좌 2/3 = 코스 자체를 보는 칸(동선 → 순서), 우 1/3 = 설정 칸.
-              🔴 **지점 순서를 넓은 쪽에 둔다.** 목업은 우측 1/3 에 두었지만 편성 편집의
-              **드래그가 여기서 일어난다** — 1/3 폭에서 핸들·구간시간·제거를 한 줄에 놓으면
-              답답하다. 목업과 다른 유일한 지점이고, 이유가 상호작용이다.
-              🔴 우측은 나중에 **이상 이력·KPI** 가 쌓일 칸이다(Phase B~C) */}
+          {/* 2열 골격 — 왼쪽 2/3 = 경로 · 기록, 오른쪽 1/3 = 기본정보 · 시간대별 · 근무자별(`spec 074`). `xl` 미만 1단 */}
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <div className="flex flex-col gap-4 xl:col-span-2">
-              {/* 🔴 동선이 **순서 위**에 온다 — 첫 질문이 "어디를 어떤 순서로 도는가" 다.
-                  ⚠️ 편집 중에도 **저장된 순서**를 그린다 — 초안을 반영하면 "저장 전인데
-                  반영된 것처럼" 보인다(옵티미스틱을 안 쓰는 것과 같은 이유).
+            <div className="flex min-w-0 flex-col gap-4 xl:col-span-2">
+              <CourseRouteCard
+                points={course.points}
+                pins={coords.pins}
+                missing={coords.missing}
+                runs={rows.length}
+                onEdit={() => setEditingPoints(true)}
+              />
 
-                  🔴 **조건부 교체**(`spec 032`, 사용자 결정 2026-10-14): 같은 자리에서
-                  **좌표가 있으면 지도**, **하나도 없으면 다이어그램**이다. 그냥 교체하면
-                  좌표 없는 코스가 **경로를 아무것도 못 보여준다** — 좌표 입력 수단이 아직
-                  없어서(OQ-032-C) 비어 있는 지점이 실제로 있다 */}
-              {/* 🔴 **xl 읽기 화면은 지점 순서가 지도 위**(사용자 결정 2026-11-06) — 순서를 스크롤 없이 한눈에 읽고 지도는 전체 폭을 쓴다.
-                  편성 편집 · 다이어그램은 기존 순서 그대로다 */}
-              <div
-                className={`flex flex-col gap-4 ${
-                  !editingPoints && coords.pins.length > 0 ? 'xl:[&>:first-child]:order-2' : ''
-                }`}
-              >
-                {coords.pins.length > 0 ? (
-                  <CourseMapCard pins={coords.pins} missing={coords.missing} />
-                ) : (
-                  <CourseDiagramCard points={course.points} />
-                )}
-
-                {editingPoints ? (
-                  <CoursePointEditor course={course} onClose={() => setEditingPoints(false)} />
-                ) : (
-                  <CoursePointList points={course.points} onEdit={() => setEditingPoints(true)} />
-                )}
-              </div>
-
-              {/* 🔴 **순찰 기록은 맨 아래**다 — 편성(현재 상태)을 먼저 읽고 기록(과거)을
-                  나중에 읽는다. 목업도 같은 순서다 */}
               <CoursePatrolLog
+                courseSeq={course.courseSeq}
                 rows={rows}
                 totalCount={history.data?.totalCount ?? 0}
                 isPending={history.isPending}
+                onSelect={(row) => setRunIndex(rows.indexOf(row))}
               />
             </div>
-            {/* 우측 1/3 — 설정 칸. 🔴 **기본정보 아래에 이상 이력이 쌓인다**(목업 순서):
-                "이 코스는 어떻게 설정돼 있나" 다음에 "최근에 뭐가 어긋났나" 를 읽는다 */}
-            <div className="flex flex-col gap-4">
-              <CourseInfo
-                course={course}
-                onRequestToggle={(kind, nextValue) => setToggle({ kind, nextValue })}
-                onEdit={() => setEditOpen(true)}
-                isSaving={toggleMutation.isPending}
-              />
 
-              <CourseAlertList
-                alerts={alerts}
-                isPending={history.isPending || unchecked.isPending}
-              />
+            <div className="flex min-w-0 flex-col gap-4">
+              <CourseInfo course={course} onEdit={() => setEditOpen(true)} />
+              <CourseHourlyCard rows={rows} isPending={history.isPending} />
+              <CourseWorkerCard rows={rows} isPending={history.isPending} />
             </div>
           </div>
 
-          {/* 🔴 **trigger 없는 제어형 모달**이다. 버튼은 기본정보 카드가 들고 있고
+          <CourseRunDialog rows={rows} index={runIndex} totalMin={course.totalMin} onIndexChange={setRunIndex} />
+
+          {/* 🔄 **편성 편집은 모달**(사용자 결정 2026-11-13) — 카드 자리를 바꿔 그리면 지도가 사라지고 페이지가 출렁인다.
+              🔴 편집기는 열 때마다 새로 붙는다(초안이 서버 편성에서 시작). 🔴 바뀐 내용이 있으면 바깥 클릭 · Esc 로
+              바로 닫지 않고 묻는다 — 드래그하다 바깥을 눌러 작업이 사라지지 않게. `취소` 버튼은 묻지 않는다(명시적 원복) */}
+          <AppDialog
+            open={editingPoints}
+            onOpenChange={(open) => {
+              if (open) return
+              if (pointsDirty) setDiscardOpen(true)
+              else setEditingPoints(false)
+            }}
+            title="지점 순서 편집"
+            description="드래그로 순서를 바꾸고 구간시간을 입력합니다. 저장하면 코스 편성 전체가 바뀝니다."
+            contentClassName="sm:max-w-[640px]"
+          >
+            {editingPoints && (
+              <CoursePointEditor
+                course={course}
+                onDirtyChange={setPointsDirty}
+                onClose={() => {
+                  setPointsDirty(false)
+                  setEditingPoints(false)
+                }}
+              />
+            )}
+          </AppDialog>
+          <AppAlertDialog
+            open={discardOpen}
+            onOpenChange={setDiscardOpen}
+            size="sm"
+            title="변경 내용을 버리시겠습니까?"
+            description="저장하지 않은 지점 순서 · 구간시간 변경이 사라집니다."
+            cancelLabel="계속 편집"
+            actionLabel="버리기"
+            onAction={() => {
+              setPointsDirty(false)
+              setEditingPoints(false)
+            }}
+          />
+
+          {/* 🔴 **trigger 없는 제어형 모달**이다. 버튼은 기본정보 카드가 들고 있고(074 에서 다시 카드로)
               (`CourseInfo.onEdit`) 모달·폼은 페이지가 들고 있다 — 카드가 mutation 을 들면
               전량 전송 규약(B-25)이 카드 안으로 새어 들어온다 */}
           <AppDialog
             open={editOpen}
             onOpenChange={setEditOpen}
             title="코스 수정"
-            description="코스명과 설명을 수정합니다."
+            description="코스명 · 설명 · 교대 허용 · 사용 여부를 수정합니다."
             contentClassName="sm:max-w-[520px]"
           >
             {/* 🔴 성공해야 닫는다 — 먼저 닫으면 실패 시 입력값이 사라진다 */}
             <EditCourseForm course={course} onSuccess={() => setEditOpen(false)} />
           </AppDialog>
 
-          {/* 🔴 토글 2종이 **같은 컴포넌트를 쓰고 문구만 다르다**(규칙 11) */}
-          {toggle && (
-            <CourseToggleDialog
-              kind={toggle.kind}
-              nextValue={toggle.nextValue}
-              open
-              onOpenChange={(open) => !open && setToggle(null)}
-              onConfirm={confirmToggle}
-            />
-          )}
         </>
       ) : detail.isPending && courseSeq !== null ? (
         <AppPageHeader title="코스 정보를 불러오는 중" subtitle="잠시만 기다려주세요" />

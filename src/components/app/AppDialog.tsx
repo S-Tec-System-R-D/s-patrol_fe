@@ -21,6 +21,10 @@ interface AppDialogProps {
    * 🔴 **같은 반응형 접두사로 덮어야 한다**(`sm:max-w-[600px]`). 접두사 없이 `max-w-*` 만 주면 `sm` 이상에서 지워진다.
    */
   contentClassName?: string
+  /** 제목 오른쪽 — 상태 뱃지 등(`spec 074` 회차 상세). 제목과 한 줄에 간격을 두고 놓는다 */
+  titleSuffix?: React.ReactNode
+  /** 제목 글자 크기를 바꿀 때(`spec 074` 회차 상세 `text-lg`) */
+  titleClassName?: string
 }
 
 const AppDialog = ({
@@ -31,6 +35,8 @@ const AppDialog = ({
   open,
   onOpenChange,
   contentClassName,
+  titleSuffix,
+  titleClassName,
 }: AppDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -43,7 +49,14 @@ const AppDialog = ({
         className={cn('max-h-[80vh] flex flex-col overflow-hidden p-0', contentClassName)}
       >
         <DialogHeader className="p-4 pb-0">
-          <DialogTitle>{title}</DialogTitle>
+          {titleSuffix ? (
+            <div className="flex flex-wrap items-center gap-2.5">
+              <DialogTitle className={titleClassName}>{title}</DialogTitle>
+              {titleSuffix}
+            </div>
+          ) : (
+            <DialogTitle className={titleClassName}>{title}</DialogTitle>
+          )}
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         {/* 🔴 `overflow-y-auto` — 바깥이 `max-h-[80vh] overflow-hidden` 이라 스크롤이 없으면

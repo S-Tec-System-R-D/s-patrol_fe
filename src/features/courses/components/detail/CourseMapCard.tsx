@@ -31,9 +31,11 @@ interface CourseMapCardProps {
   pins: CoursePin[]
   /** 좌표가 없거나 범위 밖이라 빠진 지점 수. 🔴 0 이 아니면 **그 사실을 적는다** */
   missing: number
+  /** 카드 없이 지도만 — `순찰 경로` 카드 안에 넣는다(`spec 074`). 좌표 없음 안내는 지도 아래에 둔다 */
+  embedded?: boolean
 }
 
-const CourseMapCard = ({ pins, missing }: CourseMapCardProps) => {
+const CourseMapCard = ({ pins, missing, embedded = false }: CourseMapCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -97,7 +99,7 @@ const CourseMapCard = ({ pins, missing }: CourseMapCardProps) => {
      개발돼야 한다(팀원·CI) */
   if (!TILE_URL) {
     return (
-      <Shell>
+      <Shell embedded={embedded}>
         <Notice title="지도 설정이 없습니다" description="VITE_MAP_TILE_URL 이 설정되지 않았습니다." />
       </Shell>
     )
@@ -106,7 +108,7 @@ const CourseMapCard = ({ pins, missing }: CourseMapCardProps) => {
   if (pins.length === 0) {
     // 호출부가 이 경우 다이어그램으로 되돌아가므로 보통 여기 오지 않는다 — 방어선이다
     return (
-      <Shell>
+      <Shell embedded={embedded}>
         <Notice
           title="표시할 좌표가 없습니다"
           description="지점에 좌표가 등록되면 순찰 동선이 지도에 표시됩니다."
@@ -116,7 +118,7 @@ const CourseMapCard = ({ pins, missing }: CourseMapCardProps) => {
   }
 
   return (
-    <Shell missing={missing}>
+    <Shell missing={missing} embedded={embedded}>
       {/* 🔴 높이를 고정한다 — 지도는 자기 크기를 모른다(부모가 0이면 타일이 안 뜬다) */}
       <div ref={containerRef} className="h-[320px] w-full rounded-sm" />
     </Shell>
@@ -124,7 +126,26 @@ const CourseMapCard = ({ pins, missing }: CourseMapCardProps) => {
 }
 
 /** 카드 셸 + 머리말. 🔴 **빠진 지점 수를 머리에 적는다**(조용히 빼지 않는다) */
-const Shell = ({ missing = 0, children }: { missing?: number; children: React.ReactNode }) => (
+const Shell = ({
+  missing = 0,
+  embedded = false,
+  children,
+}: {
+  missing?: number
+  embedded?: boolean
+  children: React.ReactNode
+}) =>
+  embedded ? (
+    <div className="flex min-w-0 flex-col gap-2">
+      {children}
+      {missing > 0 && (
+        <span className="inline-flex items-center gap-1 text-caption text-muted-foreground">
+          <MapPinOffIcon size={13} strokeWidth={1.75} />
+          좌표 없음 {missing}개
+        </span>
+      )}
+    </div>
+  ) : (
   <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <span className="text-panel-title font-semibold">순찰 동선</span>

@@ -68,10 +68,6 @@ export const courseHistoryKeys = {
    */
   history: (siteSeq: number, courseSeq: number, range: { fromDt: string; toDt: string }) =>
     ['course-history', siteSeq, { courseSeq, ...range }] as const,
-
-  /** 미인증 건수 — 같은 이유로 루트를 분리한다 (`spec 023` B·C단) */
-  uncheckedCount: (siteSeq: number, courseSeq: number, range: { fromDt: string; toDt: string }) =>
-    ['course-unchecked-count', siteSeq, { courseSeq, ...range }] as const,
 }
 
 /**

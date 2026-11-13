@@ -42,7 +42,8 @@ test('S2 코스 이름 바꾸기', async ({ page }) => {
   await goMenu(page, '코스/지점')
   await openFirstRow(page)
 
-  await page.getByRole('button', { name: '기본정보 수정' }).click()
+  // 074 — 코스 상세 `수정` 은 기본정보 카드 제목 줄(머리에는 `⋯` 만)
+  await page.getByRole('button', { name: '수정', exact: true }).click()
   await dialog(page, '코스 수정').getByLabel('코스명').fill(name)
   await submitAndClose(page, '코스 수정', '저장')
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()

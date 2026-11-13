@@ -30,7 +30,7 @@ export interface CoursePointDraft {
   /**
    * 🔴 표시 전용. **항상 `true` 다** — 서버가 지점의 실제 사용여부를 따라오지 않는다
    * (실측 2026-10-13). 코스에서 바꿀 값이 아니므로 요청 DTO 에 없는 것도 정상이다
-   * (B-29 철회). 자세한 사정은 `CoursePointList` 상단 주석.
+   * (B-29 철회). (옛 `CoursePointList` 주석 — `spec 074` 에서 `CourseRouteCard` 로 바뀜).
    */
   useYn: boolean
   courseMin: number
