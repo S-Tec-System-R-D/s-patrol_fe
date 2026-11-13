@@ -201,7 +201,7 @@ describe('formatSinceLabel', () => {
   })
 })
 
-describe('누락 · 날짜별 묶음 (spec 076)', () => {
+describe('미완료 · 날짜별 묶음 (spec 076)', () => {
   const rows = [
     row('2026-10-09T09:00:00', { detailSeq: 1 }),
     row('2026-10-09T14:30:00', { detailSeq: 2 }),
@@ -210,7 +210,7 @@ describe('누락 · 날짜별 묶음 (spec 076)', () => {
     row('2026-09-01T10:00:00', { detailSeq: 5, status: 3, statusName: '미완료' }), // 기간 밖
   ]
 
-  it('미완료(3)만 누락으로 센다 — 순찰제외 · 기간 밖은 아니다', () => {
+  it('미완료(3)만 센다 — 순찰제외 · 기간 밖은 아니다', () => {
     const result = summarizePatrolHistory(rows, TODAY)
 
     expect(result.missed).toBe(1)
@@ -226,6 +226,5 @@ describe('누락 · 날짜별 묶음 (spec 076)', () => {
 
     expect(groups.map((g) => g.date)).toEqual(['2026-10-09', '2026-10-08'])
     expect(groups[0].rows.map((r) => r.detailSeq)).toEqual([2, 1])
-    expect(groups[1].missed).toBe(1)
   })
 })

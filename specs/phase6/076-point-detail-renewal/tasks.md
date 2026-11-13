@@ -18,3 +18,7 @@
 - [x] T1275 테스트 — PointDetail · PointActivityCard · PointDetailPage · patrolSummary
 - [x] T1276 verify · test · e2e · 캡처(1280 · 390)
 - [x] T1277 문서 — screens.md 지점 상세 행 · roadmap 076 행
+
+## Phase 4 — 검토 반영(2026-11-13)
+
+- [x] T1278 날짜 줄 `누락 n` 삭제(행 · 막대와 중복) · 행 상태 → 순찰이력과 같은 뱃지(`pointCheckBadge`) · 요약 · 범례 `누락` → `미완료` · 테스트

@@ -10,7 +10,10 @@ import {
 import { Link } from 'react-router-dom'
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
+import AppBadge from '@/components/app/AppBadge'
+import { cardBadge } from '@/components/app/AppBadge.variants'
 import AppEmpty from '@/components/app/AppEmpty'
+import { pointCheckBadge } from '@/features/course-history/lib/historyBadge'
 import type { PointHistoryRow } from '@/features/course-history/types'
 import { cn } from '@/lib/utils'
 import { paths } from '@/router/paths'
@@ -20,11 +23,13 @@ import { groupHistoryByDay, type PatrolDayBucket, type PatrolSummary } from '../
 /**
  * 지점 상세 **인증 기록** — 활동 타임라인 (`spec 076` 시안 개선 B).
  *
- * 요약 3칸(인증 n/m · 누락 · 최근 순찰) → 14일 **쌓은 막대**(인증 · 누락) → **날짜별 묶음** 목록.
+ * 요약 3칸(인증 n/m · 미완료 · 최근 순찰) → 14일 **쌓은 막대**(인증 · 미완료) → **날짜별 묶음** 목록.
  * 데이터는 그대로 `GetPointHistory` 한 번(14일 · 100건 상한)이다.
  *
  * - 🔴 **막대를 누르면 그날만** 보인다 — 한 번 더 누르거나 `전체 보기` 로 풀린다.
- * - 🔴 **지점 기준 인증/누락**으로 적는다(D2) — 회차의 완료/미완료가 아니다. 미완료 행의
+ * - 🔄 **행 상태는 순찰이력 화면과 같은 뱃지**(`pointCheckBadge` — 이상없음 · 순찰기록 · 미완료 ·
+ *   미인증 · 순찰제외 · 진행중 · 대기중, 사용자 결정 2026-11-13). 시안의 `인증/누락` 을 쓰면 같은
+ *   기록이 지점 인증 상세에서는 `미완료` 로 보여 화면마다 이름이 달랐다. 미완료 행의
  *   `checkDt` 는 인증 시각이 아니라(OQ-15) 시각 칸을 `—` 로 둔다.
  * - 🔴 **행 → 지점 인증 상세**(D1). 시안의 회차 상세 모달은 `historySeq` 가 없어 못 연다(037 US4).
  * - 코스명은 행마다 옅게 둔다 — 소속 코스가 여러 개일 수 있다(시안은 "반복 제거" 라 했지만
@@ -33,15 +38,12 @@ import { groupHistoryByDay, type PatrolDayBucket, type PatrolSummary } from '../
 
 const STATUS = { EXCLUDED: 2, MISSED: 3, DONE: 4 } as const
 
-/** 행 상태 — 아이콘 · 글자 · 색(D2) */
-const statusOf = (row: PointHistoryRow) => {
-  if (row.status === STATUS.DONE)
-    return { label: '인증', icon: CheckCircle2Icon, className: 'text-success' }
-  if (row.status === STATUS.MISSED)
-    return { label: '누락', icon: CircleAlertIcon, className: 'text-warning-foreground' }
-  if (row.status === STATUS.EXCLUDED)
-    return { label: '제외', icon: CircleMinusIcon, className: 'text-muted-foreground' }
-  return { label: '진행 중', icon: CircleDashedIcon, className: 'text-muted-foreground' }
+/** 행 앞 아이콘 — 눈으로 훑는 용도. 이름은 오른쪽 뱃지가 말한다(`pointCheckBadge`) */
+const statusIcon = (row: PointHistoryRow) => {
+  if (row.status === STATUS.DONE) return { icon: CheckCircle2Icon, className: 'text-success' }
+  if (row.status === STATUS.MISSED) return { icon: CircleAlertIcon, className: 'text-danger' }
+  if (row.status === STATUS.EXCLUDED) return { icon: CircleMinusIcon, className: 'text-muted-foreground' }
+  return { icon: CircleDashedIcon, className: 'text-muted-foreground' }
 }
 
 const timeOf = (row: PointHistoryRow): string => {
@@ -64,7 +66,7 @@ const ChartTooltip = ({ active, payload }: { active?: boolean; payload?: { paylo
       <p className="text-muted-foreground">{format(parseISO(date), 'yyyy.MM.dd')}</p>
       <p className="font-semibold text-foreground">
         인증 {count}
-        {missed > 0 && <span className="text-warning-foreground"> · 누락 {missed}</span>}
+        {missed > 0 && <span className="text-danger"> · 미완료 {missed}</span>}
       </p>
     </div>
   )
@@ -127,8 +129,8 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
               {summary.total}/{summary.attempted}
               {rate !== null && <span className="ml-1.5 text-caption font-semibold text-muted-foreground">{rate}%</span>}
             </Stat>
-            <Stat label="누락">
-              <span className={cn(summary.missed > 0 && 'text-warning-foreground')}>{summary.missed}</span>
+            <Stat label="미완료">
+              <span className={cn(summary.missed > 0 && 'text-danger')}>{summary.missed}</span>
             </Stat>
             <Stat label="최근 순찰">{sinceLabel ?? '-'}</Stat>
           </div>
@@ -153,7 +155,7 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                   tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
                 />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-muted)', opacity: 0.6 }} />
-                {/* 🔴 쌓기 — 인증(파랑) 위에 누락(주황). 고른 날 말고는 흐리게 */}
+                {/* 🔴 쌓기 — 인증(파랑) 위에 미완료(빨강 — 행 뱃지 `미완료` 와 같은 색). 고른 날 말고는 흐리게 */}
                 <Bar
                   dataKey="count"
                   stackId="day"
@@ -182,7 +184,7 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                   {summary.buckets.map((bucket) => (
                     <Cell
                       key={bucket.date}
-                      fill="var(--color-warning)"
+                      fill="var(--color-danger)"
                       fillOpacity={selected && selected !== bucket.date ? 0.25 : 1}
                     />
                   ))}
@@ -197,8 +199,8 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
               인증
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-xs bg-warning" aria-hidden />
-              누락
+              <span className="size-2 rounded-xs bg-danger" aria-hidden />
+              미완료
             </span>
             <span className="ml-auto">
               {selected ? (
@@ -225,13 +227,11 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                     <span className="text-caption text-muted-foreground">
                       {weekday(group.date)} · {group.rows.length}회
                     </span>
-                    {group.missed > 0 && (
-                      <span className="ml-auto text-caption font-semibold text-warning-foreground">누락 {group.missed}</span>
-                    )}
                   </div>
                   <ul className="flex flex-col">
                     {group.rows.map((row) => {
-                      const status = statusOf(row)
+                      const status = statusIcon(row)
+                      const badge = pointCheckBadge(row.status, row.checkDt, row.hasMemo)
                       return (
                         <li key={row.detailSeq}>
                           <Link
@@ -244,7 +244,9 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                               <span className="shrink-0 text-body font-semibold">{row.userName || '근무자 없음'}</span>
                               <span className="min-w-0 truncate text-caption text-muted-foreground">{row.courseName}</span>
                             </span>
-                            <span className={cn('shrink-0 text-caption font-medium', status.className)}>{status.label}</span>
+                            <AppBadge variant={badge.variant} className={cn('shrink-0', cardBadge)}>
+                              {badge.label}
+                            </AppBadge>
                             <ChevronRightIcon size={14} className="shrink-0 text-muted-foreground/60 group-hover:text-foreground" aria-hidden />
                           </Link>
                         </li>

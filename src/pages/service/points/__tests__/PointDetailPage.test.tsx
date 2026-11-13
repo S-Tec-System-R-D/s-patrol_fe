@@ -254,12 +254,12 @@ describe('PointDetailPage — 수정 모달', () => {
 
 /** 🔄 `spec 076` — 인증 기록(요약 3칸 · 14일 쌓은 막대 · 날짜별 묶음) */
 describe('PointDetailPage — 인증 기록 (076)', () => {
-  it('요약 3칸(인증 · 누락 · 최근 순찰)과 날짜별 묶음을 그린다', async () => {
+  it('요약 3칸(인증 · 미완료 · 최근 순찰)과 날짜별 묶음을 그린다', async () => {
     renderAt('/points/1')
 
     expect(await screen.findByText('인증 기록')).toBeInTheDocument()
     await waitFor(() => expect(screen.getAllByRole('region', { name: /기록$/ }).length).toBeGreaterThan(0))
-    expect(screen.getAllByText('누락').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('미완료').length).toBeGreaterThan(0)
     expect(screen.getByText('최근 순찰')).toBeInTheDocument()
     expect(screen.getByText('최근 14일 전체 · 막대를 누르면 해당 일자만 표시')).toBeInTheDocument()
   })
@@ -289,5 +289,16 @@ describe('PointDetailPage — 인증 기록 (076)', () => {
     expect(screen.queryByText('출력 후 현장 부착')).not.toBeInTheDocument()
     // 지점 1은 QR — 내려받기만(029 보안)
     expect(screen.getByRole('button', { name: /QR 코드 내려받기/ })).toBeInTheDocument()
+  })
+
+  it('🔴 행 상태는 순찰이력 화면과 같은 뱃지다 — 날짜 줄에 미완료 수를 따로 적지 않는다', async () => {
+    renderAt('/points/1')
+
+    const groups = await screen.findAllByRole('region', { name: /기록$/ })
+    const labels = groups.flatMap((group) =>
+      within(group).queryAllByText(/^(이상없음|순찰기록|미완료|미인증|순찰제외|진행중|대기중)$/)
+    )
+    expect(labels.length).toBeGreaterThan(0)
+    expect(screen.queryByText(/^누락/)).not.toBeInTheDocument()
   })
 })

@@ -27,7 +27,7 @@ export interface PatrolDayBucket {
   /** 'yyyy-MM-dd' */
   date: string
   count: number
-  /** 그날 **누락**(미완료 3) 수 — `spec 076` 쌓은 막대의 주황 칸 */
+  /** 그날 **미완료**(3) 수 — `spec 076` 쌓은 막대의 주황 칸 */
   missed: number
 }
 
@@ -48,7 +48,7 @@ export interface PatrolSummary {
    * 다른 사실이다(`spec 031` 목업의 `인증 7 / 대상 순찰 9회`).
    */
   attempted: number
-  /** 기간 내 **누락**(미완료 3) 수 — `spec 076` */
+  /** 기간 내 **미완료**(3) 수 — `spec 076` */
   missed: number
   /** 오래된 날 → 최근 날 순. **기록이 없는 날도 `count: 0` 으로 포함**한다 */
   buckets: PatrolDayBucket[]
@@ -56,7 +56,7 @@ export interface PatrolSummary {
 
 /** 🔴 지점이력 `status` 사전에서 **완료**(코스이력은 1·2로 체계가 다르다 — B-7) */
 const STATUS_DONE = 4
-/** 지점이력 **미완료** — 화면에서는 `누락`(`spec 076` D2) */
+/** 지점이력 **미완료**(`spec 076` 막대의 주황 칸) */
 const STATUS_MISSED = 3
 
 /** 집계 기간의 시작일(포함). 서버 `fromDt` 로 그대로 쓴다 */
@@ -127,8 +127,6 @@ export interface PatrolDayGroup {
   date: string
   /** 그날 기록 — 최근 시각 먼저 */
   rows: PointHistoryRow[]
-  /** 그날 누락(미완료 3) 수 — 묶음 머리 오른쪽 `누락 n` */
-  missed: number
 }
 
 /**
@@ -157,7 +155,6 @@ export const groupHistoryByDay = (
     .map(([date, dayRows]) => ({
       date,
       rows: [...dayRows].sort((a, b) => b.checkDt.localeCompare(a.checkDt)),
-      missed: dayRows.filter((row) => row.status === STATUS_MISSED).length,
     }))
 }
 
