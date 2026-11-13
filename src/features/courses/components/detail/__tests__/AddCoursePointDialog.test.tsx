@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import AddCoursePointDialog from '../AddCoursePointDialog'
 import { server } from '@/mocks/server'
+import { resetPointStore } from '@/mocks/handlers/points'
 import { clearTokens, setAccessToken } from '@/lib/auth/tokens'
 import { setSite } from '@/lib/auth/site'
 import { makeAccessToken } from '@/test/jwt'
@@ -109,7 +110,7 @@ describe('AddCoursePointDialog — 후보 목록', () => {
 })
 
 describe('AddCoursePointDialog — 0건 세 가지를 구분한다', () => {
-  it('🔴 사업장에 지점이 아예 없으면 지점 관리로 보낸다', async () => {
+  it('🔴 사업장에 지점이 아예 없으면 그 자리에서 만들게 한다(075 — 지점 탭 링크 대신)', async () => {
     server.use(
       http.get(GET_CLASSIFICATION_POINT_PATH, () =>
         HttpResponse.json({ message: '요청이 정상 처리되었습니다.', data: [], code: 200 })
@@ -118,7 +119,7 @@ describe('AddCoursePointDialog — 0건 세 가지를 구분한다', () => {
     renderDialog()
 
     expect(await screen.findByText(/사업장에 등록된 지점이 없습니다/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '순찰지점' })).toHaveAttribute('href', '/points')
+    expect(screen.getByRole('button', { name: '새 지점 만들기' })).toBeInTheDocument()
   })
 
   it('🔴 조회 실패를 "후보 없음" 으로 보여주지 않는다', async () => {
@@ -288,5 +289,79 @@ describe('AddCoursePointDialog — 순번과 선택 유지 (spec 028)', () => {
 
     await user.click(screen.getByRole('button', { name: '모두 해제' }))
     expect(screen.getByRole('button', { name: '추가' })).toBeDisabled()
+  })
+})
+
+describe('AddCoursePointDialog — 새 지점 만들기 (spec 075)', () => {
+  beforeEach(() => {
+    resetPointStore()
+  })
+
+  it('검색 0건이면 검색어로 만들기 — 이름이 미리 채워지고 지점사용 스위치는 없다', async () => {
+    const user = userEvent.setup()
+    renderDialog()
+
+    await screen.findAllByRole('checkbox')
+    await user.type(screen.getByPlaceholderText('지점 이름 검색'), '지하 창고')
+    await user.click(screen.getByRole('button', { name: "'지하 창고' 새 지점 만들기" }))
+
+    expect(screen.getByLabelText(/이름/)).toHaveValue('지하 창고')
+    expect(screen.getByText('지점은 바로 만들어집니다. 코스 편성은 저장해야 반영됩니다.')).toBeInTheDocument()
+    expect(screen.queryByText('지점사용')).not.toBeInTheDocument()
+  })
+
+  it('🔴 만든 뒤 고르기 화면으로 돌아와 그 이름으로 걸러 둔다 — 자동 체크는 하지 않는다', async () => {
+    const user = userEvent.setup()
+    let sent: { useYn?: boolean } | null = null
+    server.events.on('request:start', async ({ request }) => {
+      if (request.url.endsWith('/AddPoint')) sent = await request.clone().json()
+    })
+    const { onAdd } = renderDialog()
+
+    await screen.findAllByRole('checkbox')
+    await user.click(screen.getByRole('button', { name: '새 지점 만들기' }))
+    await user.type(screen.getByLabelText(/이름/), '지하 창고')
+    await user.click(screen.getByRole('button', { name: '생성' }))
+
+    const created = await screen.findByRole('checkbox', { name: /지하 창고/ })
+    expect(created).not.toBeChecked()
+    expect(screen.getByPlaceholderText('지점 이름 검색')).toHaveValue('지하 창고')
+    // 🔴 사용으로 고정 — 미사용은 후보에서 빠져 "만들었는데 없다" 가 된다
+    expect(sent).toMatchObject({ useYn: true })
+
+    await user.click(created)
+    await user.click(screen.getByRole('button', { name: '1개 추가' }))
+    expect(onAdd).toHaveBeenCalledWith([expect.objectContaining({ pointName: '지하 창고' })])
+    server.events.removeAllListeners()
+  })
+
+  it('🔴 만들기에 실패하면 만들기 화면에 남고 입력값이 그대로다', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/v1/Point/W/sign/AddPoint', () =>
+        HttpResponse.json({ message: '잘못된 요청입니다.', data: false, code: 400 }, { status: 400 })
+      )
+    )
+    renderDialog()
+
+    await screen.findAllByRole('checkbox')
+    await user.click(screen.getByRole('button', { name: '새 지점 만들기' }))
+    await user.type(screen.getByLabelText(/이름/), '지하 창고')
+    await user.click(screen.getByRole('button', { name: '생성' }))
+
+    expect(await screen.findByRole('button', { name: '생성' })).toBeEnabled()
+    expect(screen.getByLabelText(/이름/)).toHaveValue('지하 창고')
+    expect(screen.queryByPlaceholderText('지점 이름 검색')).not.toBeInTheDocument()
+  })
+
+  it('← 지점 고르기로 돌아갈 수 있다', async () => {
+    const user = userEvent.setup()
+    renderDialog()
+
+    await screen.findAllByRole('checkbox')
+    await user.click(screen.getByRole('button', { name: '새 지점 만들기' }))
+    await user.click(screen.getByRole('button', { name: '지점 고르기' }))
+
+    expect(screen.getByPlaceholderText('지점 이름 검색')).toBeInTheDocument()
   })
 })

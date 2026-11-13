@@ -22,8 +22,19 @@ import { pointFormDefaults, pointSchema, type FormDataType } from './schema'
  *
  * 🔴 **성공해야 닫는다.** 닫기는 부모(`PointTopNav`)가 `onSuccess` 로 제어한다 —
  * 먼저 닫으면 실패했을 때 사용자가 입력한 값이 사라진다(§4).
+ *
+ * `defaultName` · `hideUseYn` — 코스의 지점 고르기 창에서 만들 때(`spec 075`).
+ * 🔴 `hideUseYn` 이면 **사용으로 고정**한다 — 미사용 지점은 서버가 편성 후보에서 빼고
+ * 주므로, 끄고 만들면 "만들었는데 목록에 없다" 가 된다.
  */
-const AddPointForm = ({ onSuccess }: { onSuccess?: () => void }) => {
+interface AddPointFormProps {
+  /** 만든 지점 이름을 넘긴다 — 서버가 새 `pointSeq` 를 주지 않는다(`api-spec.md`) */
+  onSuccess?: (name: string) => void
+  defaultName?: string
+  hideUseYn?: boolean
+}
+
+const AddPointForm = ({ onSuccess, defaultName = '', hideUseYn = false }: AddPointFormProps) => {
   const queryClient = useQueryClient()
   // 🔴 `siteSeq` 는 선택 결과에서 온다(spec 021). `AddPointDto` 가 요구하는 값이다.
   const siteSeq = getSiteSeq()
@@ -37,7 +48,7 @@ const AddPointForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     reset,
   } = useForm<FormDataType>({
     resolver: zodResolver(pointSchema),
-    defaultValues: pointFormDefaults,
+    defaultValues: { ...pointFormDefaults, name: defaultName },
   })
 
   const authenticationMethod = useWatch({ control, name: 'authenticationMethod' })
@@ -45,10 +56,10 @@ const AddPointForm = ({ onSuccess }: { onSuccess?: () => void }) => {
 
   const mutation = useMutation({
     mutationFn: addPoint,
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: pointKeys.lists })
       reset()
-      onSuccess?.()
+      onSuccess?.(variables.name)
     },
   })
 
@@ -103,16 +114,18 @@ const AddPointForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         />
       )}
       {/* 지점사용 — `AddPointDto` 의 required. 022에서 신설 */}
-      <div className="flex items-center justify-between rounded-sm border border-border px-3 py-2">
-        <label htmlFor="add-point-useYn" className="text-sm font-medium text-foreground">
-          지점사용
-        </label>
-        <Switch
-          id="add-point-useYn"
-          checked={useYn}
-          onCheckedChange={(checked) => setValue('useYn', checked)}
-        />
-      </div>
+      {!hideUseYn && (
+        <div className="flex items-center justify-between rounded-sm border border-border px-3 py-2">
+          <label htmlFor="add-point-useYn" className="text-sm font-medium text-foreground">
+            지점사용
+          </label>
+          <Switch
+            id="add-point-useYn"
+            checked={useYn}
+            onCheckedChange={(checked) => setValue('useYn', checked)}
+          />
+        </div>
+      )}
       {siteSeq === null && (
         <p className="text-xs text-danger">사업장이 선택되지 않아 지점을 추가할 수 없습니다.</p>
       )}

@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw'
 import { courseSeeds, type MockCourse } from '@/features/courses/mock/courseData'
 import { toAuthMethodCode } from '@/features/points/lib/authMethod'
 import { points as legacyPoints } from '@/features/points/mock/pointData'
+import { classificationCandidates } from './points'
 import type {
   ClassificationPoint,
   CourseDetail,
@@ -27,9 +28,6 @@ import type {
  * ⚠️ **서버 결함을 mock 에서 "고쳐 주면" 실 전환에서 터진다.** mock 이 실 서버보다
  * 관대하거나 엄격하면 둘 다 거짓이다 — 022 가 `DeletePoint` 거부 분기를 지우며 배운 것.
  */
-
-/** 지점이 어느 사업장에 속하는가 — `handlers/points.ts` 와 **같은 규칙**이어야 한다 */
-const SITE_OF_POINT = (pointSeq: number): number => (pointSeq <= 10 ? 7 : 8)
 
 /**
  * 편성 지점의 표시 이름·인증수단·**좌표** — 구 지점 mock 에서 끌어온다.
@@ -264,18 +262,8 @@ export const courseHandlers = [
    */
   http.get(GET_CLASSIFICATION_POINT_PATH, ({ request }) => {
     const siteSeq = Number(new URL(request.url).searchParams.get('siteSeq'))
-    const items: ClassificationPoint[] = legacyPoints
-      .filter((point) => SITE_OF_POINT(Number(point.id)) === siteSeq)
-      .map((point) => {
-        const meta = pointMeta(Number(point.id))
-        return {
-          pointSeq: Number(point.id),
-          pointName: meta.pointName,
-          memo: meta.memo,
-          authMethod: meta.authMethod,
-          authMethodName: meta.authMethod === 9 ? 'QR' : 'NFC',
-        }
-      })
+    // 🔴 지점 저장소에서 읽는다 — 방금 만든 지점이 후보에 나와야 한다(`spec 075`)
+    const items: ClassificationPoint[] = classificationCandidates(siteSeq)
     return ok(items)
   }),
 

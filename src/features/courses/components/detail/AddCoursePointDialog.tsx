@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { XIcon } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { ArrowLeftIcon, PlusIcon, XIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import { cardBadge } from '@/components/app/AppBadge.variants'
@@ -8,11 +8,12 @@ import AppButton from '@/components/app/AppButton'
 import AppCheckbox from '@/components/app/AppCheckbox'
 import AppDialog from '@/components/app/AppDialog'
 import AppInput from '@/components/app/AppInput'
+import AddPointForm from '@/features/points/form/AddPointForm'
 import { toAuthMethodLabel } from '@/features/points/lib/authMethod'
 import { getSiteSeq } from '@/lib/auth/site'
-import { paths } from '@/router/paths'
 
 import { useClassificationPoints } from '../../hooks/useClassificationPoints'
+import { courseKeys } from '../../queryKeys'
 import {
   candidateCounts,
   filterCandidates,
@@ -48,6 +49,14 @@ import type { ClassificationPoint } from '../../types'
  *
  * 🔴 **`미배정` 칩(목업)은 만들 수 없다.** 후보 응답에 "이 지점이 어느 코스에 속하는지"
  * 가 없고, 알아내려면 지점마다 상세 조회(N+1)다. 필터는 **인증수단 2종 + 전체**뿐이다.
+ *
+ * ➕ **새 지점 만들기(`spec 075`)** — 편성하다 필요한 지점이 없으면 **같은 창 안에서**
+ * 만든다(창을 하나 더 띄우면 편성 편집 → 고르기 → 만들기 3겹이 된다).
+ * - 🔴 **자동으로 체크하지 않는다**(사용자 결정 2026-11-13). 서버가 새 `pointSeq` 를 주지
+ *   않아 "어느 것이 새 지점인가" 를 목록 비교로 추측해야 한다. 대신 고르기 화면으로
+ *   돌아오며 **검색창에 그 이름을 넣어 둔다** — 체크 한 번이면 된다.
+ * - 🔴 후보를 **다시 받은 뒤에** 돌아온다 — 먼저 돌아오면 잠깐 "검색 결과가 없습니다" +
+ *   만들기 버튼이 보여 같은 지점을 또 만들 수 있다.
  */
 
 /**
@@ -113,6 +122,10 @@ const AddCoursePointDialog = ({
 }: AddCoursePointDialogProps) => {
   const siteSeq = getSiteSeq()
   const candidates = useClassificationPoints(siteSeq, open)
+  const queryClient = useQueryClient()
+
+  /** `pick` = 후보 고르기 · `create` = 새 지점 만들기(같은 창 안 화면 전환) */
+  const [view, setView] = useState<'pick' | 'create'>('pick')
 
   const [search, setSearch] = useState('')
   /**
@@ -137,7 +150,18 @@ const AddCoursePointDialog = ({
     setSearch('')
     setFilter('ALL')
     setSelected([])
+    setView('pick')
     onOpenChange(false)
+  }
+
+  /** 만든 뒤 — 후보를 다시 받고, 검색창에 그 이름을 넣어 고르기 화면으로 */
+  const handleCreated = async (name: string) => {
+    if (siteSeq !== null) {
+      await queryClient.invalidateQueries({ queryKey: courseKeys.classificationPoints(siteSeq) })
+    }
+    setSearch(name)
+    setFilter('ALL')
+    setView('pick')
   }
 
   const submit = () => {
@@ -151,184 +175,212 @@ const AddCoursePointDialog = ({
     <AppDialog
       open={open}
       onOpenChange={(next) => (next ? onOpenChange(true) : close())}
-      title="지점 추가"
+      title={view === 'create' ? '새 지점 만들기' : '지점 추가'}
       /* 🔴 **코스명·사업장명을 넣지 않는다**(목업과 다른 점, T395). 이 모달은 코스 상세
          안에서만 열리고 **페이지 제목이 이미 코스명**이다. 사업장도 선택된 하나뿐이라
-         같은 값을 한 화면에 두 번 적는 꼴이 된다 */
-      description="고른 순서대로 코스 끝에 추가됩니다. 구간시간은 추가한 뒤 입력합니다."
+         같은 값을 한 화면에 두 번 적는 꼴이 된다.
+         🔴 만들기 화면 안내 — 편성 편집을 취소해도 **만든 지점은 남는다**(`spec 075` D3) */
+      description={
+        view === 'create'
+          ? '지점은 바로 만들어집니다. 코스 편성은 저장해야 반영됩니다.'
+          : '고른 순서대로 코스 끝에 추가됩니다. 구간시간은 추가한 뒤 입력합니다.'
+      }
     >
-      <div className="flex min-h-0 flex-col gap-3">
-        <AppInput
-          variant="search"
-          placeholder="지점 이름 검색"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-
-        {/* 🔴 **칩은 항상 보인다**(목록 화면의 팝오버 필터와 다르다). 소비처가 이 모달
-            뿐이라 공용 컴포넌트로 뽑지 않는다(A6, `tasks.md` 제약 1).
-            ⚠️ **`미배정` 칩은 만들 수 없다** — 후보 응답에 "이 지점이 어느 코스에 속하는지"
-            가 없다. 알아내려면 지점마다 상세 조회(N+1)다(제약 2) */}
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="인증수단 필터">
-          <FilterChip label="전체" count={counts.all} active={filter === 'ALL'} onClick={() => setFilter('ALL')} />
-          <FilterChip label="QR" count={counts.qr} active={filter === 'QR'} onClick={() => setFilter('QR')} />
-          <FilterChip label="NFC" count={counts.nfc} active={filter === 'NFC'} onClick={() => setFilter('NFC')} />
+      {view === 'create' ? (
+        <div className="flex flex-col gap-4">
+          <button
+            type="button"
+            className="inline-flex w-fit items-center gap-1 text-caption font-medium text-muted-foreground hover:text-foreground"
+            onClick={() => setView('pick')}
+          >
+            <ArrowLeftIcon size={14} aria-hidden />
+            지점 고르기
+          </button>
+          {/* 🔴 검색 0건에서 왔으면 검색어를 이름으로 미리 채운다 · 지점사용은 숨기고 사용 고정(D2) */}
+          <AddPointForm defaultName={keyword} hideUseYn onSuccess={handleCreated} />
         </div>
+      ) : (
+        <div className="flex min-h-0 flex-col gap-3">
+          <AppInput
+            variant="search"
+            placeholder="지점 이름 검색"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
 
-        {candidates.isPending ? (
-          /* 🔴 로딩을 "후보 없음" 으로 보여주지 않는다 — 지점이 없다고 믿고 나가게 된다 */
-          <div className="flex flex-col gap-2">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-9 animate-pulse rounded-sm bg-muted" />
-            ))}
+          {/* 🔴 **칩은 항상 보인다**(목록 화면의 팝오버 필터와 다르다). 소비처가 이 모달
+              뿐이라 공용 컴포넌트로 뽑지 않는다(A6, `tasks.md` 제약 1).
+              ⚠️ **`미배정` 칩은 만들 수 없다** — 후보 응답에 "이 지점이 어느 코스에 속하는지"
+              가 없다. 알아내려면 지점마다 상세 조회(N+1)다(제약 2) */}
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="인증수단 필터">
+            <FilterChip label="전체" count={counts.all} active={filter === 'ALL'} onClick={() => setFilter('ALL')} />
+            <FilterChip label="QR" count={counts.qr} active={filter === 'QR'} onClick={() => setFilter('QR')} />
+            <FilterChip label="NFC" count={counts.nfc} active={filter === 'NFC'} onClick={() => setFilter('NFC')} />
           </div>
-        ) : candidates.isError ? (
-          <p className="py-6 text-center text-body text-muted-foreground">
-            지점 목록을 불러오지 못했습니다.
-          </p>
-        ) : visible.length === 0 ? (
-          /* 🔴 **네 가지 0건을 구분한다** — 사업장에 지점 없음 / 전부 편성됨 / 검색 0건 /
-             필터 0건. 하나의 문구로 뭉치면 사용자가 다음에 할 일을 알 수 없다.
-             🔴 **필터 0건이 028 에서 새로 생겼다** — 칩을 눌러 비었는데 "검색 결과가
-             없습니다" 라고 하면 검색어를 지우러 간다(원인이 칩인데) */
-          <div className="py-6 text-center text-body text-muted-foreground">
-            {all.length === 0 ? (
-              <>
-                사업장에 등록된 지점이 없습니다.{' '}
-                <Link to={paths.service.points} className="underline hover:text-foreground">
-                  순찰지점
-                </Link>
-                에서 먼저 추가해주세요.
-              </>
-            ) : assignable.length === 0 ? (
-              '추가할 수 있는 지점이 없습니다. 모든 지점이 이미 편성되어 있습니다.'
-            ) : keyword ? (
-              '검색 결과가 없습니다.'
-            ) : (
-              <>
-                <p>{filter} 인증 지점이 없습니다.</p>
-                <button
-                  type="button"
-                  className="mt-2 underline hover:text-foreground"
-                  onClick={() => setFilter('ALL')}
-                >
-                  전체 보기
-                </button>
-              </>
-            )}
-          </div>
-        ) : (
-          <>
-            <p className="text-caption text-muted-foreground">검색결과 {visible.length}개</p>
 
-            <ul className="flex max-h-[320px] min-h-0 flex-col gap-1 overflow-y-auto">
-              {visible.map((point) => {
-                const method = toAuthMethodLabel(point.authMethod)
-                const index = selected.findIndex((item) => item.pointSeq === point.pointSeq)
-                const checked = index !== -1
-                const inputId = `course-point-candidate-${point.pointSeq}`
-
-                return (
-                  <li
-                    key={point.pointSeq}
-                    /* 🔴 고른 행은 **좌측 바**로 표시한다(목업, 사용자 결정 2026-10-13) —
-                       배경 톤만으로는 스크롤 중에 눈에 띄지 않는다.
-                       🔴 바는 `border-l` 이 아니라 **덧대는 요소**다 — 테두리로 그리면 행의
-                       `rounded-sm` 을 따라 **위아래가 둥글어진다**(사용자 지적). 일자 바여야
-                       눈이 세로로 미끄러진다. 행 패딩은 선택 여부와 무관하게 같다 */
-                    className={`relative flex items-center gap-2.5 rounded-sm px-2.5 py-2.5 ${
-                      checked ? 'bg-point/5' : 'hover:bg-muted/60'
-                    }`}
+          {candidates.isPending ? (
+            /* 🔴 로딩을 "후보 없음" 으로 보여주지 않는다 — 지점이 없다고 믿고 나가게 된다 */
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="h-9 animate-pulse rounded-sm bg-muted" />
+              ))}
+            </div>
+          ) : candidates.isError ? (
+            <p className="py-6 text-center text-body text-muted-foreground">
+              지점 목록을 불러오지 못했습니다.
+            </p>
+          ) : visible.length === 0 ? (
+            /* 🔴 **네 가지 0건을 구분한다** — 사업장에 지점 없음 / 전부 편성됨 / 검색 0건 /
+               필터 0건. 하나의 문구로 뭉치면 사용자가 다음에 할 일을 알 수 없다.
+               🔴 **필터 0건이 028 에서 새로 생겼다** — 칩을 눌러 비었는데 "검색 결과가
+               없습니다" 라고 하면 검색어를 지우러 간다(원인이 칩인데) */
+            <div className="py-6 text-center text-body text-muted-foreground">
+              {/* 🔴 "순찰지점 탭에서 먼저 추가" 링크는 뺐다 — 아래 `새 지점 만들기` 가 그 자리다(075) */}
+              {all.length === 0 ? (
+                '사업장에 등록된 지점이 없습니다.'
+              ) : assignable.length === 0 ? (
+                '추가할 수 있는 지점이 없습니다. 모든 지점이 이미 편성되어 있습니다.'
+              ) : keyword ? (
+                '검색 결과가 없습니다.'
+              ) : (
+                <>
+                  <p>{filter} 인증 지점이 없습니다.</p>
+                  <button
+                    type="button"
+                    className="mt-2 underline hover:text-foreground"
+                    onClick={() => setFilter('ALL')}
                   >
-                    {checked && (
-                      <span aria-hidden className="absolute inset-y-0 left-0 w-0.5 bg-point" />
-                    )}
+                    전체 보기
+                  </button>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              <p className="text-caption text-muted-foreground">검색결과 {visible.length}개</p>
 
-                    <AppCheckbox
-                      id={inputId}
-                      checked={checked}
-                      onChange={() => setSelected((prev) => toggleSelection(prev, point))}
-                    />
-                    {/* 행 전체를 눌러도 토글된다 — 체크박스 4px 를 조준하게 두지 않는다 */}
-                    <label
-                      htmlFor={inputId}
-                      className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
+              <ul className="flex max-h-[320px] min-h-0 flex-col gap-1 overflow-y-auto">
+                {visible.map((point) => {
+                  const method = toAuthMethodLabel(point.authMethod)
+                  const index = selected.findIndex((item) => item.pointSeq === point.pointSeq)
+                  const checked = index !== -1
+                  const inputId = `course-point-candidate-${point.pointSeq}`
+
+                  return (
+                    <li
+                      key={point.pointSeq}
+                      /* 🔴 고른 행은 **좌측 바**로 표시한다(목업, 사용자 결정 2026-10-13) —
+                         배경 톤만으로는 스크롤 중에 눈에 띄지 않는다.
+                         🔴 바는 `border-l` 이 아니라 **덧대는 요소**다 — 테두리로 그리면 행의
+                         `rounded-sm` 을 따라 **위아래가 둥글어진다**(사용자 지적). 일자 바여야
+                         눈이 세로로 미끄러진다. 행 패딩은 선택 여부와 무관하게 같다 */
+                      className={`relative flex items-center gap-2.5 rounded-sm px-2.5 py-2.5 ${
+                        checked ? 'bg-point/5' : 'hover:bg-muted/60'
+                      }`}
                     >
-                      <span className="min-w-0 flex-1 truncate text-body">
-                        <Highlight text={point.pointName} keyword={keyword} />
-                      </span>
-                      {/* 🔴 목록 뱃지는 **한 단계 작게**(사용자 지적 2026-10-13) — 기본
-                          `AppBadge` 는 지점명과 글자 크기가 비슷해 둘이 다툰다. 여기서
-                          주인공은 이름이고 인증수단은 곁들이는 정보다 */}
-                      {method && (
-                        <AppBadge
-                          variant={method === 'QR' ? 'point' : 'success'}
-                          className={cardBadge}
-                        >
-                          {method}
-                        </AppBadge>
-                      )}
-                      {/* 🔴 순번은 **고른 행에만** 붙인다 — 안 고른 행에 번호가 있으면
-                          "이미 그 자리에 있다" 로 읽힌다 */}
                       {checked && (
-                        <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-point text-label font-bold text-white tabular-nums">
-                          {orderNoOf(assignedPointSeqs.length, index)}
-                        </span>
+                        <span aria-hidden className="absolute inset-y-0 left-0 w-0.5 bg-point" />
                       )}
-                    </label>
-                  </li>
-                )
-              })}
-            </ul>
-          </>
-        )}
 
-        {/* 🔴 **선택 목록을 따로 둔다** — 필터·검색을 바꾸면 고른 행이 목록에서 사라지는데
-            (선택은 유지된다, T392) 그것을 확인하고 해제할 자리가 없으면 사용자는 무엇을
-            골랐는지 알 수 없다 */}
-        {selected.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 rounded-sm bg-muted p-2">
-            <span className="text-caption text-muted-foreground">선택 {selected.length}</span>
-            {selected.map((point, index) => (
-              <span
-                key={point.pointSeq}
-                className="inline-flex items-center gap-1 rounded-sm border border-border bg-card px-1.5 py-0.5 text-caption"
-              >
-                <span className="tabular-nums text-muted-foreground">
-                  {orderNoOf(assignedPointSeqs.length, index)}
-                </span>
-                <span className="max-w-[160px] truncate">{point.pointName}</span>
-                <button
-                  type="button"
-                  aria-label={`${point.pointName} 선택 해제`}
-                  className="text-muted-foreground hover:text-foreground"
-                  onClick={() => setSelected((prev) => toggleSelection(prev, point))}
-                >
-                  <XIcon size={12} />
-                </button>
-              </span>
-            ))}
+                      <AppCheckbox
+                        id={inputId}
+                        checked={checked}
+                        onChange={() => setSelected((prev) => toggleSelection(prev, point))}
+                      />
+                      {/* 행 전체를 눌러도 토글된다 — 체크박스 4px 를 조준하게 두지 않는다 */}
+                      <label
+                        htmlFor={inputId}
+                        className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
+                      >
+                        <span className="min-w-0 flex-1 truncate text-body">
+                          <Highlight text={point.pointName} keyword={keyword} />
+                        </span>
+                        {/* 🔴 목록 뱃지는 **한 단계 작게**(사용자 지적 2026-10-13) — 기본
+                            `AppBadge` 는 지점명과 글자 크기가 비슷해 둘이 다툰다. 여기서
+                            주인공은 이름이고 인증수단은 곁들이는 정보다 */}
+                        {method && (
+                          <AppBadge
+                            variant={method === 'QR' ? 'point' : 'success'}
+                            className={cardBadge}
+                          >
+                            {method}
+                          </AppBadge>
+                        )}
+                        {/* 🔴 순번은 **고른 행에만** 붙인다 — 안 고른 행에 번호가 있으면
+                            "이미 그 자리에 있다" 로 읽힌다 */}
+                        {checked && (
+                          <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-point text-label font-bold text-white tabular-nums">
+                            {orderNoOf(assignedPointSeqs.length, index)}
+                          </span>
+                        )}
+                      </label>
+                    </li>
+                  )
+                })}
+              </ul>
+            </>
+          )}
+
+          {/* ➕ 새 지점 만들기(075) — 목록 아래 늘 둔다. 검색 0건이면 검색어를 이름으로 넘긴다.
+              🔴 로딩 · 오류 중엔 숨긴다 — "없어서 만든다" 를 판단할 근거가 아직 없다 */}
+          {candidates.isSuccess && (
             <button
               type="button"
-              className="ml-auto text-caption font-medium text-point hover:text-point/80"
-              onClick={() => setSelected([])}
+              className="flex w-full items-center justify-center gap-1.5 rounded-sm border border-dashed border-border py-2 text-body text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+              onClick={() => setView('create')}
             >
-              모두 해제
+              <PlusIcon size={14} aria-hidden />
+              {keyword && visible.length === 0 ? `'${keyword}' 새 지점 만들기` : '새 지점 만들기'}
             </button>
-          </div>
-        )}
+          )}
 
-        <div className="flex justify-end gap-2 pt-1">
-          <AppButton variant="sub" type="button" onClick={close}>
-            취소
-          </AppButton>
-          {/* 🔴 아직 저장이 아니다 — 편집 중인 목록에 **담을 뿐**이고 저장은 편성 카드의
-              "저장" 이 한다. 라벨을 "추가" 로 둬서 "저장" 과 구분한다 */}
-          <AppButton type="button" disabled={selected.length === 0} onClick={submit}>
-            {selected.length > 0 ? `${selected.length}개 추가` : '추가'}
-          </AppButton>
+          {/* 🔴 **선택 목록을 따로 둔다** — 필터·검색을 바꾸면 고른 행이 목록에서 사라지는데
+              (선택은 유지된다, T392) 그것을 확인하고 해제할 자리가 없으면 사용자는 무엇을
+              골랐는지 알 수 없다 */}
+          {selected.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 rounded-sm bg-muted p-2">
+              <span className="text-caption text-muted-foreground">선택 {selected.length}</span>
+              {selected.map((point, index) => (
+                <span
+                  key={point.pointSeq}
+                  className="inline-flex items-center gap-1 rounded-sm border border-border bg-card px-1.5 py-0.5 text-caption"
+                >
+                  <span className="tabular-nums text-muted-foreground">
+                    {orderNoOf(assignedPointSeqs.length, index)}
+                  </span>
+                  <span className="max-w-[160px] truncate">{point.pointName}</span>
+                  <button
+                    type="button"
+                    aria-label={`${point.pointName} 선택 해제`}
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => setSelected((prev) => toggleSelection(prev, point))}
+                  >
+                    <XIcon size={12} />
+                  </button>
+                </span>
+              ))}
+              <button
+                type="button"
+                className="ml-auto text-caption font-medium text-point hover:text-point/80"
+                onClick={() => setSelected([])}
+              >
+                모두 해제
+              </button>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-1">
+            <AppButton variant="sub" type="button" onClick={close}>
+              취소
+            </AppButton>
+            {/* 🔴 아직 저장이 아니다 — 편집 중인 목록에 **담을 뿐**이고 저장은 편성 카드의
+                "저장" 이 한다. 라벨을 "추가" 로 둬서 "저장" 과 구분한다 */}
+            <AppButton type="button" disabled={selected.length === 0} onClick={submit}>
+              {selected.length > 0 ? `${selected.length}개 추가` : '추가'}
+            </AppButton>
+          </div>
         </div>
-      </div>
+      )}
     </AppDialog>
   )
 }

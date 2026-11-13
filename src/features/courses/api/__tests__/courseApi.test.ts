@@ -130,8 +130,10 @@ describe('fetchClassificationPoints', () => {
   it('🔴 페이징이 없다 — 사업장의 지점이 전량 온다', async () => {
     const candidates = await fetchClassificationPoints(SITE_SEQ)
 
-    // 사업장 7 의 지점은 10건(1~10) — 20건씩 끊는 페이징이 없다
-    expect(candidates).toHaveLength(10)
+    // 사업장 7 의 지점은 10건(1~10) 중 미사용 9번을 뺀 9건 — 20건씩 끊는 페이징이 없다
+    // (🔴 미사용은 서버가 후보에서 뺀다, 023 실측 — mock 도 075 에서 맞췄다)
+    expect(candidates).toHaveLength(9)
+    expect(candidates.some((point) => point.pointSeq === 9)).toBe(false)
   })
 })
 

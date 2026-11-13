@@ -109,6 +109,23 @@ const toMockPoint = (legacy: (typeof legacyPoints)[number]): MockPoint => {
 const store: MockPoint[] = legacyPoints.map(toMockPoint)
 
 /**
+ * 코스 편성 후보(`GetClassificationPoint`) — **이 저장소에서 읽는다**(`spec 075`).
+ *
+ * 🔴 구 mock 에서 읽으면 지점 고르기 창에서 **방금 만든 지점이 후보에 안 나온다.**
+ * 🔴 **미사용 지점은 뺀다** — 실서버가 그렇게 준다(023 실측 2026-10-13).
+ */
+export const classificationCandidates = (siteSeq: number) =>
+  store
+    .filter((point) => point.siteSeq === siteSeq && point.useYn)
+    .map((point) => ({
+      pointSeq: point.pointSeq,
+      pointName: point.name,
+      memo: point.memo,
+      authMethod: point.authMethod,
+      authMethodName: point.authMethod === 9 ? 'QR' : 'NFC',
+    }))
+
+/**
  * 저장소를 초기 상태로 되돌린다.
  *
  * 🔴 **테스트 격리에 필요하다.** `server.resetHandlers()` 는 핸들러만 되돌리고 이 배열은

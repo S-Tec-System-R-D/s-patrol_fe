@@ -20,13 +20,16 @@ import { makeAccessToken } from '@/test/jwt'
 
 const ADD_POINT_PATH = '/api/v1/Point/W/sign/AddPoint'
 
-const renderForm = (onSuccess = vi.fn()) => {
+const renderForm = (
+  onSuccess = vi.fn(),
+  props: { defaultName?: string; hideUseYn?: boolean } = {}
+) => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
   })
   render(
     <QueryClientProvider client={queryClient}>
-      <AddPointForm onSuccess={onSuccess} />
+      <AddPointForm onSuccess={onSuccess} {...props} />
     </QueryClientProvider>
   )
   return { onSuccess }
@@ -166,7 +169,8 @@ describe('AddPointForm — 성공·실패 후 모달', () => {
     await user.type(screen.getByPlaceholderText('지점명을 입력해주세요'), '정문 입구')
     await user.click(screen.getByRole('button', { name: '생성' }))
 
-    await waitFor(() => expect(onSuccess).toHaveBeenCalled())
+    // 075 — 만든 이름을 넘긴다(서버가 새 pointSeq 를 주지 않는다)
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith('정문 입구'))
   })
 
   it('🔴 실패하면 onSuccess를 부르지 않는다 — 입력값이 사라지면 안 된다', async () => {
@@ -195,5 +199,20 @@ describe('AddPointForm — 성공·실패 후 모달', () => {
     expect(
       screen.getByText('사업장이 선택되지 않아 지점을 추가할 수 없습니다.')
     ).toBeInTheDocument()
+  })
+})
+
+describe('AddPointForm — 코스 지점 고르기 창에서 (spec 075)', () => {
+  it('🔴 hideUseYn 이면 지점사용 스위치가 없고 useYn true 로 보낸다 · 이름이 미리 채워진다', async () => {
+    const user = userEvent.setup()
+    const captured = captureBody()
+    renderForm(vi.fn(), { defaultName: '지하 창고', hideUseYn: true })
+
+    expect(screen.queryByText('지점사용')).not.toBeInTheDocument()
+    expect(screen.getByPlaceholderText('지점명을 입력해주세요')).toHaveValue('지하 창고')
+    await user.click(screen.getByRole('button', { name: '생성' }))
+
+    await waitFor(() => expect(captured).toHaveLength(1))
+    expect(captured[0]).toMatchObject({ name: '지하 창고', useYn: true })
   })
 })
