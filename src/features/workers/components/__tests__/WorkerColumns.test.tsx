@@ -44,7 +44,7 @@ describe('workerColumns', () => {
     expect(screen.getByText('근무 종료')).toBeInTheDocument()
   })
 
-  it('⚠️ 원소속은 Seq 가 있을 때만 이름을 보인다 (OQ-038-B)', () => {
+  it('⚠️ 배치(예전 원소속)는 Seq 가 있을 때만 소속지 이름을 보인다 (OQ-038-B)', () => {
     renderRows([
       row(),
       row({ userSeq: 103, userName: '오준혁', originSiteSeq: 12, originSiteName: '강서 스퀘어타워' }),

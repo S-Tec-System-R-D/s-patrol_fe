@@ -111,10 +111,12 @@ describe('UsersPage — 서버 목록', () => {
     expect(inTable().getByText('현장 관리자')).toBeInTheDocument()
   })
 
-  it('원소속은 Seq 가 있는 행에만 보인다 (OQ-038-B)', async () => {
+  it('배치 컬럼(예전 원소속) — Seq 가 있는 행에만 소속지 이름 (OQ-038-B)', async () => {
     renderPage()
 
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+    expect(inTable().getByRole('columnheader', { name: '배치' })).toBeInTheDocument()
+    expect(inTable().queryByRole('columnheader', { name: '원소속' })).not.toBeInTheDocument()
     expect(inTable().getAllByText('강서 스퀘어타워')).toHaveLength(1)
     expect(inTable().queryByText('강동 테크노타워')).not.toBeInTheDocument()
   })

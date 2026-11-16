@@ -5,7 +5,6 @@ import { cardBadge as CARD_BADGE } from '@/components/app/AppBadge.variants'
 import { workLabel } from '../lib/userFormat'
 import { roleBadgeVariant } from '../lib/userRole'
 import type { UserRow } from '../types/user'
-import WorkerAvatar from './WorkerAvatar'
 
 /**
  * 근무자 목록의 **좁은 폭(`xl` 미만) 카드** (`spec 038` T608).
@@ -22,8 +21,6 @@ const formatDate = (value: string): string => value.slice(0, 10)
 
 const WorkerCard = (row: UserRow) => (
   <div className="flex items-center gap-3">
-    <WorkerAvatar id={String(row.userSeq)} name={row.userName} className="size-11" />
-
     <div className="flex min-w-0 flex-1 flex-col gap-1">
       <div className="flex items-center gap-2">
         <span className="truncate text-body font-semibold text-foreground">{row.userName}</span>

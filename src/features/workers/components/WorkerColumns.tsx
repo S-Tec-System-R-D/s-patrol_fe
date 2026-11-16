@@ -5,7 +5,6 @@ import AppBadge from '@/components/app/AppBadge'
 import { workLabel } from '../lib/userFormat'
 import { roleBadgeVariant } from '../lib/userRole'
 import type { UserRow } from '../types/user'
-import WorkerAvatar from './WorkerAvatar'
 
 /**
  * 근무자 목록 컬럼 (`spec 038` T607).
@@ -14,7 +13,9 @@ import WorkerAvatar from './WorkerAvatar'
  * - **연락처** — 목록 응답에 없다(상세에만 `phone`). 붙이면 행마다 상세 조회(N+1)
  * - **사용자 상태(활성/비활성)** — 필드가 없다
  * - **"배치중" 뱃지** — mock 의 `isAssignedElsewhere` 는 서버에 없다. 대신 `originSiteSeq` 가
- *   **배치 온 사람의 소속지**임이 실측됐다(OQ-038-B) → 원소속 컬럼에 소속지 이름을 보인다
+ *   **배치 온 사람의 소속지**임이 실측됐다(OQ-038-B) → `배치` 컬럼에 소속지 이름을 보인다(🔄 2026-11-16 `원소속` → `배치`)
+ *
+ * 🔄 2026-11-16 이름 칸 아바타 삭제(사용자 결정) — 표 · 카드 함께. 배치관리 화면의 아바타는 그대로.
  *
  * 생긴 것 — **사번**(`loginId`) · **권한**(`codeName`): 목록에 관리자도 섞여 온다(사용자 결정 2026-10-21).
  */
@@ -32,13 +33,9 @@ export const workerColumns = (): ColumnDef<UserRow>[] =>
       accessorKey: 'userName',
       header: '이름',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          {/* ⚠️ `WorkerAvatar` 는 색 해시용 `id` 를 문자열로 받는다 — 컴포넌트는 고치지 않는다 */}
-          <WorkerAvatar id={String(row.original.userSeq)} name={row.original.userName} />
-          <div className="flex min-w-0 flex-col">
-            <span className="font-medium">{row.original.userName}</span>
-            <span className="text-meta tabular-nums text-muted-foreground">{row.original.loginId}</span>
-          </div>
+        <div className="flex min-w-0 flex-col">
+          <span className="font-medium">{row.original.userName}</span>
+          <span className="text-meta tabular-nums text-muted-foreground">{row.original.loginId}</span>
         </div>
       ),
     },
@@ -68,7 +65,7 @@ export const workerColumns = (): ColumnDef<UserRow>[] =>
     },
     {
       id: 'origin',
-      header: '원소속',
+      header: '배치',
       /**
        * **Seq 가 있을 때만** 이름을 보인다 — Seq 가 있으면 **다른 사업장 소속으로 배치 온 사람**이고
        * 그 이름이 소속지다(실측 2026-10-21). Seq 가 `null` 인 행은 이름이 현재 사업장명이라 매 행 반복될 뿐이다
