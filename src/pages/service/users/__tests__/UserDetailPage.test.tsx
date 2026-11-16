@@ -232,7 +232,7 @@ describe('UserDetailPage — 정상', () => {
 describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
   /**
    * 시드(`mocks/handlers/workerRuns.ts`): 104 박지우의 최근 14일 회차 8건 + 동명이인(110 박지우) 1건.
-   * 요약은 시안과 같다 — 순찰 8회 · 지점 인증 86% (31/36) · 미완료 포함 4회 · 특이사항 2회 · 시간초과 3회.
+   * 요약은 시안과 같다 — 순찰 8회 · 지점 인증 86% (31/36) · 미인증 4회 · 특이사항 2회 · 시간초과 3회.
    */
   const HISTORY_PATH = '/api/v1/History/W/sign/GetCourseHistory'
   const runButtons = () => screen.findAllByRole('button', { name: /^\d{2}:\d{2} –/ })
@@ -292,31 +292,34 @@ describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
     heads.forEach((head) => expect(head.textContent).toMatch(/^\d{2}\.\d{2} \(.\)$/))
     expect(screen.getByText('오늘')).toBeInTheDocument()
     // 🔴 D5 — 날짜 머리에 예외 수도 적지 않는다(회차 줄과 겹친다)
-    heads.forEach((head) => expect(head.parentElement).not.toHaveTextContent(/미완료 포함|시간초과/))
+    heads.forEach((head) => expect(head.parentElement).not.toHaveTextContent(/미인증|시간초과/))
   })
 
-  it('접힌 줄은 교대 · 시간초과만 — 미완료 · 특이사항은 펼쳐야 보인다', async () => {
+  it('접힌 줄은 교대 · 시간초과만 — 미인증 · 특이사항은 펼쳐야 보인다', async () => {
     renderAt('104')
 
     const row = await findRun('14:28')
     expect(row).toHaveTextContent('지하 주차장 코스')
     expect(row).toHaveTextContent('인증 3/4')
     expect(row).toHaveTextContent('시간초과')
-    expect(row).not.toHaveTextContent('미완료')
+    expect(row).not.toHaveTextContent('미인증')
     expect(screen.getAllByRole('button', { name: /교대/ })).toHaveLength(2)
   })
 
-  it('펼치면 지점별 시각 · 건너뜀 · 메모 · 사진 수와 순찰 상세 링크', async () => {
+  it('펼치면 지점별 시각 · 미인증 · 메모 · 사진 수와 순찰 상세 링크', async () => {
     const user = userEvent.setup()
     renderAt('104')
 
-    await user.click(await findRun('14:28'))
+    const run = await findRun('14:28')
+    await user.click(run)
     expect(await screen.findByText('램프 차단기 작동 불량, 시설팀 전달', {})).toBeInTheDocument()
-    expect(screen.getByText('사진 2')).toBeInTheDocument()
-    expect(screen.getByText('미완료 1')).toBeInTheDocument()
-    expect(screen.getByText('특이사항 1')).toBeInTheDocument()
-    // 3번 지점은 중간에 빠졌다 — 시각 있음 = 건너뜀(077)
-    expect(screen.getByText('건너뜀')).toBeInTheDocument()
+    // 요약 칸 · 범례도 `미인증`(D10)이라 펼친 패널 안에서만 찾는다
+    const panel = within(document.getElementById(run.getAttribute('aria-controls') ?? '') as HTMLElement)
+    expect(panel.getByText('사진 2')).toBeInTheDocument()
+    expect(panel.getByText('미인증 1')).toBeInTheDocument()
+    expect(panel.getByText('특이사항 1')).toBeInTheDocument()
+    // 3번 지점은 중간에 빠졌다 — 시각이 있어도 미인증(D8)
+    expect(panel.getByText('미인증')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /순찰 이력 상세 보기/ })).toHaveAttribute('href', '/patrol/zones/7901')
   })
 

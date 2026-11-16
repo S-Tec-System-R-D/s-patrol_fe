@@ -27,7 +27,7 @@ import type { PointHistoryRow } from '@/features/course-history/types'
 const formatDateTime = (value: string): string => value.replace('T', ' ').slice(0, 16)
 
 const PointHistoryCard = (row: PointHistoryRow) => {
-  const result = pointCheckBadge(row.status, row.checkDt, row.hasMemo)
+  const result = pointCheckBadge(row.status, row.hasMemo)
   const overtime = overtimeBadge(row.overTimeYn)
   // 🔴 미완료 행은 인증이 없어 `''` 다 — "모른다" 가 아니라 **없었다**는 뜻이라 뱃지를 뺀다
   const hasAuth = row.authMethod !== null && row.authMethodName !== ''

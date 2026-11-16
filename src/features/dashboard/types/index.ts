@@ -22,7 +22,7 @@ export interface DashboardCoursePoint {
   pointSeq: number
   orderNo: number
   pointName: string
-  /** 지점 사전 — `0` 대기 · `1` 진행중(= 다음 지점) · `2` 순찰제외 · `3` 미완료(건너뜀) · `4` 완료 */
+  /** 지점 사전 — `0` 대기 · `1` 진행중(= 다음 지점) · `2` 순찰제외 · `3` 미완료(화면 `미인증`) · `4` 완료 */
   status: number
   checkDt: string | null
 }
@@ -73,7 +73,7 @@ export type CourseStartedEvent = SseEventBase
 
 export interface PointCheckedEvent extends SseEventBase {
   detailSeq: number
-  /** 지점 사전 — `3` 건너뜀 · `4` 인증 */
+  /** 지점 사전 — `3` 미인증 · `4` 인증 */
   detailStatus: number
 }
 

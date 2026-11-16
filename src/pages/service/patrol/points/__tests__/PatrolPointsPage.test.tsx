@@ -167,7 +167,7 @@ describe('PatrolPointsPage — 필터가 서버로 나간다', () => {
     await user.click(inFilters().getByLabelText('결과'))
 
     const options = await screen.findAllByRole('option')
-    expect(options.map((option) => option.textContent)).toEqual(['전체', '건너뜀', '완료'])
+    expect(options.map((option) => option.textContent)).toEqual(['전체', '미인증', '완료'])
     // 고르면 0건이 돌아오는 필터는 "데이터가 없다" 는 거짓 신호를 준다
     expect(screen.queryByRole('option', { name: '시간초과' })).not.toBeInTheDocument()
     expect(screen.queryByRole('option', { name: '순찰제외' })).not.toBeInTheDocument()
@@ -262,7 +262,7 @@ describe('PatrolPointsPage — 실측 예외를 화면이 감당한다', () => {
     seed({ status: 3, statusName: '미완료', authMethod: null, authMethodName: '' })
     renderPage()
 
-    expect((await screen.findAllByText('건너뜀')).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('미인증')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('09:07').length).toBeGreaterThan(0)
     expect(screen.queryByText('QR')).not.toBeInTheDocument()
   })

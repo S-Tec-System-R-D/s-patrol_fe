@@ -15,7 +15,7 @@ export const filterMyRuns = (rows: CourseHistoryRow[], userSeq: number): CourseH
   rows.filter((row) => row.userList.some((user) => user.userSeq === userSeq))
 
 /**
- * 🔴 **미완료 포함** = 끝난 회차 중 인증하지 못한 지점이 있는 회차(D2). 진행 중은 아직 판단하지 않는다.
+ * 🔴 **미인증**(회차) = 끝난 회차 중 인증하지 못한 지점이 있는 회차(D2 → D10 화면 이름 `미인증`). 진행 중은 아직 판단하지 않는다.
  * ⚠️ `status` 가 아니라 두 수로 본다 — `완료` 인데 `checkedCount: 0` 인 행이 실재한다(api-spec 15)
  */
 export const isIncompleteRun = (row: CourseHistoryRow): boolean =>
@@ -42,7 +42,7 @@ export const summarizeRuns = (rows: CourseHistoryRow[]): RunSummary => ({
   overtime: rows.filter((row) => row.overtimeYn).length,
 })
 
-/** 막대 색 하나 — 미완료 포함과 시간초과가 겹치면 **미완료 포함**(시안 범례) */
+/** 막대 색 하나 — 미인증과 시간초과가 겹치면 **미인증**(시안 범례) */
 export type RunKind = 'normal' | 'overtime' | 'incomplete'
 
 export const runKind = (row: CourseHistoryRow): RunKind =>

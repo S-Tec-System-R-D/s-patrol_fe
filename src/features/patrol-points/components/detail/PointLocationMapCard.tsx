@@ -113,7 +113,7 @@ const PointLocationMapCard = ({ detail, bare = false }: PointLocationMapCardProp
   if (!TILE_URL) return null
 
   /* 🔄 `spec 078` D5 — 오른쪽 패널은 좌표가 없어도 지도 자리를 둔다. 왼쪽 본문은 페이지가 좌표 있을 때만 쓴다.
-     D7 — 건너뜀 · 미인증은 찍지 않아 위치가 없는 게 맞다 / 완료인데 없으면 값이 빠진 것 — 문구를 나눈다 */
+     D7 — 미인증(서버 3)은 찍지 않아 위치가 없는 게 맞다 / 완료인데 없으면 값이 빠진 것 — 문구를 나눈다 */
   if (!hasCoord) {
     if (!bare) return null
     const notChecked = detail.status !== POINT_HISTORY_STATUS.COMPLETED

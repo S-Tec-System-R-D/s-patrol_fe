@@ -68,14 +68,15 @@ describe('PatrolZoneDetailPage — 회차 상세 (spec 077)', () => {
     expect(screen.queryByText(/평균/)).not.toBeInTheDocument()
   })
 
-  it('🔴 미완료(3)를 두 종류로 구분한다 — 미인증(도달 못 함) ↔ 건너뜀(시각 있음)', async () => {
+  it('🔴 미완료(3)는 시각 유무와 상관없이 미인증 하나다 (spec 079 D8)', async () => {
     renderPage(103)
 
-    // 103 시드: 시각 없음 1건(비상구 A → 미인증) + 시각 있음 1건(로비 1층 → 건너뜀)
+    // 103 시드: 시각 없음 1건(비상구 A) + 시각 있음 1건(로비 1층) — 둘 다 미인증
     await screen.findByRole('list', { name: '지점 인증 내역' })
     expect(inTimeline().getByText('비상구 A')).toBeInTheDocument()
-    expect(inTimeline().getAllByText('미인증').length).toBeGreaterThan(0)
-    expect(inTimeline().getAllByText('건너뜀').length).toBeGreaterThan(0)
+    // 행마다 뱃지 + 화면 낭독용 글자가 함께 있어 2행이면 2개 이상
+    expect(inTimeline().getAllByText('미인증').length).toBeGreaterThanOrEqual(2)
+    expect(screen.queryByText(/건너뜀/)).not.toBeInTheDocument()
   })
 
   it('🔴 정상 인증(이상없음)은 뱃지를 달지 않는다 (D2)', async () => {
@@ -116,12 +117,12 @@ describe('PatrolZoneDetailPage — 회차 상세 (spec 077)', () => {
     expect(summary.queryByRole('button')).not.toBeInTheDocument()
   })
 
-  it('🔴 머리 숫자는 아래 행에서 센다 — 103: 인증 1 / 3 · 건너뜀 1 · 미인증 1 (2026-11-13)', async () => {
+  it('🔴 머리 숫자는 아래 행에서 센다 — 103: 인증 1 / 3 · 미인증 2 (2026-11-13 · D8)', async () => {
     renderPage(103)
 
     await screen.findByRole('list', { name: '지점 인증 내역' })
     expect(screen.getByText('/ 3 인증', { exact: false })).toBeInTheDocument()
-    expect(screen.getByText('건너뜀 1 · 미인증 1')).toBeInTheDocument()
+    expect(screen.getByText('미인증 2')).toBeInTheDocument()
   })
 
   it('지점 줄을 누르면 고른 상태가 된다 — 지도와 서로 강조 (D3)', async () => {

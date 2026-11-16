@@ -136,7 +136,7 @@ const PatrolPointDetailPage = () => {
   const result =
     data.status === POINT_HISTORY_STATUS.COMPLETED
       ? { variant: 'success' as const, label: '인증' }
-      : pointCheckBadge(data.status, data.checkDt, data.hasMemo)
+      : pointCheckBadge(data.status, data.hasMemo)
   // 🔴 상세는 `overtimeYn`(**소문자 t**) 다 — 코스 상세와 다르다(B-4)
   const overtime = overtimeBadge(data.overtimeYn)
   const hasMemo = data.memoList.length > 0

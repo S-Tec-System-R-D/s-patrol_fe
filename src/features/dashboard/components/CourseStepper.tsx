@@ -10,7 +10,7 @@ import type { DashboardCoursePoint, PointStepStatus } from '../types'
  *
  * 🔴 **뱃지형이다**(사용자 결정 2026-10-30) — 번호 + 지점명을 상태색 뱃지 하나로 묶고 선을 바로 붙인다.
  * 번호 원 + 이름(숫자 스테퍼)과 나란히 비교해 골랐다: 선이 이어진 느낌이 강하고 색만으로 어디까지 갔는지 보인다.
- * 🔴 **색은 회차 상세 지도 핀과 같은 규칙이다** — 인증 `success` · 건너뜀(미인증) `warning` · 아직 안 감 회색.
+ * 🔴 **색은 회차 상세 지도 핀과 같은 규칙이다** — 인증 `success` · 미인증(서버 3, `spec 079` D8) `warning` · 아직 안 감 회색.
  * 파랑(`point`)은 **다음 지점** 하나에만 쓴다(점선 뱃지 + 점선 연결).
  * 🔴 **가로 스크롤 대신 줄바꿈** — 지점이 12개여도 390px 에서 전부 읽힌다.
  */
@@ -33,7 +33,7 @@ const numberStyles: Record<PointStepStatus, string> = {
 
 const statusText: Record<PointStepStatus, string> = {
   done: '인증',
-  skipped: '건너뜀',
+  skipped: '미인증',
   next: '다음',
   pending: '대기',
 }

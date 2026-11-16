@@ -30,11 +30,10 @@ import CheckDetailMemo from './CheckDetailMemo'
  *   고르면 이 목록이 그 행으로 스크롤한다.
  */
 
-/** 순번 원 색 — 완료 녹색 · 건너뜀 주황 채움 · 미인증 주황 테두리 · 다음 파랑 테두리 · 그 외 회색(대시보드 단계와 같은 색) */
+/** 순번 원 색 — 완료 녹색 · 미인증 주황 채움 · 다음 파랑 테두리 · 그 외 회색(대시보드 단계와 같은 색) */
 const chipClass = (step: RunStep): string => {
   if (step.row.status === POINT_HISTORY_STATUS.COMPLETED) return 'border-success bg-success text-white'
-  if (step.row.status === POINT_HISTORY_STATUS.INCOMPLETE)
-    return step.row.checkDt === null ? 'border-warning bg-card text-warning-foreground' : 'border-warning bg-warning text-white'
+  if (step.row.status === POINT_HISTORY_STATUS.INCOMPLETE) return 'border-warning bg-warning text-white'
   if (step.isNext) return 'border-point bg-card text-point ring-4 ring-point/15'
   return 'border-border bg-card text-muted-foreground'
 }
@@ -153,11 +152,9 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
   const memoRows = steps.filter((step) => step.row.memos.length > 0)
   const allOpen = memoRows.length > 0 && memoRows.every((step) => expanded.has(step.row.detailSeq))
   /* 🔴 **머리 숫자는 아래 행에서 센다**(사용자 지적 2026-11-13) — 서버 집계(`completedPointCount`)를 쓰면
-     행과 어긋난 회차에서 `2 / 3 인증` 아래에 인증 행이 1개뿐인 화면이 된다. 건너뜀 · 미인증도 따로 센다 */
+     행과 어긋난 회차에서 `2 / 3 인증` 아래에 인증 행이 1개뿐인 화면이 된다. 미인증도 행에서 센다 */
   const checked = steps.filter((step) => step.row.status === POINT_HISTORY_STATUS.COMPLETED).length
-  const incomplete = steps.filter((step) => step.row.status === POINT_HISTORY_STATUS.INCOMPLETE)
-  const skipped = incomplete.filter((step) => step.row.checkDt !== null).length
-  const unvisited = incomplete.length - skipped
+  const missed = steps.filter((step) => step.row.status === POINT_HISTORY_STATUS.INCOMPLETE).length
   const rate = steps.length > 0 ? (checked / steps.length) * 100 : 0
   const inProgress = detail.endDt === null
   const startMove = moveText(steps[0])
@@ -173,11 +170,7 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
         <span aria-hidden className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
           <span className="block h-full rounded-full bg-success" style={{ width: `${rate}%` }} />
         </span>
-        {(skipped > 0 || unvisited > 0) && (
-          <span className="text-caption font-semibold text-warning-foreground">
-            {[skipped > 0 && `건너뜀 ${skipped}`, unvisited > 0 && `미인증 ${unvisited}`].filter(Boolean).join(' · ')}
-          </span>
-        )}
+        {missed > 0 && <span className="text-caption font-semibold text-warning-foreground">미인증 {missed}</span>}
         {memoRows.length > 0 && (
           <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-caption text-muted-foreground">
             <input
@@ -202,7 +195,7 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
           <ol ref={listRef} aria-label="지점 인증 내역" className="flex flex-col">
             {steps.map((step, index) => {
               const { row } = step
-              const badge = pointCheckBadge(row.status, row.checkDt, row.memos.length > 0)
+              const badge = pointCheckBadge(row.status, row.memos.length > 0)
               const plain = row.status === POINT_HISTORY_STATUS.COMPLETED && row.memos.length === 0
               // 🔴 대기 지점도 뱃지를 달지 않는다 — 오른쪽 끝 `대기` 와 같은 말을 두 번 한다(시안)
               const quiet = plain || row.status === POINT_HISTORY_STATUS.WAITING

@@ -23,7 +23,7 @@ import CourseStepper from './CourseStepper'
 /**
  * 진행 중 회차 카드 — `spec 067`. 누르면 회차 상세로 간다.
  *
- * 1줄 = **무엇이 · 문제가 있나 · 얼마나**(코스명 · 시간초과/건너뜀 · `n/N 지점`),
+ * 1줄 = **무엇이 · 문제가 있나 · 얼마나**(코스명 · 시간초과/미인증 · `n/N 지점`),
  * 2줄 = **누가 · 언제 · 시간**. 목업의 `4 ~ 5 순찰중` 은 아래 단계 표시와 같은 말이라 뺐다.
  * `spec 073` — `다음: 지점` 문구를 뺐다(칩의 파란 `다음` 과 같은 말 · 분석 문서 §2) · 시간 막대를 길게(짧아 비율이 안 읽혔다).
  * `spec 068` — 서버 이름 그대로: 기준 = `totalMin`. `spec 070` — 순찰자 = 마지막 교대를 받은 사람 · 교대는 일어난 지점 뱃지 위에
@@ -69,7 +69,7 @@ const ActiveCourseCard = ({ course, elapsedMin, handOvers = [] }: ActiveCourseCa
         )}
         {skipped > 0 && (
           <AppBadge variant="warning" className={cardBadge}>
-            건너뜀 {skipped}
+            미인증 {skipped}
           </AppBadge>
         )}
         <span className="ml-auto text-caption text-muted-foreground tabular-nums">

@@ -60,7 +60,7 @@ describe('historyPins — 좌표 출처 (🔴 등록 좌표가 1순위)', () => 
   it('🔴 미인증 행도 같은 등록 좌표에 찍힌다 — 색만 다르다', () => {
     const { pins } = historyPins([row()], [coursePoint()])
 
-    expect(pins[0]).toMatchObject({ lat: 37.49, lng: 127.07, source: 'point', kind: 'unvisited' })
+    expect(pins[0]).toMatchObject({ lat: 37.49, lng: 127.07, source: 'point', kind: 'incomplete' })
   })
 
   it('등록 좌표가 없으면 인증 좌표로 폴백한다 — 핀을 잃지 않는다', () => {
@@ -202,10 +202,10 @@ describe('historyPins — 🔴 핀 5종 (2026-10-19 3종 → spec 077)', () => {
     expect(pins[0].kind).toBe('incomplete')
   })
 
-  it('🔴 미완료(3) + checkDt 없음 → unvisited(미인증) — 아예 가지 않았다', () => {
+  it('🔴 미완료(3) + checkDt 없음도 incomplete(미인증) 하나다 (spec 079 D8)', () => {
     const { pins } = historyPins([row({ status: 3, checkDt: null })], [coursePoint()])
 
-    expect(pins[0].kind).toBe('unvisited')
+    expect(pins[0].kind).toBe('incomplete')
   })
 
   it('진행 중 회차의 다음 지점은 next · 좌표 없는 지점은 이름으로 남는다 (spec 077)', () => {

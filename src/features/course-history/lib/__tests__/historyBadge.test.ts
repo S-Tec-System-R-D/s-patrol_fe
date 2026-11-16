@@ -30,33 +30,30 @@ describe('courseResultBadge — 코스 사전(0·1·2)', () => {
 
 describe('pointCheckBadge — 지점 사전(0~4)', () => {
   it('0=대기중 / 1=진행중 / 2=순찰제외', () => {
-    expect(pointCheckBadge(0, null, false)).toEqual({ variant: 'muted', label: '대기중' })
-    expect(pointCheckBadge(1, null, false)).toEqual({ variant: 'point', label: '진행중' })
-    expect(pointCheckBadge(2, null, false)).toEqual({ variant: 'warning', label: '순찰제외' })
+    expect(pointCheckBadge(0, false)).toEqual({ variant: 'muted', label: '대기중' })
+    expect(pointCheckBadge(1, false)).toEqual({ variant: 'point', label: '진행중' })
+    expect(pointCheckBadge(2, false)).toEqual({ variant: 'warning', label: '순찰제외' })
   })
 
-  it('🔴 미완료(3)는 checkDt 로 두 종류로 갈린다', () => {
-    // 실측 124건이 79(무방문) / 45(방문)로 갈린다 — 관리자가 할 일이 다르다
-    expect(pointCheckBadge(3, null, false).label).toBe('미인증')
-    // 🔄 spec 077 — 시각 있는 미완료 = 서버가 건너뛴 지점(대시보드와 같은 말 · 주황)
-    expect(pointCheckBadge(3, '2026-10-12T10:41:07', false)).toEqual({ variant: 'warning', label: '건너뜀' })
-    expect(pointCheckBadge(3, null, false).variant).toBe('warning')
+  it('🔴 미완료(3)는 건너뜀 · 종료로 남은 지점 모두 미인증 하나다 (spec 079 D8)', () => {
+    // 서버는 둘을 같은 상태로 둔다(백엔드 확인 2026-11-16) — 화면도 한 이름 · 주황
+    expect(pointCheckBadge(3, false)).toEqual({ variant: 'warning', label: '미인증' })
   })
 
   it('🔴 완료(4)는 hasMemo 로 이상없음 ↔ 순찰기록이 갈린다', () => {
     // 서버 status 에 이 구분이 없다 — 조합으로 유도한다
-    expect(pointCheckBadge(4, '2026-10-12T10:41:07', false)).toEqual({
+    expect(pointCheckBadge(4, false)).toEqual({
       variant: 'success',
       label: '이상없음',
     })
-    expect(pointCheckBadge(4, '2026-10-12T10:41:07', true)).toEqual({
+    expect(pointCheckBadge(4, true)).toEqual({
       variant: 'point',
       label: '순찰기록',
     })
   })
 
   it('사전에 없는 값은 "알 수 없음"', () => {
-    expect(pointCheckBadge(7, null, false).label).toBe('알 수 없음')
+    expect(pointCheckBadge(7, false).label).toBe('알 수 없음')
   })
 })
 
@@ -75,7 +72,7 @@ describe('overtimeBadge — 🔴 독립 축이라 별 뱃지다', () => {
 
   it('🔴 결과·기록·초과 세 축이 동시에 참인 행을 둘 다 표현한다 (실측 detailSeq 85)', () => {
     // 하나로 접으면 우선순위를 정해야 하고 어느 쪽이든 정보가 사라진다
-    const result = pointCheckBadge(4, '2026-08-24T12:59:45', true)
+    const result = pointCheckBadge(4, true)
     const overtime = overtimeBadge(true)
     expect(result.label).toBe('순찰기록')
     expect(overtime?.label).toBe('시간초과')

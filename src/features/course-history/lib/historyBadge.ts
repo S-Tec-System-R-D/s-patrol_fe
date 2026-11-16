@@ -63,12 +63,10 @@ export const courseResultBadge = (status: number): HistoryBadge => {
 /**
  * 코스 상세의 **지점 인증 결과** — **지점 사전**(`0~4`). 코스 상세 테이블 전용이다.
  *
- * 🔴 **`미완료`(3) 를 두 종류로 가른다** — `checkDt` 로 갈린다(실측: 79 vs 45):
- * - `null` → **미인증**: 회차가 끝날 때까지 도달하지 못했다. 순찰자·시각도 전부 없다
- * - 값 있음 → 🔄 **건너뜀**(`spec 077` 사용자 결정 2026-11-13 — 예전 `미완료`): 앱은 순서를 강제하지 않고,
- *   뒤 지점을 먼저 찍으면 서버가 앞 지점을 **그 순간 `3` + `checkDt`** 로 바꾼다(`api-spec.md` 실측).
- *   예전엔 "갔는데 인증 실패" 로 읽었는데 실측과 맞지 않았다. **대시보드(067~)가 이미 `건너뜀`** 이라 맞췄다.
- * - 🔴 **둘 다 `warning`(주황)** — 대시보드 진행 단계 · 회차 상세 지도 핀과 같은 색이다.
+ * 🔴 **`미완료`(3) 는 화면 어디서나 `미인증` 하나다**(`spec 079` D8 사용자 결정 2026-11-16).
+ * 서버는 건너뛴 지점(뒤 지점을 먼저 찍은 순간 `3` + `checkDt`)과 종료로 남은 지점(`3` · `checkDt` 없음)을
+ * **같은 상태**로 둔다(백엔드 확인). 예전(077~)엔 `checkDt` 로 `건너뜀` · `미인증` 을 갈랐는데,
+ * 둘 다 "인증이 남지 않았다" 이고 이름이 둘이면 헷갈린다 → 하나로. `warning`(주황).
  *
  * 🔴 **`완료`(4) 는 `hasMemo` 로 갈린다** — 서버 `status` 에 그 구분이 없다. 메모가 있으면
  * `순찰기록`(정보성), 없으면 `이상없음`. `design-system.md` §1-1 의 5종 매핑이 이것이다.
@@ -78,11 +76,7 @@ export const courseResultBadge = (status: number): HistoryBadge => {
  *
  * @param hasMemo 그 행의 `memos.length > 0`
  */
-export const pointCheckBadge = (
-  status: number,
-  checkDt: string | null,
-  hasMemo: boolean
-): HistoryBadge => {
+export const pointCheckBadge = (status: number, hasMemo: boolean): HistoryBadge => {
   switch (status) {
     case POINT_HISTORY_STATUS.WAITING:
       return { variant: 'muted', label: '대기중' }
@@ -91,9 +85,7 @@ export const pointCheckBadge = (
     case POINT_HISTORY_STATUS.EXCLUDED:
       return { variant: 'warning', label: '순찰제외' }
     case POINT_HISTORY_STATUS.INCOMPLETE:
-      return checkDt === null
-        ? { variant: 'warning', label: '미인증' }
-        : { variant: 'warning', label: '건너뜀' }
+      return { variant: 'warning', label: '미인증' }
     case POINT_HISTORY_STATUS.COMPLETED:
       return hasMemo
         ? { variant: 'point', label: '순찰기록' }

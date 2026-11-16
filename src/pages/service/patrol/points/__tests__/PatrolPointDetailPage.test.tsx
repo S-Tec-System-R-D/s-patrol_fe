@@ -176,7 +176,7 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     seed({ status: 3, statusName: '미완료', authMethod: null, authMethodName: 'Unknown' })
     renderPage()
 
-    expect(await screen.findByText('건너뜀')).toBeInTheDocument()
+    expect(await screen.findByText('미인증')).toBeInTheDocument()
     expect(screen.queryByText('Unknown')).not.toBeInTheDocument()
     // 🔄 spec 078 D7 — `-` 대신 이유를 적는다(찍지 않았으니 수단이 없는 게 맞다)
     expect(screen.getByText('인증하지 않음')).toBeInTheDocument()
@@ -304,7 +304,7 @@ describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
 
     await waitDetail()
     expect(screen.getByText('남긴 기록이 없습니다')).toBeInTheDocument()
-    // 🔄 D7 — 건너뜀은 찍지 않아 위치가 없는 게 맞다(완료인데 좌표 없음과 문구를 나눈다)
+    // 🔄 D7 — 미인증은 찍지 않아 위치가 없는 게 맞다(완료인데 좌표 없음과 문구를 나눈다)
     expect(screen.getByText('인증하지 않아 위치가 없습니다')).toBeInTheDocument()
     expect(screen.queryByText('인증 시점 좌표가 없습니다')).not.toBeInTheDocument()
     expect(screen.queryByText('인증 위치')).not.toBeInTheDocument()

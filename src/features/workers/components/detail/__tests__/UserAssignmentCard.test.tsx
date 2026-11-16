@@ -127,7 +127,8 @@ describe('UserAssignmentCard', () => {
   it('🔴 복귀완료 — 복귀 시각(completeDt)과 기간 일수 (OQ-042-E 해소)', async () => {
     renderCard(104)
 
-    expect(await screen.findByText('2025-12-01 ~ 2026-01-15 · 2026-01-15 18:00 복귀')).toBeInTheDocument()
+    // 🔄 spec 079 D9 — 날짜를 두 번 적지 않는다: 시작 ~ 복귀 일시
+    expect(await screen.findByText('2025-12-01 ~ 2026-01-15 18:00')).toBeInTheDocument()
     expect(screen.getByText('46일')).toBeInTheDocument()
     expect(screen.getByText('복귀완료')).toBeInTheDocument()
   })

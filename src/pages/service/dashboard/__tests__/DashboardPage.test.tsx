@@ -149,7 +149,7 @@ describe('DashboardPage — API 연결', () => {
     expect(cards[0]).toHaveAttribute('href', '/patrol/zones/103')
   })
 
-  it('카드 — 서버 status 단계 · 지금 순찰자 · 교대 · 다음 지점 · 건너뜀', async () => {
+  it('카드 — 서버 status 단계 · 지금 순찰자 · 교대 · 다음 지점 · 미인증(D8)', async () => {
     renderPage()
     await screen.findByRole('heading', { name: 'B코스' })
     const card = courseCard('B코스')
@@ -158,10 +158,10 @@ describe('DashboardPage — API 연결', () => {
     expect(card).not.toHaveTextContent('최근무')
     expect(card).toHaveTextContent('교대')
     expect(card).not.toHaveTextContent('다음:')
-    expect(card).toHaveTextContent('건너뜀 1')
+    expect(card).toHaveTextContent('미인증 1')
     const steps = within(card).getAllByRole('listitem')
     expect(steps).toHaveLength(5)
-    expect(steps[2]).toHaveTextContent('3창고 (건너뜀)')
+    expect(steps[2]).toHaveTextContent('3창고 (미인증)')
     expect(steps[4]).toHaveTextContent('5옥상 (다음)')
 
     const night = courseCard('야간코스')

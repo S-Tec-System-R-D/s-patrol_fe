@@ -41,7 +41,7 @@ const Dash = () => <span className="text-muted-foreground">-</span>
 
 const PointHistoryInfoCard = ({ detail, map }: PointHistoryInfoCardProps) => {
   const hasAuth = detail.authMethod !== null && detail.authMethodName !== UNKNOWN_AUTH
-  /* 🔄 `spec 078` D7 — 건너뜀 · 미인증은 수단이 **없는 게 맞다** → 이유를 적는다. 완료인데 없으면 값 누락이라 `-` */
+  /* 🔄 `spec 078` D7 — 미인증(서버 3)은 수단이 **없는 게 맞다** → 이유를 적는다. 완료인데 없으면 값 누락이라 `-` */
   const notChecked = detail.status !== POINT_HISTORY_STATUS.COMPLETED
 
   return (

@@ -99,7 +99,7 @@ const buildChecks = (spec: RunSpec): CheckDetailRow[] => {
   const step = Math.max(1, Math.floor(spec.minutes / course.points.length))
   return course.points.map(([pointName, authMethod], j) => {
     const done = spec.checks[j] === 1
-    // 077 규칙 — 마지막 인증 뒤 남은 지점은 시각 없음(미인증) · 중간에 빠진 지점은 시각 있음(건너뜀)
+    // 077 규칙 — 마지막 인증 뒤 남은 지점은 시각 없음(미인증) · 중간에 빠진 지점은 시각 있음 — 화면은 둘 다 미인증(D8)
     const trailing = !done && j > lastChecked(spec.checks)
     const owner = ownerOf(spec, j)
     const memo = spec.memos?.[j]

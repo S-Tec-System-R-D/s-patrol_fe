@@ -32,7 +32,7 @@ const summary: TodaySummary = {
 
 const user = (userSeq: number, userName: string) => ({ userSeq, userName })
 
-/** 지점 사전 그대로 — `4` 완료 · `3` 미완료(건너뜀) · `1` 진행중(다음) · `0` 대기 */
+/** 지점 사전 그대로 — `4` 완료 · `3` 미완료(화면 `미인증`) · `1` 진행중(다음) · `0` 대기 */
 const points = (historySeq: number, names: string[], statuses: number[]) =>
   names.map((pointName, index) => ({
     detailSeq: historySeq * 100 + index + 1,

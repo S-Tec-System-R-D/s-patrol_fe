@@ -254,12 +254,12 @@ describe('PointDetailPage — 수정 모달', () => {
 
 /** 🔄 `spec 076` — 인증 기록(요약 3칸 · 14일 쌓은 막대 · 날짜별 묶음) */
 describe('PointDetailPage — 인증 기록 (076)', () => {
-  it('요약 3칸(인증 · 건너뜀 · 최근 순찰)과 날짜별 묶음을 그린다', async () => {
+  it('요약 3칸(인증 · 미인증 · 최근 순찰)과 날짜별 묶음을 그린다', async () => {
     renderAt('/points/1')
 
     expect(await screen.findByText('인증 기록')).toBeInTheDocument()
     await waitFor(() => expect(screen.getAllByRole('region', { name: /기록$/ }).length).toBeGreaterThan(0))
-    expect(screen.getAllByText('건너뜀').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('미인증').length).toBeGreaterThan(0)
     expect(screen.getByText('최근 순찰')).toBeInTheDocument()
     expect(screen.getByText('최근 14일 전체 · 막대를 누르면 해당 일자만 표시')).toBeInTheDocument()
   })
@@ -296,7 +296,7 @@ describe('PointDetailPage — 인증 기록 (076)', () => {
 
     const groups = await screen.findAllByRole('region', { name: /기록$/ })
     const labels = groups.flatMap((group) =>
-      within(group).queryAllByText(/^(순찰기록|건너뜀|미인증|순찰제외|진행중|대기중)$/)
+      within(group).queryAllByText(/^(순찰기록|미인증|순찰제외|진행중|대기중)$/)
     )
     expect(labels.length).toBeGreaterThan(0)
     // 🔴 정상 인증은 뱃지가 없다 — 줄마다 반복되면 뱃지가 의미를 잃는다(2026-11-13)

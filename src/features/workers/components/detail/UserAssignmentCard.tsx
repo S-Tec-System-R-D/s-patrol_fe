@@ -49,13 +49,14 @@ const durationText = (row: UserAssignmentHistoryRow, today: Date): string | null
   return end ? `${dayCount(row.startDt, parseISO(end))}일` : null
 }
 
-/** 기간 + 복귀완료면 복귀 시각 — OQ-042-E 해소로 `completeDt` 를 쓴다(사용자 결정 2026-10-26) */
-const periodText = (row: UserAssignmentHistoryRow): string => {
-  const period = formatPeriod(row.startDt, row.endDt)
-  return row.status === ASSIGNMENT_STATUS.RETURNED && row.completeDt
-    ? `${period} · ${row.completeDt.slice(0, 16).replace('T', ' ')} 복귀`
-    : period
-}
+/**
+ * 기간 — 복귀완료면 끝을 **복귀 시각**으로 쓴다(OQ-042-E 해소 `completeDt`, 사용자 결정 2026-10-26).
+ * 🔄 `spec 079` D9 — `시작 ~ 종료 · 종료 시각 복귀` 는 날짜가 두 번 나와 `시작 ~ 복귀 일시` 한 번으로(뱃지가 `복귀완료`).
+ */
+const periodText = (row: UserAssignmentHistoryRow): string =>
+  row.status === ASSIGNMENT_STATUS.RETURNED && row.completeDt
+    ? `${row.startDt.slice(0, 10)} ~ ${row.completeDt.slice(0, 16).replace('T', ' ')}`
+    : formatPeriod(row.startDt, row.endDt)
 
 interface UserAssignmentCardProps {
   userSeq: number

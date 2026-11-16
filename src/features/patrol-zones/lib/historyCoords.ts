@@ -92,12 +92,12 @@ import { POINT_HISTORY_STATUS, type CheckDetailRow } from '@/features/course-his
  */
 
 /**
- * 핀 5종(🔄 `spec 077` — 3종에서). 범례를 타임라인 뱃지와 같은 말로 맞췄다:
- * 인증(완료) · 미완료(시각 있음) · 미인증(시각 없음) · 다음(진행 중 회차의 다음 지점) · 대기(그 외).
+ * 핀 4종(🔄 `spec 077` 5종 → `spec 079` D8 미완료 두 종류를 `미인증` 하나로). 범례를 타임라인 뱃지와 같은 말로:
+ * 인증(완료) · 미인증(미완료) · 다음(진행 중 회차의 다음 지점) · 대기(그 외).
  * 예전 `norecord` 는 미인증과 대기를 한데 묶어, 진행 중 회차에서 **아직 안 간 것**과
  * **건너뛴 것**이 같은 핀이었다.
  */
-export type HistoryPinKind = 'checked' | 'incomplete' | 'unvisited' | 'next' | 'waiting'
+export type HistoryPinKind = 'checked' | 'incomplete' | 'next' | 'waiting'
 
 /** 지도에 찍을 핀 하나 */
 export interface HistoryPin {
@@ -144,10 +144,7 @@ export interface HistoryCoords {
 const pinKind = (row: CheckDetailRow, nextDetailSeq?: number): HistoryPinKind => {
   if (row.status === POINT_HISTORY_STATUS.COMPLETED) return 'checked'
   if (row.detailSeq === nextDetailSeq) return 'next'
-  // 🔴 `checkDt` 가 미완료 2종을 가른다 — 값이 있으면 **방문 흔적**이다(실측 45/124).
-  //    ✅ 그 값은 **지점 인증 시각**이다(OQ-15 해소) — 여기서는 종류를 가르는 데만 쓴다
-  if (row.status === POINT_HISTORY_STATUS.INCOMPLETE && row.checkDt !== null) return 'incomplete'
-  if (row.status === POINT_HISTORY_STATUS.INCOMPLETE) return 'unvisited'
+  if (row.status === POINT_HISTORY_STATUS.INCOMPLETE) return 'incomplete'
   return 'waiting'
 }
 

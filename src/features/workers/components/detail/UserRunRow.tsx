@@ -25,7 +25,7 @@ import { hasHandOver } from '../../lib/userPatrolRuns'
 /**
  * 근무자 상세의 **회차 한 줄** + 펼침 (`spec 079` T1307 · T1308, 시안 `개선안/근무자`).
  *
- * 🔴 접힌 줄에는 **교대 · 시간초과만** 적는다(시안) — 미완료 · 특이사항은 펼친 한 줄 요약에서.
+ * 🔴 접힌 줄에는 **교대 · 시간초과만** 적는다(시안) — 미인증 · 특이사항은 펼친 한 줄 요약에서.
  * 🔴 교대 문장은 펼친 지점 목록의 점선 한 곳에만(D6) — 점선을 놓을 지점이 없는 교대만 요약 한 줄로.
  * 🔴 펼칠 때만 그 회차의 지점별 인증(`CheckDetails`) · 교대(`HandOvers`)를 부른다 — 목록에는 지점별 값이 없다(spec 제약 3).
  * 🔴 시간초과는 표시만(D3) — 목록에 코스 기준 시간이 없다.
@@ -45,7 +45,7 @@ const handOverText = (row: HandOverRow, me: number) => {
 
 const PointLine = ({ check, me }: { check: CheckDetailRow; me: number }) => {
   const done = check.status === POINT_HISTORY_STATUS.COMPLETED
-  const badge = pointCheckBadge(check.status, check.checkDt, false)
+  const badge = pointCheckBadge(check.status, false)
   const other = check.checkUserSeq !== null && check.checkUserSeq !== me ? check.userName : null
   const memo = check.memos[0]
   const photos = check.memos.reduce((sum, item) => sum + (item.attaches?.length ?? 0), 0)
@@ -103,7 +103,7 @@ const RunDetail = ({ row, me }: { row: CourseHistoryRow; me: number }) => {
   const loose = turns.filter((turn) => !list.some((check) => check.orderNo === turn.nextOrderNo))
   const summary = [
     ...loose.map((turn, i) => ({ key: `h${i}`, text: handOverText(turn, me), tone: 'text-point-foreground' })),
-    missed > 0 ? { key: 'm', text: `미완료 ${missed}`, tone: 'text-warning-foreground' } : null,
+    missed > 0 ? { key: 'm', text: `미인증 ${missed}`, tone: 'text-warning-foreground' } : null,
     memos > 0 ? { key: 's', text: `특이사항 ${memos}`, tone: 'text-warning-foreground' } : null,
     row.overtimeYn ? { key: 'o', text: '시간초과', tone: 'text-danger' } : null,
   ].filter((item): item is { key: string; text: string; tone: string } => item !== null)

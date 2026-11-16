@@ -122,8 +122,8 @@ export const pointHistoryColumns = (): ColumnDef<PointHistoryRow>[] =>
       id: 'result',
       header: '결과',
       cell: ({ row }) => {
-        const { status, checkDt, hasMemo, overTimeYn } = row.original
-        const result = pointCheckBadge(status, checkDt, hasMemo)
+        const { status, hasMemo, overTimeYn } = row.original
+        const result = pointCheckBadge(status, hasMemo)
         // 🔴 **뱃지 2개 병기** — `overTimeYn` 은 `status` 와 독립 축이라 하나로 접으면
         //    우선순위를 정해야 하고 어느 쪽이든 정보가 사라진다(036 결정)
         const overtime = overtimeBadge(overTimeYn)

@@ -43,8 +43,7 @@ export const authMethodFilterOptions: AppSelectOption[] = [
  * 🔴 그래서 **거를 수 없는 값을 선택지에 두지 않는다** — 고르면 0건이 돌아오는 필터는
  * "데이터가 없다" 는 **거짓 신호**를 준다.
  *
- * ⚠️ 라벨은 `pointCheckBadge` 가 만든다. `미완료`(3)는 `checkDt` 유무로 `미인증`↔`미완료`
- * 가 갈리는데, **목록에는 `checkDt` 가 있는 행만** 오므로 여기서는 항상 `미완료` 다.
+ * ⚠️ 라벨은 `pointCheckBadge` 가 만든다(`미완료`(3) = `미인증`, `spec 079` D8).
  * `완료`(4)는 `hasMemo` 로 갈리므로 **필터 라벨은 `이상없음` 이 아니라 그 상위어**가
  * 필요하다 — 아래처럼 직접 적는다(뱃지 문구를 그대로 쓰면 `순찰기록` 인 행이 빠진 것처럼
  * 읽힌다).
@@ -53,8 +52,7 @@ export const pointResultFilterOptions: AppSelectOption[] = [
   allOption,
   {
     value: String(POINT_HISTORY_STATUS.INCOMPLETE),
-    // `checkDt` 가 있는 행만 오므로 뱃지 라벨과 같다
-    label: pointCheckBadge(POINT_HISTORY_STATUS.INCOMPLETE, '2026-01-01T00:00:00', false).label,
+    label: pointCheckBadge(POINT_HISTORY_STATUS.INCOMPLETE, false).label,
   },
   {
     value: String(POINT_HISTORY_STATUS.COMPLETED),
