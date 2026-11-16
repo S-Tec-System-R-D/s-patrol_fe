@@ -1,5 +1,7 @@
 import z from 'zod'
 
+import { TIME_PATTERN } from '@/lib/timeInput'
+
 import { isHealthCheckEmpty, toExceptionRequest, toHHmm, toHHmmss } from '../lib/healthCheck'
 import type { SiteDetail, UpdateSiteRequest } from '../types/site'
 
@@ -14,7 +16,11 @@ import type { SiteDetail, UpdateSiteRequest } from '../types/site'
 
 const SAME_TIME = '시작과 종료가 같을 수 없습니다.'
 
-const time = z.string().min(1, '시각을 입력해주세요.')
+// 🔄 `spec 080` D8 — `type="time"` 대신 글자 칸(`AppTimeInput`)이라 형식을 여기서 막는다(`25:99` 등)
+const time = z
+  .string()
+  .min(1, '시각을 입력해주세요.')
+  .regex(TIME_PATTERN, '00:00 ~ 23:59 로 입력해주세요.')
 const integerAtLeast = (min: number) =>
   z
     .string()

@@ -26,6 +26,40 @@ export const toHHmm = (time: string | null): string => {
   return match ? `${match[1]}:${match[2]}` : ''
 }
 
+const DAY_MINUTES = 24 * 60
+
+/** `'HH:mm:ss'` → 자정부터 분. 읽을 수 없으면 `null` */
+const toMinutes = (time: string | null): number | null => {
+  const match = time === null ? null : HH_MM.exec(time)
+  if (!match) return null
+  const minutes = Number(match[1]) * 60 + Number(match[2])
+  return minutes <= DAY_MINUTES ? minutes : null
+}
+
+/** 하루 막대의 한 구간 — 0~1 비율 */
+export interface DaySegment {
+  from: number
+  to: number
+}
+
+/**
+ * 시작 · 종료 → 하루 막대 구간(`spec 080` 헬스체크 24시간 막대).
+ * 🔴 **자정을 넘기면 두 구간**이다(22:00–06:00 → 22~24 · 0~6) — 폼이 자정 넘김을 허용한다.
+ * 시작 = 종료 · 읽을 수 없는 값이면 빈 배열(그리지 않는다).
+ */
+export const daySegments = (start: string | null, end: string | null): DaySegment[] => {
+  const from = toMinutes(start)
+  const to = toMinutes(end)
+  if (from === null || to === null || from === to) return []
+  const ratio = (minutes: number) => minutes / DAY_MINUTES
+  return from < to
+    ? [{ from: ratio(from), to: ratio(to) }]
+    : [
+        { from: ratio(from), to: 1 },
+        { from: 0, to: ratio(to) },
+      ].filter((segment) => segment.to > segment.from)
+}
+
 /** `<input type="time">` 값(`'HH:mm'`) → 서버 `'HH:mm:ss'` */
 export const toHHmmss = (time: string): string => `${time}:00`
 

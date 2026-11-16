@@ -79,11 +79,12 @@ describe('HealthCheckCard — 표시', () => {
     expect(values.getByText('5회')).toBeInTheDocument()
   })
 
-  it('미사용이면 값을 흐리게 · [수정] 막힘 · 값 없는 칸은 -', async () => {
+  it('🔄 미사용이면 값을 흐리게 · [수정] 숨김(spec 080) · 값 없는 칸은 -', async () => {
     renderCard(9)
     expect(await screen.findByText('미사용')).toBeInTheDocument()
     expect(screen.getByTestId('health-check-values')).toHaveClass('opacity-50')
-    expect(screen.getByRole('button', { name: '수정' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '설정 수정' })).not.toBeInTheDocument()
     expect(within(screen.getByTestId('health-check-values')).getAllByText('-')).toHaveLength(4)
   })
 })
@@ -216,7 +217,7 @@ describe('HealthCheckForm — 검증 · 예외 바디', () => {
     await user.click(dialog.getByRole('button', { name: '예외 1 삭제' }))
     await user.click(dialog.getByRole('button', { name: '저장' }))
 
-    expect(await screen.findByText('없음')).toBeInTheDocument()
+    expect(await screen.findByText('예외 시간 없음')).toBeInTheDocument()
     expect(bodies[0]).toMatchObject({ exceptionTime: [] })
   })
 

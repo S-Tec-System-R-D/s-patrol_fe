@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { SiteDetail } from '../../types/site'
-import { isHealthCheckEmpty, toExceptionRequest, toHHmm, toHHmmss } from '../healthCheck'
+import { daySegments, isHealthCheckEmpty, toExceptionRequest, toHHmm, toHHmmss } from '../healthCheck'
 
 /** 헬스체크 순수 함수 (`spec 044` T786) */
 
@@ -84,5 +84,28 @@ describe('toExceptionRequest', () => {
 
   it('전부 지우면 빈 배열(= 서버에서 전부 삭제)', () => {
     expect(toExceptionRequest([])).toEqual([])
+  })
+})
+
+describe('daySegments — 24시간 막대 (spec 080)', () => {
+  it('하루 안 구간은 하나 — 비율', () => {
+    expect(daySegments('06:00:00', '18:00:00')).toEqual([{ from: 0.25, to: 0.75 }])
+  })
+
+  it('🔴 자정을 넘기면 두 구간', () => {
+    expect(daySegments('18:00:00', '06:00:00')).toEqual([
+      { from: 0.75, to: 1 },
+      { from: 0, to: 0.25 },
+    ])
+  })
+
+  it('끝이 24:00 이 아니라 00:00 이면 뒤 구간만', () => {
+    expect(daySegments('18:00:00', '00:00:00')).toEqual([{ from: 0.75, to: 1 }])
+  })
+
+  it('없음 · 같음 · 읽을 수 없음 → 그리지 않는다', () => {
+    expect(daySegments(null, '06:00:00')).toEqual([])
+    expect(daySegments('06:00:00', '06:00:00')).toEqual([])
+    expect(daySegments('25.00:00:00', '06:00:00')).toEqual([])
   })
 })

@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { PlusIcon, Trash2Icon } from 'lucide-react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { Controller, useFieldArray, useForm } from 'react-hook-form'
 
 import AppButton from '@/components/app/AppButton'
 import AppIconButton from '@/components/app/AppIconButton'
 import AppInput from '@/components/app/AppInput'
+import AppTimeInput from '@/components/app/AppTimeInput'
 
 import { healthCheckSchema, type HealthCheckFormData } from './healthCheckSchema'
 
@@ -14,6 +15,8 @@ import { healthCheckSchema, type HealthCheckFormData } from './healthCheckSchema
  * - 🔴 **필드 · 검증만** 한다. 제출(`useUpdateHealthCheck`)과 모달은 호출부 몫이다(`SiteForm` 규약).
  * - 🔴 **닫는 것은 호출부가 성공한 뒤에** — 서버 검증 실패(래퍼 · (D) 문자열)는 전역 토스트가 띄우고 입력값은 남는다.
  * - 타임아웃 단위는 미확인(OQ-044-B) — 라벨에 단위를 쓰지 않는다.
+ * - 🔄 `spec 080` D8 — 시각 칸 4개(사용 시작 · 종료 · 예외 시작 · 종료)는 `AppTimeInput`(24시간 `HH:mm` · 키보드 + 시 · 분
+ *   두 열 선택 창). 예외 1행 = 시작 칸 `~` 종료 칸 + 삭제 — 시작 · 종료는 **칸을 나눈다**(한 칸으로 묶은 D6 는 되돌렸다, 사용자).
  */
 
 interface HealthCheckFormProps {
@@ -39,21 +42,19 @@ const HealthCheckForm = ({ defaultValues, pending, onSubmit, onCancel }: HealthC
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {/* `AppInput` 의 label 은 입력과 연결돼 있지 않다 — 이름으로 찾을 수 있게 직접 단다(`SiteForm` 승계) */}
       <div className="grid grid-cols-2 gap-3">
-        <AppInput
-          label="사용 시작"
-          aria-label="사용 시작"
-          type="time"
-          required
-          error={errors.startTime?.message}
-          {...register('startTime')}
+        <Controller
+          control={control}
+          name="startTime"
+          render={({ field }) => (
+            <AppTimeInput label="사용 시작" aria-label="사용 시작" required error={errors.startTime?.message} {...field} />
+          )}
         />
-        <AppInput
-          label="사용 종료"
-          aria-label="사용 종료"
-          type="time"
-          required
-          error={errors.endTime?.message}
-          {...register('endTime')}
+        <Controller
+          control={control}
+          name="endTime"
+          render={({ field }) => (
+            <AppTimeInput label="사용 종료" aria-label="사용 종료" required error={errors.endTime?.message} {...field} />
+          )}
         />
       </div>
       <div className="grid grid-cols-3 gap-3">
@@ -84,25 +85,40 @@ const HealthCheckForm = ({ defaultValues, pending, onSubmit, onCancel }: HealthC
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium text-foreground">예외 시간</span>
-        {exceptions.fields.length === 0 && (
-          <p className="text-caption text-muted-foreground">예외 시간이 없습니다.</p>
-        )}
+        <div className="flex items-baseline gap-2">
+          <span className="text-sm font-medium text-foreground">예외 시간</span>
+          <span className="text-caption text-muted-foreground">이 시간에는 확인하지 않습니다</span>
+        </div>
         {exceptions.fields.map((field, index) => (
           <div key={field.id} className="flex items-start gap-2">
-            <AppInput
-              aria-label={`예외 ${index + 1} 시작`}
-              type="time"
-              error={errors.exceptions?.[index]?.start?.message}
-              {...register(`exceptions.${index}.start`)}
-            />
+            {/* `AppTimeInput` 은 `w-full` 이라 한 줄에 둘을 두면 넘친다 — 칸마다 남은 폭을 나눠 갖게 감싼다 */}
+            <div className="min-w-0 flex-1">
+              <Controller
+                control={control}
+                name={`exceptions.${index}.start`}
+                render={({ field: input }) => (
+                  <AppTimeInput
+                    aria-label={`예외 ${index + 1} 시작`}
+                    error={errors.exceptions?.[index]?.start?.message}
+                    {...input}
+                  />
+                )}
+              />
+            </div>
             <span className="pt-2 text-muted-foreground">~</span>
-            <AppInput
-              aria-label={`예외 ${index + 1} 종료`}
-              type="time"
-              error={errors.exceptions?.[index]?.end?.message}
-              {...register(`exceptions.${index}.end`)}
-            />
+            <div className="min-w-0 flex-1">
+              <Controller
+                control={control}
+                name={`exceptions.${index}.end`}
+                render={({ field: input }) => (
+                  <AppTimeInput
+                    aria-label={`예외 ${index + 1} 종료`}
+                    error={errors.exceptions?.[index]?.end?.message}
+                    {...input}
+                  />
+                )}
+              />
+            </div>
             <AppIconButton
               type="button"
               icon={Trash2Icon}
@@ -111,16 +127,14 @@ const HealthCheckForm = ({ defaultValues, pending, onSubmit, onCancel }: HealthC
             />
           </div>
         ))}
-        <AppButton
+        <button
           type="button"
-          variant="sub"
-          icon={PlusIcon}
-          iconSize={14}
-          className="w-fit"
           onClick={() => exceptions.append({ start: '', end: '' })}
+          className="flex items-center justify-center gap-1 rounded-sm border border-dashed border-border py-2 text-caption font-medium text-muted-foreground hover:border-point/50 hover:text-point-foreground"
         >
+          <PlusIcon className="size-3.5" aria-hidden />
           예외 시간 추가
-        </AppButton>
+        </button>
       </div>
 
       <div className="flex justify-end gap-2">
