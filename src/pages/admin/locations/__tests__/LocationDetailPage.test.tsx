@@ -57,11 +57,17 @@ const captureUpdates = () => {
   return bodies
 }
 
-/** 수정 모달을 연다 — 목록 노드를 찾아야 버튼이 열린다 */
+/** 머리 `⋯` 메뉴 항목을 누른다(spec 080) */
+const pickMenu = async (user: ReturnType<typeof userEvent.setup>, name: string) => {
+  await user.click(await screen.findByRole('button', { name: '사업장 메뉴' }))
+  await user.click(await screen.findByRole('menuitem', { name }))
+}
+
+/** 수정 모달을 연다 — 목록 노드를 찾아야 메뉴가 열린다(머리 경로가 보이면 찾은 것) */
 const openEdit = async (user: ReturnType<typeof userEvent.setup>) => {
-  const button = await screen.findByRole('button', { name: '사업장 수정' })
-  await waitFor(() => expect(button).toBeEnabled())
-  await user.click(button)
+  const heading = await screen.findByRole('heading', { level: 1 })
+  await waitFor(() => expect(heading.previousElementSibling).not.toBeNull())
+  await pickMenu(user, '사업장 수정')
   return within(await screen.findByRole('dialog'))
 }
 
@@ -76,15 +82,21 @@ beforeEach(() => {
 afterEach(() => server.events.removeAllListeners())
 
 describe('LocationDetailPage — 머리 · 기본정보 · 담당 관리자', () => {
-  it('머리(경로 · 이름) · 기본정보 카드 · 헬스체크 뱃지 · 탭 · 운영 중지 · 계약 기간 없음', async () => {
+  it('🔄 머리(경로 · 이름 · ⋯) · 기본정보(소속 그룹 행 없음 · 하이픈 · 하위 이름 링크) · 탭 · 운영 중지 · 계약 기간 없음 (spec 080)', async () => {
     renderPage('/admin/locations/3')
     expect(await screen.findByRole('heading', { name: '테테테(수정)1' })).toBeInTheDocument()
-    expect(await screen.findAllByText('테스트사업장(수정) › 강동지사')).toHaveLength(2) // 머리 경로 + 소속 그룹 행
+    // 소속 경로는 머리 한 곳 — 기본정보의 소속 그룹 행을 지웠다
+    expect(await screen.findAllByText('테스트사업장(수정) › 강동지사')).toHaveLength(1)
+    expect(screen.queryByText('소속 그룹')).not.toBeInTheDocument()
     expect(screen.getByText('서울시')).toBeInTheDocument()
-    expect(screen.getByText('0123125165')).toBeInTheDocument()
+    expect(screen.getByText('012-312-5165')).toBeInTheDocument()
     expect(screen.getByText('13개 · 15개')).toBeInTheDocument()
-    expect(screen.getByText('1개')).toBeInTheDocument() // 하위 사업장
-    expect(screen.getByText('사용 · 30분')).toBeInTheDocument()
+    // 하위 사업장 = 이름 + 링크(D2)
+    expect(await screen.findByRole('link', { name: '수정사업장테테' })).toHaveAttribute('href', '/admin/locations/4')
+    expect(screen.getByRole('switch', { name: '헬스체크 사용' })).toBeChecked()
+    // 수정 · 삭제는 `⋯` 안 — 카드 아래 버튼이 없다
+    expect(screen.queryByRole('button', { name: '삭제' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '사업장 메뉴' })).toBeInTheDocument()
     expect(screen.queryByRole('tab')).not.toBeInTheDocument()
     expect(screen.queryByText(/운영 중지|계약 기간/)).not.toBeInTheDocument()
   })
@@ -226,7 +238,7 @@ describe('LocationDetailPage — 삭제', () => {
     const user = userEvent.setup()
     renderPage('/admin/locations/6')
     await screen.findByText('지정된 담당 관리자가 없습니다')
-    await user.click(screen.getByRole('button', { name: '삭제' }))
+    await pickMenu(user, '사업장 삭제')
 
     const alert = await screen.findByRole('alertdialog')
     // 🔴 대상은 질문형 제목이, 영향은 설명이 말한다(046 #16)
@@ -245,7 +257,7 @@ describe('LocationDetailPage — 삭제', () => {
   it('0 인 항목은 뺀다', async () => {
     const user = userEvent.setup()
     renderPage('/admin/locations/9')
-    await user.click(await screen.findByRole('button', { name: '삭제' }))
+    await pickMenu(user, '사업장 삭제')
     expect(await screen.findByText("'강동지사_추가사업장' 사업장을 삭제하시겠습니까?")).toBeInTheDocument()
     expect(screen.getByText('삭제된 데이터는 복구할 수 없습니다.')).toBeInTheDocument()
   })
@@ -269,8 +281,9 @@ describe('LocationDetailPage — 없음 · 주소 오류', () => {
 
 describe('LocationDetailPage — 비상연락망 (spec 057)', () => {
   const EMERGENCY = '/api/v1/Emergency/W/sign'
-  const week = () => within(screen.getByRole('table', { name: '요일별 담당자' }))
-  const dayCell = (label: string) => within(week().getByRole('rowheader', { name: label }).closest('tr') as HTMLElement)
+  // 🔄 spec 080 — 표가 아니라 요일 목록(넓은 폭 7칸 · 좁은 폭 요일별 카드, 한 DOM)
+  const week = () => within(screen.getByRole('list', { name: '요일별 담당자' }))
+  const dayCell = (label: string) => within(week().getByRole('listitem', { name: `${label}요일` }))
 
   const recordEmergency = () => {
     const calls: { name: string; search: string; body?: unknown }[] = []
@@ -294,10 +307,20 @@ describe('LocationDetailPage — 비상연락망 (spec 057)', () => {
     return dialog
   }
 
-  it('7요일 · 칩(이름 · 권한 · 연락처) · 담당자 N명(중복 제거) · 예시 안내 · 담당자 풀 없음', async () => {
+  it('7요일 · 담당자(이름 · 권한 · 연락처) · 담당자 N명(중복 제거) · 빈 요일 = 담당자 지정 · 담당자 풀 없음', async () => {
     renderPage('/admin/locations/3')
-    await screen.findByRole('table', { name: '요일별 담당자' })
-    expect(week().getAllByRole('rowheader').map((cell) => cell.textContent)).toEqual(['월', '화', '수', '목', '금', '토', '일'])
+    await screen.findByRole('list', { name: '요일별 담당자' })
+    expect(week().getAllByRole('listitem', { name: /요일$/ }).map((day) => day.getAttribute('aria-label'))).toEqual([
+      '월요일',
+      '화요일',
+      '수요일',
+      '목요일',
+      '금요일',
+      '토요일',
+      '일요일',
+    ])
+    // 🔴 빈 요일은 `담당자 지정`(주황 점선) — 비어 있는 날이 먼저 보여야 한다(spec 080)
+    expect(dayCell('화').getByRole('button', { name: '화요일 담당자 추가' })).toHaveTextContent('담당자 지정')
     expect(dayCell('월').getByText('테스트')).toBeInTheDocument()
     expect(dayCell('월').getByText('010-0000-0006')).toBeInTheDocument()
     expect(dayCell('토').getByText('마스터')).toBeInTheDocument()

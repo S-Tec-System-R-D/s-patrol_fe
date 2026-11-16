@@ -1,7 +1,6 @@
 import { Trash2Icon } from 'lucide-react'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
-import AppButton from '@/components/app/AppButton'
 
 /**
  * 사업장 삭제 확인 (`spec 044` T802).
@@ -9,6 +8,7 @@ import AppButton from '@/components/app/AppButton'
  * 🔴 **하위 사업장 · 지점이 함께 지워진다**(실측, B-54). 코스 · 근무자에 무슨 일이 생기는지는 미실측이라
  * "삭제됩니다" 라고 단정하지 않고 **"영향이 있습니다"** 로 묶는다. 0 인 항목은 뺀다.
  * 비밀번호 재확인은 하지 않는다 — 검증할 API 가 없다(spec 결정).
+ * 🔄 `spec 080` — 트리거 버튼이 없다. 머리 `⋯` 메뉴가 `open` 으로 연다(근무자 상세와 같다).
  */
 
 export interface DeleteImpact {
@@ -33,12 +33,15 @@ const deleteSiteMessage = (impact: DeleteImpact): string => {
 interface SiteDeleteDialogProps {
   siteName: string
   impact: DeleteImpact
-  pending: boolean
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onConfirm: () => void
 }
 
-const SiteDeleteDialog = ({ siteName, impact, pending, onConfirm }: SiteDeleteDialogProps) => (
+const SiteDeleteDialog = ({ siteName, impact, open, onOpenChange, onConfirm }: SiteDeleteDialogProps) => (
   <AppAlertDialog
+    open={open}
+    onOpenChange={onOpenChange}
     size="sm"
     icon={Trash2Icon}
     variant="destructive"
@@ -46,12 +49,7 @@ const SiteDeleteDialog = ({ siteName, impact, pending, onConfirm }: SiteDeleteDi
     description={deleteSiteMessage(impact)}
     actionLabel="삭제"
     onAction={onConfirm}
-  >
-    {/* 처리 중에도 잠근다 — 확인 창은 즉시 닫힌다(`UserDetailPage` 승계) */}
-    <AppButton icon={Trash2Icon} variant="destructive" className="flex-auto whitespace-nowrap" disabled={pending}>
-      삭제
-    </AppButton>
-  </AppAlertDialog>
+  />
 )
 
 export default SiteDeleteDialog

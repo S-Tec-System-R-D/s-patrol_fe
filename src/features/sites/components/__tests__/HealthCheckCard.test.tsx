@@ -70,7 +70,7 @@ afterEach(() => {
 describe('HealthCheckCard — 표시', () => {
   it('5칸(HH:mm · 예외 여러 줄 · 타임아웃은 숫자만) · 사용 뱃지', async () => {
     renderCard(4)
-    expect(await screen.findByText('사용 · 30분')).toBeInTheDocument()
+    await waitFor(() => expect(toggle()).toBeChecked())
     const values = within(screen.getByTestId('health-check-values'))
     expect(values.getByText('11:10 – 16:00')).toBeInTheDocument()
     expect(values.getByText('12:30 – 12:40')).toBeInTheDocument()
@@ -96,7 +96,7 @@ describe('HealthCheckCard — 토글', () => {
     await screen.findByText('미사용')
     await user.click(toggle())
 
-    expect(await screen.findByText('사용 · 1분')).toBeInTheDocument()
+    await waitFor(() => expect(toggle()).toBeChecked())
     expect(bodies).toEqual([{ siteSeq: 11, healthCheckYn: true }])
   })
 
@@ -104,7 +104,7 @@ describe('HealthCheckCard — 토글', () => {
     const user = userEvent.setup()
     const bodies = captureUpdates()
     renderCard(3)
-    await screen.findByText('사용 · 30분')
+    await waitFor(() => expect(toggle()).toBeChecked())
     await user.click(toggle())
 
     expect(await screen.findByText('미사용')).toBeInTheDocument()
@@ -145,7 +145,7 @@ describe('HealthCheckCard — 토글', () => {
     setTime(dialog.getByLabelText('예외 1 종료'), '00:30')
     await user.click(dialog.getByRole('button', { name: '저장' }))
 
-    expect(await screen.findByText('사용 · 60분')).toBeInTheDocument()
+    await waitFor(() => expect(toggle()).toBeChecked())
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(bodies).toEqual([
       {
@@ -167,7 +167,7 @@ describe('HealthCheckForm — 검증 · 예외 바디', () => {
     const user = userEvent.setup()
     const bodies = captureUpdates()
     renderCard(3)
-    await screen.findByText('사용 · 30분')
+    await waitFor(() => expect(toggle()).toBeChecked())
     const dialog = await openEdit(user)
 
     setTime(dialog.getByLabelText('사용 종료'), '08:16')
@@ -187,7 +187,7 @@ describe('HealthCheckForm — 검증 · 예외 바디', () => {
     const user = userEvent.setup()
     const bodies = captureUpdates()
     renderCard(4)
-    await screen.findByText('사용 · 30분')
+    await waitFor(() => expect(toggle()).toBeChecked())
     const dialog = await openEdit(user)
 
     expect(dialog.getByLabelText('예외 1 시작')).toHaveValue('12:30')
@@ -210,7 +210,7 @@ describe('HealthCheckForm — 검증 · 예외 바디', () => {
     const user = userEvent.setup()
     const bodies = captureUpdates()
     renderCard(4)
-    await screen.findByText('사용 · 30분')
+    await waitFor(() => expect(toggle()).toBeChecked())
     const dialog = await openEdit(user)
 
     await user.click(dialog.getByRole('button', { name: '예외 1 삭제' }))
@@ -227,7 +227,7 @@ describe('HealthCheckForm — 검증 · 예외 바디', () => {
       http.put(UPDATE_PATH, () => HttpResponse.json('간격은 필수입니다.', { status: 400 }), { once: true })
     )
     renderCard(3)
-    await screen.findByText('사용 · 30분')
+    await waitFor(() => expect(toggle()).toBeChecked())
     const dialog = await openEdit(user)
     await user.click(dialog.getByRole('button', { name: '저장' }))
 

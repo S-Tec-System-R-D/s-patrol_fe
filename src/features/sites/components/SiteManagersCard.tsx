@@ -1,6 +1,5 @@
 import { ShieldCheckIcon, TriangleAlertIcon } from 'lucide-react'
 
-import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
 import AppDetailCard from '@/components/app/AppDetailCard'
 import AppEmpty from '@/components/app/AppEmpty'
@@ -57,18 +56,16 @@ const SiteManagersCard = ({ managers, isPending, isError, onRetry }: SiteManager
       ) : shown.length === 0 ? (
         <AppEmpty icon={ShieldCheckIcon} title="지정된 담당 관리자가 없습니다" />
       ) : (
+        /* 🔄 `spec 080` — 왼쪽 열 작은 카드라 `이름 권한` 한 줄(권한은 회색 글자, 시안) */
         <ul aria-label="담당 관리자" className="flex flex-col gap-2">
           {shown.map((manager) => (
-            <li
-              key={manager.userSeq}
-              className="flex items-center gap-2.5 border-l-2 border-l-point py-1 pl-3"
-            >
+            <li key={manager.userSeq} className="flex min-w-0 items-baseline gap-1.5 text-body">
               <span className="min-w-0 truncate font-semibold text-foreground">
                 {manager.userName}
               </span>
-              <AppBadge variant="muted">
+              <span className="shrink-0 text-caption text-muted-foreground">
                 {adminRoleLabel(manager.codeSeq, manager.codeName)}
-              </AppBadge>
+              </span>
             </li>
           ))}
         </ul>
