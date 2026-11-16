@@ -22,13 +22,13 @@ import UserDetailPage from '../UserDetailPage'
 
 const DETAIL_PATH = '/api/v1/User/W/sign/UserDetail'
 
-const renderAt = (userSeq: string) => {
+const renderAt = (userSeq: string, search = '') => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[`/users/${userSeq}`]}>
+      <MemoryRouter initialEntries={[`/users/${userSeq}${search}`]}>
         <Routes>
           <Route path="/users" element={<div>LIST_ROUTE</div>} />
           <Route path="/users/:userSeq" element={<UserDetailPage />} />
@@ -36,6 +36,12 @@ const renderAt = (userSeq: string) => {
       </MemoryRouter>
     </QueryClientProvider>
   )
+}
+
+/** 🔄 `spec 079` — 정보 수정 · 비밀번호 변경 · 삭제는 머리 `⋯` 메뉴 안이다 */
+const pickMenu = async (user: ReturnType<typeof userEvent.setup>, name: string) => {
+  await user.click(await screen.findByRole('button', { name: '근무자 메뉴' }))
+  await user.click(await screen.findByRole('menuitem', { name }))
 }
 
 const captureDetailCalls = () => {
@@ -60,14 +66,17 @@ afterEach(() => {
 })
 
 describe('UserDetailPage — 정상', () => {
-  it('머리(이름·근무 상태)와 기본정보(사번·연락처·소속·근무 상태)를 그린다', async () => {
+  it('머리(이름 · 근무 상태 · 소속 사업장)와 기본정보(사번 · 연락처 · 소속) — 🔴 근무 상태 행은 없다 (spec 079)', async () => {
     renderAt('101')
 
     expect(await screen.findByRole('heading', { name: '김민준' })).toBeInTheDocument()
     expect(screen.getByText('기본정보')).toBeInTheDocument()
     expect(screen.getByText('240101')).toBeInTheDocument()
-    expect(screen.getByText('강동 테크노타워')).toBeInTheDocument()
-    expect(screen.getAllByText('근무 중').length).toBeGreaterThan(0)
+    // 머리 + 기본정보 소속 사업장
+    expect(screen.getAllByText('강동 테크노타워')).toHaveLength(2)
+    // 🔴 머리 뱃지와 같은 말이라 카드 행을 뺐다
+    expect(screen.getAllByText('근무 중')).toHaveLength(1)
+    expect(screen.queryByText('근무 상태')).not.toBeInTheDocument()
   })
 
   it('🔴 머리에 부제가 없다 — 값은 카드에만 있다 (같은 말을 두 번 하지 않는다)', async () => {
@@ -93,7 +102,7 @@ describe('UserDetailPage — 정상', () => {
     expect(await screen.findByText('010-2345-6789')).toBeInTheDocument()
   })
 
-  it('🔴 권한·등록일·배치 이력이 없다 — 상세 응답에 없고(OQ-8) 이력은 미개발이다', async () => {
+  it('🔴 권한 · 등록일이 없다 — 상세 응답에 없다(OQ-8)', async () => {
     renderAt('101')
 
     await screen.findByRole('heading', { name: '김민준' })
@@ -106,14 +115,14 @@ describe('UserDetailPage — 정상', () => {
     renderAt('102')
 
     await screen.findByRole('heading', { name: '이서연' })
-    expect(screen.getAllByText('근무 종료').length).toBeGreaterThan(0)
+    expect(screen.getByText('근무 종료')).toBeInTheDocument()
   })
 
   it('수정 모달이 서버 값으로 채워진다', async () => {
     const user = userEvent.setup()
     renderAt('101')
 
-    await user.click(await screen.findByRole('button', { name: '수정' }))
+    await pickMenu(user, '정보 수정')
 
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByDisplayValue('김민준')).toBeInTheDocument()
@@ -124,7 +133,7 @@ describe('UserDetailPage — 정상', () => {
     const user = userEvent.setup()
     renderAt('101')
 
-    await user.click(await screen.findByRole('button', { name: '수정' }))
+    await pickMenu(user, '정보 수정')
     const dialog = await screen.findByRole('dialog')
     const name = within(dialog).getByDisplayValue('김민준')
     await user.clear(name)
@@ -139,7 +148,7 @@ describe('UserDetailPage — 정상', () => {
     const user = userEvent.setup()
     renderAt('101')
 
-    await user.click(await screen.findByRole('button', { name: '삭제' }))
+    await pickMenu(user, '근무자 삭제')
     const dialog = await screen.findByRole('alertdialog')
     await user.click(within(dialog).getByRole('button', { name: '삭제' }))
 
@@ -156,7 +165,7 @@ describe('UserDetailPage — 정상', () => {
     // 다른 관리자가 먼저 지웠다
     await removeUser(101)
 
-    await user.click(screen.getByRole('button', { name: '삭제' }))
+    await pickMenu(user, '근무자 삭제')
     const dialog = await screen.findByRole('alertdialog')
     await user.click(within(dialog).getByRole('button', { name: '삭제' }))
 
@@ -164,12 +173,14 @@ describe('UserDetailPage — 정상', () => {
     expect(screen.queryByText('LIST_ROUTE')).not.toBeInTheDocument()
   })
 
-  it('🔴 본인 계정은 삭제 버튼이 잠긴다', async () => {
+  it('🔴 본인 계정은 삭제 메뉴가 잠긴다', async () => {
     setAccessToken(makeAccessToken({ userSeq: '109' }))
+    const user = userEvent.setup()
     renderAt('109')
 
     await screen.findByRole('heading', { name: '홍관리' })
-    expect(screen.getByRole('button', { name: '삭제' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: '근무자 메뉴' }))
+    expect(await screen.findByRole('menuitem', { name: '근무자 삭제' })).toHaveAttribute('aria-disabled', 'true')
   })
 
   it('비밀번호 변경은 정보 수정과 다른 모달이다 — loginPw 만 보내고 닫힌다 (spec 041 US3)', async () => {
@@ -184,7 +195,7 @@ describe('UserDetailPage — 정상', () => {
     const user = userEvent.setup()
     renderAt('101')
 
-    await user.click(await screen.findByRole('button', { name: '비밀번호 변경' }))
+    await pickMenu(user, '비밀번호 변경')
     const dialog = await screen.findByRole('dialog', { name: '비밀번호 변경' })
     expect(within(dialog).queryByDisplayValue('김민준')).not.toBeInTheDocument()
 
@@ -209,7 +220,7 @@ describe('UserDetailPage — 정상', () => {
     const user = userEvent.setup()
     renderAt('101')
 
-    await user.click(await screen.findByRole('button', { name: '비밀번호 변경' }))
+    await pickMenu(user, '비밀번호 변경')
     const dialog = await screen.findByRole('dialog', { name: '비밀번호 변경' })
     await user.type(within(dialog).getByPlaceholderText('8자리 이상, 영문·숫자·특수문자 포함'), '12')
     await user.click(within(dialog).getByRole('button', { name: '변경' }))
@@ -218,72 +229,151 @@ describe('UserDetailPage — 정상', () => {
   })
 })
 
-describe('UserDetailPage — 최근 순찰 기록', () => {
-  const HISTORY_PATH = '/api/v1/History/W/sign/GetPointHistory'
+describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
+  /**
+   * 시드(`mocks/handlers/workerRuns.ts`): 104 박지우의 최근 14일 회차 8건 + 동명이인(110 박지우) 1건.
+   * 요약은 시안과 같다 — 순찰 8회 · 지점 인증 86% (31/36) · 미완료 포함 4회 · 특이사항 2회 · 시간초과 3회.
+   */
+  const HISTORY_PATH = '/api/v1/History/W/sign/GetCourseHistory'
+  const runButtons = () => screen.findAllByRole('button', { name: /^\d{2}:\d{2} –/ })
+  const findRun = async (time: string) => (await screen.findAllByRole('button', { name: new RegExp(`^${time} –`) }))[0]
+  const ymd = (ago: number) => {
+    const date = new Date()
+    date.setDate(date.getDate() - ago)
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  }
 
-  it('🔴 선택 사업장 + userSeq 로 조회한다 — 이름 검색이 아니다(동명이인)', async () => {
+  it('🔴 선택 사업장 + 이름 + 14일로 코스 이력을 조회한다 — 서버에 userSeq 필터가 없다 (D4)', async () => {
     const calls: URL[] = []
     server.events.on('request:start', ({ request }) => {
       const target = new URL(request.url)
       if (target.pathname === HISTORY_PATH) calls.push(target)
     })
-    renderAt('101')
+    renderAt('104')
 
-    await screen.findByText('최근 순찰 기록')
-    await screen.findAllByRole('link', { name: /\d{2}:\d{2}/ })
+    await screen.findByText('순찰 기록')
+    await runButtons()
     const query = calls[calls.length - 1].searchParams
     expect(query.get('siteSeq')).toBe('7')
-    expect(query.get('userSeq')).toBe('101')
-    expect(query.get('userName')).toBeNull()
+    expect(query.get('userName')).toBe('박지우')
+    expect(query.get('fromDt')).toBe(ymd(13))
+    expect(query.get('toDt')).toBe(ymd(0))
   })
 
-  it('기록 행은 지점 인증 상세로 간다 · 전체 기록은 순찰자 필터를 건 목록으로 간다', async () => {
-    renderAt('101')
+  it('🔴 동명이인(110) 회차는 userSeq 로 걸러 나오지 않는다', async () => {
+    renderAt('104')
 
-    const rows = await screen.findAllByRole('link', { name: /\d{2}:\d{2}/ })
-    expect(rows.length).toBeGreaterThan(0)
-    expect(rows.length).toBeLessThanOrEqual(8)
-    expect(rows[0].getAttribute('href')).toMatch(/^\/patrol\/points\/\d+$/)
-    expect(screen.getByRole('link', { name: '전체 기록' })).toHaveAttribute(
-      'href',
-      `/patrol/points?user=${encodeURIComponent('김민준')}`
-    )
+    const rows = await runButtons()
+    expect(rows).toHaveLength(8)
+    // 동명이인 회차는 2일 전 10:00 시작이다
+    expect(screen.queryByRole('button', { name: /^10:00 –/ })).not.toBeInTheDocument()
   })
 
-  it('🔴 날짜별로 묶고 결과는 왼쪽 아이콘이 말한다 — 결과 글자 뱃지가 없다 (spec 049)', async () => {
-    renderAt('101')
+  it('요약 5칸 — 시안과 같은 수', async () => {
+    renderAt('104')
 
-    await screen.findAllByRole('link', { name: /\d{2}:\d{2}/ })
-    expect(screen.getAllByRole('heading', { level: 4, name: /^\d+월 \d+일 \(.\)/ }).length).toBeGreaterThan(0)
-    // 시드 101: 미완료 · 완료(메모 없음) 행이 섞여 있다 — 5종 문구는 아이콘의 접근 이름으로 남는다
-    expect(screen.getAllByRole('img', { name: '건너뜀' }).length).toBeGreaterThan(0)
-    expect(screen.getAllByRole('img', { name: '이상없음' }).length).toBeGreaterThan(0)
-    expect(screen.queryByText('이상없음')).not.toBeInTheDocument()
-    expect(screen.queryByText('건너뜀')).not.toBeInTheDocument()
+    await runButtons()
+    expect(screen.getByText('8회')).toBeInTheDocument()
+    expect(screen.getByText('86%')).toBeInTheDocument()
+    expect(screen.getByText('31/36')).toBeInTheDocument()
+    expect(screen.getByText('4회')).toBeInTheDocument()
+    expect(screen.getByText('2회')).toBeInTheDocument()
+    expect(screen.getByText('3회')).toBeInTheDocument()
+    // 🔴 D2 — 시안의 `누락` 은 쓰지 않는다
+    expect(screen.queryByText(/누락/)).not.toBeInTheDocument()
+  })
+
+  it('🔴 날짜 머리에 회차 수를 적지 않는다 (D1)', async () => {
+    renderAt('104')
+
+    await runButtons()
+    const heads = screen.getAllByRole('heading', { level: 4 })
+    expect(heads.length).toBe(6)
+    heads.forEach((head) => expect(head.textContent).toMatch(/^\d{2}\.\d{2} \(.\)$/))
+    expect(screen.getByText('오늘')).toBeInTheDocument()
+  })
+
+  it('접힌 줄은 교대 · 시간초과만 — 미완료 · 특이사항은 펼쳐야 보인다', async () => {
+    renderAt('104')
+
+    const row = await findRun('14:28')
+    expect(row).toHaveTextContent('지하 주차장 코스')
+    expect(row).toHaveTextContent('인증 3/4')
+    expect(row).toHaveTextContent('시간초과')
+    expect(row).not.toHaveTextContent('미완료')
+    expect(screen.getAllByRole('button', { name: /교대/ })).toHaveLength(2)
+  })
+
+  it('펼치면 지점별 시각 · 건너뜀 · 메모 · 사진 수와 순찰 상세 링크', async () => {
+    const user = userEvent.setup()
+    renderAt('104')
+
+    await user.click(await findRun('14:28'))
+    expect(await screen.findByText('램프 차단기 작동 불량, 시설팀 전달', {})).toBeInTheDocument()
+    expect(screen.getByText('사진 2')).toBeInTheDocument()
+    expect(screen.getByText('미완료 1')).toBeInTheDocument()
+    expect(screen.getByText('특이사항 1')).toBeInTheDocument()
+    // 3번 지점은 중간에 빠졌다 — 시각 있음 = 건너뜀(077)
+    expect(screen.getByText('건너뜀')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /순찰 이력 상세 보기/ })).toHaveAttribute('href', '/patrol/zones/7901')
+  })
+
+  it('🔴 교대받은 회차 — 요약 한 줄 · 교대 지점 앞 구분선 · 상대 몫 지점에 이름', async () => {
+    const user = userEvent.setup()
+    renderAt('104')
+
+    await user.click(await findRun('09:37'))
+    expect(await screen.findByText('이서연에게서 3번부터 교대받음', {})).toBeInTheDocument()
+    expect(screen.getByText('이서연에게서 교대받음')).toBeInTheDocument()
+    expect(screen.getAllByText('이서연')).toHaveLength(2)
+  })
+
+  it('🔴 고른 날짜는 URL(?day=)에 있다 — 그 날 회차만 · 전체 보기로 푼다', async () => {
+    const user = userEvent.setup()
+    renderAt('104', `?day=${ymd(3)}`)
+
+    const rows = await runButtons()
+    expect(rows).toHaveLength(1)
+    expect(screen.getAllByRole('heading', { level: 4 })).toHaveLength(1)
+
+    await user.click(screen.getByRole('button', { name: '전체 보기' }))
+    expect(await screen.findAllByRole('button', { name: /^\d{2}:\d{2} –/ })).toHaveLength(8)
+  })
+
+  it('전체 기록은 코스 순찰이력으로 — 이름 · 같은 14일을 건다', async () => {
+    renderAt('104')
+
+    await runButtons()
+    const href = screen.getByRole('link', { name: /전체 기록/ }).getAttribute('href') ?? ''
+    expect(href.startsWith('/patrol/zones?')).toBe(true)
+    const query = new URLSearchParams(href.split('?')[1])
+    expect(query.get('user')).toBe('박지우')
+    expect(query.get('from')).toBe(ymd(13))
+    expect(query.get('to')).toBe(ymd(0))
   })
 
   it('🔴 기록 조회 실패는 "기록 없음" 이 아니다 — 상세 본문은 그대로 있다', async () => {
     server.use(http.get(HISTORY_PATH, () => HttpResponse.json({ message: 'x' }, { status: 500 })))
-    renderAt('101')
+    renderAt('104')
 
-    expect(await screen.findByText('순찰 기록을 불러오지 못했습니다')).toBeInTheDocument()
+    expect(await screen.findByText('순찰 기록을 불러오지 못했습니다', {})).toBeInTheDocument()
     expect(screen.queryByText('순찰 기록이 없습니다')).not.toBeInTheDocument()
     expect(screen.getByText('기본정보')).toBeInTheDocument()
   })
 
-  it('기록이 없으면 단정하지 않는 빈 상태', async () => {
+  it('기록이 없으면 빈 상태', async () => {
     server.use(
       http.get(HISTORY_PATH, () =>
         HttpResponse.json({
           message: '',
           code: 200,
-          data: { items: [], page: 1, pageSize: 8, totalCount: 0 },
+          data: { items: [], page: 1, pageSize: 100, totalCount: 0 },
         })
       )
     )
-    renderAt('101')
+    renderAt('104')
 
-    expect(await screen.findByText('순찰 기록이 없습니다')).toBeInTheDocument()
+    expect(await screen.findByText('순찰 기록이 없습니다', {})).toBeInTheDocument()
   })
 })
 

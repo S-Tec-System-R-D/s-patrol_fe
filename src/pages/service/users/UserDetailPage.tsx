@@ -4,10 +4,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeftIcon,
   ChevronRightIcon,
+  EllipsisIcon,
   KeyRoundIcon,
   SquarePenIcon,
   Trash2Icon,
   TriangleAlertIcon,
+  UserRoundIcon,
 } from 'lucide-react'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
@@ -15,12 +17,20 @@ import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
 import AppEmpty from '@/components/app/AppEmpty'
+import AppIconButton from '@/components/app/AppIconButton'
+import AppPageHeader from '@/components/app/AppPageHeader'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useMe } from '@/features/auth/hooks/useMe'
 import { removeUser } from '@/features/workers/api/removeUser'
 import UserAssignmentCard from '@/features/workers/components/detail/UserAssignmentCard'
 import UserInfoCard from '@/features/workers/components/detail/UserInfoCard'
-import UserPatrolCard from '@/features/workers/components/detail/UserPatrolCard'
-import WorkerAvatar from '@/features/workers/components/WorkerAvatar'
+import UserPatrolActivityCard from '@/features/workers/components/detail/UserPatrolActivityCard'
 import EditWorkerForm from '@/features/workers/form/EditWorkerForm'
 import PasswordForm from '@/features/workers/form/PasswordForm'
 import { useUserDetail } from '@/features/workers/hooks/useUserDetail'
@@ -31,15 +41,16 @@ import { notify } from '@/lib/notify'
 import { paths } from '@/router/paths'
 
 /**
- * 근무자 상세 (`spec 038` US2) — 🔴 **신설**. 전에는 목록 우측 400px 패널이었다.
+ * 근무자 상세 (`spec 038` US2 → 🔄 **`spec 079` 개편** — 시안 `개선안/근무자`, 지점 상세 B 패턴).
  *
- * 026 공지 상세와 같은 머리: 브레드크럼 → 머리 줄(아바타·이름·근무 상태·부제·액션) → 기본정보 카드.
+ * 머리(이름 · 근무 상태 · 소속 사업장 · `⋯`) / 왼쪽 고정 패널(기본정보 + 배치 이력) / 오른쪽 순찰 기록(회차 단위).
  *
  * 🔴 **현장관리자는 이 API 가 403 이다**(B-41) — 실서버에서는 "불러오지 못했습니다" 가 뜬다.
  * 🔴 조회 중과 "없음" 을 구분한다 — 단정하면 조회 중에 그것이 뜨는 순간 방금 지운 줄 안다(023).
  *
- * 정보 수정·비밀번호 변경은 **각각 다른 모달** → `UpdateUser`(`spec 041` US2·US3) — 성공해야 닫힌다.
+ * 정보 수정 · 비밀번호 변경은 **각각 다른 모달** → `UpdateUser`(`spec 041` US2 · US3) — 성공해야 닫힌다.
  * 삭제는 확인 → `RemoveUser` → 목록(US4). 🔴 본인 계정은 삭제할 수 없게 잠근다.
+ * 🔄 세 동작은 머리 `⋯` 메뉴 안이다(079 — 076 지점 상세 · 074 코스 상세와 같다).
  */
 
 const Breadcrumb = () => (
@@ -73,10 +84,10 @@ const UserDetailPage = () => {
   const detail = useUserDetail(userSeq)
   const [editOpen, setEditOpen] = useState(false)
   const [passwordOpen, setPasswordOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const me = useMe()
   const queryClient = useQueryClient()
 
-  /** 🔴 실패 토스트는 전역 `MutationCache` 가 띄운다 — 여기서 또 띄우지 않는다 */
   const deleteMutation = useMutation({
     mutationFn: removeUser,
     onSuccess: async (_, deletedSeq) => {
@@ -93,7 +104,6 @@ const UserDetailPage = () => {
   /* 🔴 순찰 기록은 **선택한 사업장** 기준이다 — 상세의 `siteSeq` 는 소속지라(배치 온 사람은 다르다) 쓰지 않는다 */
   const siteSeq = getSiteSeq()
 
-  /** 🔴🔴 주소 오류를 로딩보다 먼저 분기한다 — `enabled: false` 는 영원히 `isPending` 이다(037 T557) */
   if (userSeq === null) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
@@ -152,103 +162,90 @@ const UserDetailPage = () => {
     <div className="flex flex-col gap-4 p-4 xl:p-8">
       <Breadcrumb />
 
-      {/* 머리 줄 — 식별(아바타·이름·근무 상태)만. `AppPageHeader` 는 아이콘 자리에 lucide 아이콘만 받아 아바타를 넣을 수 없다.
-          🔴 **액션은 머리에 없다** — 기본정보 카드 아래로 옮겼다(사용자 요청 2026-10-21) */}
-      <div className="flex items-center gap-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <WorkerAvatar id={String(user.userSeq)} name={user.userName} className="size-11" />
-          {/* 🔴 **부제를 두지 않는다**(사용자 결정 2026-10-21) — `사번 · 소속` 을 머리에 적으면
-              기본정보 카드와 같은 말을 두 번 하고 카드에 새로 남는 값이 연락처 하나뿐이었다.
-              값은 카드에 모은다 — 상세 응답의 권한·등록일(B-41)이 생기면 들어갈 자리도 카드다 */}
-          <div className="flex items-center gap-2">
-            <h1 className="truncate text-page-title font-bold text-foreground">{user.userName}</h1>
-            <AppBadge variant={user.workYn ? 'success' : 'muted'}>
-              {workLabel(user.workYn)}
-            </AppBadge>
-          </div>
-        </div>
-      </div>
-
-      {/* **좌 1/3 기본정보 / 우 2/3 최근 순찰 기록**(사용자 요청 2026-10-21 — 처음엔 지점 상세처럼 기록이
-          좌측이었는데 좌우를 바꿨다). "누구인가" 를 먼저 읽고 그 사람의 기록을 본다.
-          좁은 폭(1단)에서도 기본정보가 먼저다 — DOM 순서 그대로라 `order` 가 필요 없다.
-          🔴 `items-start` — 짧은 카드가 긴 카드 높이만큼 늘어나지 않게(036).
-          🔴 **기본정보를 `div` 로 감싼다** — `AppDetailCard` 가 `h-full` 이라 그리드 칸에 바로 두면 행 높이(= 기록
-          카드 높이)까지 늘어난다. 감싼 `div`(카드 + 액션) 가 내용 높이가 된다 */}
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3">
-        {/* 🔴 **액션 3개는 기본정보 카드 바로 아래**(사용자 요청 2026-10-21) — 그 사람에 대한 조작을 그 사람의
-            정보 옆에 둔다. 🔴 균등 3칸이
-            아니라 `flex-auto` — 1/3 폭에서 "비밀번호 변경" 이 두 줄로 꺾였다. 글자 길이만큼 차지하고 남는 폭을 나눈다 */}
-        <div className="flex flex-col gap-2">
-          <UserInfoCard user={user} />
-          <div className="flex gap-2">
-            {/* 🔴 **초기화가 아니라 변경**이다 — 서버는 `UpdateUser.loginPw` 로 새 값을 지정한다. 정보 수정과
-             **다른 버튼**으로 둔다(사용자 결정 2026-10-21, OQ-038-C) */}
-            <AppDialog
-              title="비밀번호 변경"
-              description="근무자가 로그인에 쓸 새 비밀번호를 지정합니다."
-              contentClassName="sm:max-w-[520px]"
-              open={passwordOpen}
-              onOpenChange={setPasswordOpen}
-              trigger={
-                <AppButton
-                  icon={KeyRoundIcon}
-                  // 수정과 같은 테두리 버튼 — 추가 버튼이 primary 로 바뀌며 point 연한 톤을 걷었다(046 #1-1, 사용자 결정 2026-10-26)
-                  variant="sub"
-                  className="flex-auto whitespace-nowrap bg-card"
-                >
-                  비밀번호 변경
-                </AppButton>
-              }
-            >
-              <PasswordForm userSeq={user.userSeq} onSuccess={() => setPasswordOpen(false)} />
-            </AppDialog>
-            <AppDialog
-              title="근무자 수정"
-              description="근무자 정보를 수정합니다."
-              contentClassName="sm:max-w-[520px]"
-              open={editOpen}
-              onOpenChange={setEditOpen}
-              trigger={
-                <AppButton
-                  icon={SquarePenIcon}
-                  variant="sub"
-                  className="flex-auto whitespace-nowrap bg-card"
-                >
-                  수정
-                </AppButton>
-              }
-            >
-              <EditWorkerForm user={user} onSuccess={() => setEditOpen(false)} />
-            </AppDialog>
-            <AppAlertDialog
-              size="sm"
-              icon={Trash2Icon}
-              variant="destructive"
-              title="근무자를 삭제하시겠습니까?"
-              actionLabel="삭제"
-              onAction={() => deleteMutation.mutate(user.userSeq)}
-            >
-              <AppButton
-                icon={Trash2Icon}
+      <AppPageHeader
+        title={user.userName}
+        icon={UserRoundIcon}
+        titleSuffix={
+          <span className="flex flex-wrap items-center gap-2">
+            <AppBadge variant={user.workYn ? 'success' : 'muted'}>{workLabel(user.workYn)}</AppBadge>
+            {/* 시안 — 상태 옆 소속 사업장. 상세 `siteName` 은 소속지다(실측) */}
+            {user.siteName && <span className="text-caption text-muted-foreground">{user.siteName}</span>}
+          </span>
+        }
+        action={
+          /* 🔄 **`spec 079`**: 정보 수정 · 비밀번호 변경 · 삭제는 `⋯` 안 — 076 과 같다.
+             modal={false} — 메뉴 항목에서 모달을 열 때 body pointer-events 가 남는 Radix 문제 회피 */
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="근무자 메뉴" className="bg-card" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-auto">
+              <DropdownMenuItem className="cursor-pointer" onSelect={() => setEditOpen(true)}>
+                <SquarePenIcon />
+                정보 수정
+              </DropdownMenuItem>
+              {/* 🔴 **초기화가 아니라 변경**이다 — 서버는 `UpdateUser.loginPw` 로 새 값을 지정한다 */}
+              <DropdownMenuItem className="cursor-pointer" onSelect={() => setPasswordOpen(true)}>
+                <KeyRoundIcon />
+                비밀번호 변경
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {/* 🔴 본인 계정은 지울 수 없다 — 목록에 관리자도 섞여 온다(038). 처리 중에도 잠근다 */}
+              <DropdownMenuItem
                 variant="destructive"
-                className="flex-auto whitespace-nowrap"
-                // 🔴 본인 계정은 지울 수 없다 — 목록에 관리자도 섞여 온다(038). 처리 중에도 잠근다(확인 창은 즉시 닫힌다)
+                className="cursor-pointer"
                 disabled={isMe || deleteMutation.isPending}
                 title={isMe ? '본인 계정은 삭제할 수 없습니다' : undefined}
+                onSelect={() => setDeleteOpen(true)}
               >
-                삭제
-              </AppButton>
-            </AppAlertDialog>
-          </div>
-        </div>
-        {/* 🔴 우측 열에 **배치 이력**을 순찰 기록 아래로 쌓는다(`spec 042` T724) — 둘 다 "그 사람의 기록" 이다 */}
-        <div className="flex flex-col gap-4 xl:col-span-2">
-          <UserPatrolCard userSeq={user.userSeq} userName={user.userName} siteSeq={siteSeq} />
+                <Trash2Icon />
+                근무자 삭제
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      />
+
+      {/* 🔄 **`spec 079`**: 왼쪽 **고정 패널**(기본정보 + 배치 이력) / 오른쪽 **순찰 기록**(나머지 폭) — 076 과 같은 틀.
+          `xl` 미만 1단 — DOM 순서대로 "누구인가" 가 먼저. 🔴 `items-start` — 짧은 쪽이 긴 쪽 높이로 늘어나지 않게(036) */}
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[400px_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-4">
+          <UserInfoCard user={user} />
           {/* 상세 `siteName` 은 소속지다(실측) — 배치 이력의 출발지로 쓴다(`spec 049`) */}
           <UserAssignmentCard userSeq={user.userSeq} homeSiteName={user.siteName} />
         </div>
+        <UserPatrolActivityCard userSeq={user.userSeq} userName={user.userName} siteSeq={siteSeq} />
       </div>
+
+      <AppDialog
+        title="근무자 수정"
+        description="근무자 정보를 수정합니다."
+        contentClassName="sm:max-w-[520px]"
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      >
+        <EditWorkerForm user={user} onSuccess={() => setEditOpen(false)} />
+      </AppDialog>
+      <AppDialog
+        title="비밀번호 변경"
+        description="근무자가 로그인에 쓸 새 비밀번호를 지정합니다."
+        contentClassName="sm:max-w-[520px]"
+        open={passwordOpen}
+        onOpenChange={setPasswordOpen}
+      >
+        <PasswordForm userSeq={user.userSeq} onSuccess={() => setPasswordOpen(false)} />
+      </AppDialog>
+      {/* 삭제 확인은 확인 즉시 닫는다: 잃을 입력이 없고 거부 사유는 전역 토스트가 전달한다 */}
+      <AppAlertDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        size="sm"
+        icon={Trash2Icon}
+        variant="destructive"
+        title="근무자를 삭제하시겠습니까?"
+        actionLabel="삭제"
+        onAction={() => deleteMutation.mutate(user.userSeq)}
+      />
     </div>
   )
 }

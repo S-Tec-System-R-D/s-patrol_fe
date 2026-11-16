@@ -2,7 +2,7 @@ import { InfoIcon } from 'lucide-react'
 
 import AppDetailCard from '@/components/app/AppDetailCard'
 import AppDetailRow from '@/components/app/AppDetailRow'
-import { formatPhone, workLabel } from '../../lib/userFormat'
+import { formatPhone } from '../../lib/userFormat'
 import type { UserDetail } from '../../types/user'
 
 /**
@@ -21,7 +21,7 @@ const UserInfoCard = ({ user }: { user: UserDetail }) => (
       <AppDetailRow label="사번" value={user.loginId} />
       <AppDetailRow label="연락처" value={formatPhone(user.phone)} />
       <AppDetailRow label="소속 사업장" value={user.siteName} />
-      <AppDetailRow label="근무 상태" value={workLabel(user.workYn)} />
+      {/* 🔄 `spec 079`: `근무 상태` 행을 뺐다 — 머리 뱃지와 같은 말이다 */}
     </div>
   </AppDetailCard>
 )

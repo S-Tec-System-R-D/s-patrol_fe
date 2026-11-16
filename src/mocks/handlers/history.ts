@@ -6,6 +6,7 @@ import type {
   CourseHistoryDetail,
   CourseHistoryRow,
 } from '@/features/course-history/types'
+import { WORKER_RUN_SITE, workerRunChecks, workerRunHandOvers, workerRunRows } from './workerRuns'
 
 /**
  * MSW 순찰이력 핸들러 (`spec 023` 코스 상세 B단).
@@ -503,8 +504,16 @@ export const historyHandlers = [
         userName === null ? true : item.userList.some((user) => user.userName.includes(userName))
       )
       .filter((item) => inRange(item.startDt, query.get('fromDt'), query.get('toDt')))
-      .sort((a, b) => b.startDt.localeCompare(a.startDt))
       .map(toCourseHistoryRow)
+      // `spec 079` — 근무자 상세의 회차는 **이름을 건 조회에만** 섞는다(`workerRuns.ts` 머리말)
+      .concat(
+        userName === null || siteSeq !== WORKER_RUN_SITE
+          ? []
+          : workerRunRows()
+              .filter((item) => item.userList.some((user) => user.userName.includes(userName)))
+              .filter((item) => inRange(item.startDt, query.get('fromDt'), query.get('toDt')))
+      )
+      .sort((a, b) => b.startDt.localeCompare(a.startDt))
 
     return HttpResponse.json(paged(filtered, query))
   }),
@@ -530,6 +539,8 @@ export const historyHandlers = [
   // 순찰자가 둘인 회차 = 교대 1번(상세의 `handoverCount` 와 같은 판단) · 대시보드 B코스(회차 101)는 시드 밖이라 따로 둔다
   http.get(GET_HAND_OVERS_PATH, ({ request }) => {
     const historySeq = Number(new URL(request.url).searchParams.get('historySeq'))
+    const workerRun = workerRunHandOvers(historySeq)
+    if (workerRun) return HttpResponse.json({ message: '요청이 정상 처리되었습니다.', code: 200, data: workerRun })
     const [from, to] =
       historySeq === 101
         ? [
@@ -562,7 +573,7 @@ export const historyHandlers = [
     return HttpResponse.json({
       message: '요청이 정상 처리되었습니다.',
       code: 200,
-      data: checkDetailSeeds[historySeq] ?? [],
+      data: workerRunChecks(historySeq) ?? checkDetailSeeds[historySeq] ?? [],
     })
   }),
 ]
