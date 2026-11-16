@@ -5,8 +5,11 @@ import AppButton from '@/components/app/AppButton'
 import { REQUEST_KIND_LABEL, useApproveDeployment } from '../hooks/useApproveDeployment'
 import type { RequestKind } from '../types/deployment'
 
-/** 필터 트리거와 같은 치수 — `h-8` · `px-3` · `rounded-md` */
-const ROW_BUTTON_CLASS = 'h-8 gap-1.5 rounded-md px-3 py-0'
+/**
+ * 배치관리 표 · 카드 — 🔄 2026-11-16 축소(사용자 요청): `h-8` · 14px → **`h-7` · 12px**, 아이콘 12.
+ * `text-caption` 은 tailwind-merge 가 글자색으로 읽는다 — 같은 12px 인 `text-xs`(아래와 같은 이유)
+ */
+const ROW_BUTTON_CLASS = 'h-7 gap-1 rounded-md px-2.5 py-0 text-xs'
 /** 대시보드 배치 대기(`spec 073`) — 440px 패널에서 버튼이 요청 내용을 밀어내지 않게 글자만 · 낮게 */
 // `text-caption` 은 tailwind-merge 가 글자색으로 읽어 버튼 글자색을 지운다 — 같은 12px 인 `text-xs`
 const COMPACT_BUTTON_CLASS = 'h-7 rounded-md px-2.5 py-0 text-xs'
@@ -29,7 +32,7 @@ interface DeploymentRequestActionsProps {
  *
  * 🔴 **승인은 확인 모달 없이 즉시다**(014 결정 유지 · 사용자 확인 2026-10-21). 되돌릴 수 없으므로
  * **처리 중에는 두 버튼을 모두 막고**(연타 방지), 승인·반려 사이 간격을 둔다(오클릭 방지).
- * 버튼은 **필터와 같은 높이(`h-8`)**(사용자 요청 2026-10-21).
+ * 버튼은 `h-7` · 12px(🔄 2026-11-16 축소 — 처음엔 필터와 같은 `h-8`, 사용자 요청 2026-10-21).
  *
  * 🔴 **반려는 사유 입력 없이 확인창**이다(`spec 042`) — 서버에 사유 필드가 없다(사용자 결정 2026-10-21).
  * 반려는 되돌릴 수 없고 이력에도 남지 않아 한 번 묻는다.
@@ -46,10 +49,10 @@ const DeploymentRequestActions = ({
   const buttonClass = compact ? COMPACT_BUTTON_CLASS : ROW_BUTTON_CLASS
 
   return (
-    <div className={compact ? 'flex items-center justify-end gap-1.5' : 'flex items-center justify-end gap-3'}>
+    <div className={compact ? 'flex items-center justify-end gap-1.5' : 'flex items-center justify-end gap-2'}>
       <AppButton
         icon={compact ? undefined : CheckIcon}
-        iconSize={14}
+        iconSize={12}
         className={buttonClass}
         onClick={() => process.mutate({ assignmentSeq, userName, approved: true })}
         disabled={process.isPending}
@@ -68,7 +71,7 @@ const DeploymentRequestActions = ({
       >
         <AppButton
           icon={compact ? undefined : XIcon}
-          iconSize={14}
+          iconSize={12}
           className={buttonClass}
           variant="destructive"
           disabled={process.isPending}

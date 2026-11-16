@@ -56,9 +56,10 @@ describe('FloatingNav (현장)', () => {
     expect(nav.getByLabelText('근무자')).not.toHaveClass('bg-rail-2')
   })
 
-  it('배치관리 뱃지 — 레일과 같은 대기 건수', async () => {
+  it('배치관리 뱃지 — 레일과 같은 대기 건수(배치 요청 + 복귀 요청, 2026-11-16)', async () => {
     const nav = renderNav('/zones')
-    expect(await within(nav.getByLabelText('배치관리')).findByText('2')).toBeInTheDocument()
+    // mock 요약: 배치 요청 2 + 복귀 요청 1
+    expect(await within(nav.getByLabelText('배치관리')).findByText('3')).toBeInTheDocument()
   })
 
   it('🔴 콘텐츠 영역은 xl 미만에서 하단 여백을 둔다 — nav 가 마지막 행을 가리지 않게', () => {

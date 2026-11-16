@@ -56,7 +56,8 @@ describe('RailSidebar (현장)', () => {
   it('🔴 배치관리 뱃지는 요약 쿼리의 대기 건수다 (spec 039 — store 직접 읽기 제거)', async () => {
     const rail = renderRail('/zones')
 
-    expect(await within(rail.getByLabelText('배치관리')).findByText('2')).toBeInTheDocument()
+    // mock 요약: 배치 요청 2 + 복귀 요청 1
+    expect(await within(rail.getByLabelText('배치관리')).findByText('3')).toBeInTheDocument()
   })
 
   it('요약 조회가 실패하면 뱃지를 그리지 않는다 — 숫자를 지어내지 않는다', async () => {

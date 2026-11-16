@@ -1,6 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
 
-import WorkerAvatar from '@/features/workers/components/WorkerAvatar'
 import { formatPeriod } from '../lib/deploymentPeriod'
 import type { AssignmentRequestRow } from '../types/deployment'
 import DeploymentRequestActions from './DeploymentRequestActions'
@@ -27,10 +26,7 @@ export const returnRequestColumns = (siteSeq: number): ColumnDef<AssignmentReque
       accessorKey: 'userName',
       header: '근무자',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2 whitespace-nowrap">
-          <WorkerAvatar id={String(row.original.userSeq)} name={row.original.userName} />
-          <span className="font-medium">{row.original.userName}</span>
-        </div>
+<span className="whitespace-nowrap font-medium">{row.original.userName}</span>
       ),
     },
     {

@@ -1,6 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
 
-import WorkerAvatar from '@/features/workers/components/WorkerAvatar'
 import type { AssignmentHistoryRow } from '../hooks/useDeploymentHistory'
 import { formatPeriod } from '../lib/deploymentPeriod'
 import AssignmentStatusBadge from './AssignmentStatusBadge'
@@ -27,10 +26,7 @@ export const deploymentHistoryColumns = (siteName: string): ColumnDef<Assignment
       accessorKey: 'userName',
       header: '근무자',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2 whitespace-nowrap">
-          <WorkerAvatar id={row.original.userName} name={row.original.userName} />
-          <span className="font-medium">{row.original.userName}</span>
-        </div>
+<span className="whitespace-nowrap font-medium">{row.original.userName}</span>
       ),
     },
     {

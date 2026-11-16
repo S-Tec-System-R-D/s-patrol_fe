@@ -1,4 +1,3 @@
-import WorkerAvatar from '@/features/workers/components/WorkerAvatar'
 import type { AssignmentHistoryRow } from '../hooks/useDeploymentHistory'
 import { formatPeriod } from '../lib/deploymentPeriod'
 import AssignmentStatusBadge from './AssignmentStatusBadge'
@@ -13,7 +12,6 @@ import SiteRoute from './SiteRoute'
 const DeploymentHistoryCard = ({ row, siteName }: { row: AssignmentHistoryRow; siteName: string }) => (
   <div className="flex flex-col gap-2">
     <div className="flex items-center gap-2">
-      <WorkerAvatar id={row.userName} name={row.userName} />
       <span className="min-w-0 flex-1 truncate text-body font-semibold text-foreground">{row.userName}</span>
       <AssignmentStatusBadge status={row.status} statusName={row.statusName} />
     </div>

@@ -44,8 +44,12 @@ const ServiceLayout = () => {
    * 배치관리 대기 건수 — 🔴 **KPI 와 같은 쿼리**(`spec 039` T637). 승인·거부가 `deploymentKeys.all` 을
    * 무효화하므로 페이지 이동 없이 뱃지도 함께 줄어든다. ⚠️ 실패·로딩이면 `undefined` → 뱃지를 그리지 않는다.
    * 🔴 레일이 아니라 **여기서** 부른다(`spec 043` T743) — 레일은 본사와 공용이다.
+   * 🔄 2026-11-16 **배치 요청 + 복귀 요청** 합계(사용자 요청) — 둘 다 이 관리자가 처리할 일이다. 전엔 배치 요청만 셌다.
    */
-  const deploymentPending = useDeploymentSummary(siteSeq).data?.pendingCount
+  const deploymentSummary = useDeploymentSummary(siteSeq).data
+  const deploymentPending = deploymentSummary
+    ? deploymentSummary.pendingCount + deploymentSummary.pendingReturnCount
+    : undefined
 
   // 로딩 · 실패면 `undefined` → 버튼을 그리지 않는다(뱃지와 같은 방침)
   const siteOptions = useSiteOptions(me?.userSeq).data

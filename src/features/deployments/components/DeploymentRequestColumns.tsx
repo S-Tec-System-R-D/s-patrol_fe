@@ -1,6 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
 
-import WorkerAvatar from '@/features/workers/components/WorkerAvatar'
 import { formatPeriod } from '../lib/deploymentPeriod'
 import type { AssignmentRequestRow } from '../types/deployment'
 import DeploymentRequestActions from './DeploymentRequestActions'
@@ -28,11 +27,7 @@ export const deploymentRequestColumns = (siteSeq: number): ColumnDef<AssignmentR
       accessorKey: 'userName',
       header: '근무자',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2 whitespace-nowrap">
-          {/* 이력 표·근무자 목록과 같은 사람이면 같은 색 — 해시 키를 `userSeq` 로 맞춘다 */}
-          <WorkerAvatar id={String(row.original.userSeq)} name={row.original.userName} />
-          <span className="font-medium">{row.original.userName}</span>
-        </div>
+<span className="whitespace-nowrap font-medium">{row.original.userName}</span>
       ),
     },
     {

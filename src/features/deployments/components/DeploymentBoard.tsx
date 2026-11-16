@@ -214,7 +214,7 @@ const DeploymentBoard = () => {
       >
         {TABS.map(({ key, label, icon: Icon }) => {
           const selected = tab === key
-          /* 배치 요청 = `pendingCount`(사이드바와 같은 숫자) · 복귀 요청 = `pendingReturnCount`(탭에만) */
+          /* 배치 요청 = `pendingCount` · 복귀 요청 = `pendingReturnCount` — 사이드바는 둘의 합(2026-11-16) */
           const pending =
             key === 'requests'
               ? summary.data?.pendingCount
