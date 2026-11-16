@@ -8,7 +8,7 @@ import { cardBadge } from '@/components/app/AppBadge.variants'
 import { useCourseHistoryCheckDetails } from '@/features/course-history/hooks/useCourseHistoryDetail'
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
 import { overtimeBadge } from '@/features/course-history/lib/historyBadge'
-import { COURSE_HISTORY_STATUS, type CourseHistoryRow } from '@/features/course-history/types'
+import type { CourseHistoryRow } from '@/features/course-history/types'
 import { cn } from '@/lib/utils'
 import { paths } from '@/router/paths'
 
@@ -29,7 +29,7 @@ import AreaFallback from './AreaFallback'
 
 type Tab = 'issue' | 'finished'
 
-const TAB_LABEL: Record<Tab, string> = { issue: '미완료 · 시간초과', finished: '종료된 순찰' }
+const TAB_LABEL: Record<Tab, string> = { issue: '미인증 · 시간초과', finished: '종료된 순찰' }
 
 const parse = (value: string | null): Date | null => {
   if (value === null) return null
@@ -56,7 +56,9 @@ const EndTime = ({ endDt }: { endDt: string | null }) => {
 }
 
 const IssueRow = ({ row }: { row: CourseHistoryRow }) => {
-  const incomplete = row.status === COURSE_HISTORY_STATUS.INCOMPLETE
+  /* 🔄 D11 — 서버 상태가 아니라 미인증 지점이 있나로 본다 */
+  const missedCount = Math.max(row.pointCount - row.checkedCount, 0)
+  const incomplete = missedCount > 0
   const details = useCourseHistoryCheckDetails(incomplete ? row.historySeq : null)
   const missed = details.data ? missedPointNames(details.data) : []
   const overtime = overtimeBadge(row.overtimeYn)
@@ -75,7 +77,7 @@ const IssueRow = ({ row }: { row: CourseHistoryRow }) => {
           </span>
           {missed.length > 0 ? (
             <span className="truncate text-caption text-muted-foreground">
-              놓친 지점 <span className="text-danger-foreground">{missed.join(', ')}</span>
+              미인증 지점 <span className="text-warning-foreground">{missed.join(', ')}</span>
             </span>
           ) : (
             !incomplete && (
@@ -87,8 +89,8 @@ const IssueRow = ({ row }: { row: CourseHistoryRow }) => {
         </span>
         <span className="flex shrink-0 gap-1">
           {incomplete && (
-            <AppBadge variant="danger" className={cardBadge}>
-              미완료 {row.pointCount - row.checkedCount}
+            <AppBadge variant="warning" className={cardBadge}>
+              미인증 {missedCount}
             </AppBadge>
           )}
           {overtime && (
@@ -120,11 +122,6 @@ const FinishedRow = ({ row }: { row: CourseHistoryRow }) => {
           </span>
         </span>
         <span className="flex shrink-0 items-center gap-2">
-          {row.status === COURSE_HISTORY_STATUS.INCOMPLETE && (
-            <AppBadge variant="danger" className={cardBadge}>
-              미완료
-            </AppBadge>
-          )}
           {overtime && (
             <AppBadge variant={overtime.variant} className={cardBadge}>
               {overtime.label}
@@ -157,7 +154,7 @@ const ListBody = ({
     <AreaFallback state={state} label="최근 기록" onRetry={onRetry} />
   ) : rows.length === 0 ? (
     <p className="py-6 text-center text-caption text-muted-foreground">
-      {tab === 'issue' ? '어제와 오늘 미완료 · 시간초과 순찰이 없습니다' : '오늘 종료된 순찰이 없습니다'}
+      {tab === 'issue' ? '어제와 오늘 미인증 · 시간초과 순찰이 없습니다' : '오늘 종료된 순찰이 없습니다'}
     </p>
   ) : (
     <ul className="flex flex-col" aria-label={TAB_LABEL[tab]}>

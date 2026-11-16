@@ -13,7 +13,7 @@ import { useDashboardHandOvers } from '@/features/dashboard/hooks/useDashboardHa
 import { useRecentCourses } from '@/features/dashboard/hooks/useRecentCourses'
 import { useTodaySummary } from '@/features/dashboard/hooks/useTodaySummary'
 import { pickFinishedCourses } from '@/features/dashboard/lib/finishedCourses'
-import { pickIssueCourses } from '@/features/dashboard/lib/recentIssueCourses'
+import { pickIssueCourses, todayMissedPoints } from '@/features/dashboard/lib/recentIssueCourses'
 import { useDashboardRealtime } from '@/features/dashboard/realtime/useDashboardRealtime'
 import type { AreaState } from '@/features/dashboard/types'
 import { useDeploymentRequests } from '@/features/deployments/hooks/useDeploymentRequests'
@@ -100,6 +100,7 @@ const DashboardPage = () => {
             <DashboardKpiCard
               summary={summary.data}
               activeCount={courses.data ? courses.data.length : null}
+              missedCount={recent.data ? todayMissedPoints(recent.data, format(new Date(), 'yyyy-MM-dd')) : null}
               state={areaState(summary)}
               onRetry={() => summary.refetch()}
             />

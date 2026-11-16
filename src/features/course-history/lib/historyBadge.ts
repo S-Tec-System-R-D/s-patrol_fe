@@ -41,6 +41,10 @@ const UNKNOWN: HistoryBadge = { variant: 'muted', label: '알 수 없음' }
 /**
  * 코스 순찰 결과 — **코스 사전**(`0` 진행중 / `1` 완료 / `2` 미완료).
  *
+ * 🔄🔄 **`spec 079` D11(사용자 결정 2026-11-16): 회차는 `진행중` / `완료` 두 가지다.** 서버 `2`(중간 종료)도
+ * 순찰 자체는 끝난 것이라 `완료` 로 적는다 — 빠진 지점은 **지점의 `미인증`** 이 말하고, 지점 상태가 회차
+ * 상태를 침범하지 않는다. `시간초과` 는 따로 붙는 뱃지(아래 `overtimeBadge`).
+ *
  * ⚠️ `0 진행중` 은 테스트 DB 에 **0건**이다(OQ-036-A) — `eventType=0` 으로만 조회되고
  * mock 시드로 검증한다. 사전은 백엔드 확인으로 확정돼 있다(OQ-5 해소).
  *
@@ -52,9 +56,8 @@ export const courseResultBadge = (status: number): HistoryBadge => {
     case COURSE_HISTORY_STATUS.IN_PROGRESS:
       return { variant: 'point', label: '진행중' }
     case COURSE_HISTORY_STATUS.COMPLETED:
-      return { variant: 'success', label: '완료' }
     case COURSE_HISTORY_STATUS.INCOMPLETE:
-      return { variant: 'danger', label: '미완료' }
+      return { variant: 'success', label: '완료' }
     default:
       return UNKNOWN
   }

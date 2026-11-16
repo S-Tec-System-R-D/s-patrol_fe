@@ -55,7 +55,7 @@ const CourseKpiRow = ({ stats }: CourseKpiRowProps) => (
       value={formatDuration(stats.avgElapsedSec)}
       /* 🔴 **`설정 +5분` 대신 서버가 판정한 초과 횟수다** — 기준 `totalMin` 은 구간시간 합과
          어긋난 코스가 있어 못 쓴다(OQ-031-B, B-31) */
-      unit={stats.sampledCount > 0 ? `초과 ${stats.overtimeCount}/${stats.sampledCount}` : undefined}
+      unit={stats.sampledCount > 0 ? `시간초과 ${stats.overtimeCount}/${stats.sampledCount}` : undefined}
       /* 🔴 **회차별 막대가 평균의 안정성을 보여준다** — 평균만 있으면 "50분" 이 고른 값인지
          들쑥날쑥한 값인지 알 수 없다 */
       aside={stats.recentRuns.length > 0 && <RunElapsedBars runs={stats.recentRuns} />}

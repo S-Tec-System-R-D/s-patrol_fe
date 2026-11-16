@@ -37,7 +37,7 @@ test('대시보드 — 로그인 착지(현장 홈, spec 066) · 본문(spec 067
   await expect(deploy.getByRole('listitem')).toHaveCount(3)
   await expect(page.getByRole('heading', { name: '공지사항' })).toBeVisible()
   // 최근 기록(spec 073) — 2xl 미만은 탭. 값은 mock 핸들러(`mocks/handlers/history.ts`) 오늘 시드
-  await expect(page.getByRole('list', { name: '미완료 · 시간초과' }).getByRole('listitem')).toHaveCount(2)
+  await expect(page.getByRole('list', { name: '미인증 · 시간초과' }).getByRole('listitem')).toHaveCount(2)
   await page.getByRole('tab', { name: /종료된 순찰/ }).click()
   await expect(page.getByRole('list', { name: '종료된 순찰' }).getByRole('listitem')).toHaveCount(3)
   // 실시간 연결(spec 069) — mock 은 연결만 흉내 낸다. 좁은 폭에서도 보인다

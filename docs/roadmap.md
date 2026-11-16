@@ -496,7 +496,7 @@ flowchart LR
 | 6 마감 — 076 point-detail-renewal | ☑ | **정식 사이클**(위험도 B). T1270~T1277. 행 → 지점 인증 상세(회차 모달은 037 US4 대기) |
 | 6 마감 — 077 patrol-run-detail-renewal | ☑ | **정식 사이클**(위험도 B). T1280~T1288 |
 | 6 마감 — 078 point-check-detail-renewal | ☑ | **정식 사이클**(위험도 B). T1290~T1300(수정 D5~D7 포함) |
-| 6 마감 — 079 worker-detail-renewal | ☑ | **정식 사이클**(위험도 B). T1301~T1314(수정 D5~D7 · 건너뜀→미인증 통일 D8 포함). 교대받고 처리 없는 회차는 빠짐(서버 `userList` 한계) |
+| 6 마감 — 079 worker-detail-renewal | ☑ | **정식 사이클**(위험도 B). T1301~T1317(수정 D5~D7 · 건너뜀→미인증 통일 D8 · 회차 상태 진행중/완료 D11 포함). 교대받고 처리 없는 회차는 빠짐(서버 `userList` 한계) |
 | 6 마감 — 073 dashboard-renewal | ☐ | **정식 사이클**(위험도 B). T1210~T1223. 실서버 앱 순찰 확인(T1222) 남음 |
 | 6 마감 — 069 dashboard-sse | ☑ | **정식 사이클(위험도 B · 수신만 — 사용자 결정 2026-11-03).** T1141~T1164. `lib/sse`(파서 · 연결) · `features/dashboard/realtime`(알림 처리 · 연결 훅) · 알림은 신호로만 쓰고 캐시를 고치지 않는다 · 실서버 확인 중 `최근 종료된 순찰`(`GetCourseHistory`) · `마지막 갱신` · 카드 1개 전체 폭 추가 · mock 은 연결만 · 실서버 + 앱 순찰로 시작 ~ 종료 · 재연결 확인 |
 | 6 마감 — 068 dashboard-api | ☑ | **정식 사이클(위험도 B · 조회만 — 사용자 결정 2026-11-03).** T1123~T1140. 타입 = §5-1-D 실측 이름(`TodaySummary` · `DashboardCourse` · 최근 기록 `PointHistoryRow` · 공지 `NoticeRow`, 어댑터 없음) · API 3개 · 훅 3개(키에 `siteSeq`) · `activeCourse` 서버 `status` 기준 교체 · `recentIssues` 합치기 · 경과 = 받은 시각(`dataUpdatedAt`) 기준 · MSW `dashboard.ts`(어느 사업장이든 같은 값) · `AreaFallback` · `dashboardMock.ts` · `?preview` 삭제. 1532/1532 · e2e 39 통과. 다음: 069 SSE |

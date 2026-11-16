@@ -52,7 +52,7 @@ const renderLog = (
 const dataRows = () => screen.getAllByRole('row', { name: /회차 상세/ })
 
 describe('CoursePatrolLog — 기본', () => {
-  it('행을 표로 그린다 — 시작·근무자·인증·누락·소요·상태', () => {
+  it('행을 표로 그린다 — 시작·근무자·인증·소요·상태 (D11 누락 칸 삭제)', () => {
     renderLog([row()])
 
     expect(screen.getByText('10.11 02:40')).toBeInTheDocument()
@@ -64,7 +64,6 @@ describe('CoursePatrolLog — 기본', () => {
       '시작',
       '근무자',
       '인증',
-      '누락',
       '소요',
       '상태',
     ])
@@ -103,16 +102,14 @@ describe('CoursePatrolLog — 기본', () => {
   })
 })
 
-describe('CoursePatrolLog — 누락', () => {
-  it('하나도 못 찍었으면 `전체`, 일부면 개수, 다 찍었으면 `-`', () => {
-    renderLog([
-      row({ historySeq: 1, checkedCount: 0, status: 2, statusName: '미완료' }),
-      row({ historySeq: 2, checkedCount: 1, status: 2, statusName: '미완료' }),
-      row({ historySeq: 3 }),
-    ])
+describe('CoursePatrolLog — 🔴 회차 상태 (spec 079 D11)', () => {
+  it('서버 미완료(2)도 완료 — 지점 미인증이 회차 상태를 침범하지 않는다 · 서버 이름을 그대로 쓰지 않는다', () => {
+    renderLog([row({ historySeq: 1, checkedCount: 1, status: 2, statusName: '미완료' })])
 
-    const missedCells = dataRows().map((tr) => tr.querySelectorAll('td')[3].textContent)
-    expect(missedCells).toEqual(['전체', '2', '-'])
+    expect(screen.getByText('완료')).toBeInTheDocument()
+    expect(screen.getByText('1/3')).toBeInTheDocument()
+    expect(screen.queryByText('미완료')).not.toBeInTheDocument()
+    expect(screen.queryByText(/누락|미인증/)).not.toBeInTheDocument()
   })
 })
 
@@ -138,11 +135,11 @@ describe('CoursePatrolLog — 🔴 실측 예외', () => {
     expect(screen.queryByText('2분')).not.toBeInTheDocument()
   })
 
-  it('초과는 상태 옆 뱃지다 — 상태 뱃지를 덮어쓰지 않는다 · 기준 초과 열은 없다', () => {
+  it('시간초과는 상태 옆 빨강 뱃지다 — 상태 뱃지를 덮어쓰지 않는다 · 기준 초과 열은 없다', () => {
     renderLog([row({ overtimeYn: true })])
 
     expect(screen.getByText('완료')).toBeInTheDocument()
-    expect(screen.getByText('초과')).toBeInTheDocument()
+    expect(screen.getByText('시간초과')).toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: '기준 초과' })).toBeNull()
   })
 
@@ -152,10 +149,10 @@ describe('CoursePatrolLog — 🔴 실측 예외', () => {
     expect(screen.getByText('진행중')).toBeInTheDocument()
   })
 
-  it('🔴 statusName 이 비면 코스 사전으로 메운다 — 빈 뱃지를 그리지 않는다', () => {
+  it('🔴 statusName 이 비어도 공통 규칙으로 그린다 — 빈 뱃지를 그리지 않는다', () => {
     renderLog([row({ status: 2, statusName: '  ' })])
 
-    expect(screen.getByText('미완료')).toBeInTheDocument()
+    expect(screen.getByText('완료')).toBeInTheDocument()
   })
 })
 

@@ -37,6 +37,9 @@ export const courseFilterOptions = (courses: CourseRow[]): AppSelectOption[] => 
 /**
  * 결과 선택지 — **코스 사전**(`eventType`: 0 진행중 / 1 완료 / 2 미완료).
  *
+ * 🔄 `spec 079` D11 — 화면은 `진행중` · `완료` 둘이다(서버 `2` 도 `완료` 로 적는다). 선택지는 `전체 · 진행중 · 완료`
+ * 이고 🔴 **`완료` 는 서버 `1` 만 거른다**(필터는 값 하나만 보낸다 — 서버 `2` 회차는 `전체` 에서만 보인다, 사용자 결정).
+ *
  * ⚠️ **`시간초과` 는 여기 없다.** `overtimeYn` 은 `status` 와 독립 축이고 **서버에 그
  * 필터가 없다**(B-34 에서 요청을 철회했다 — 거를 화면이 없었다). 목록에는 뱃지로 **보이지만**
  * 거를 수는 없다. 거르고 싶어지면 그때 요청한다.
@@ -46,7 +49,6 @@ export const resultFilterOptions: AppSelectOption[] = [
   ...[
     COURSE_HISTORY_STATUS.IN_PROGRESS,
     COURSE_HISTORY_STATUS.COMPLETED,
-    COURSE_HISTORY_STATUS.INCOMPLETE,
   ].map((status) => ({
     value: String(status),
     label: courseResultBadge(status).label,

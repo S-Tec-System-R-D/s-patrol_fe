@@ -96,10 +96,11 @@ export const RunElapsedBars = ({ runs }: { runs: RecentRun[] }) => {
         (run) =>
           run && {
             ratio: run.elapsedSec === null || scale === 0 ? null : Math.min(run.elapsedSec / scale, 1),
-            color: run.overtime ? 'bg-warning' : 'bg-point',
+            // 🔄 `spec 079` D11 — 시간초과는 빨강(주황은 미인증)
+            color: run.overtime ? 'bg-danger' : 'bg-point',
             tip: {
               date: dateLabel(run.startDt),
-              value: `${formatDuration(run.elapsedSec)}${run.overtime ? ' · 기준 초과' : ''}`,
+              value: `${formatDuration(run.elapsedSec)}${run.overtime ? ' · 시간초과' : ''}`,
             },
           }
       )}

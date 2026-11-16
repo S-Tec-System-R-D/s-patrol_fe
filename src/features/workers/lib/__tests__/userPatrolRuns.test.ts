@@ -4,7 +4,7 @@ import type { CourseHistoryRow } from '@/features/course-history/types'
 import {
   filterMyRuns,
   groupRunsByDay,
-  isIncompleteRun,
+  missedPoints,
   runDayBuckets,
   runKind,
   summarizeRuns,
@@ -40,26 +40,26 @@ describe('userPatrolRuns', () => {
     expect(filterMyRuns(rows, 104).map((r) => r.historySeq)).toEqual([1, 3])
   })
 
-  it('🔴 미완료 포함은 두 수로 본다 — 완료인데 0/4 도 포함 · 진행 중은 아니다', () => {
-    expect(isIncompleteRun(run({ checkedCount: 3 }))).toBe(true)
-    expect(isIncompleteRun(run({ status: 1, checkedCount: 0 }))).toBe(true)
-    expect(isIncompleteRun(run({ status: 0, checkedCount: 1, endDt: null }))).toBe(false)
-    expect(isIncompleteRun(run())).toBe(false)
+  it('🔴 미인증 지점 수는 두 수로 센다 — 완료인데 0/4 도 4 · 진행 중은 0 (D11)', () => {
+    expect(missedPoints(run({ checkedCount: 3 }))).toBe(1)
+    expect(missedPoints(run({ status: 1, checkedCount: 0 }))).toBe(4)
+    expect(missedPoints(run({ status: 0, checkedCount: 1, endDt: null }))).toBe(0)
+    expect(missedPoints(run())).toBe(0)
   })
 
-  it('막대 색 — 미완료 포함과 시간초과가 겹치면 미완료 포함', () => {
+  it('🔴 막대 색은 정상 / 시간초과 두 가지 — 미인증 지점이 있어도 회차 색은 바뀌지 않는다 (D11)', () => {
     expect(runKind(run())).toBe('normal')
-    expect(runKind(run({ overtimeYn: true }))).toBe('overtime')
-    expect(runKind(run({ overtimeYn: true, checkedCount: 2 }))).toBe('incomplete')
+    expect(runKind(run({ checkedCount: 2 }))).toBe('normal')
+    expect(runKind(run({ overtimeYn: true, checkedCount: 2 }))).toBe('overtime')
   })
 
-  it('요약 — 회차 · 지점 인증 두 수 · 미완료 포함 · 특이사항 · 시간초과', () => {
+  it('요약 — 회차 · 지점 인증 두 수 · 미인증 지점 · 특이사항 · 시간초과', () => {
     const summary = summarizeRuns([
       run({ checkedCount: 3, hasMemo: true }),
       run({ overtimeYn: true }),
       run({ pointCount: 5, checkedCount: 5 }),
     ])
-    expect(summary).toEqual({ runs: 3, points: 13, checked: 12, incomplete: 1, memo: 1, overtime: 1 })
+    expect(summary).toEqual({ runs: 3, points: 13, checked: 12, missed: 1, memo: 1, overtime: 1 })
   })
 
   it('14일 칸 — 기록 없는 날도 0 으로 두고 날짜 오름차순', () => {
@@ -69,8 +69,8 @@ describe('userPatrolRuns', () => {
       today
     )
     expect(buckets).toHaveLength(14)
-    expect(buckets[0]).toEqual({ date: '2026-11-03', normal: 0, overtime: 0, incomplete: 1 })
-    expect(buckets[13]).toEqual({ date: '2026-11-16', normal: 1, overtime: 1, incomplete: 0 })
+    expect(buckets[0]).toEqual({ date: '2026-11-03', normal: 1, overtime: 0 })
+    expect(buckets[13]).toEqual({ date: '2026-11-16', normal: 1, overtime: 1 })
   })
 
   it('날짜 묶음 — 최신 날짜부터 · 같은 날은 늦은 시작부터', () => {

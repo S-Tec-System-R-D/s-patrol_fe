@@ -25,7 +25,8 @@ import UserRunRow from './UserRunRow'
  *
  * 요약 5칸 → 14일 막대(누르면 그 날만 — URL `?day=`) → 날짜별 **회차** 줄(펼치면 지점별).
  * 🔴 날짜 머리 · 막대에 **회차 수 숫자를 적지 않는다**(D1) — 높이가 말한다. 합계는 요약 `순찰 n회` 하나.
- * 🔴 용어는 회차 · 지점 모두 `미인증`이다(D2 → D10 — `미완료` 는 서버 이름이라 화면에 쓰지 않는다) — 시안의 `누락` 은 쓰지 않는다.
+ * 🔴 `미인증` 은 **지점에만** 쓴다(D11) — 요약 칸은 미인증 **지점 수**, 막대는 정상 / 시간초과 두 색. 회차 상태가
+ *    지점 결과로 바뀌지 않는다. 시안의 `누락` · 서버 이름 `미완료` 는 쓰지 않는다(D2 · D10).
  * 🔴 인증 %에 색을 입히지 않는다 — `pointCount` 가 순찰제외를 뺀 값인지 미확인(api-spec 15).
  */
 
@@ -34,17 +35,12 @@ const DAY_PARAM = 'day'
 const COLORS = {
   normal: 'var(--color-point)',
   overtime: 'var(--color-danger)',
-  incomplete: 'var(--color-warning)',
 } as const
 
 const ChartTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: RunDayBucket }[] }) => {
   if (!active || !payload?.length) return null
-  const { date, normal, overtime, incomplete } = payload[0].payload
-  const parts = [
-    normal > 0 ? `정상 ${normal}` : null,
-    overtime > 0 ? `시간초과 ${overtime}` : null,
-    incomplete > 0 ? `미인증 ${incomplete}` : null,
-  ].filter(Boolean)
+  const { date, normal, overtime } = payload[0].payload
+  const parts = [normal > 0 ? `정상 ${normal}` : null, overtime > 0 ? `시간초과 ${overtime}` : null].filter(Boolean)
   return (
     <div className="rounded-sm border border-border bg-card px-2.5 py-1.5 text-caption shadow-sm">
       <p className="text-muted-foreground">{format(parseISO(date), 'yyyy.MM.dd')}</p>
@@ -168,8 +164,8 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
                 {summary.checked}/{summary.points}
               </span>
             </Stat>
-            <Stat label="미인증">
-              <span className={cn(summary.incomplete > 0 && 'text-warning-foreground')}>{summary.incomplete}회</span>
+            <Stat label="미인증 지점">
+              <span className={cn(summary.missed > 0 && 'text-warning-foreground')}>{summary.missed}</span>
             </Stat>
             <Stat label="특이사항">{summary.memo}회</Stat>
             <Stat label="시간초과">
@@ -198,8 +194,7 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
                 />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-muted)', opacity: 0.6 }} />
                 {bar('normal', false)}
-                {bar('overtime', false)}
-                {bar('incomplete', true)}
+                {bar('overtime', true)}
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -207,8 +202,6 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border pb-3 text-caption text-muted-foreground">
             <Legend color={COLORS.normal} label="정상" />
             <Legend color={COLORS.overtime} label="시간초과" />
-            <Legend color={COLORS.incomplete} label="미인증" />
-            <span className="text-muted-foreground/80">둘 다면 미인증</span>
             <span className="ml-auto">
               {selected ? (
                 <>

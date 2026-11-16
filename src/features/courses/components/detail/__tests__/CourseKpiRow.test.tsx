@@ -53,7 +53,7 @@ describe('CourseKpiRow — 값', () => {
     expect(screen.getByText('마지막 순찰')).toBeInTheDocument()
     expect(screen.getByText('11.06 09:10')).toBeInTheDocument()
     expect(screen.getByText('47분')).toBeInTheDocument()
-    expect(screen.getByText('초과 1/60')).toBeInTheDocument()
+    expect(screen.getByText('시간초과 1/60')).toBeInTheDocument()
     expect(screen.getByText('96.7%')).toBeInTheDocument()
     expect(screen.getByText('174/180')).toBeInTheDocument()
   })
@@ -97,11 +97,11 @@ describe('CourseKpiRow — 값', () => {
     expect(filled[3].style.height).toBe('100%')
   })
 
-  it('기준을 넘긴 회차만 주황이다', () => {
+  it('🔄 시간초과 회차만 빨강이다 — 주황은 미인증 색 (D11)', () => {
     render(<CourseKpiRow stats={stats()} />)
 
     const bars = screen.getByRole('img', { name: '최근 2회 소요시간' })
-    expect(bars.querySelectorAll('.bg-warning')).toHaveLength(1)
+    expect(bars.querySelectorAll('.bg-danger')).toHaveLength(1)
     expect(bars.querySelectorAll('.bg-point')).toHaveLength(1)
   })
 

@@ -382,7 +382,7 @@ describe('ZoneDetailPage — 순찰 기록·KPI (B단)', () => {
     expect(workers).toHaveTextContent('근무자 없음')
   })
 
-  it('🔴 기록 행을 누르면 회차 상세 모달 — 지점별 결과 · 누락 · 상세 보기 · 이전/다음 (spec 074)', async () => {
+  it('🔴 기록 행을 누르면 회차 상세 모달 — 지점별 결과 · 미인증 · 상세 보기 · 이전/다음 (spec 074 · D11)', async () => {
     const user = userEvent.setup()
     renderPage('/zones/1')
 
@@ -393,7 +393,8 @@ describe('ZoneDetailPage — 순찰 기록·KPI (B단)', () => {
 
     const points = await screen.findByRole('list', { name: '지점별 결과' })
     expect(within(points).getAllByRole('listitem')).toHaveLength(3)
-    expect(within(points).getAllByText('누락').length).toBeGreaterThan(0)
+    expect(within(points).getAllByText('미인증').length).toBeGreaterThan(0)
+    expect(screen.queryByText(/누락/)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: '상세 보기' })).toHaveAttribute('href', '/patrol/zones/103')
 
     const before = screen.getByText(/^\d+ \/ 7/).textContent

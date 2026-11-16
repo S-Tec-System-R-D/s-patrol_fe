@@ -5,8 +5,9 @@ import { Link } from 'react-router-dom'
 import AppBadge from '@/components/app/AppBadge'
 import AppEmpty from '@/components/app/AppEmpty'
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
+import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
 import { HISTORY_DAYS } from '@/features/course-history/lib/historyRange'
-import { COURSE_HISTORY_STATUS, type CourseHistoryRow } from '@/features/course-history/types'
+import type { CourseHistoryRow } from '@/features/course-history/types'
 import { paths } from '@/router/paths'
 
 import { checkRatio } from '../../lib/courseRunStats'
@@ -17,9 +18,9 @@ import { checkRatio } from '../../lib/courseRunStats'
  * 🔴 **앞 10건만 · 나머지는 순찰이력 화면**(`전체 기록 N건 보기` → 코스 필터). KPI · 오른쪽 카드는 받은 회차
  * 전부(최대 100건)로 센다 — 표만 줄인다.
  * 🔴 **행을 누르면 회차 상세 모달**(`CourseRunDialog`) — 페이지가 모달을 들고 있다(`onSelect`).
- * 🔴 **인증은 막대 + `n/m`, 누락은 따로 센다** — 상태와 따로 적는다(`완료` 인데 `0/3` 인 행이 실존한다, 023 실측).
- *    하나도 못 찍었으면 `전체`.
- * 🔴 **초과는 상태 옆 뱃지**(기준 초과 열 삭제) — 예외만 뱃지(073 과 같은 규칙).
+ * 🔴 **인증은 막대 + `n/m`** — 상태와 따로 적는다(`완료` 인데 `0/3` 인 행이 실존한다, 023 실측).
+ * 🔄 `spec 079` D11 — 상태는 `진행중` / `완료`(공통 `courseResultBadge`) + `시간초과`(공통 `overtimeBadge`, 빨강)만.
+ *    `누락` 칸은 지웠다 — 지점별 미인증은 모달에서 본다(지점 상태가 회차 행을 침범하지 않는다).
  * 🔴 `userList` 빈 배열 · `actualElapsedTime` 시 단위(023 실측)는 그대로 받는다.
  */
 
@@ -39,33 +40,14 @@ const formatStartDt = (value: string): string => {
   return isValid(parsed) ? format(parsed, 'MM.dd HH:mm') : value
 }
 
-/** 상태 — 코스 사전(0 진행중 / 1 완료 / 2 미완료). `statusName` 이 오면 그것을 쓴다 */
-const StatusBadge = ({ row }: { row: CourseHistoryRow }) => {
-  const label =
-    row.statusName.trim() ||
-    (row.status === COURSE_HISTORY_STATUS.COMPLETED
-      ? '완료'
-      : row.status === COURSE_HISTORY_STATUS.IN_PROGRESS
-        ? '진행중'
-        : '미완료')
-  const variant =
-    row.status === COURSE_HISTORY_STATUS.COMPLETED
-      ? 'success'
-      : row.status === COURSE_HISTORY_STATUS.IN_PROGRESS
-        ? 'point'
-        : 'danger'
-  return <AppBadge variant={variant}>{label}</AppBadge>
-}
-
-const Missed = ({ row }: { row: CourseHistoryRow }) => {
-  const missed = Math.max(row.pointCount - row.checkedCount, 0)
-  // 🔴 진행 중인 회차는 아직 누락이 아니다 — 남은 지점일 뿐이다
-  if (missed === 0 || row.status === COURSE_HISTORY_STATUS.IN_PROGRESS) {
-    return <span className="text-muted-foreground">-</span>
-  }
+/** 상태 — 공통 규칙(진행중 / 완료) + 시간초과. 🔴 서버 `statusName`(`미완료`)을 그대로 쓰지 않는다(D11) */
+const StatusBadges = ({ row }: { row: CourseHistoryRow }) => {
+  const result = courseResultBadge(row.status)
+  const overtime = overtimeBadge(row.overtimeYn)
   return (
-    <span className="font-semibold text-warning-foreground">
-      {row.checkedCount === 0 ? '전체' : missed}
+    <span className="flex items-center gap-1">
+      <AppBadge variant={result.variant}>{result.label}</AppBadge>
+      {overtime && <AppBadge variant={overtime.variant}>{overtime.label}</AppBadge>}
     </span>
   )
 }
@@ -104,7 +86,6 @@ const CoursePatrolLog = ({ courseSeq, rows, totalCount, isPending, onSelect }: C
                   <th className="py-2 pr-3 text-left font-medium">시작</th>
                   <th className="py-2 pr-3 text-left font-medium">근무자</th>
                   <th className="py-2 pr-3 text-left font-medium">인증</th>
-                  <th className="py-2 pr-3 text-right font-medium">누락</th>
                   <th className="py-2 pr-3 text-right font-medium">소요</th>
                   <th className="py-2 text-left font-medium">상태</th>
                 </tr>
@@ -144,16 +125,10 @@ const CoursePatrolLog = ({ courseSeq, rows, totalCount, isPending, onSelect }: C
                         </span>
                       </td>
                       <td className="py-2.5 pr-3 text-right whitespace-nowrap tabular-nums">
-                        <Missed row={row} />
-                      </td>
-                      <td className="py-2.5 pr-3 text-right whitespace-nowrap tabular-nums">
                         {formatElapsed(row.actualElapsedTime)}
                       </td>
                       <td className="py-2.5 whitespace-nowrap">
-                        <span className="flex items-center gap-1">
-                          <StatusBadge row={row} />
-                          {row.overtimeYn && <AppBadge variant="warning">초과</AppBadge>}
-                        </span>
+                        <StatusBadges row={row} />
                       </td>
                     </tr>
                   )

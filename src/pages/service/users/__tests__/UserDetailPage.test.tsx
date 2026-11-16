@@ -276,7 +276,8 @@ describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
     expect(screen.getByText('8회')).toBeInTheDocument()
     expect(screen.getByText('86%')).toBeInTheDocument()
     expect(screen.getByText('31/36')).toBeInTheDocument()
-    expect(screen.getByText('4회')).toBeInTheDocument()
+    // 🔄 D11 — 회차 미인증 n회 → 미인증 지점 수(36 - 31)
+    expect(screen.getByText('미인증 지점').nextSibling).toHaveTextContent(/^5$/)
     expect(screen.getByText('2회')).toBeInTheDocument()
     expect(screen.getByText('3회')).toBeInTheDocument()
     // 🔴 D2 — 시안의 `누락` 은 쓰지 않는다

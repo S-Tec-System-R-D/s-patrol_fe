@@ -7,6 +7,7 @@ import AppDialog from '@/components/app/AppDialog'
 import AppIconButton from '@/components/app/AppIconButton'
 import { useCourseHistoryCheckDetails } from '@/features/course-history/hooks/useCourseHistoryDetail'
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
+import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
 import { COURSE_HISTORY_STATUS, POINT_HISTORY_STATUS, type CourseHistoryRow } from '@/features/course-history/types'
 import type { CheckDetailRow } from '@/features/course-history/types/checkDetail'
 import { toAuthMethodLabel } from '@/features/points/lib/authMethod'
@@ -25,6 +26,8 @@ import { checkRatio } from '../../lib/courseRunStats'
  * 🔄 사용자 검토(2026-11-13): 상태 뱃지는 제목 오른쪽 · 🔴 **순번 동그라미는 회색**(주황이면 `초과` 뱃지와 헷갈린다 —
  *    색은 결과 칸만 쓴다) · 🔴 **진행 중 회차의 남은 지점은 누락이 아니다**(기록 표의 `-` 와 같은 규칙) ·
  *    지점 기록 0건(회차는 있는데 행이 없다, 실존)은 빈 안내.
+ * 🔄 `spec 079` D11 — 머리 뱃지는 `진행중` / `완료` + `시간초과`(공통 규칙 · 빨강). 빠진 지점은 **지점 줄의 `미인증`**
+ *    (주황, D8)과 요약 `미인증 n` 으로만 적는다 — 예전 `누락`(빨강) · `미완료` 회차 뱃지는 지웠다.
  * 🔄 아래 줄(2026-11-13): `‹ ›` 아이콘 + `i / n` 은 왼쪽, `상세 보기` 는 오른쪽 끝 버튼 — 모달에서 나가는 유일한 동작이다.
  *    키보드 ← / → 로도 넘긴다(입력칸이 없는 모달이라 가로챌 것이 없다).
  */
@@ -56,13 +59,13 @@ const MethodChip = ({ code }: { code: number | null }) => {
   )
 }
 
-/** 지점 결과 — 완료는 인증 시각, 미완료는 `누락` */
+/** 지점 결과 — 완료는 인증 시각, 서버 미완료(3)는 `미인증`(D8 · 주황) */
 const PointResult = ({ row }: { row: CheckDetailRow }) => {
   if (row.status === POINT_HISTORY_STATUS.COMPLETED) {
     return <span className="tabular-nums text-foreground">{formatDt(row.checkDt, 'HH:mm') ?? '-'}</span>
   }
   if (row.status === POINT_HISTORY_STATUS.INCOMPLETE) {
-    return <span className="font-semibold text-danger">누락</span>
+    return <span className="font-semibold text-warning-foreground">미인증</span>
   }
   const label =
     row.status === POINT_HISTORY_STATUS.EXCLUDED
@@ -80,18 +83,16 @@ const Summary = ({ label, children }: { label: string; children: React.ReactNode
   </div>
 )
 
-const StatusBadges = ({ row }: { row: CourseHistoryRow }) => (
-  <span className="flex items-center gap-1">
-    {row.status === COURSE_HISTORY_STATUS.COMPLETED ? (
-      <AppBadge variant="success">완료</AppBadge>
-    ) : row.status === COURSE_HISTORY_STATUS.IN_PROGRESS ? (
-      <AppBadge variant="point">진행중</AppBadge>
-    ) : (
-      <AppBadge variant="danger">미완료</AppBadge>
-    )}
-    {row.overtimeYn && <AppBadge variant="warning">초과</AppBadge>}
-  </span>
-)
+const StatusBadges = ({ row }: { row: CourseHistoryRow }) => {
+  const result = courseResultBadge(row.status)
+  const overtime = overtimeBadge(row.overtimeYn)
+  return (
+    <span className="flex items-center gap-1">
+      <AppBadge variant={result.variant}>{result.label}</AppBadge>
+      {overtime && <AppBadge variant={overtime.variant}>{overtime.label}</AppBadge>}
+    </span>
+  )
+}
 
 const RunBody = ({ row, totalMin }: { row: CourseHistoryRow; totalMin: number }) => {
   const details = useCourseHistoryCheckDetails(row.historySeq)
@@ -126,7 +127,7 @@ const RunBody = ({ row, totalMin }: { row: CourseHistoryRow; totalMin: number })
               (inProgress ? (
                 <span className="text-muted-foreground">남은 지점 {remaining}</span>
               ) : (
-                <span className="font-semibold text-danger">누락 {remaining}</span>
+                <span className="font-semibold text-warning-foreground">미인증 {remaining}</span>
               ))}
           </span>
         </Summary>
