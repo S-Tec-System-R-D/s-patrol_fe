@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PhoneIcon, PlusIcon, TriangleAlertIcon, XIcon } from 'lucide-react'
+import { PlusIcon, TriangleAlertIcon, XIcon } from 'lucide-react'
 
 import AppButton from '@/components/app/AppButton'
 import AppDetailCard from '@/components/app/AppDetailCard'
@@ -12,7 +12,6 @@ import {
   useRemoveEmergency,
 } from '@/features/emergency/hooks/useEmergency'
 import {
-  contactCount,
   DAY_LABEL,
   isWeekend,
   registeredOn,
@@ -29,7 +28,7 @@ import { cn } from '@/lib/utils'
  *   **빈 요일은 주황 점선 `+ 담당자 지정`** — 비어 있는 날이 먼저 보여야 한다. 토 · 일 빨강(048 그대로).
  * - 🔄 048 의 **담당자 풀 · 예시 안내는 없앴다** — 서버에 사업장별 풀이 없다(사용자 결정 2026-10-28). 후보는 [추가] 모달의 전사 트리.
  * - 해제는 확인창 없이 바로(045 담당 그룹 해제와 같다) · 처리 중 그 칩 비활성.
- * - 머리 "담당자 N명" = 7요일 중 하루라도 등록된 사람(중복 제거).
+ * - 🔄 머리 "담당자 N명" 은 지웠다(`spec 080` D10, 사용자) — 요일마다 칸이 사람을 보여 준다.
  * - 아바타는 그리지 않는다(045 판단 그대로).
  */
 
@@ -42,17 +41,7 @@ const EmergencyContactCard = ({ siteSeq }: { siteSeq: number }) => {
   const removing = remove.isPending ? remove.variables : undefined
 
   return (
-    <AppDetailCard
-      icon={PhoneIcon}
-      title="비상연락망"
-      badge={
-        week.data && (
-          <span className="text-caption text-muted-foreground">
-            담당자 {contactCount(week.data)}명
-          </span>
-        )
-      }
-    >
+    <AppDetailCard title="비상연락망">
       <p className="text-caption text-muted-foreground">
         헬스체크 이상 감지 시 요일별로 지정된 담당자에게 알림이 발송됩니다.
       </p>

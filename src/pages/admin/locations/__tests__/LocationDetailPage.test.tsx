@@ -307,7 +307,7 @@ describe('LocationDetailPage — 비상연락망 (spec 057)', () => {
     return dialog
   }
 
-  it('7요일 · 담당자(이름 · 권한 · 연락처) · 담당자 N명(중복 제거) · 빈 요일 = 담당자 지정 · 담당자 풀 없음', async () => {
+  it('7요일 · 담당자(이름 · 권한 · 연락처) · 🔄 담당자 N명 없음(D10) · 빈 요일 = 담당자 지정 · 담당자 풀 없음', async () => {
     renderPage('/admin/locations/3')
     await screen.findByRole('list', { name: '요일별 담당자' })
     expect(week().getAllByRole('listitem', { name: /요일$/ }).map((day) => day.getAttribute('aria-label'))).toEqual([
@@ -324,7 +324,7 @@ describe('LocationDetailPage — 비상연락망 (spec 057)', () => {
     expect(dayCell('월').getByText('테스트')).toBeInTheDocument()
     expect(dayCell('월').getByText('010-0000-0006')).toBeInTheDocument()
     expect(dayCell('토').getByText('마스터')).toBeInTheDocument()
-    expect(screen.getByText('담당자 2명')).toBeInTheDocument()
+    expect(screen.queryByText(/담당자 \d+명/)).not.toBeInTheDocument()
     expect(screen.queryByText(/예시 화면/)).not.toBeInTheDocument()
     expect(screen.queryByRole('region', { name: '담당자 풀' })).not.toBeInTheDocument()
   })
@@ -387,6 +387,5 @@ describe('LocationDetailPage — 비상연락망 (spec 057)', () => {
 
     await waitFor(() => expect(dayCell('월').queryByText('테스트')).not.toBeInTheDocument())
     expect(calls).toEqual([{ name: 'DeleteEmergency', search: '?siteSeq=3&userSeq=6&day=MON' }])
-    expect(screen.getByText('담당자 1명')).toBeInTheDocument()
   })
 })

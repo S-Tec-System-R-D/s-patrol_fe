@@ -1,5 +1,3 @@
-import { InfoIcon } from 'lucide-react'
-
 import AppDetailCard from '@/components/app/AppDetailCard'
 import AppDetailRow from '@/components/app/AppDetailRow'
 import { formatPhone } from '../../lib/userFormat'
@@ -16,7 +14,7 @@ import type { UserDetail } from '../../types/user'
  * 않았다 → 배치관리 spec 으로 이월.
  */
 const UserInfoCard = ({ user }: { user: UserDetail }) => (
-  <AppDetailCard icon={InfoIcon} title="기본정보">
+  <AppDetailCard title="기본정보">
     <div className="flex flex-col">
       <AppDetailRow label="사번" value={user.loginId} />
       <AppDetailRow label="연락처" value={formatPhone(user.phone)} />

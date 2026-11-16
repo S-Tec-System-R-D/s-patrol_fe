@@ -1,4 +1,4 @@
-import { ChevronRightIcon, InfoIcon } from 'lucide-react'
+import { ChevronRightIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import AppDetailCard from '@/components/app/AppDetailCard'
@@ -26,7 +26,7 @@ interface SiteInfoCardProps {
 }
 
 const SiteInfoCard = ({ detail, childSites }: SiteInfoCardProps) => (
-  <AppDetailCard icon={InfoIcon} title="기본정보">
+  <AppDetailCard title="기본정보">
     <div className="flex flex-col">
       <AppDetailRow label="주소" value={detail.address || EMPTY} />
       <AppDetailRow label="대표 연락처" value={detail.tel ? formatPhone(detail.tel) : EMPTY} />

@@ -28,7 +28,6 @@ const SiteManagersCard = ({ managers, isPending, isError, onRetry }: SiteManager
 
   return (
     <AppDetailCard
-      icon={ShieldCheckIcon}
       title="담당 관리자"
       badge={
         !isPending &&

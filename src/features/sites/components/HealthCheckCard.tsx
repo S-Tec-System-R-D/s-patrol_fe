@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { HeartPulseIcon, SquarePenIcon } from 'lucide-react'
+import { SquarePenIcon } from 'lucide-react'
 
 import AppButton from '@/components/app/AppButton'
 import AppDialog from '@/components/app/AppDialog'
@@ -98,8 +98,7 @@ const HealthCheckCard = ({ detail }: { detail: SiteDetail }) => {
   return (
     <section aria-label="헬스체크" className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="flex items-center gap-1.5 text-panel-title font-bold text-foreground">
-          <HeartPulseIcon size={16} strokeWidth={1.75} aria-hidden />
+        <h2 className="text-panel-title font-bold text-foreground">
           헬스체크
         </h2>
         <div className="flex shrink-0 items-center gap-3">
