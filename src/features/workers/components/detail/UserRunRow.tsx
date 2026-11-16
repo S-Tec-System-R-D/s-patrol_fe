@@ -26,6 +26,7 @@ import { hasHandOver } from '../../lib/userPatrolRuns'
  * 근무자 상세의 **회차 한 줄** + 펼침 (`spec 079` T1307 · T1308, 시안 `개선안/근무자`).
  *
  * 🔴 접힌 줄에는 **교대 · 시간초과만** 적는다(시안) — 미완료 · 특이사항은 펼친 한 줄 요약에서.
+ * 🔴 교대 문장은 펼친 지점 목록의 점선 한 곳에만(D6) — 점선을 놓을 지점이 없는 교대만 요약 한 줄로.
  * 🔴 펼칠 때만 그 회차의 지점별 인증(`CheckDetails`) · 교대(`HandOvers`)를 부른다 — 목록에는 지점별 값이 없다(spec 제약 3).
  * 🔴 시간초과는 표시만(D3) — 목록에 코스 기준 시간이 없다.
  */
@@ -36,10 +37,9 @@ const authLabel = (authMethod: number | null) =>
   authMethod === AUTH_METHOD.QR ? 'QR' : authMethod === AUTH_METHOD.NFC ? 'NFC' : null
 
 /** 나를 기준으로 교대 문장을 만든다 — 나와 상관없는 교대는 `A → B` */
-const handOverText = (row: HandOverRow, me: number, withOrder: boolean) => {
-  const from = withOrder && row.nextOrderNo !== null ? `${row.nextOrderNo}번부터 ` : ''
-  if (row.fromUserSeq === me) return `${from}${row.toUserName}에게 교대`
-  if (row.toUserSeq === me) return withOrder ? `${row.fromUserName}에게서 ${from}교대받음` : `${row.fromUserName}에게서 교대받음`
+const handOverText = (row: HandOverRow, me: number) => {
+  if (row.fromUserSeq === me) return `${row.toUserName}에게 교대`
+  if (row.toUserSeq === me) return `${row.fromUserName}에게서 교대받음`
   return `${row.fromUserName} → ${row.toUserName} 교대`
 }
 
@@ -99,8 +99,10 @@ const RunDetail = ({ row, me }: { row: CourseHistoryRow; me: number }) => {
   const missed = list.filter((check) => check.status === POINT_HISTORY_STATUS.INCOMPLETE).length
   const memos = list.filter((check) => check.memos.length > 0).length
 
+  /* 점선을 놓을 지점이 없는 교대(nextOrderNo 없음 · 목록 밖)만 요약에 — 같은 교대를 두 번 적지 않는다 */
+  const loose = turns.filter((turn) => !list.some((check) => check.orderNo === turn.nextOrderNo))
   const summary = [
-    ...turns.map((turn) => ({ key: `h${turn.nextOrderNo}`, text: handOverText(turn, me, true), tone: 'text-point-foreground' })),
+    ...loose.map((turn, i) => ({ key: `h${i}`, text: handOverText(turn, me), tone: 'text-point-foreground' })),
     missed > 0 ? { key: 'm', text: `미완료 ${missed}`, tone: 'text-warning-foreground' } : null,
     memos > 0 ? { key: 's', text: `특이사항 ${memos}`, tone: 'text-warning-foreground' } : null,
     row.overtimeYn ? { key: 'o', text: '시간초과', tone: 'text-danger' } : null,
@@ -130,7 +132,7 @@ const RunDetail = ({ row, me }: { row: CourseHistoryRow; me: number }) => {
                 {turn && (
                   <li className="flex items-center gap-2 py-1 text-caption font-medium text-point-foreground">
                     <ArrowLeftRightIcon size={12} aria-hidden />
-                    {handOverText(turn, me, false)}
+                    {handOverText(turn, me)}
                     <span className="flex-1 border-t border-dashed border-point/40" aria-hidden />
                   </li>
                 )}
@@ -194,15 +196,7 @@ const UserRunRow = ({ row, userSeq, open, onToggle }: UserRunRowProps) => {
           <span className="min-w-0 flex-1 truncate text-body font-semibold">{row.courseName}</span>
         </span>
         <span className="ml-auto flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1">
-          <span className="flex shrink-0 items-center gap-2">
-            {/* 🔴 비율만 — 지점별 인증 여부는 목록에 없다. 색을 입히지 않는다(분모 미확인, api-spec 15) */}
-            <span className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted sm:block" aria-hidden>
-              <span className="block h-full rounded-full bg-point" style={{ width: `${ratio}%` }} />
-            </span>
-            <span className="text-caption tabular-nums text-muted-foreground">
-              인증 {row.checkedCount}/{row.pointCount}
-            </span>
-          </span>
+          {/* 🔴 있다 없다 하는 표시는 막대 왼쪽 — 오른쪽(막대 · 인증 · 소요)은 폭을 고정해 줄마다 세로로 맞춘다(D7) */}
           {hasHandOver(row) && (
             <span className="inline-flex shrink-0 items-center gap-1 text-caption font-medium text-point-foreground">
               <ArrowLeftRightIcon size={12} aria-hidden />
@@ -215,6 +209,15 @@ const UserRunRow = ({ row, userSeq, open, onToggle }: UserRunRowProps) => {
               시간초과
             </span>
           )}
+          <span className="flex shrink-0 items-center gap-2">
+            {/* 🔴 비율만 — 지점별 인증 여부는 목록에 없다. 색을 입히지 않는다(분모 미확인, api-spec 15) */}
+            <span className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted sm:block" aria-hidden>
+              <span className="block h-full rounded-full bg-point" style={{ width: `${ratio}%` }} />
+            </span>
+            <span className="w-[60px] text-caption tabular-nums text-muted-foreground">
+              인증 {row.checkedCount}/{row.pointCount}
+            </span>
+          </span>
           <span className="w-12 shrink-0 text-right text-caption tabular-nums text-muted-foreground">
             {formatElapsed(row.actualElapsedTime)}
           </span>

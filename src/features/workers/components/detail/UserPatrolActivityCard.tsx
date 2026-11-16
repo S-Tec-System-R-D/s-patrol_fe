@@ -13,7 +13,6 @@ import { useUserPatrolRuns } from '../../hooks/useUserPatrolRuns'
 import {
   formatRunDay,
   groupRunsByDay,
-  isIncompleteRun,
   RUN_DAYS,
   runDayBuckets,
   summarizeRuns,
@@ -231,18 +230,12 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
           ) : (
             <div className="flex flex-col">
               {groups.map((group) => {
-                const incomplete = group.rows.filter(isIncompleteRun).length
-                const overtime = group.rows.filter((row) => row.overtimeYn).length
                 return (
                   <section key={group.date} aria-label={`${formatRunDay(group.date)} 기록`} className="border-b border-border/60 last:border-0">
                     <div className="flex items-center gap-2 pt-3 pb-1">
-                      {/* 🔴 회차 수를 적지 않는다(D1) */}
+                      {/* 🔴 회차 수 · 예외 수를 적지 않는다(D1 · D5) — 예외는 아래 회차 줄에 있다 */}
                       <h4 className="text-body font-semibold tabular-nums">{formatRunDay(group.date)}</h4>
                       {group.date === todayKey && <span className="text-caption font-medium text-point">오늘</span>}
-                      <span className="ml-auto flex gap-2 text-caption font-medium">
-                        {incomplete > 0 && <span className="text-warning-foreground">미완료 포함 {incomplete}</span>}
-                        {overtime > 0 && <span className="text-danger">시간초과 {overtime}</span>}
-                      </span>
                     </div>
                     <ul className="flex flex-col gap-0.5 pb-2">
                       {group.rows.map((row) => (

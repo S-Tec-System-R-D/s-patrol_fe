@@ -291,6 +291,8 @@ describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
     expect(heads.length).toBe(6)
     heads.forEach((head) => expect(head.textContent).toMatch(/^\d{2}\.\d{2} \(.\)$/))
     expect(screen.getByText('오늘')).toBeInTheDocument()
+    // 🔴 D5 — 날짜 머리에 예외 수도 적지 않는다(회차 줄과 겹친다)
+    heads.forEach((head) => expect(head.parentElement).not.toHaveTextContent(/미완료 포함|시간초과/))
   })
 
   it('접힌 줄은 교대 · 시간초과만 — 미완료 · 특이사항은 펼쳐야 보인다', async () => {
@@ -318,13 +320,13 @@ describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
     expect(screen.getByRole('link', { name: /순찰 이력 상세 보기/ })).toHaveAttribute('href', '/patrol/zones/7901')
   })
 
-  it('🔴 교대받은 회차 — 요약 한 줄 · 교대 지점 앞 구분선 · 상대 몫 지점에 이름', async () => {
+  it('🔴 교대받은 회차 — 교대 지점 앞 구분선 한 곳만(D6) · 상대 몫 지점에 이름', async () => {
     const user = userEvent.setup()
     renderAt('104')
 
     await user.click(await findRun('09:37'))
-    expect(await screen.findByText('이서연에게서 3번부터 교대받음', {})).toBeInTheDocument()
-    expect(screen.getByText('이서연에게서 교대받음')).toBeInTheDocument()
+    expect(await screen.findAllByText('이서연에게서 교대받음', {})).toHaveLength(1)
+    expect(screen.queryByText(/번부터/)).not.toBeInTheDocument()
     expect(screen.getAllByText('이서연')).toHaveLength(2)
   })
 
