@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { CrosshairIcon } from 'lucide-react'
+import { CrosshairIcon, MapPinOffIcon } from 'lucide-react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 import { isValidCoord } from '@/features/courses/lib/courseCoords'
-import { AUTH_METHOD, type PointHistoryDetail } from '@/features/course-history/types'
+import { AUTH_METHOD, POINT_HISTORY_STATUS, type PointHistoryDetail } from '@/features/course-history/types'
 
 /**
  * 지점 인증 상세 — **인증 위치 지도**, 핀 1개 (`spec 037`, 사용자 요청 2026-10-20).
@@ -24,8 +24,9 @@ import { AUTH_METHOD, type PointHistoryDetail } from '@/features/course-history/
  *
  * 🔴 **좌표가 "인증 시점 위치" 라는 것을 화면이 말한다.** 지점이 등록된 자리가 아니라
  * **근무자가 인증을 찍은 위치**다(`PointHistoryDetail.gpsLat/gpsLng`). 실측상 **완료(4) 행만
- * 값이 있고 미완료(3) 45건은 전부 `null`** 이라, 미완료 인증에서는 **카드를 그리지 않는다**
- * (036 의 "좌표 0개면 지도 비표시" 규칙 승계 — 빈 회색 박스는 자리만 차지한다).
+ * 값이 있고 미완료(3) 45건은 전부 `null`** 이다. 왼쪽 본문 카드는 좌표가 없으면 그리지 않고,
+ * 🔄 오른쪽 패널(`bare`)은 **자리를 두고 `인증 시점 좌표가 없습니다` 를 적는다**(`spec 078` D5 —
+ * 지도가 통째로 사라지면 "어디 갔나" 가 된다).
  *
  * 🔴 **거리·오차를 판정하지 않는다.** 좌표는 **앱이 인증 시점에 채우는 값**이고 범위 밖
  * 값이 실재한다(B-33: `gpsLat: 123`). `spec 035` 가 P3 로 전달해 둔 상태다 — 등록 좌표와
@@ -109,15 +110,22 @@ const PointLocationMapCard = ({ detail, bare = false }: PointLocationMapCardProp
     }
   }, [hasCoord, lat, lng, label])
 
-  /**
-   * 🔴 **좌표가 없으면 카드를 아예 그리지 않는다.**
-   *
-   * 미완료 인증은 좌표가 **구조적으로 없다**(실측 45/45 `null`) — "표시할 좌표가 없습니다"
-   * 박스를 띄우면 **매번 뜨는 안내**가 되고, 그건 알려 주는 것이 아니라 자리만 먹는다.
-   * ⚠️ 036 은 코스에 좌표 없는 지점이 **섞여 있을 수 있어** 빈 상태를 띄웠다(그 수를 적어야
-   * 했다). 여기는 1건이라 있거나 없거나다.
-   */
-  if (!TILE_URL || !hasCoord) return null
+  if (!TILE_URL) return null
+
+  /* 🔄 `spec 078` D5 — 오른쪽 패널은 좌표가 없어도 지도 자리를 둔다. 왼쪽 본문은 페이지가 좌표 있을 때만 쓴다.
+     D7 — 건너뜀 · 미인증은 찍지 않아 위치가 없는 게 맞다 / 완료인데 없으면 값이 빠진 것 — 문구를 나눈다 */
+  if (!hasCoord) {
+    if (!bare) return null
+    const notChecked = detail.status !== POINT_HISTORY_STATUS.COMPLETED
+    return (
+      <div className="flex h-[260px] w-full flex-col items-center justify-center gap-2 bg-muted/50 text-muted-foreground">
+        <MapPinOffIcon size={20} aria-hidden />
+        <span className="text-caption">
+          {notChecked ? '인증하지 않아 위치가 없습니다' : '인증 시점 좌표가 없습니다'}
+        </span>
+      </div>
+    )
+  }
 
   if (bare) {
     return (

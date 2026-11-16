@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import AppBadge from '@/components/app/AppBadge'
 import AppDetailCard from '@/components/app/AppDetailCard'
 import AppDetailRow from '@/components/app/AppDetailRow'
-import type { PointHistoryDetail } from '@/features/course-history/types'
+import { POINT_HISTORY_STATUS, type PointHistoryDetail } from '@/features/course-history/types'
 import { paths } from '@/router/paths'
 
 /**
@@ -24,12 +24,12 @@ import { paths } from '@/router/paths'
  * 🔄 **`spec 078`: `구간` 행을 뺐다**(사용자 결정 2026-11-13). `pauseTime` 은 무엇을 센 시간인지
  * 확정되지 않았고(OQ-037-A) 시안은 `이전 지점에서 N분 이동` 으로 이름을 붙였는데 그 근거가 없다.
  * 시안의 `순찰 회차` 링크도 없다 — 회차 번호(`historySeq`)가 응답에 없다(037 US4).
- * 🔄 특이사항이 있으면 페이지가 `map` 으로 지도를 넘긴다 — 카드 맨 위에 틀 없이 붙는다(시안).
+ * 🔄 특이사항이 있으면(또는 좌표가 없으면) 페이지가 `map` 으로 지도 · 좌표 없음 자리를 넘긴다 — 카드 맨 위에 틀 없이 붙는다(시안 · D5).
  */
 
 interface PointHistoryInfoCardProps {
   detail: PointHistoryDetail
-  /** 카드 맨 위에 붙일 지도(특이사항이 있을 때만) */
+  /** 카드 맨 위에 붙일 지도(특이사항이 있거나 좌표가 없을 때) */
   map?: React.ReactNode
 }
 
@@ -41,6 +41,8 @@ const Dash = () => <span className="text-muted-foreground">-</span>
 
 const PointHistoryInfoCard = ({ detail, map }: PointHistoryInfoCardProps) => {
   const hasAuth = detail.authMethod !== null && detail.authMethodName !== UNKNOWN_AUTH
+  /* 🔄 `spec 078` D7 — 건너뜀 · 미인증은 수단이 **없는 게 맞다** → 이유를 적는다. 완료인데 없으면 값 누락이라 `-` */
+  const notChecked = detail.status !== POINT_HISTORY_STATUS.COMPLETED
 
   return (
     /* 🔴 지도를 받으면 카드 틀은 이 바깥 상자가 갖는다 — 안쪽 `AppDetailCard` 의 테두리 · 모서리를 지운다 */
@@ -68,7 +70,15 @@ const PointHistoryInfoCard = ({ detail, map }: PointHistoryInfoCardProps) => {
             />
             <AppDetailRow
               label="인증수단"
-              value={hasAuth ? <AppBadge variant="point">{detail.authMethodName}</AppBadge> : <Dash />}
+              value={
+                hasAuth ? (
+                  <AppBadge variant="point">{detail.authMethodName}</AppBadge>
+                ) : notChecked ? (
+                  <span className="text-muted-foreground">인증하지 않음</span>
+                ) : (
+                  <Dash />
+                )
+              }
             />
           </div>
         </AppDetailCard>

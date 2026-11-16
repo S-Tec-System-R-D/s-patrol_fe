@@ -183,7 +183,7 @@ test('순찰이력 — 지점 이력', async ({ page }) => {
  */
 test('순찰이력 — 지점 인증 상세', async ({ page }) => {
   await open(page, '/patrol/points/1060')
-  // 요청 2개(상세·최근 14일) + 지도 타일이 안착할 여유
+  // 상세 요청 + 지도 타일이 안착할 여유
   await page.waitForTimeout(900)
   await shoot(page, '현장/patrol-points--상세')
 })

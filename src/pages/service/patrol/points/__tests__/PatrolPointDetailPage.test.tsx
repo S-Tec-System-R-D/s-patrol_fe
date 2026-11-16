@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -163,14 +163,13 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     expect(screen.getByText('인증 위치')).toBeInTheDocument()
   })
 
-  it('이 지점 최근 14일 한 줄 — 지점 상세로 가는 길 (spec 078)', async () => {
+  it('🔴 최근 14일 한 줄을 두지 않는다 — 머리 `지점 상세` 와 겹친다 (spec 078 D6)', async () => {
     seed()
     renderPage()
 
-    const line = await screen.findByRole('region', { name: '이 지점 최근 14일' })
-    // 조회가 끝나야 숫자가 뜬다(그 전엔 자리표시)
-    await waitFor(() => expect(line).toHaveTextContent(/인증 \d+ · 건너뜀 \d+ · 특이사항 \d+/))
-    expect(screen.getByRole('link', { name: /지점 상세에서 보기/ })).toHaveAttribute('href', '/points/12')
+    await waitDetail()
+    expect(screen.queryByRole('region', { name: '이 지점 최근 14일' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /지점 상세에서 보기/ })).not.toBeInTheDocument()
   })
 
   it('🔴 authMethodName 의 "Unknown" 을 화면에 내보내지 않는다 (B-6)', async () => {
@@ -178,6 +177,17 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     renderPage()
 
     expect(await screen.findByText('건너뜀')).toBeInTheDocument()
+    expect(screen.queryByText('Unknown')).not.toBeInTheDocument()
+    // 🔄 spec 078 D7 — `-` 대신 이유를 적는다(찍지 않았으니 수단이 없는 게 맞다)
+    expect(screen.getByText('인증하지 않음')).toBeInTheDocument()
+  })
+
+  it('🔴 완료인데 수단이 없으면 `-` — 값이 빠진 것이라 `인증하지 않음` 이 아니다 (spec 078 D7)', async () => {
+    seed({ authMethod: null, authMethodName: 'Unknown' })
+    renderPage()
+
+    await waitDetail()
+    expect(screen.queryByText('인증하지 않음')).not.toBeInTheDocument()
     expect(screen.queryByText('Unknown')).not.toBeInTheDocument()
   })
 
@@ -278,12 +288,25 @@ describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
     expect(screen.queryByText('인증 위치')).not.toBeInTheDocument()
   })
 
-  it('🔴 좌표가 없으면 카드 자체가 없다 — 미완료 인증은 좌표가 구조적으로 null 이다', async () => {
-    seed({ status: 3, statusName: '미완료', gpsLat: null, gpsLng: null })
+  it('🔴 좌표가 없으면 오른쪽에 지도 자리를 두고 안내한다 — 메모는 왼쪽 그대로 (spec 078 D5)', async () => {
+    seed({ gpsLat: null, gpsLng: null })
     renderPage()
 
     await waitDetail()
-    // "표시할 좌표가 없습니다" 박스를 띄우면 미완료마다 뜨는 안내가 된다(자리만 먹는다)
+    expect(screen.getByText('인증 시점 좌표가 없습니다')).toBeInTheDocument()
+    expect(screen.getByText('3층 비상등 점멸')).toBeInTheDocument()
+    expect(screen.queryByText('인증 위치')).not.toBeInTheDocument()
+  })
+
+  it('🔴 메모 · 좌표 둘 다 없으면 왼쪽 순찰 기록 빈 상태 + 오른쪽 좌표 없음 (spec 078 D5)', async () => {
+    seed({ status: 3, statusName: '미완료', hasMemo: false, memoList: [], gpsLat: null, gpsLng: null })
+    renderPage()
+
+    await waitDetail()
+    expect(screen.getByText('남긴 기록이 없습니다')).toBeInTheDocument()
+    // 🔄 D7 — 건너뜀은 찍지 않아 위치가 없는 게 맞다(완료인데 좌표 없음과 문구를 나눈다)
+    expect(screen.getByText('인증하지 않아 위치가 없습니다')).toBeInTheDocument()
+    expect(screen.queryByText('인증 시점 좌표가 없습니다')).not.toBeInTheDocument()
     expect(screen.queryByText('인증 위치')).not.toBeInTheDocument()
   })
 
@@ -292,7 +315,8 @@ describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
     renderPage()
 
     await waitDetail()
-    expect(screen.queryByText('인증 위치')).not.toBeInTheDocument()
+    expect(screen.getByText('인증 시점 좌표가 없습니다')).toBeInTheDocument()
+    expect(screen.queryByText(/인증 시점 좌표 ·/)).not.toBeInTheDocument()
   })
 
   it('🔴 거리·오차를 판정하지 않는다 — 좌표는 앱이 채우는 값이다(spec 035 P3)', async () => {
