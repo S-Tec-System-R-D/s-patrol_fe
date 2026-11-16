@@ -27,7 +27,7 @@ export interface SiteDetail {
   healthCheckYn: boolean
   /** 체크 주기(분) */
   healthCheckInterval: number
-  /** 단위 미확인(OQ-044-B) */
+  /** 타임아웃(회) — 사용자 확인 2026-11-17(OQ-044-B 해소) */
   healthCheckTimeout: number
   healthCheckRetry: number | null
   healthCheckStartTime: string | null

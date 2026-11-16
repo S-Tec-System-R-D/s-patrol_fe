@@ -14,7 +14,7 @@ import { healthCheckSchema, type HealthCheckFormData } from './healthCheckSchema
  *
  * - 🔴 **필드 · 검증만** 한다. 제출(`useUpdateHealthCheck`)과 모달은 호출부 몫이다(`SiteForm` 규약).
  * - 🔴 **닫는 것은 호출부가 성공한 뒤에** — 서버 검증 실패(래퍼 · (D) 문자열)는 전역 토스트가 띄우고 입력값은 남는다.
- * - 타임아웃 단위는 미확인(OQ-044-B) — 라벨에 단위를 쓰지 않는다.
+ * - 타임아웃 단위는 **회**(사용자 확인 2026-11-17, OQ-044-B 해소) — 라벨 `타임아웃(회)`.
  * - 🔄 `spec 080` D8 — 시각 칸 4개(사용 시작 · 종료 · 예외 시작 · 종료)는 `AppTimeInput`(24시간 `HH:mm` · 키보드 + 시 · 분
  *   두 열 선택 창). 예외 1행 = 시작 칸 `~` 종료 칸 + 삭제 — 시작 · 종료는 **칸을 나눈다**(한 칸으로 묶은 D6 는 되돌렸다, 사용자).
  */
@@ -67,7 +67,7 @@ const HealthCheckForm = ({ defaultValues, pending, onSubmit, onCancel }: HealthC
           {...register('interval')}
         />
         <AppInput
-          label="타임아웃"
+          label="타임아웃(회)"
           aria-label="타임아웃"
           inputMode="numeric"
           required

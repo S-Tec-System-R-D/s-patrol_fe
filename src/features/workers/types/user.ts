@@ -4,8 +4,7 @@
  * `api-spec.md` §8·9 **실측 그대로 전량** 선언한다(안 쓰는 필드도 둔다 — CLAUDE.md B4).
  * mock 시절 `worker.ts`(사용자 상태·배치 이력 등 서버에 없는 필드)는 T618 에서 지웠다.
  *
- * 🔴 **현장관리자는 이 두 API 가 403 이다**(재실측 2026-10-21) — 서버 타입으로 만들어 두고
- * 권한 개방을 요청했다(B-41). 열리면 코드 변경 없이 동작한다.
+ * ✅ 현장관리자도 조회 · 추가 · 수정 · 삭제 모두 된다(B-41 해소 — 재실측 2026-11-17).
  */
 
 /** `GET User/W/sign/UserList` 의 행 */
@@ -31,8 +30,8 @@ export interface UserRow {
 /**
  * `GET User/W/sign/UserDetail?userId=`
  *
- * ⚠️ **목록에 있는 `codeSeq`·`codeName`·`createDt` 가 없다**(OQ-8) — 상세에서 권한·등록일을
- * 보여줄 수 없다. 목록에서 넘겨받아 채우지 않는다(주소로 바로 들어오면 없는 값이 된다).
+ * ⚠️ 목록에 있는 `codeSeq`·`createDt` 가 없다 — **요청하지 않는다**(사용자 결정 2026-11-17, OQ-8 종료).
+ * 권한은 `codeName` 으로 적고 등록일 행은 두지 않는다.
  */
 export interface UserDetail {
   userSeq: number
@@ -55,8 +54,7 @@ export interface UserDetail {
   imageName: string | null
   imageExt: string | null
   /**
-   * 권한 이름(`'현장 근무자'`). ✅ **2026-10-21 관측**(B-41 ② 일부) — `codeSeq`·`createDt` 는 아직 없다.
-   * 화면에는 아직 쓰지 않는다(OQ-041-C)
+   * 권한 이름(`'현장 근무자'`) — 기본정보 카드 `권한` 행(`spec 079` D12)
    */
   codeName: string
 }

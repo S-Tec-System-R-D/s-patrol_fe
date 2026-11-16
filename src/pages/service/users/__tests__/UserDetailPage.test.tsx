@@ -66,12 +66,14 @@ afterEach(() => {
 })
 
 describe('UserDetailPage — 정상', () => {
-  it('머리(이름 · 근무 상태 · 소속 사업장)와 기본정보(사번 · 연락처 · 소속) — 🔴 근무 상태 행은 없다 (spec 079)', async () => {
+  it('머리(이름 · 근무 상태 · 소속 사업장)와 기본정보(사번 · 권한 · 연락처 · 소속) —🔴 근무 상태 행은 없다 (spec 079)', async () => {
     renderAt('101')
 
     expect(await screen.findByRole('heading', { name: '김민준' })).toBeInTheDocument()
     expect(screen.getByText('기본정보')).toBeInTheDocument()
     expect(screen.getByText('240101')).toBeInTheDocument()
+    // 권한 행 — 상세 응답 `codeName` 그대로(D12)
+    expect(screen.getByText('현장 근무자')).toBeInTheDocument()
     // 머리 + 기본정보 소속 사업장
     expect(screen.getAllByText('강동 테크노타워')).toHaveLength(2)
     // 🔴 머리 뱃지와 같은 말이라 카드 행을 뺐다
@@ -102,11 +104,11 @@ describe('UserDetailPage — 정상', () => {
     expect(await screen.findByText('010-2345-6789')).toBeInTheDocument()
   })
 
-  it('🔴 권한 · 등록일이 없다 — 상세 응답에 없다(OQ-8)', async () => {
+  it('🔴 등록일 행이 없다 — 상세 응답에 없고 요청하지 않는다(OQ-8 종료) · 권한 행은 있다(D12)', async () => {
     renderAt('101')
 
     await screen.findByRole('heading', { name: '김민준' })
-    expect(screen.queryByText('권한')).not.toBeInTheDocument()
+    expect(screen.getByText('권한')).toBeInTheDocument()
     expect(screen.queryByText('등록일')).not.toBeInTheDocument()
     expect(screen.queryByText(/배치 변경 이력/)).not.toBeInTheDocument()
   })

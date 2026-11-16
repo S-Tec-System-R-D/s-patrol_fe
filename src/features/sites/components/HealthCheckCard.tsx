@@ -22,7 +22,7 @@ import type { SiteDetail } from '../types/site'
  *   보조(사용 구간 칠함 · 예외는 빈 틈 · 자정 넘김은 두 구간). 레퍼런스 = CCTV 녹화 일정(Reolink · Hikvision)의 하루 막대 —
  *   설정이 아니라 **읽기 전용**. 눈금은 0 · 6 · 12 · 18 · 24 만(공대 느낌을 줄인다, 사용자).
  * - 🔄 꺼지면 [수정] · `설정 수정` 을 **숨긴다**(사용자) — 켜는 길은 토글 하나(값이 비었으면 토글이 설정 창을 연다).
- * - 🔴 타임아웃은 **숫자만**(D1) — 단위 미확인(OQ-044-B). 시안의 `1회 무응답 허용` 은 쓰지 않는다.
+ * - 🔄 타임아웃 단위는 **회**(D11 — 사용자 확인 2026-11-17, OQ-044-B 해소). 시안의 `1회 무응답 허용` 문장은 쓰지 않는다.
  * - 🔴 **토글은 비옵티미스틱** — 표시는 늘 상세 응답(`healthCheckYn`)이다. 처리 중 잠그고, 실패하면 그대로 남는다.
  * - 🔴 **값이 빈 사업장을 켜면 저장하지 않고 설정 모달을 연다** — 서버가 저장된 값까지 합쳐 검사해 토글만으로는
  *   400 이다(실측). 모달 저장이 곧 켜기이고, 취소하면 꺼진 채다.
@@ -157,8 +157,7 @@ const HealthCheckCard = ({ detail }: { detail: SiteDetail }) => {
             </span>
           </Stat>
           <Stat label="체크 주기">{detail.healthCheckInterval > 0 ? `${detail.healthCheckInterval}분` : EMPTY}</Stat>
-          {/* 단위 미확인(OQ-044-B) — 숫자만(D1) */}
-          <Stat label="타임아웃">{detail.healthCheckTimeout > 0 ? String(detail.healthCheckTimeout) : EMPTY}</Stat>
+          <Stat label="타임아웃">{detail.healthCheckTimeout > 0 ? `${detail.healthCheckTimeout}회` : EMPTY}</Stat>
           <Stat label="반복 횟수">{detail.healthCheckRetry === null ? EMPTY : `${detail.healthCheckRetry}회`}</Stat>
         </dl>
         <DayBar detail={detail} />

@@ -68,14 +68,14 @@ afterEach(() => {
 })
 
 describe('HealthCheckCard — 표시', () => {
-  it('5칸(HH:mm · 예외 여러 줄 · 타임아웃은 숫자만) · 사용 뱃지', async () => {
+  it('5칸(HH:mm · 예외 여러 줄 · 타임아웃 단위 회) · 사용 뱃지', async () => {
     renderCard(4)
     await waitFor(() => expect(toggle()).toBeChecked())
     const values = within(screen.getByTestId('health-check-values'))
     expect(values.getByText('11:10 – 16:00')).toBeInTheDocument()
     expect(values.getByText('12:30 – 12:40')).toBeInTheDocument()
     expect(values.getByText('30분')).toBeInTheDocument()
-    expect(values.getByText('2')).toBeInTheDocument()
+    expect(values.getByText('2회')).toBeInTheDocument()
     expect(values.getByText('5회')).toBeInTheDocument()
   })
 
