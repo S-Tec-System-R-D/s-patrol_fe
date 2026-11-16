@@ -111,10 +111,9 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
       return (
         <div className="flex items-center gap-2">
           <div className="h-1.5 w-14 overflow-hidden rounded-full bg-muted">
-            {/* 🔴 **색을 입히지 않는다**(023 승계) — 지점 상태에 `순찰제외` 가 있어
-                분모를 확신할 수 없다. 100% 미달을 경고로 바꾸면 관리자가 **없는 문제**를
-                찾는다. 막대는 비율만 보여 주고 판정하지 않는다 */}
-            <div className="h-full rounded-full bg-foreground/40" style={{ width: `${ratio * 100}%` }} />
+            {/* 🔴 막대는 비율만 보여 주고 판정하지 않는다(023 승계 — 100% 미달을 경고색으로 바꾸지 않는다).
+                🔄 2026-11-16 회색 → 메인 포인트색 — 인증 비율 막대를 한 색으로(순찰제외는 미사용, OQ-18 종결) */}
+            <div className="h-full rounded-full bg-point" style={{ width: `${ratio * 100}%` }} />
           </div>
           <span className="tabular-nums text-caption text-muted-foreground">
             {checkedCount}/{pointCount}

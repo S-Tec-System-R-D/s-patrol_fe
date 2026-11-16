@@ -142,7 +142,8 @@ export const CourseWorkerCard = ({ rows, isPending }: CardProps) => {
                   </span>
                   <span aria-hidden className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
                     <span
-                      className="block h-full rounded-full bg-muted-foreground/60"
+                      /* 인증 비율 막대는 메인 포인트색 하나(2026-11-16 사용자 결정 — 색 수를 줄인다) */
+                      className="block h-full rounded-full bg-point"
                       style={{ width: `${(ratio ?? 0) * 100}%` }}
                     />
                   </span>

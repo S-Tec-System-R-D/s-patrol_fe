@@ -168,7 +168,8 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
           <span className="text-muted-foreground"> / {steps.length} 인증</span>
         </span>
         <span aria-hidden className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
-          <span className="block h-full rounded-full bg-success" style={{ width: `${rate}%` }} />
+          {/* 인증 비율 막대는 메인 포인트색 하나(2026-11-16 사용자 결정 — 색 수를 줄인다) */}
+          <span className="block h-full rounded-full bg-point" style={{ width: `${rate}%` }} />
         </span>
         {missed > 0 && <span className="text-caption font-semibold text-warning-foreground">미인증 {missed}</span>}
         {memoRows.length > 0 && (

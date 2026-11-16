@@ -128,7 +128,11 @@ const CourseRouteCard = ({ points, pins, missing, runs, onEdit }: CourseRouteCar
                       <>
                         <span aria-hidden className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted sm:block">
                           <span
-                            className={cn('block h-full rounded-full', weak ? 'bg-warning' : 'bg-muted-foreground/60')}
+                            /* 인증 비율은 메인 포인트색 · 가장 낮은 지점만 주황 · 비활성 지점은 회색(2026-11-16) */
+                            className={cn(
+                              'block h-full rounded-full',
+                              !point.useYn ? 'bg-muted-foreground/60' : weak ? 'bg-warning' : 'bg-point'
+                            )}
                             style={{ width: `${ratio * 100}%` }}
                           />
                         </span>

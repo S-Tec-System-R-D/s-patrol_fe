@@ -128,7 +128,8 @@ const FinishedRow = ({ row }: { row: CourseHistoryRow }) => {
             </AppBadge>
           )}
           <span aria-hidden className="hidden h-1.5 w-12 overflow-hidden rounded-full bg-muted sm:block">
-            <span className="block h-full rounded-full bg-success" style={{ width: `${ratio * 100}%` }} />
+            {/* 인증 비율 막대는 메인 포인트색 하나(2026-11-16 사용자 결정 — 색 수를 줄인다) */}
+            <span className="block h-full rounded-full bg-point" style={{ width: `${ratio * 100}%` }} />
           </span>
           <span className="w-9 text-right text-caption text-muted-foreground tabular-nums">
             <span className="font-semibold text-foreground">{row.checkedCount}</span>/{row.pointCount}
