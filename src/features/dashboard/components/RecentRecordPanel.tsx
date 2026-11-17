@@ -5,14 +5,12 @@ import { Link } from 'react-router-dom'
 
 import AppBadge from '@/components/app/AppBadge'
 import { cardBadge } from '@/components/app/AppBadge.variants'
-import { useCourseHistoryCheckDetails } from '@/features/course-history/hooks/useCourseHistoryDetail'
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
-import { overtimeBadge } from '@/features/course-history/lib/historyBadge'
-import type { CourseHistoryRow } from '@/features/course-history/types'
+import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
+import { COURSE_HISTORY_STATUS, type CourseHistoryRow } from '@/features/course-history/types'
 import { cn } from '@/lib/utils'
 import { paths } from '@/router/paths'
 
-import { missedPointNames } from '../lib/recentIssueCourses'
 import type { AreaState } from '../types'
 import AreaFallback from './AreaFallback'
 
@@ -22,14 +20,15 @@ import AreaFallback from './AreaFallback'
  *
  * 🔴 **탭 + 숫자 뱃지, `2xl` 부터 두 목록을 나란히** — xl 에서는 이 패널이 화면 절반 열이라 나란히 두면 좁다.
  * 숫자 뱃지가 없으면 숨은 쪽을 놓친다(분석 §4).
- * 🔴 **미완료는 회차 1건 = 1행 + 놓친 지점 이름**(분석 §2) — 이름은 행마다 인증 내역을 1번 부른다(최대 5건 · OQ-073-A).
+ * 🔴 **미완료 · 시간초과는 회차 1건 = 1행 · 회차 상태만**(`spec 079` D13) — 놓친 지점 이름 · `미인증 n` 은 적지 않는다
+ *    (회차를 열면 보인다). 행마다 인증 내역을 부르던 호출도 없어졌다.
  * 🔴 **종료된 순찰은 예외만 뱃지**(분석 §1-3) — 모든 행이 초록 `완료` 면 아무것도 말하지 않는다. 대신 미니 막대 + 인증 수.
  * 🔴 **처리할 목록이 아니라 최근 기록이다**(067 결정 유지) — 확인하면 사라지는 기능은 없다(DB 컬럼 없음).
  */
 
 type Tab = 'issue' | 'finished'
 
-const TAB_LABEL: Record<Tab, string> = { issue: '미인증 · 시간초과', finished: '종료된 순찰' }
+const TAB_LABEL: Record<Tab, string> = { issue: '미완료 · 시간초과', finished: '종료된 순찰' }
 
 const parse = (value: string | null): Date | null => {
   if (value === null) return null
@@ -56,11 +55,8 @@ const EndTime = ({ endDt }: { endDt: string | null }) => {
 }
 
 const IssueRow = ({ row }: { row: CourseHistoryRow }) => {
-  /* 🔄 D11 — 서버 상태가 아니라 미인증 지점이 있나로 본다 */
-  const missedCount = Math.max(row.pointCount - row.checkedCount, 0)
-  const incomplete = missedCount > 0
-  const details = useCourseHistoryCheckDetails(incomplete ? row.historySeq : null)
-  const missed = details.data ? missedPointNames(details.data) : []
+  /* 🔄 D13 — 회차 상태만 적는다(서버 `미완료` = 도중 종료). 지점 결과는 회차를 열어야 보인다 */
+  const result = row.status === COURSE_HISTORY_STATUS.INCOMPLETE ? courseResultBadge(row.status) : null
   const overtime = overtimeBadge(row.overtimeYn)
 
   return (
@@ -75,22 +71,14 @@ const IssueRow = ({ row }: { row: CourseHistoryRow }) => {
             <span className="font-semibold text-foreground">{row.courseName}</span>
             <span className="text-muted-foreground"> · {runnerLabel(row.userList)}</span>
           </span>
-          {missed.length > 0 ? (
-            <span className="truncate text-caption text-muted-foreground">
-              미인증 지점 <span className="text-warning-foreground">{missed.join(', ')}</span>
-            </span>
-          ) : (
-            !incomplete && (
-              <span className="text-caption text-muted-foreground tabular-nums">
-                소요 {formatElapsed(row.actualElapsedTime)}
-              </span>
-            )
-          )}
+          <span className="text-caption text-muted-foreground tabular-nums">
+            소요 {formatElapsed(row.actualElapsedTime)}
+          </span>
         </span>
         <span className="flex shrink-0 gap-1">
-          {incomplete && (
-            <AppBadge variant="warning" className={cardBadge}>
-              미인증 {missedCount}
+          {result && (
+            <AppBadge variant={result.variant} className={cardBadge}>
+              {result.label}
             </AppBadge>
           )}
           {overtime && (
@@ -155,7 +143,7 @@ const ListBody = ({
     <AreaFallback state={state} label="최근 기록" onRetry={onRetry} />
   ) : rows.length === 0 ? (
     <p className="py-6 text-center text-caption text-muted-foreground">
-      {tab === 'issue' ? '어제와 오늘 미인증 · 시간초과 순찰이 없습니다' : '오늘 종료된 순찰이 없습니다'}
+      {tab === 'issue' ? '어제와 오늘 미완료 · 시간초과 순찰이 없습니다' : '오늘 종료된 순찰이 없습니다'}
     </p>
   ) : (
     <ul className="flex flex-col" aria-label={TAB_LABEL[tab]}>

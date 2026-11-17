@@ -68,7 +68,7 @@ const ActiveCourseCard = ({ course, elapsedMin, handOvers = [] }: ActiveCourseCa
           </AppBadge>
         )}
         {skipped > 0 && (
-          <AppBadge variant="warning" className={cardBadge}>
+          <AppBadge variant="neutral" className={cardBadge}>
             미인증 {skipped}
           </AppBadge>
         )}

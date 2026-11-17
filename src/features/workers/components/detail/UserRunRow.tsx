@@ -12,6 +12,7 @@ import { formatElapsed } from '@/features/course-history/lib/elapsed'
 import { pointCheckBadge } from '@/features/course-history/lib/historyBadge'
 import {
   AUTH_METHOD,
+  COURSE_HISTORY_STATUS,
   POINT_HISTORY_STATUS,
   type CheckDetailRow,
   type CourseHistoryRow,
@@ -25,7 +26,8 @@ import { hasHandOver } from '../../lib/userPatrolRuns'
 /**
  * 근무자 상세의 **회차 한 줄** + 펼침 (`spec 079` T1307 · T1308, 시안 `개선안/근무자`).
  *
- * 🔴 접힌 줄에는 **교대 · 시간초과만** 적는다(시안) — 미인증 · 특이사항은 펼친 한 줄 요약에서.
+ * 🔴 접힌 줄에는 **미완료 · 교대 · 시간초과만** 적는다 — 회차 상태만이다(`spec 079` D13). 지점 `미인증` · 특이사항은
+ *    펼친 지점 목록이 말한다 — 목록 위 요약(`미인증 n` · `특이사항 n` · `시간초과`)은 뺐다(줄 · 목록과 같은 말을 두 번 한다, 사용자).
  * 🔴 교대 문장은 펼친 지점 목록의 점선 한 곳에만(D6) — 점선을 놓을 지점이 없는 교대만 요약 한 줄로.
  * 🔴 펼칠 때만 그 회차의 지점별 인증(`CheckDetails`) · 교대(`HandOvers`)를 부른다 — 목록에는 지점별 값이 없다(spec 제약 3).
  * 🔴 시간초과는 표시만(D3) — 목록에 코스 기준 시간이 없다.
@@ -96,26 +98,18 @@ const RunDetail = ({ row, me }: { row: CourseHistoryRow; me: number }) => {
 
   const list = [...checks.data].sort((a, b) => a.orderNo - b.orderNo)
   const turns = handOvers.data ?? []
-  const missed = list.filter((check) => check.status === POINT_HISTORY_STATUS.INCOMPLETE).length
-  const memos = list.filter((check) => check.memos.length > 0).length
 
-  /* 점선을 놓을 지점이 없는 교대(nextOrderNo 없음 · 목록 밖)만 요약에 — 같은 교대를 두 번 적지 않는다 */
+  /* 점선을 놓을 지점이 없는 교대(nextOrderNo 없음 · 목록 밖)만 목록 위 한 줄에 — 같은 교대를 두 번 적지 않는다 */
   const loose = turns.filter((turn) => !list.some((check) => check.orderNo === turn.nextOrderNo))
-  const summary = [
-    ...loose.map((turn, i) => ({ key: `h${i}`, text: handOverText(turn, me), tone: 'text-point-foreground' })),
-    missed > 0 ? { key: 'm', text: `미인증 ${missed}`, tone: 'text-warning-foreground' } : null,
-    memos > 0 ? { key: 's', text: `특이사항 ${memos}`, tone: 'text-warning-foreground' } : null,
-    row.overtimeYn ? { key: 'o', text: '시간초과', tone: 'text-danger' } : null,
-  ].filter((item): item is { key: string; text: string; tone: string } => item !== null)
 
   return (
     <div className="flex flex-col gap-2">
-      {summary.length > 0 && (
-        <p className="flex flex-wrap gap-x-2 text-caption font-medium">
-          {summary.map((item, i) => (
-            <span key={item.key} className={item.tone}>
+      {loose.length > 0 && (
+        <p className="flex flex-wrap gap-x-2 text-caption font-medium text-point-foreground">
+          {loose.map((turn, i) => (
+            <span key={i}>
               {i > 0 && <span className="mr-2 text-muted-foreground/60">·</span>}
-              {item.text}
+              {handOverText(turn, me)}
             </span>
           ))}
         </p>
@@ -170,6 +164,7 @@ const UserRunRow = ({ row, userSeq, open, onToggle }: UserRunRowProps) => {
     `${hhmm(row.startDt)} – ${end ?? '진행 중'}`,
     row.courseName,
     `인증 ${row.checkedCount}/${row.pointCount}`,
+    row.status === COURSE_HISTORY_STATUS.INCOMPLETE ? '미완료' : null,
     hasHandOver(row) ? '교대' : null,
     row.overtimeYn ? '시간초과' : null,
     formatElapsed(row.actualElapsedTime),
@@ -197,6 +192,9 @@ const UserRunRow = ({ row, userSeq, open, onToggle }: UserRunRowProps) => {
         </span>
         <span className="ml-auto flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1">
           {/* 🔴 있다 없다 하는 표시는 막대 왼쪽 — 오른쪽(막대 · 인증 · 소요)은 폭을 고정해 줄마다 세로로 맞춘다(D7) */}
+          {row.status === COURSE_HISTORY_STATUS.INCOMPLETE && (
+            <span className="shrink-0 text-caption font-medium text-muted-foreground">미완료</span>
+          )}
           {hasHandOver(row) && (
             <span className="inline-flex shrink-0 items-center gap-1 text-caption font-medium text-point-foreground">
               <ArrowLeftRightIcon size={12} aria-hidden />

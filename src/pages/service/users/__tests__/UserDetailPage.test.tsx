@@ -271,15 +271,15 @@ describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
     expect(screen.queryByRole('button', { name: /^10:00 –/ })).not.toBeInTheDocument()
   })
 
-  it('요약 5칸 — 시안과 같은 수', async () => {
+  it('요약 4칸 — 미인증 지점 칸은 없다 (D13)', async () => {
     renderAt('104')
 
     await runButtons()
     expect(screen.getByText('8회')).toBeInTheDocument()
     expect(screen.getByText('86%')).toBeInTheDocument()
     expect(screen.getByText('31/36')).toBeInTheDocument()
-    // 🔄 D11 — 회차 미인증 n회 → 미인증 지점 수(36 - 31)
-    expect(screen.getByText('미인증 지점').nextSibling).toHaveTextContent(/^5$/)
+    // 🔄 D13 — 요약에 지점 결과(미인증 지점 수)를 적지 않는다
+    expect(screen.queryByText('미인증 지점')).not.toBeInTheDocument()
     expect(screen.getByText('2회')).toBeInTheDocument()
     expect(screen.getByText('3회')).toBeInTheDocument()
     // 🔴 D2 — 시안의 `누락` 은 쓰지 않는다
@@ -319,8 +319,10 @@ describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
     // 요약 칸 · 범례도 `미인증`(D10)이라 펼친 패널 안에서만 찾는다
     const panel = within(document.getElementById(run.getAttribute('aria-controls') ?? '') as HTMLElement)
     expect(panel.getByText('사진 2')).toBeInTheDocument()
-    expect(panel.getByText('미인증 1')).toBeInTheDocument()
-    expect(panel.getByText('특이사항 1')).toBeInTheDocument()
+    // 🔄 D13 — 목록 위 요약(`미인증 n` · `특이사항 n` · `시간초과`)은 뺐다(회차 줄 · 지점 목록이 말한다)
+    expect(panel.queryByText('미인증 1')).not.toBeInTheDocument()
+    expect(panel.queryByText('특이사항 1')).not.toBeInTheDocument()
+    expect(panel.queryByText('시간초과')).not.toBeInTheDocument()
     // 3번 지점은 중간에 빠졌다 — 시각이 있어도 미인증(D8)
     expect(panel.getByText('미인증')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /순찰 이력 상세 보기/ })).toHaveAttribute('href', '/patrol/zones/7901')

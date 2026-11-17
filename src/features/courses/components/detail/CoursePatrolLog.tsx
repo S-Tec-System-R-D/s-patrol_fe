@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { ChevronRightIcon } from 'lucide-react'
+import { ArrowLeftRightIcon, ChevronRightIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import AppBadge from '@/components/app/AppBadge'
@@ -40,7 +40,7 @@ const formatStartDt = (value: string): string => {
   return isValid(parsed) ? format(parsed, 'MM.dd HH:mm') : value
 }
 
-/** 상태 — 공통 규칙(진행중 / 완료) + 시간초과. 🔴 서버 `statusName`(`미완료`)을 그대로 쓰지 않는다(D11) */
+/** 상태 — 공통 규칙(진행중 / 완료 / 미완료, D13) + 시간초과 + 교대(처리한 사람이 둘 이상). 라벨은 `statusName` 이 아니라 공통 함수 */
 const StatusBadges = ({ row }: { row: CourseHistoryRow }) => {
   const result = courseResultBadge(row.status)
   const overtime = overtimeBadge(row.overtimeYn)
@@ -48,6 +48,12 @@ const StatusBadges = ({ row }: { row: CourseHistoryRow }) => {
     <span className="flex items-center gap-1">
       <AppBadge variant={result.variant}>{result.label}</AppBadge>
       {overtime && <AppBadge variant={overtime.variant}>{overtime.label}</AppBadge>}
+      {row.userList.length > 1 && (
+        <span className="inline-flex items-center gap-1 text-caption font-medium text-point-foreground">
+          <ArrowLeftRightIcon size={12} aria-hidden />
+          교대
+        </span>
+      )}
     </span>
   )
 }

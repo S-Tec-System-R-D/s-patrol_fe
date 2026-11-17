@@ -10,11 +10,11 @@ import { courseResultBadge, overtimeBadge, pointCheckBadge } from '../historyBad
  */
 
 describe('courseResultBadge — 코스 사전(0·1·2)', () => {
-  it('🔴 0=진행중 / 1 · 2=완료 — 회차는 진행중 · 완료 두 가지다 (spec 079 D11)', () => {
+  it('🔴 0=진행중 / 1=완료 / 2=미완료 — 회차 상태는 서버 값 그대로 세 가지다 (spec 079 D13)', () => {
     expect(courseResultBadge(0)).toEqual({ variant: 'point', label: '진행중' })
     expect(courseResultBadge(1)).toEqual({ variant: 'success', label: '완료' })
-    // 서버 2(중간 종료)도 순찰은 끝난 것 — 빠진 지점은 지점의 미인증이 말한다
-    expect(courseResultBadge(2)).toEqual({ variant: 'success', label: '완료' })
+    // 서버 2 = 근무자가 도중에 순찰 종료를 누른 회차(백엔드 회신 2026-11-17) — 회차 자체의 상태 · 회색
+    expect(courseResultBadge(2)).toEqual({ variant: 'neutral', label: '미완료' })
   })
 
   it('🔴 사전에 없는 값은 빈 칸이 아니라 "알 수 없음" 이다', () => {
@@ -23,8 +23,8 @@ describe('courseResultBadge — 코스 사전(0·1·2)', () => {
   })
 
   it('🔴 지점 사전의 2(순찰제외)를 코스 사전으로 읽지 않는다', () => {
-    // 값이 겹치는데 뜻이 다르다 — 코스 2 는 (화면) 완료다(B-7 · D11)
-    expect(courseResultBadge(2).label).toBe('완료')
+    // 값이 겹치는데 뜻이 다르다 — 코스 2 는 미완료다(B-7 · D13)
+    expect(courseResultBadge(2).label).toBe('미완료')
     expect(courseResultBadge(2).label).not.toBe('순찰제외')
   })
 })
@@ -37,8 +37,8 @@ describe('pointCheckBadge — 지점 사전(0~4)', () => {
   })
 
   it('🔴 미완료(3)는 건너뜀 · 종료로 남은 지점 모두 미인증 하나다 (spec 079 D8)', () => {
-    // 서버는 둘을 같은 상태로 둔다(백엔드 확인 2026-11-16) — 화면도 한 이름 · 주황
-    expect(pointCheckBadge(3, false)).toEqual({ variant: 'warning', label: '미인증' })
+    // 서버는 둘을 같은 상태로 둔다(백엔드 확인 2026-11-16) — 화면도 한 이름 · 회색(D13)
+    expect(pointCheckBadge(3, false)).toEqual({ variant: 'neutral', label: '미인증' })
   })
 
   it('🔴 완료(4)는 hasMemo 로 이상없음 ↔ 순찰기록이 갈린다', () => {

@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { ChevronRightIcon, MessageSquareTextIcon } from 'lucide-react'
+import { ArrowLeftRightIcon, ChevronRightIcon, MessageSquareTextIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
@@ -134,6 +134,13 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
         <div className="flex flex-wrap items-center gap-1">
           <AppBadge variant={result.variant}>{result.label}</AppBadge>
           {overtime && <AppBadge variant={overtime.variant}>{overtime.label}</AppBadge>}
+          {/* 교대 — 처리한 사람이 둘 이상(`spec 079` D13: 회차 줄 어디서나 · 근무자 상세 줄과 같은 표시) */}
+          {row.original.userList.length > 1 && (
+            <span className="inline-flex items-center gap-1 text-caption font-medium text-point-foreground">
+              <ArrowLeftRightIcon size={12} aria-hidden />
+              교대
+            </span>
+          )}
         </div>
       )
     },

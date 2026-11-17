@@ -29,6 +29,8 @@ export const badgeVariants = cva(
         warning: 'bg-warning-bg text-warning-foreground',
         danger: 'bg-danger-bg text-danger-foreground',
         muted: 'bg-muted text-muted-foreground',
+        // 회차 `미완료` · 지점 `미인증`(`spec 079` D13) — 회색(#64748B) 계열. `muted`(대기 · 모름)보다 한 단계 진하다
+        neutral: 'bg-muted-foreground/15 text-foreground/75',
       },
     },
     defaultVariants: {

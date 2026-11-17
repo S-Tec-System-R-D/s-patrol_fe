@@ -10,7 +10,7 @@ import type { DashboardCoursePoint, PointStepStatus } from '../types'
  *
  * 🔴 **뱃지형이다**(사용자 결정 2026-10-30) — 번호 + 지점명을 상태색 뱃지 하나로 묶고 선을 바로 붙인다.
  * 번호 원 + 이름(숫자 스테퍼)과 나란히 비교해 골랐다: 선이 이어진 느낌이 강하고 색만으로 어디까지 갔는지 보인다.
- * 🔴 **색은 회차 상세 지도 핀과 같은 규칙이다** — 인증 `success` · 미인증(서버 3, `spec 079` D8) `warning` · 아직 안 감 회색.
+ * 🔴 **색은 회차 상세 지도 핀과 같은 규칙이다** — 인증 `success` · 미인증(서버 3, `spec 079` D8) 진한 회색(D13) · 아직 안 감 흰 바탕 + 옅은 회색.
  * 파랑(`point`)은 **다음 지점** 하나에만 쓴다(점선 뱃지 + 점선 연결).
  * 🔴 **가로 스크롤 대신 줄바꿈** — 지점이 12개여도 390px 에서 전부 읽힌다.
  */
@@ -18,7 +18,7 @@ import type { DashboardCoursePoint, PointStepStatus } from '../types'
 /** 뱃지 — 바탕은 상태의 옅은 색 */
 const pillStyles: Record<PointStepStatus, string> = {
   done: 'border-success/30 bg-success-bg text-success-foreground',
-  skipped: 'border-warning/40 bg-warning-bg text-warning-foreground',
+  skipped: 'border-muted-foreground/40 bg-muted-foreground/15 text-foreground/75',
   next: 'border-dashed border-point bg-point-bg font-semibold text-point-foreground',
   pending: 'border-border bg-card text-muted-foreground',
 }
@@ -26,7 +26,7 @@ const pillStyles: Record<PointStepStatus, string> = {
 /** 뱃지 안 번호 원 — 진한 색 */
 const numberStyles: Record<PointStepStatus, string> = {
   done: 'bg-success text-white',
-  skipped: 'bg-warning text-white',
+  skipped: 'bg-muted-foreground text-white',
   next: 'bg-point text-white',
   pending: 'bg-muted text-muted-foreground',
 }

@@ -120,16 +120,15 @@ describe('DashboardPage — API 연결', () => {
     expect(within(patrol).getAllByRole('term').map((el) => el.textContent)).toEqual([
       '진행 중',
       '완료',
-      '미인증 지점',
+      '미완료',
       '시간초과',
     ])
-    // 미인증 지점은 최근 회차(오늘 끝난 `오늘 중단 코스` 1/3)로 센다 — 받을 때까지 기다린다
     await waitFor(() =>
       expect(within(patrol).getAllByRole('definition').map((el) => el.textContent)).toEqual([
         '6건',
-        // 🔴 D11 — 서버 미완료(1)는 완료(12)에 더한다
-        '13건',
-        '2건',
+        // 🔴 D13 — 완료(12) · 미완료(1)는 서버 회차 수 그대로(더하지 않는다)
+        '12건',
+        '1건',
         '2건',
       ])
     )
@@ -213,20 +212,22 @@ describe('DashboardPage — API 연결', () => {
     expect(card).not.toHaveTextContent('/ 0분')
   })
 
-  it('최근 미인증 · 시간초과 — 회차 1건 = 1행 · 미인증 지점 이름 · 미인증 N / 시간초과 (D11)', async () => {
+  it('최근 미완료 · 시간초과 — 회차 1건 = 1행 · 회차 상태만(미인증 · 지점 이름 없음) (D13)', async () => {
     renderPage()
     const rows = await waitFor(() => {
-      const items = within(recentList('미인증 · 시간초과')).getAllByRole('listitem')
+      const items = within(recentList('미완료 · 시간초과')).getAllByRole('listitem')
       expect(items).toHaveLength(2)
       return items
     })
     expect(rows[0]).toHaveTextContent('오늘 중단 코스')
-    expect(rows[0]).toHaveTextContent('미인증 2')
-    await waitFor(() => expect(rows[0]).toHaveTextContent('미인증 지점 로비 1층, 지하 주차장 B1'))
+    expect(rows[0]).toHaveTextContent('미완료')
+    // 🔴 회차 줄에 지점 결과를 적지 않는다
+    expect(rows[0]).not.toHaveTextContent('미인증')
+    expect(rows[0]).not.toHaveTextContent('로비 1층')
     expect(within(rows[0]).getByRole('link')).toHaveAttribute('href', '/patrol/zones/191')
     expect(rows[1]).toHaveTextContent('오늘 초과 코스')
     expect(rows[1]).toHaveTextContent('시간초과')
-    expect(rows[1]).not.toHaveTextContent('미인증')
+    expect(rows[1]).not.toHaveTextContent('미완료')
   })
 
   it('배치 대기 — 배치 요청 · 복귀 요청 묶음 · 대기 일수 · 승인하면 목록에서 빠진다', async () => {
@@ -456,28 +457,27 @@ describe('ActiveCourseSection — 경과 1분 증가', () => {
 describe('DashboardKpiCard — 색', () => {
   const zero = { completedCount: 0, incompleteCount: 0, overtimeCount: 0, pendingAssignmentCount: 0, pendingReturnCount: 0 }
 
-  it('0 이면 회색 · 미인증 지점 주황 · 시간초과 빨강 · 모르면 - (D11)', () => {
+  it('0 이면 회색 · 색은 시간초과 빨강뿐 · 모르면 - (D13)', () => {
     const { container, unmount } = render(
-      <DashboardKpiCard summary={zero} activeCount={null} missedCount={null} state="ready" onRetry={() => {}} />
+      <DashboardKpiCard summary={zero} activeCount={null} state="ready" onRetry={() => {}} />
     )
     expect(container.querySelector('.text-danger-foreground')).toBeNull()
     expect(screen.getAllByRole('definition')[0]).toHaveTextContent('-건')
-    expect(screen.getAllByRole('definition')[2]).toHaveTextContent('-건')
     unmount()
 
     const filled = render(
       <DashboardKpiCard
         summary={{ ...zero, completedCount: 3, incompleteCount: 1, overtimeCount: 2 }}
         activeCount={2}
-        missedCount={5}
         state="ready"
         onRetry={() => {}}
       />
     )
-    // 🔴 회차는 진행중 / 완료뿐 — 서버 미완료(1)는 완료(3)에 더한다
-    expect(screen.getAllByRole('definition')[1]).toHaveTextContent('4건')
-    expect(screen.getByText('미인증 지점')).toBeInTheDocument()
-    expect(filled.container.querySelectorAll('.text-warning-foreground')).toHaveLength(1)
+    // 🔴 완료 · 미완료는 서버 회차 수 그대로 — 더하지 않는다
+    expect(screen.getAllByRole('definition')[1]).toHaveTextContent('3건')
+    expect(screen.getAllByRole('definition')[2]).toHaveTextContent('1건')
+    expect(screen.queryByText('미인증 지점')).not.toBeInTheDocument()
+    expect(filled.container.querySelectorAll('.text-warning-foreground')).toHaveLength(0)
     expect(filled.container.querySelectorAll('.text-danger-foreground')).toHaveLength(1)
   })
 })

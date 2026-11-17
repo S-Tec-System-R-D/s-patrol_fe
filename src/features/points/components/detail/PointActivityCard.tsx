@@ -42,7 +42,7 @@ const STATUS = { EXCLUDED: 2, MISSED: 3, DONE: 4 } as const
 /** 행 앞 아이콘 — 눈으로 훑는 용도. 이름은 오른쪽 뱃지가 말한다(`pointCheckBadge`) */
 const statusIcon = (row: PointHistoryRow) => {
   if (row.status === STATUS.DONE) return { icon: CheckCircle2Icon, className: 'text-success' }
-  if (row.status === STATUS.MISSED) return { icon: CircleAlertIcon, className: 'text-warning-foreground' }
+  if (row.status === STATUS.MISSED) return { icon: CircleAlertIcon, className: 'text-muted-foreground' }
   if (row.status === STATUS.EXCLUDED) return { icon: CircleMinusIcon, className: 'text-muted-foreground' }
   return { icon: CircleDashedIcon, className: 'text-muted-foreground' }
 }
@@ -70,7 +70,7 @@ const ChartTooltip = ({ active, payload }: { active?: boolean; payload?: { paylo
       <p className="text-muted-foreground">{format(parseISO(date), 'yyyy.MM.dd')}</p>
       <p className="font-semibold text-foreground">
         인증 {count}
-        {missed > 0 && <span className="text-warning-foreground"> · 미인증 {missed}</span>}
+        {missed > 0 && <span className="text-muted-foreground"> · 미인증 {missed}</span>}
       </p>
     </div>
   )
@@ -133,9 +133,7 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
               {summary.total}/{summary.attempted}
               {rate !== null && <span className="ml-1.5 text-caption font-semibold text-muted-foreground">{rate}%</span>}
             </Stat>
-            <Stat label="미인증">
-              <span className={cn(summary.missed > 0 && 'text-warning-foreground')}>{summary.missed}</span>
-            </Stat>
+            <Stat label="미인증">{summary.missed}</Stat>
             <Stat label="최근 순찰">{sinceLabel ?? '-'}</Stat>
           </div>
 
@@ -188,7 +186,7 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                   {summary.buckets.map((bucket) => (
                     <Cell
                       key={bucket.date}
-                      fill="var(--color-warning)"
+                      fill="var(--color-muted-foreground)"
                       fillOpacity={selected && selected !== bucket.date ? 0.25 : 1}
                     />
                   ))}
@@ -203,7 +201,7 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
               인증
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-xs bg-warning" aria-hidden />
+              <span className="size-2 rounded-xs bg-muted-foreground" aria-hidden />
               미인증
             </span>
             <span className="ml-auto">

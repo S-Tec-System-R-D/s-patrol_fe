@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import type { CheckDetailRow, CourseHistoryRow } from '@/features/course-history/types'
-import { missedPointNames, pickIssueCourses } from '@/features/dashboard/lib/recentIssueCourses'
+import type { CourseHistoryRow } from '@/features/course-history/types'
+import { pickIssueCourses } from '@/features/dashboard/lib/recentIssueCourses'
 
 const row = (
   historySeq: number,
@@ -30,35 +30,20 @@ const row = (
   userList: [],
 })
 
-const detail = (orderNo: number, pointName: string, status: number): CheckDetailRow => ({
-  detailSeq: orderNo,
-  pointSeq: orderNo,
-  pointName,
-  status,
-  checkDt: null,
-  authMethod: null,
-  checkUserSeq: null,
-  userName: null,
-  orderNo,
-  gpsLat: null,
-  gpsLng: null,
-  overtimeYn: null,
-  memos: [],
-})
 
 const seqs = (rows: CourseHistoryRow[]) => rows.map((item) => item.historySeq)
 
 describe('pickIssueCourses', () => {
-  it('🔄 미인증 지점 있음 · 시간초과만 — 서버 상태가 아니라 두 수로 본다 · 진행 중은 뺀다 (D11)', () => {
+  it('🔄 서버 미완료 · 시간초과만 — 회차 상태로만 본다 · 진행 중은 뺀다 (D13)', () => {
     const rows = [
       row(1, '2026-11-11T09:00:00'),
       row(2, '2026-11-11T09:10:00', { status: 2 }),
       row(3, '2026-11-11T09:20:00', { overtimeYn: true }),
       row(4, null, { status: 0, overtimeYn: true }),
-      // 서버 완료인데 지점이 빠진 회차도 들어온다(실측 41건 중 25건)
+      // 🔴 서버 완료인데 지점이 빠진 회차는 들어오지 않는다 — 지점 결과가 회차 줄에 섞이지 않는다
       row(5, '2026-11-11T09:30:00', { checkedCount: 4 }),
     ]
-    expect(seqs(pickIssueCourses(rows))).toEqual([5, 3, 2])
+    expect(seqs(pickIssueCourses(rows))).toEqual([3, 2])
   })
 
   it('종료 시각 역순 앞 5건 — 어제 끝난 회차도 들어간다', () => {
@@ -70,9 +55,3 @@ describe('pickIssueCourses', () => {
   })
 })
 
-describe('missedPointNames', () => {
-  it('미완료 지점만 순번 순 — 완료 · 순찰제외는 뺀다', () => {
-    const details = [detail(3, '옥상', 3), detail(1, '정문', 4), detail(2, '로비', 3), detail(4, '창고', 2)]
-    expect(missedPointNames(details)).toEqual(['로비', '옥상'])
-  })
-})

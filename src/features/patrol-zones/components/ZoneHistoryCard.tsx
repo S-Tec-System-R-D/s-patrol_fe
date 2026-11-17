@@ -1,4 +1,11 @@
-import { ChevronRightIcon, MapPinIcon, MessageSquareTextIcon, RouteIcon, UserIcon } from 'lucide-react'
+import {
+  ArrowLeftRightIcon,
+  ChevronRightIcon,
+  MapPinIcon,
+  MessageSquareTextIcon,
+  RouteIcon,
+  UserIcon,
+} from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import { cardBadge as CARD_BADGE } from '@/components/app/AppBadge.variants'
@@ -68,6 +75,13 @@ const ZoneHistoryCard = (row: CourseHistoryRow) => {
               <AppBadge variant={overtime.variant} className={CARD_BADGE}>
                 {overtime.label}
               </AppBadge>
+            )}
+            {/* 교대 — 처리한 사람이 둘 이상(표와 같은 표시) */}
+            {row.userList.length > 1 && (
+              <span className="inline-flex items-center gap-0.5 text-caption font-medium text-point-foreground">
+                <ArrowLeftRightIcon size={12} aria-hidden />
+                교대
+              </span>
             )}
             {row.hasMemo && (
               <MessageSquareTextIcon

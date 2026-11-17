@@ -23,10 +23,10 @@ import UserRunRow from './UserRunRow'
 /**
  * 근무자 상세 오른쪽 **순찰 기록** (`spec 079`, 시안 `개선안/근무자` — 지점 상세 B 패턴).
  *
- * 요약 5칸 → 14일 막대(누르면 그 날만 — URL `?day=`) → 날짜별 **회차** 줄(펼치면 지점별).
+ * 요약 4칸 → 14일 막대(누르면 그 날만 — URL `?day=`) → 날짜별 **회차** 줄(펼치면 지점별).
  * 🔴 날짜 머리 · 막대에 **회차 수 숫자를 적지 않는다**(D1) — 높이가 말한다. 합계는 요약 `순찰 n회` 하나.
- * 🔴 `미인증` 은 **지점에만** 쓴다(D11) — 요약 칸은 미인증 **지점 수**, 막대는 정상 / 시간초과 두 색. 회차 상태가
- *    지점 결과로 바뀌지 않는다. 시안의 `누락` · 서버 이름 `미완료` 는 쓰지 않는다(D2 · D10).
+ * 🔴 `미인증` 은 **지점에만** 쓴다 — 요약 · 회차 줄에는 적지 않는다(D13: 요약의 `미인증 지점` 칸을 뺐다). 막대는
+ *    정상 / 시간초과 두 색. 회차 줄의 `미완료` 는 서버 회차 상태(도중 종료)다.
  * 🔴 인증 %에 색을 입히지 않는다 — `pointCount` 가 순찰제외를 뺀 값인지 미확인(api-spec 15).
  */
 
@@ -164,9 +164,7 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
                 {summary.checked}/{summary.points}
               </span>
             </Stat>
-            <Stat label="미인증 지점">
-              <span className={cn(summary.missed > 0 && 'text-warning-foreground')}>{summary.missed}</span>
-            </Stat>
+
             <Stat label="특이사항">{summary.memo}회</Stat>
             <Stat label="시간초과">
               <span className={cn(summary.overtime > 0 && 'text-danger')}>{summary.overtime}회</span>

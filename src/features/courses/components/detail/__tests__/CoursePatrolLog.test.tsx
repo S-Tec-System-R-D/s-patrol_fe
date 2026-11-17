@@ -102,13 +102,13 @@ describe('CoursePatrolLog — 기본', () => {
   })
 })
 
-describe('CoursePatrolLog — 🔴 회차 상태 (spec 079 D11)', () => {
-  it('서버 미완료(2)도 완료 — 지점 미인증이 회차 상태를 침범하지 않는다 · 서버 이름을 그대로 쓰지 않는다', () => {
+describe('CoursePatrolLog — 🔴 회차 상태 (spec 079 D13)', () => {
+  it('서버 미완료(2)는 미완료 — 회차 자체의 상태(도중 종료)다 · 지점 미인증은 줄에 적지 않는다', () => {
     renderLog([row({ historySeq: 1, checkedCount: 1, status: 2, statusName: '미완료' })])
 
-    expect(screen.getByText('완료')).toBeInTheDocument()
+    expect(screen.getByText('미완료')).toBeInTheDocument()
     expect(screen.getByText('1/3')).toBeInTheDocument()
-    expect(screen.queryByText('미완료')).not.toBeInTheDocument()
+    expect(screen.queryByText('완료')).not.toBeInTheDocument()
     expect(screen.queryByText(/누락|미인증/)).not.toBeInTheDocument()
   })
 })
@@ -152,7 +152,7 @@ describe('CoursePatrolLog — 🔴 실측 예외', () => {
   it('🔴 statusName 이 비어도 공통 규칙으로 그린다 — 빈 뱃지를 그리지 않는다', () => {
     renderLog([row({ status: 2, statusName: '  ' })])
 
-    expect(screen.getByText('완료')).toBeInTheDocument()
+    expect(screen.getByText('미완료')).toBeInTheDocument()
   })
 })
 

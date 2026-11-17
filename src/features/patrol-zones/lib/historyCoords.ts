@@ -63,7 +63,7 @@ import { POINT_HISTORY_STATUS, type CheckDetailRow } from '@/features/course-his
  * | `kind` | 조건 | 뜻 | 시맨틱 | 형태 |
  * |---|---|---|---|---|
  * | `checked` | `status 4` | 인증이 찍혔다 | `success` | 채움 |
- * | `incomplete` | `status 3` + `checkDt` 있음 | **갔는데 인증이 안 됐다** | `warning` | 채움 |
+ * | `incomplete` | `status 3` + `checkDt` 있음 | **갔는데 인증이 안 됐다** | 진한 회색(`muted-foreground`, D13) | 채움 |
  * | `norecord` | 나머지 | 아무 기록이 없다 | `muted` | **빈 원** |
  *
  * 🔴 **`미완료` 를 한 종으로 묶지 않는다** — 실측 124건이 **79 / 45** 로 갈린다. 앞은 아예

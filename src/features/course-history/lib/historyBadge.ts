@@ -28,7 +28,7 @@ import { COURSE_HISTORY_STATUS, POINT_HISTORY_STATUS } from '../types'
  * 하고 어느 쪽이든 정보가 사라진다. 그래서 `overtimeBadge()` 가 **별 함수**다.
  */
 
-export type BadgeVariant = 'success' | 'point' | 'warning' | 'danger' | 'muted'
+export type BadgeVariant = 'success' | 'point' | 'warning' | 'danger' | 'muted' | 'neutral'
 
 export interface HistoryBadge {
   variant: BadgeVariant
@@ -41,9 +41,10 @@ const UNKNOWN: HistoryBadge = { variant: 'muted', label: '알 수 없음' }
 /**
  * 코스 순찰 결과 — **코스 사전**(`0` 진행중 / `1` 완료 / `2` 미완료).
  *
- * 🔄🔄 **`spec 079` D11(사용자 결정 2026-11-16): 회차는 `진행중` / `완료` 두 가지다.** 서버 `2`(중간 종료)도
- * 순찰 자체는 끝난 것이라 `완료` 로 적는다 — 빠진 지점은 **지점의 `미인증`** 이 말하고, 지점 상태가 회차
- * 상태를 침범하지 않는다. `시간초과` 는 따로 붙는 뱃지(아래 `overtimeBadge`).
+ * 🔄🔄 **`spec 079` D13(백엔드 회신 · 사용자 결정 2026-11-17): 회차는 `진행중` / `완료` / `미완료` 세 가지다.**
+ * 서버 `2` 는 지점 결과가 아니라 **근무자가 도중에 순찰 종료를 누른 회차**다(`1` 은 종료를 누르지 않고 끝까지 간 회차 —
+ * 지점을 전부 건너뛰어도 `완료`). 회차 자체의 상태라 그대로 적는다(D11 의 `2 → 완료` 를 되돌렸다). 회색(`neutral`).
+ * 🔴 **회차 줄에는 회차 상태만** — 지점의 `미인증` 은 회차를 열었을 때만 보인다. `시간초과` 는 따로 붙는 뱃지(아래 `overtimeBadge`).
  *
  * ⚠️ `0 진행중` 은 테스트 DB 에 **0건**이다(OQ-036-A) — `eventType=0` 으로만 조회되고
  * mock 시드로 검증한다. 사전은 백엔드 확인으로 확정돼 있다(OQ-5 해소).
@@ -56,8 +57,9 @@ export const courseResultBadge = (status: number): HistoryBadge => {
     case COURSE_HISTORY_STATUS.IN_PROGRESS:
       return { variant: 'point', label: '진행중' }
     case COURSE_HISTORY_STATUS.COMPLETED:
-    case COURSE_HISTORY_STATUS.INCOMPLETE:
       return { variant: 'success', label: '완료' }
+    case COURSE_HISTORY_STATUS.INCOMPLETE:
+      return { variant: 'neutral', label: '미완료' }
     default:
       return UNKNOWN
   }
@@ -69,7 +71,7 @@ export const courseResultBadge = (status: number): HistoryBadge => {
  * 🔴 **`미완료`(3) 는 화면 어디서나 `미인증` 하나다**(`spec 079` D8 사용자 결정 2026-11-16).
  * 서버는 건너뛴 지점(뒤 지점을 먼저 찍은 순간 `3` + `checkDt`)과 종료로 남은 지점(`3` · `checkDt` 없음)을
  * **같은 상태**로 둔다(백엔드 확인). 예전(077~)엔 `checkDt` 로 `건너뜀` · `미인증` 을 갈랐는데,
- * 둘 다 "인증이 남지 않았다" 이고 이름이 둘이면 헷갈린다 → 하나로. `warning`(주황).
+ * 둘 다 "인증이 남지 않았다" 이고 이름이 둘이면 헷갈린다 → 하나로. 🔄 색은 회색(`neutral`, D13 — 주황에서 바꿨다).
  *
  * 🔴 **`완료`(4) 는 `hasMemo` 로 갈린다** — 서버 `status` 에 그 구분이 없다. 메모가 있으면
  * `순찰기록`(정보성), 없으면 `이상없음`. `design-system.md` §1-1 의 5종 매핑이 이것이다.
@@ -88,7 +90,7 @@ export const pointCheckBadge = (status: number, hasMemo: boolean): HistoryBadge 
     case POINT_HISTORY_STATUS.EXCLUDED:
       return { variant: 'warning', label: '순찰제외' }
     case POINT_HISTORY_STATUS.INCOMPLETE:
-      return { variant: 'warning', label: '미인증' }
+      return { variant: 'neutral', label: '미인증' }
     case POINT_HISTORY_STATUS.COMPLETED:
       return hasMemo
         ? { variant: 'point', label: '순찰기록' }

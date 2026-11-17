@@ -316,10 +316,10 @@ const checkDetail = (
 const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
   // 정상 3건 — 간격 6분·7분
   101: [
-    checkDetail({ detailSeq: 1001, pointSeq: 60, orderNo: 1, pointName: '정문 입구' }),
+    checkDetail({ detailSeq: 1001, pointSeq: 1, orderNo: 1, pointName: '정문 입구' }),
     checkDetail({
       detailSeq: 1002,
-      pointSeq: 61,
+      pointSeq: 2,
       orderNo: 2,
       pointName: '로비 1층',
       checkDt: daysAgo(1, '02:51:00'),
@@ -327,7 +327,7 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
     }),
     checkDetail({
       detailSeq: 1003,
-      pointSeq: 62,
+      pointSeq: 3,
       orderNo: 3,
       pointName: '지하 주차장 B1',
       checkDt: daysAgo(1, '02:58:00'),
@@ -335,10 +335,10 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
   ],
   // 정상 3건 — 야간 회차(코스 상세 회차 모달 · `spec 074`)
   102: [
-    checkDetail({ detailSeq: 1021, pointSeq: 60, orderNo: 1, pointName: '정문 입구', checkDt: daysAgo(2, '23:10:00') }),
+    checkDetail({ detailSeq: 1021, pointSeq: 1, orderNo: 1, pointName: '정문 입구', checkDt: daysAgo(2, '23:10:00') }),
     checkDetail({
       detailSeq: 1022,
-      pointSeq: 61,
+      pointSeq: 2,
       orderNo: 2,
       pointName: '로비 1층',
       checkDt: daysAgo(2, '23:24:00'),
@@ -346,7 +346,7 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
     }),
     checkDetail({
       detailSeq: 1023,
-      pointSeq: 62,
+      pointSeq: 3,
       orderNo: 3,
       pointName: '지하 주차장 B1',
       checkDt: daysAgo(2, '23:47:00'),
@@ -356,14 +356,14 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
   103: [
     checkDetail({
       detailSeq: 1031,
-      pointSeq: 60,
+      pointSeq: 1,
       orderNo: 1,
       pointName: '정문 입구',
       checkDt: daysAgo(3, '02:45:00'),
     }),
     checkDetail({
       detailSeq: 1032,
-      pointSeq: 61,
+      pointSeq: 2,
       orderNo: 2,
       pointName: '로비 1층',
       checkDt: daysAgo(3, '02:52:00'),
@@ -375,7 +375,7 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
     }),
     checkDetail({
       detailSeq: 1033,
-      pointSeq: 62,
+      pointSeq: 3,
       orderNo: 3,
       pointName: '비상구 A',
       // 🔴 미인증 — 전부 null. 지도는 **지점 등록 좌표**로 회색 핀을 찍어야 한다
@@ -393,7 +393,7 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
   104: [
     checkDetail({
       detailSeq: 1041,
-      pointSeq: 60,
+      pointSeq: 1,
       orderNo: 1,
       pointName: 'B동 계단실',
       checkDt: daysAgo(5, '10:45:00'),
@@ -417,7 +417,7 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
     }),
     checkDetail({
       detailSeq: 1042,
-      pointSeq: 61,
+      pointSeq: 2,
       orderNo: 2,
       pointName: '외벽 남측',
       checkDt: daysAgo(5, '11:30:00'),
@@ -429,7 +429,7 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
     }),
     checkDetail({
       detailSeq: 1043,
-      pointSeq: 62,
+      pointSeq: 3,
       orderNo: 3,
       pointName: '옥상 출입문',
       checkDt: daysAgo(5, '12:58:00'),
@@ -439,14 +439,14 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
   107: [
     checkDetail({
       detailSeq: 1071,
-      pointSeq: 60,
+      pointSeq: 1,
       orderNo: 1,
       pointName: '정문 입구',
       checkDt: daysAgo(0, '09:15:00'),
     }),
     checkDetail({
       detailSeq: 1072,
-      pointSeq: 61,
+      pointSeq: 2,
       orderNo: 2,
       pointName: '로비 1층',
       status: 1,
@@ -460,7 +460,7 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
     }),
     checkDetail({
       detailSeq: 1073,
-      pointSeq: 62,
+      pointSeq: 3,
       orderNo: 3,
       pointName: '지하 주차장 B1',
       status: 0,
@@ -475,9 +475,9 @@ const checkDetailSeeds: Record<number, CheckDetailRow[]> = {
   ],
   // 오늘 중단 회차(191) — 3곳 중 1곳만 인증. 대시보드 `놓친 지점`(`spec 073`)
   191: [
-    checkDetail({ detailSeq: 1911, pointSeq: 60, orderNo: 1, pointName: '정문 입구', checkDt: todayAt('00:15:00') }),
-    checkDetail({ detailSeq: 1912, pointSeq: 61, orderNo: 2, pointName: '로비 1층', status: 3, checkDt: null, authMethod: null }),
-    checkDetail({ detailSeq: 1913, pointSeq: 62, orderNo: 3, pointName: '지하 주차장 B1', status: 3, checkDt: null, authMethod: null }),
+    checkDetail({ detailSeq: 1911, pointSeq: 1, orderNo: 1, pointName: '정문 입구', checkDt: todayAt('00:15:00') }),
+    checkDetail({ detailSeq: 1912, pointSeq: 2, orderNo: 2, pointName: '로비 1층', status: 3, checkDt: null, authMethod: null }),
+    checkDetail({ detailSeq: 1913, pointSeq: 3, orderNo: 3, pointName: '지하 주차장 B1', status: 3, checkDt: null, authMethod: null }),
   ],
 }
 

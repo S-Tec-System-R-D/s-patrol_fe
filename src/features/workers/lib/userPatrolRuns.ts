@@ -1,6 +1,6 @@
 import { format, parseISO, subDays } from 'date-fns'
 
-import { COURSE_HISTORY_STATUS, type CourseHistoryRow } from '@/features/course-history/types'
+import type { CourseHistoryRow } from '@/features/course-history/types'
 
 /**
  * 근무자 상세의 **회차 기록** 계산 (`spec 079`). 모두 순수 함수다.
@@ -14,12 +14,6 @@ export const RUN_DAYS = 14
 export const filterMyRuns = (rows: CourseHistoryRow[], userSeq: number): CourseHistoryRow[] =>
   rows.filter((row) => row.userList.some((user) => user.userSeq === userSeq))
 
-/**
- * 끝난 회차의 **미인증 지점 수**(D11 — 회차 상태가 아니라 지점 수로 센다). 진행 중은 아직 남은 지점이라 0.
- * ⚠️ `status` 가 아니라 두 수로 본다 — `완료` 인데 `checkedCount: 0` 인 행이 실재한다(api-spec 15)
- */
-export const missedPoints = (row: CourseHistoryRow): number =>
-  row.status === COURSE_HISTORY_STATUS.IN_PROGRESS ? 0 : Math.max(row.pointCount - row.checkedCount, 0)
 
 /** 교대 — 처리한 사람이 둘 이상. ⚠️ 교대받고 하나도 처리하지 않은 사람은 `userList` 에 없다(spec 제약 2) */
 export const hasHandOver = (row: CourseHistoryRow): boolean => row.userList.length > 1
@@ -28,8 +22,6 @@ export interface RunSummary {
   runs: number
   points: number
   checked: number
-  /** 미인증 지점 수 합(끝난 회차) */
-  missed: number
   memo: number
   overtime: number
 }
@@ -38,12 +30,12 @@ export const summarizeRuns = (rows: CourseHistoryRow[]): RunSummary => ({
   runs: rows.length,
   points: rows.reduce((sum, row) => sum + row.pointCount, 0),
   checked: rows.reduce((sum, row) => sum + row.checkedCount, 0),
-  missed: rows.reduce((sum, row) => sum + missedPoints(row), 0),
+
   memo: rows.filter((row) => row.hasMemo).length,
   overtime: rows.filter((row) => row.overtimeYn).length,
 })
 
-/** 막대 색 — 정상 / 시간초과 두 가지(D11 — 미인증은 회차 색이 아니다) */
+/** 막대 색 — 정상 / 시간초과 두 가지(미인증은 회차 색이 아니다) */
 export type RunKind = 'normal' | 'overtime'
 
 export const runKind = (row: CourseHistoryRow): RunKind => (row.overtimeYn ? 'overtime' : 'normal')

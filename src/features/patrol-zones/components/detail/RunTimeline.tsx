@@ -30,12 +30,17 @@ import CheckDetailMemo from './CheckDetailMemo'
  *   고르면 이 목록이 그 행으로 스크롤한다.
  */
 
-/** 순번 원 색 — 완료 녹색 · 미인증 주황 채움 · 다음 파랑 테두리 · 그 외 회색(대시보드 단계와 같은 색) */
+/**
+ * 순번 원 — **테두리 + 연한 배경**(사용자 결정 2026-11-17, 레퍼런스 Carbon progress indicator).
+ * 이 화면은 진행 표시가 아니라 기록이다 — 대부분인 인증 줄이 진한 채움으로 줄지어 서면 정상이 가장 눈에 띈다.
+ * 완료 연초록 · 미인증 연회색 · 다음 파랑 테두리 + 고리 · 대기 **점선** 빈 원(연회색과 흰 바탕만으로는 헷갈려 선 모양으로 가른다).
+ * ⚠️ 지도 핀은 채움 그대로다 — 지도 타일 위에서는 연한 색이 묻힌다(색은 같다).
+ */
 const chipClass = (step: RunStep): string => {
-  if (step.row.status === POINT_HISTORY_STATUS.COMPLETED) return 'border-success bg-success text-white'
-  if (step.row.status === POINT_HISTORY_STATUS.INCOMPLETE) return 'border-warning bg-warning text-white'
+  if (step.row.status === POINT_HISTORY_STATUS.COMPLETED) return 'border-success/50 bg-success-bg text-success-foreground'
+  if (step.row.status === POINT_HISTORY_STATUS.INCOMPLETE) return 'border-muted-foreground/50 bg-muted-foreground/15 text-foreground/75'
   if (step.isNext) return 'border-point bg-card text-point ring-4 ring-point/15'
-  return 'border-border bg-card text-muted-foreground'
+  return 'border-dashed border-muted-foreground/60 bg-card text-muted-foreground'
 }
 
 const hhmm = (value: string | null): string | null => (value ? value.slice(11, 16) : null)
@@ -171,7 +176,7 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
           {/* 인증 비율 막대는 메인 포인트색 하나(2026-11-16 사용자 결정 — 색 수를 줄인다) */}
           <span className="block h-full rounded-full bg-point" style={{ width: `${rate}%` }} />
         </span>
-        {missed > 0 && <span className="text-caption font-semibold text-warning-foreground">미인증 {missed}</span>}
+        {missed > 0 && <span className="text-caption font-semibold text-muted-foreground">미인증 {missed}</span>}
         {memoRows.length > 0 && (
           <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-caption text-muted-foreground">
             <input
@@ -216,7 +221,8 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
                     <div className="flex shrink-0 flex-col items-center">
                       <span
                         className={cn(
-                          'grid size-7 place-items-center rounded-full border-2 text-label font-bold leading-none tabular-nums',
+                          // 🔴 숫자 세로 중앙 — 가운데 정렬(grid)만으로는 Pretendard 숫자가 위로 뜬다. 줄 높이를 안쪽 높이에 맞춘다(`CourseStepper` 와 같은 방법)
+                          'block size-7 rounded-full border-2 text-center text-label font-bold leading-6 tabular-nums',
                           chipClass(step)
                         )}
                       >

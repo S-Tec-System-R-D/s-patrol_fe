@@ -59,13 +59,13 @@ const MethodChip = ({ code }: { code: number | null }) => {
   )
 }
 
-/** 지점 결과 — 완료는 인증 시각, 서버 미완료(3)는 `미인증`(D8 · 주황) */
+/** 지점 결과 — 완료는 인증 시각, 서버 미완료(3)는 `미인증`(D8 · 회색 D13) */
 const PointResult = ({ row }: { row: CheckDetailRow }) => {
   if (row.status === POINT_HISTORY_STATUS.COMPLETED) {
     return <span className="tabular-nums text-foreground">{formatDt(row.checkDt, 'HH:mm') ?? '-'}</span>
   }
   if (row.status === POINT_HISTORY_STATUS.INCOMPLETE) {
-    return <span className="font-semibold text-warning-foreground">미인증</span>
+    return <span className="font-semibold text-muted-foreground">미인증</span>
   }
   const label =
     row.status === POINT_HISTORY_STATUS.EXCLUDED
@@ -127,7 +127,7 @@ const RunBody = ({ row, totalMin }: { row: CourseHistoryRow; totalMin: number })
               (inProgress ? (
                 <span className="text-muted-foreground">남은 지점 {remaining}</span>
               ) : (
-                <span className="font-semibold text-warning-foreground">미인증 {remaining}</span>
+                <span className="font-semibold text-muted-foreground">미인증 {remaining}</span>
               ))}
           </span>
         </Summary>
