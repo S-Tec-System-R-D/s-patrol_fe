@@ -32,7 +32,6 @@ export interface RunSummary {
   points: number
   checked: number
   incomplete: number
-  memo: number
   overtime: number
 }
 
@@ -43,7 +42,7 @@ export const summarizeRuns = (rows: CourseHistoryRow[]): RunSummary => {
     points: ended.reduce((sum, row) => sum + row.pointCount, 0),
     checked: ended.reduce((sum, row) => sum + row.checkedCount, 0),
     incomplete: ended.filter(isIncomplete).length,
-    memo: ended.filter((row) => row.hasMemo).length,
+
     overtime: ended.filter((row) => row.overtimeYn).length,
   }
 }

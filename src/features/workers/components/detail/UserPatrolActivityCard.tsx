@@ -23,7 +23,7 @@ import UserRunRow from './UserRunRow'
 /**
  * 근무자 상세 오른쪽 **순찰 기록** (`spec 079`, 시안 `개선안/근무자` — 지점 상세 B 패턴).
  *
- * 요약 5칸 → 14일 막대(누르면 그 날만 — URL `?day=`) → 날짜별 **회차** 줄(펼치면 지점별).
+ * 요약 4칸(`순찰 · 미완료 · 시간초과 · 지점 인증` — 회차 숫자 먼저 · 특이사항은 회차 줄 표시로 옮겼다) → 14일 막대(누르면 그 날만 — URL `?day=`) → 날짜별 **회차** 줄(펼치면 지점별).
  * 🔴 **요약과 차트가 같은 숫자를 말한다**(D14) — 막대 높이의 합 = `순찰` · 회색 부분의 합 = `미완료` ·
  *    막대 위 빨간 숫자의 합 = `시간초과`. 상태(완료 / 미완료)는 막대 색, 시간초과는 막대 위 숫자 — 둘은 겹칠 수 있는
  *    다른 기준이라 한 막대에 색으로 함께 쌓지 않는다. 진행 중 회차는 요약 · 차트에서 뺀다(목록에는 나온다).
@@ -43,18 +43,48 @@ const OVERTIME_COLOR = 'var(--color-danger)'
 const ChartTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: RunDayBucket }[] }) => {
   if (!active || !payload?.length) return null
   const { date, completed, incomplete, overtime } = payload[0].payload
-  const parts = [
-    completed > 0 ? `완료 ${completed}` : null,
-    incomplete > 0 ? `미완료 ${incomplete}` : null,
-    overtime > 0 ? `시간초과 ${overtime}` : null,
-  ].filter(Boolean)
+  const total = completed + incomplete
+  // 🔴 **합계 → 내역(색 네모) → 구분선 → 시간초과**(사용자 결정 2026-11-17) — `완료 1 · 미완료 1 · 시간초과 1` 로 한 줄에
+  // 늘어놓으면 3회로 읽힌다. 시간초과는 완료 · 미완료에 겹쳐 세는 수라 색 네모 없이 구분선 아래에 따로 둔다
   return (
-    <div className="rounded-sm border border-border bg-card px-2.5 py-1.5 text-caption shadow-sm">
+    <div className="min-w-[120px] rounded-sm border border-border bg-card px-2.5 py-1.5 text-caption shadow-sm">
       <p className="text-muted-foreground">{format(parseISO(date), 'yyyy.MM.dd')}</p>
-      <p className="font-semibold text-foreground">{parts.length > 0 ? parts.join(' · ') : '기록 없음'}</p>
+      {total === 0 ? (
+        <p className="font-semibold text-foreground">기록 없음</p>
+      ) : (
+        <>
+          <TipRow label="순찰" value={`${total}회`} className="font-semibold text-foreground" />
+          {completed > 0 && <TipRow color={COLORS.completed} label="완료" value={completed} />}
+          {incomplete > 0 && <TipRow color={COLORS.incomplete} label="미완료" value={incomplete} />}
+          {overtime > 0 && (
+            <TipRow label="시간초과" value={overtime} className="mt-1 border-t border-border pt-1 font-medium text-danger" />
+          )}
+        </>
+      )}
     </div>
   )
 }
+
+/** 툴팁 한 줄 — 이름 왼쪽 · 값 오른쪽. `color` 가 있으면 막대 색 네모를 붙인다(막대를 이루는 값) */
+const TipRow = ({
+  label,
+  value,
+  color,
+  className,
+}: {
+  label: string
+  value: React.ReactNode
+  color?: string
+  className?: string
+}) => (
+  <p className={cn('flex items-center justify-between gap-4 text-muted-foreground', className)}>
+    <span className="inline-flex items-center gap-1.5">
+      {color && <span className="size-2 rounded-xs" style={{ background: color }} aria-hidden />}
+      {label}
+    </span>
+    <span className="tabular-nums">{value}</span>
+  </p>
+)
 
 const Stat = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="flex flex-col gap-0.5">
@@ -166,17 +196,16 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
         <>
           <div className="flex flex-wrap gap-x-10 gap-y-3">
             <Stat label="순찰">{summary.runs}회</Stat>
+            <Stat label="미완료">{summary.incomplete}회</Stat>
+            <Stat label="시간초과">
+              <span className={cn(summary.overtime > 0 && 'text-danger')}>{summary.overtime}회</span>
+            </Stat>
             <Stat label="지점 인증">
               {rate !== null ? `${rate}%` : '-'}
               <span className="ml-1.5 text-caption font-semibold text-muted-foreground">
                 {summary.checked}/{summary.points}
               </span>
             </Stat>
-            <Stat label="미완료">{summary.incomplete}회</Stat>
-            <Stat label="시간초과">
-              <span className={cn(summary.overtime > 0 && 'text-danger')}>{summary.overtime}회</span>
-            </Stat>
-            <Stat label="특이사항">{summary.memo}회</Stat>
           </div>
 
           {/* 🔴 막대를 누르면 recharts 가 차트 전체에 포커스 테두리를 그린다 — 막대 색 변화로 충분해 지운다(076) */}

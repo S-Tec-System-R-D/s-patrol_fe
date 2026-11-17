@@ -234,7 +234,8 @@ describe('UserDetailPage — 정상', () => {
 describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
   /**
    * 시드(`mocks/handlers/workerRuns.ts`): 104 박지우의 최근 14일 회차 8건 + 동명이인(110 박지우) 1건.
-   * 요약 — 순찰 8회 · 지점 인증 86% (31/36) · 미완료 1회(도중 종료 7902 — 미인증 지점이 있는 다른 회차는 완료) · 시간초과 3회 · 특이사항 2회.
+   * 요약 — 순찰 8회 · 미완료 1회(도중 종료 7902 — 미인증 지점이 있는 다른 회차는 완료) · 시간초과 3회 · 지점 인증 86% (31/36).
+   * 특이사항은 요약에 없다 — 회차 줄에 표시한다(7901 · 7904).
    */
   const HISTORY_PATH = '/api/v1/History/W/sign/GetCourseHistory'
   const runButtons = () => screen.findAllByRole('button', { name: /^\d{2}:\d{2} –/ })
@@ -271,7 +272,7 @@ describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
     expect(screen.queryByRole('button', { name: /^10:00 –/ })).not.toBeInTheDocument()
   })
 
-  it('요약 5칸 — 미완료 칸이 있고(D14) 미인증 지점 칸은 없다 (D13)', async () => {
+  it('요약 4칸 — 미완료 칸이 있고(D14) 미인증 지점 · 특이사항 칸은 없다', async () => {
     renderAt('104')
 
     await runButtons()
@@ -281,8 +282,9 @@ describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
     // 🔄 D13 — 요약에 지점 결과(미인증 지점 수)를 적지 않는다
     expect(screen.queryByText('미인증 지점')).not.toBeInTheDocument()
     expect(screen.getByText('1회')).toBeInTheDocument()
-    expect(screen.getByText('2회')).toBeInTheDocument()
     expect(screen.getByText('3회')).toBeInTheDocument()
+    // 🔄 D14 — 특이사항 칸은 뺐다(회차 줄 표시로 옮김)
+    expect(screen.queryByText('2회')).not.toBeInTheDocument()
     // 🔴 D2 — 시안의 `누락` 은 쓰지 않는다
     expect(screen.queryByText(/누락/)).not.toBeInTheDocument()
   })
@@ -299,7 +301,7 @@ describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
     heads.forEach((head) => expect(head.parentElement).not.toHaveTextContent(/미인증|시간초과/))
   })
 
-  it('접힌 줄은 교대 · 시간초과만 — 미인증 · 특이사항은 펼쳐야 보인다', async () => {
+  it('접힌 줄은 교대 · 특이사항 · 시간초과 — 미인증은 펼쳐야 보인다', async () => {
     renderAt('104')
 
     const row = await findRun('14:28')
@@ -307,6 +309,9 @@ describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
     expect(row).toHaveTextContent('인증 3/4')
     expect(row).toHaveTextContent('시간초과')
     expect(row).not.toHaveTextContent('미인증')
+    // 🔄 D14 — 특이사항이 있는 회차 줄에만 표시(7901 · 7904)
+    expect(row).toHaveTextContent('특이사항')
+    expect(screen.getAllByRole('button', { name: /특이사항/ })).toHaveLength(2)
     expect(screen.getAllByRole('button', { name: /교대/ })).toHaveLength(2)
   })
 

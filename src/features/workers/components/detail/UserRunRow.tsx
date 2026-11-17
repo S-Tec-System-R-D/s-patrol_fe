@@ -26,8 +26,10 @@ import { hasHandOver } from '../../lib/userPatrolRuns'
 /**
  * 근무자 상세의 **회차 한 줄** + 펼침 (`spec 079` T1307 · T1308, 시안 `개선안/근무자`).
  *
- * 🔴 접힌 줄에는 **미완료 · 교대 · 시간초과만** 적는다 — 회차 상태만이다(`spec 079` D13). 지점 `미인증` · 특이사항은
+ * 🔴 접힌 줄에는 **미완료 · 교대 · 특이사항 · 시간초과만** 적는다 — 회차의 것만이다(`spec 079` D13). 지점 `미인증` 은
  *    펼친 지점 목록이 말한다 — 목록 위 요약(`미인증 n` · `특이사항 n` · `시간초과`)은 뺐다(줄 · 목록과 같은 말을 두 번 한다, 사용자).
+ * 🔄 `특이사항` 표시(D14) — 요약의 `특이사항` 칸을 빼면서 줄로 옮겼다(안 그러면 줄을 하나씩 펼쳐야 안다).
+ *    있는지만 적는다 — 목록 응답에는 `hasMemo` 뿐이고 건수가 없다.
  * 🔴 교대 문장은 펼친 지점 목록의 점선 한 곳에만(D6) — 점선을 놓을 지점이 없는 교대만 요약 한 줄로.
  * 🔴 펼칠 때만 그 회차의 지점별 인증(`CheckDetails`) · 교대(`HandOvers`)를 부른다 — 목록에는 지점별 값이 없다(spec 제약 3).
  * 🔴 시간초과는 표시만(D3) — 목록에 코스 기준 시간이 없다.
@@ -166,6 +168,7 @@ const UserRunRow = ({ row, userSeq, open, onToggle }: UserRunRowProps) => {
     `인증 ${row.checkedCount}/${row.pointCount}`,
     row.status === COURSE_HISTORY_STATUS.INCOMPLETE ? '미완료' : null,
     hasHandOver(row) ? '교대' : null,
+    row.hasMemo ? '특이사항' : null,
     row.overtimeYn ? '시간초과' : null,
     formatElapsed(row.actualElapsedTime),
   ]
@@ -199,6 +202,12 @@ const UserRunRow = ({ row, userSeq, open, onToggle }: UserRunRowProps) => {
             <span className="inline-flex shrink-0 items-center gap-1 text-caption font-medium text-point-foreground">
               <ArrowLeftRightIcon size={12} aria-hidden />
               교대
+            </span>
+          )}
+          {row.hasMemo && (
+            <span className="inline-flex shrink-0 items-center gap-1 text-caption font-medium text-warning-foreground">
+              <StickyNoteIcon size={12} aria-hidden />
+              특이사항
             </span>
           )}
           {row.overtimeYn && (

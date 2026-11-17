@@ -39,19 +39,19 @@ describe('userPatrolRuns', () => {
   })
 
 
-  it('요약 — 회차 · 지점 인증 두 수 · 미완료 · 특이사항 · 시간초과 (미인증 지점 수는 세지 않는다 D13)', () => {
+  it('요약 — 회차 · 지점 인증 두 수 · 미완료 · 시간초과 (미인증 지점 수 · 특이사항은 세지 않는다)', () => {
     const summary = summarizeRuns([
       run({ checkedCount: 3, hasMemo: true }),
       run({ overtimeYn: true }),
       run({ pointCount: 5, checkedCount: 5 }),
       run({ status: 2, overtimeYn: true, checkedCount: 2 }),
     ])
-    expect(summary).toEqual({ runs: 4, points: 17, checked: 14, incomplete: 1, memo: 1, overtime: 2 })
+    expect(summary).toEqual({ runs: 4, points: 17, checked: 14, incomplete: 1, overtime: 2 })
   })
 
   it('🔴 요약 · 차트는 끝난 회차만 — 진행 중은 세지 않는다 (D14)', () => {
     const rows = [run(), run({ status: 0, endDt: null, checkedCount: 1, overtimeYn: true, hasMemo: true })]
-    expect(summarizeRuns(rows)).toEqual({ runs: 1, points: 4, checked: 4, incomplete: 0, memo: 0, overtime: 0 })
+    expect(summarizeRuns(rows)).toEqual({ runs: 1, points: 4, checked: 4, incomplete: 0, overtime: 0 })
     expect(runDayBuckets(rows, new Date(2026, 10, 16))[13]).toEqual({
       date: '2026-11-16',
       completed: 1,
