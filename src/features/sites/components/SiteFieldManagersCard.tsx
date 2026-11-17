@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { EllipsisIcon, KeyRoundIcon, PlusIcon, SquarePenIcon, Trash2Icon, TriangleAlertIcon, UserCogIcon } from 'lucide-react'
+import {
+  EllipsisVerticalIcon,
+  KeyRoundIcon,
+  PlusIcon,
+  SquarePenIcon,
+  Trash2Icon,
+  TriangleAlertIcon,
+  UserCogIcon,
+} from 'lucide-react'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
 import AppButton from '@/components/app/AppButton'
@@ -127,7 +135,13 @@ const SiteFieldManagersCard = ({ siteSeq, siteName }: SiteFieldManagersCardProps
               {/* modal={false} — 메뉴 항목에서 모달을 열 때 body pointer-events 가 남는 Radix 문제 회피(079 와 같다) */}
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label={`${user.userName} 메뉴`} className="shrink-0" />
+                  {/* 줄 안의 메뉴 — 관리그룹 편집과 같은 모양(세로 점 · 테두리 없음, 사용자 2026-11-17) */}
+                  <AppIconButton
+                    icon={EllipsisVerticalIcon}
+                    iconSize={14}
+                    aria-label={`${user.userName} 메뉴`}
+                    className="shrink-0 border-0 p-1.5"
+                  />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-auto">
                   <DropdownMenuItem className="cursor-pointer" onSelect={() => setAction({ kind: 'edit', user })}>

@@ -7,3 +7,4 @@
 - [x] T1338 현장관리자 카드 in src/features/sites/components/SiteFieldManagersCard.tsx — 목록(`UserList?codeSeq=6`) · `⋯`(정보 수정 · 비밀번호 변경 · 삭제) · 빈 상태 · 실패 + 다시 시도
 - [x] T1339 사업장 상세 왼쪽 열 담당 관리자 아래에 배치 in src/pages/admin/locations/LocationDetailPage.tsx
 - [x] T1340 테스트(카드 6건) · e2e S9(추가 → 삭제) · verify · test · 캡처 · screens · roadmap
+- [x] T1341 줄 메뉴 버튼을 세로 점(⋮) · 테두리 없음으로 — 관리그룹 편집 창의 줄 메뉴와 같은 모양(사용자 2026-11-17) in src/features/sites/components/SiteFieldManagersCard.tsx
