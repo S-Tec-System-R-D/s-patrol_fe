@@ -1,6 +1,7 @@
 import {
   ArrowLeftRightIcon,
   ChevronRightIcon,
+  ClockIcon,
   MapPinIcon,
   MessageSquareTextIcon,
   RouteIcon,
@@ -9,7 +10,7 @@ import {
 
 import AppBadge from '@/components/app/AppBadge'
 import { cardBadge as CARD_BADGE } from '@/components/app/AppBadge.variants'
-import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
+import { courseResultBadge } from '@/features/course-history/lib/historyBadge'
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
 import type { CourseHistoryRow } from '@/features/course-history/types'
 
@@ -52,7 +53,6 @@ const runnerLabel = (userList: CourseHistoryRow['userList']): string => {
 
 const ZoneHistoryCard = (row: CourseHistoryRow) => {
   const result = courseResultBadge(row.status)
-  const overtime = overtimeBadge(row.overtimeYn)
 
   return (
     <div className="flex items-center gap-3">
@@ -70,19 +70,7 @@ const ZoneHistoryCard = (row: CourseHistoryRow) => {
             <AppBadge variant={result.variant} className={CARD_BADGE}>
               {result.label}
             </AppBadge>
-            {/* 🔴 좁은 폭에서도 **2개 병기**를 유지한다 — 접으면 테이블과 다른 정보를 준다 */}
-            {overtime && (
-              <AppBadge variant={overtime.variant} className={CARD_BADGE}>
-                {overtime.label}
-              </AppBadge>
-            )}
-            {/* 교대 — 처리한 사람이 둘 이상(표와 같은 표시) */}
-            {row.userList.length > 1 && (
-              <span className="inline-flex items-center gap-0.5 text-caption font-medium text-point-foreground">
-                <ArrowLeftRightIcon size={12} aria-hidden />
-                교대
-              </span>
-            )}
+            {/* 🔄 결과 뱃지는 하나(`spec 079` D15 · 표와 같다) — 시간초과는 아래 소요, 교대는 순찰자 옆 */}
             {row.hasMemo && (
               <MessageSquareTextIcon
                 size={13}
@@ -103,6 +91,12 @@ const ZoneHistoryCard = (row: CourseHistoryRow) => {
           <span className="inline-flex min-w-0 items-center gap-1">
             <UserIcon size={13} strokeWidth={1.75} className="shrink-0" />
             <span className="truncate">{runnerLabel(row.userList)}</span>
+            {row.userList.length > 1 && (
+              <span className="inline-flex shrink-0 items-center gap-0.5 font-medium text-point-foreground">
+                <ArrowLeftRightIcon size={12} aria-hidden />
+                교대
+              </span>
+            )}
           </span>
           <span className="inline-flex items-center gap-1">
             <MapPinIcon size={13} strokeWidth={1.75} />
@@ -111,7 +105,14 @@ const ZoneHistoryCard = (row: CourseHistoryRow) => {
             </span>
           </span>
           {/* 🔴 `'02:17:40'` 처럼 **시 단위가 온다** — 분으로 가정하면 2시간이 2분이 된다 */}
-          <span className="tabular-nums">{formatElapsed(row.actualElapsedTime)}</span>
+          {row.overtimeYn ? (
+            <span className="inline-flex items-center gap-1 font-medium tabular-nums text-danger">
+              <ClockIcon size={12} aria-label="시간초과" />
+              {formatElapsed(row.actualElapsedTime)}
+            </span>
+          ) : (
+            <span className="tabular-nums">{formatElapsed(row.actualElapsedTime)}</span>
+          )}
         </div>
       </div>
 

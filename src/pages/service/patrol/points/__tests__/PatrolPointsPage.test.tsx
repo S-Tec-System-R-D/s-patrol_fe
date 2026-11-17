@@ -83,7 +83,9 @@ describe('PatrolPointsPage — 서버 목록', () => {
     expect(screen.getByText('순찰지점')).toBeInTheDocument()
     // 필터 버튼에도 '인증수단' 이 보인다(spec 065 — 이름 표시) — 표 머리글로 좁힌다
     expect(screen.getByRole('columnheader', { name: /인증수단/ })).toBeInTheDocument()
-    expect(screen.getByText('구간')).toBeInTheDocument()
+    // 🔄 D15 — `구간` 칸은 뺐고 `기록` 은 `특이사항` 이 됐다
+    expect(screen.queryByText('구간')).not.toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: '특이사항' })).toBeInTheDocument()
     expect(inTable().getAllByRole('row').length).toBeGreaterThan(1)
   })
 
@@ -167,7 +169,7 @@ describe('PatrolPointsPage — 필터가 서버로 나간다', () => {
     await user.click(inFilters().getByLabelText('결과'))
 
     const options = await screen.findAllByRole('option')
-    expect(options.map((option) => option.textContent)).toEqual(['전체', '미인증', '완료'])
+    expect(options.map((option) => option.textContent)).toEqual(['전체', '미인증', '인증'])
     // 고르면 0건이 돌아오는 필터는 "데이터가 없다" 는 거짓 신호를 준다
     expect(screen.queryByRole('option', { name: '시간초과' })).not.toBeInTheDocument()
     expect(screen.queryByRole('option', { name: '순찰제외' })).not.toBeInTheDocument()
@@ -271,7 +273,8 @@ describe('PatrolPointsPage — 실측 예외를 화면이 감당한다', () => {
     seed({ overTimeYn: true })
     renderPage()
 
-    expect((await screen.findAllByText('이상없음')).length).toBeGreaterThan(0)
+    await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
+    expect((await inTable().findAllByText('인증')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('시간초과').length).toBeGreaterThan(0)
   })
 

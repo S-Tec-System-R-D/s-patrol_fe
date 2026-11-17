@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, ChevronRightIcon, HistoryIcon, MapPinIcon, StickyNoteIcon, TriangleAlertIcon } from 'lucide-react'
+import { ArrowLeftIcon, ChevronRightIcon, HistoryIcon, MapPinIcon, MessageSquareTextIcon, TriangleAlertIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
@@ -10,7 +10,6 @@ import { overtimeBadge, pointCheckBadge } from '@/features/course-history/lib/hi
 import PointHistoryInfoCard from '@/features/patrol-points/components/detail/PointHistoryInfoCard'
 import PointHistoryMemoCard from '@/features/patrol-points/components/detail/PointHistoryMemoCard'
 import PointLocationMapCard from '@/features/patrol-points/components/detail/PointLocationMapCard'
-import { POINT_HISTORY_STATUS } from '@/features/course-history/types'
 import { isValidCoord } from '@/features/courses/lib/courseCoords'
 import { paths } from '@/router/paths'
 
@@ -131,12 +130,8 @@ const PatrolPointDetailPage = () => {
   }
 
   const data = detail.data
-  /* 🔄 `spec 078` D3 — 결과 하나 + `특이사항` + `시간초과`. 완료는 메모와 상관없이 `인증`(한 건만 보는 상세라
-     정상도 적는다 — 목록의 `순찰기록` 은 결과와 특이사항을 한 말에 묶은 것이라 여기서는 나눈다) */
-  const result =
-    data.status === POINT_HISTORY_STATUS.COMPLETED
-      ? { variant: 'success' as const, label: '인증' }
-      : pointCheckBadge(data.status, data.hasMemo)
+  /* 🔄 `spec 078` D3 — 결과 하나 + `특이사항` + `시간초과`. 완료는 메모와 상관없이 `인증`(목록도 같다 — `spec 079` D15) */
+  const result = pointCheckBadge(data.status, false)
   // 🔴 상세는 `overtimeYn`(**소문자 t**) 다 — 코스 상세와 다르다(B-4)
   const overtime = overtimeBadge(data.overtimeYn)
   const hasMemo = data.memoList.length > 0
@@ -165,7 +160,7 @@ const PatrolPointDetailPage = () => {
             <AppBadge variant={result.variant}>{result.label}</AppBadge>
             {hasMemo && (
               <AppBadge variant="warning" className="gap-1">
-                <StickyNoteIcon size={12} aria-hidden />
+                <MessageSquareTextIcon size={12} aria-hidden />
                 특이사항
               </AppBadge>
             )}

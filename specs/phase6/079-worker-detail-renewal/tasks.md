@@ -54,6 +54,11 @@
 - [x] T1345 D14 차트 — 막대 색 완료 / 미완료 · 막대 위 빨간 시간초과 수(`ReferenceDot` — `LabelList` 는 높이 0 칸에서 순번이 밀린다) · 범례 · 툴팁 in src/features/workers/components/detail/UserPatrolActivityCard.tsx · 테스트 · verify · test · 캡처 · screens
 - [x] T1346 mock 회차 상태를 기준에 맞춤 — `미인증 지점이 있으면 미완료` → `도중 종료(stopped)만 미완료`(7902 하나) in src/mocks/handlers/workerRuns.ts · 테스트
 - [x] T1347 D14 다듬기(사용자 확인 뒤) — 툴팁을 합계 → 내역(색 네모) → 구분선 → 시간초과 줄로 · 요약 4칸 `순찰 · 미완료 · 시간초과 · 지점 인증`(특이사항 칸 삭제 · `RunSummary.memo` 삭제) · 회차 줄 `특이사항` 표시 in UserPatrolActivityCard.tsx · UserRunRow.tsx · userPatrolRuns.ts · 테스트 · screens
+- [x] T1348 D15 지점 결과 뱃지 — `이상없음` / `순찰기록` → `인증` · 메모 있는 예외 자리 `특이사항`(주황) in src/features/course-history/lib/historyBadge.ts · 결과 필터 `인증` in pointHistoryFilters.ts · 지점 순찰 상세 머리 정리
+- [x] T1349 D15 코스 이력 목록 — 결과 뱃지 하나 · 시간초과 → 소요 칸 · 교대 → 순찰자 칸 in ZoneColumn.tsx · ZoneHistoryCard.tsx
+- [x] T1350 D15 지점 이력 목록 — 결과 `인증` / `미인증` + 시간초과 · `구간` 칸 삭제 · `기록` → `특이사항` in PointColumn.tsx · PointHistoryCard.tsx
+- [x] T1351 D15 실측(`pauseTime` = 교대 요청으로 멈춘 시간 · OQ-037-A 해소) · api-spec(B-70 요청 예정) · design-system · screens · 테스트 · verify · test · e2e · 캡처
+- [x] T1352 D15 특이사항 아이콘 통일 — 메모지(`StickyNoteIcon`) → 말풍선(`MessageSquareTextIcon`, 순찰이력 목록과 같은 것 · 사용자 결정) in UserRunRow.tsx · RunTimeline.tsx · PatrolPointDetailPage.tsx
 - [x] T1335 D13 다듬기(사용자 확인 뒤) — 순찰 상세 타임라인 순번 숫자 세로 중앙 · 근무자 펼친 목록 위 요약(`특이사항 n` · `시간초과`) 삭제(교대 문장만 남김) · 순찰 상세 순번 원 테두리 + 연한 배경(대기 점선) · 교대 표시를 순찰이력 목록(표 · 카드) · 코스관리 기록 표에도 · mock 순찰 인증 내역 지점 번호를 코스 편성(1 · 2 · 3)과 맞춤(등록 좌표로 핀이 찍히지 않던 원인)
 
 ## Dependencies & Execution Order

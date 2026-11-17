@@ -83,12 +83,28 @@ describe('ZoneHistoryCard', () => {
     expect(screen.getByText('박성민 외 1명')).toBeInTheDocument()
   })
 
-  it('🔴 좁은 폭에서도 결과 + 시간초과 뱃지를 함께 둔다', () => {
+  it('🔴 결과 뱃지는 하나 — 시간초과는 소요에 표시한다 (D15 · 표와 같다)', () => {
     render(<ZoneHistoryCard {...row({ overtimeYn: true })} />)
 
-    // 접으면 테이블과 다른 정보를 준다
     expect(screen.getByText('완료')).toBeInTheDocument()
-    expect(screen.getByText('시간초과')).toBeInTheDocument()
+    expect(screen.queryByText('시간초과')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('시간초과').parentElement).toHaveClass('text-danger')
+  })
+
+  it('🔴 교대는 순찰자 옆에 표시한다 (D15)', () => {
+    render(
+      <ZoneHistoryCard
+        {...row({
+          userList: [
+            { userSeq: 1, userName: '김근무' },
+            { userSeq: 2, userName: '이근무' },
+          ],
+        })}
+      />
+    )
+
+    expect(screen.getByText('교대')).toBeInTheDocument()
+    expect(screen.getByText('김근무 외 1명')).toBeInTheDocument()
   })
 
   it('특이사항이 있으면 아이콘으로 알린다 — 건수는 서버에 없다', () => {

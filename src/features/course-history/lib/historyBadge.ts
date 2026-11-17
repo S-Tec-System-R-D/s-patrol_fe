@@ -73,8 +73,10 @@ export const courseResultBadge = (status: number): HistoryBadge => {
  * **같은 상태**로 둔다(백엔드 확인). 예전(077~)엔 `checkDt` 로 `건너뜀` · `미인증` 을 갈랐는데,
  * 둘 다 "인증이 남지 않았다" 이고 이름이 둘이면 헷갈린다 → 하나로. 🔄 색은 회색(`neutral`, D13 — 주황에서 바꿨다).
  *
- * 🔴 **`완료`(4) 는 `hasMemo` 로 갈린다** — 서버 `status` 에 그 구분이 없다. 메모가 있으면
- * `순찰기록`(정보성), 없으면 `이상없음`. `design-system.md` §1-1 의 5종 매핑이 이것이다.
+ * 🔴 **`완료`(4) 는 `인증`** 이다 — 결과 칸에는 결과만(`spec 079` D15). 예전의 `이상없음` ↔ `순찰기록` 은 결과와
+ * 메모 여부를 한 말에 묶은 것이라 뺐다(`이상없음` 은 "메모 없음" 일 뿐인데 "문제없음" 으로 읽혔다).
+ * `hasMemo` 를 넘기면 `특이사항`(주황)을 준다 — **정상은 뱃지를 달지 않고 예외만 다는 자리**(순찰 상세 타임라인 ·
+ * 지점 상세 순찰 기록)에서만 쓴다. 목록 · 상세 머리는 `false` 로 불러 `인증` 을 받고 특이사항은 따로 표시한다.
  *
  * ⚠️ `순찰제외`(2) 는 전 사업장 **0건**이다(OQ-18). 매핑은 두지만 **실데이터로 확인할 수
  * 없다** — 쓰이기 시작하면 인증률 분모도 함께 봐야 한다.
@@ -93,8 +95,8 @@ export const pointCheckBadge = (status: number, hasMemo: boolean): HistoryBadge 
       return { variant: 'neutral', label: '미인증' }
     case POINT_HISTORY_STATUS.COMPLETED:
       return hasMemo
-        ? { variant: 'point', label: '순찰기록' }
-        : { variant: 'success', label: '이상없음' }
+        ? { variant: 'warning', label: '특이사항' }
+        : { variant: 'success', label: '인증' }
     default:
       return UNKNOWN
   }

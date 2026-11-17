@@ -79,12 +79,15 @@ describe('PatrolZoneDetailPage — 회차 상세 (spec 077)', () => {
     expect(screen.queryByText(/건너뜀/)).not.toBeInTheDocument()
   })
 
-  it('🔴 정상 인증(이상없음)은 뱃지를 달지 않는다 (D2)', async () => {
+  it('🔴 정상 인증은 뱃지를 달지 않는다 (D2)', async () => {
     renderPage(101)
 
     await screen.findByRole('list', { name: '지점 인증 내역' })
     // 화면 낭독기용 글자는 남는다 — 눈에 보이는 뱃지만 없다
-    expect(inTimeline().queryAllByText('이상없음').every((el) => el.classList.contains('sr-only'))).toBe(true)
+    expect(inTimeline().queryAllByText('인증').every((el) => el.classList.contains('sr-only'))).toBe(true)
+    // 🔄 D15 — 옛 이름은 어디에도 없다
+    expect(screen.queryByText('이상없음')).not.toBeInTheDocument()
+    expect(screen.queryByText('순찰기록')).not.toBeInTheDocument()
   })
 
   it('🔴 전 필드가 null 인 행(대기중·진행중)에서 터지지 않는다', async () => {

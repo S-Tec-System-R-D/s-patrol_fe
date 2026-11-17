@@ -237,13 +237,16 @@ describe('PatrolZonesPage — 실측 예외를 화면이 감당한다', () => {
     expect(inTable().queryByText('진행 중')).not.toBeInTheDocument()
   })
 
-  it('🔴 결과 뱃지와 시간초과 뱃지를 함께 보여준다', async () => {
+  it('🔴 결과 칸에는 결과 뱃지만 — 시간초과는 소요 칸에 표시한다 (D15)', async () => {
     renderPage()
 
     // mock 시드 historySeq 104 가 `overtimeYn: true` + `status: 1` 이다
     await screen.findAllByText('A동 순찰코스')
     expect(inTable().getAllByText('완료').length).toBeGreaterThan(0)
-    expect(inTable().getAllByText('시간초과').length).toBeGreaterThan(0)
+    expect(inTable().queryByText('시간초과')).not.toBeInTheDocument()
+    const marks = inTable().getAllByLabelText('시간초과')
+    expect(marks.length).toBeGreaterThan(0)
+    marks.forEach((mark) => expect(mark.parentElement).toHaveClass('text-danger'))
   })
 
   it('🔴 완료인데 인증 0건인 행도 그대로 그린다 — 상태와 인증률은 독립이다', async () => {

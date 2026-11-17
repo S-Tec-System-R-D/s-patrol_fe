@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { ChevronDownIcon, FlagIcon, ImageIcon, StickyNoteIcon } from 'lucide-react'
+import { ChevronDownIcon, FlagIcon, ImageIcon, MessageSquareTextIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import { cardBadge } from '@/components/app/AppBadge.variants'
@@ -84,7 +84,7 @@ const MemoPreview = ({ row, open, onToggle }: { row: CheckDetailRow; open: boole
       onClick={onToggle}
       className="mt-2 flex w-full max-w-[640px] items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-left text-caption hover:bg-muted"
     >
-      <StickyNoteIcon size={13} className="shrink-0 text-warning-foreground" aria-hidden />
+      <MessageSquareTextIcon size={13} className="shrink-0 text-warning-foreground" aria-hidden />
       <span className="min-w-0 flex-1 truncate text-foreground">{first}</span>
       {row.memos.length > 1 && <span className="shrink-0 text-muted-foreground">메모 {row.memos.length}</span>}
       {photos > 0 && (

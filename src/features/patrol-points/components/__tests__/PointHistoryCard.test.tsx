@@ -36,7 +36,7 @@ describe('PointHistoryCard', () => {
     render(<PointHistoryCard {...row()} />)
 
     expect(screen.getByText('정문 입구')).toBeInTheDocument()
-    expect(screen.getByText('이상없음')).toBeInTheDocument()
+    expect(screen.getByText('인증')).toBeInTheDocument()
     expect(screen.getByText('A동 순찰코스')).toBeInTheDocument()
     expect(screen.getByText('김근무')).toBeInTheDocument()
     expect(screen.getByText('QR')).toBeInTheDocument()
@@ -52,13 +52,15 @@ describe('PointHistoryCard', () => {
     render(<PointHistoryCard {...row({ hasMemo: true })} />)
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('순찰 기록 있음')).toBeInTheDocument()
+    expect(screen.getByLabelText('특이사항 있음')).toBeInTheDocument()
+    // 🔄 D15 — 결과는 메모와 상관없이 인증
+    expect(screen.getByText('인증')).toBeInTheDocument()
   })
 
   it('🔴 좁은 폭에서도 뱃지 2개 병기를 유지한다 — 접으면 테이블과 다른 정보를 준다', () => {
     render(<PointHistoryCard {...row({ overTimeYn: true })} />)
 
-    expect(screen.getByText('이상없음')).toBeInTheDocument()
+    expect(screen.getByText('인증')).toBeInTheDocument()
     expect(screen.getByText('시간초과')).toBeInTheDocument()
   })
 

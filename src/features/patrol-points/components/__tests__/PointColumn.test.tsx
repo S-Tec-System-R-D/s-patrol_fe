@@ -42,23 +42,25 @@ describe('pointHistoryColumns', () => {
     expect(screen.getByText('09:07')).toBeInTheDocument()
   })
 
-  it('완료 + 메모 없음 → 이상없음', () => {
+  it('완료 → 인증 (메모와 상관없다, D15)', () => {
     renderRows([row()])
 
-    expect(screen.getByText('이상없음')).toBeInTheDocument()
+    expect(screen.getByText('인증')).toBeInTheDocument()
   })
 
-  it('🔴 완료 + 메모 있음 → 순찰기록 (서버 status 에 그 구분이 없다)', () => {
+  it('🔴 완료 + 메모 있음 → 결과는 그대로 인증 · 특이사항은 제 칸의 아이콘 (D15)', () => {
     renderRows([row({ hasMemo: true })])
 
-    expect(screen.getByText('순찰기록')).toBeInTheDocument()
-    expect(screen.getByLabelText('순찰 기록 있음')).toBeInTheDocument()
+    expect(screen.getByText('인증')).toBeInTheDocument()
+    expect(screen.queryByText('순찰기록')).not.toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: '특이사항' })).toBeInTheDocument()
+    expect(screen.getByLabelText('특이사항 있음')).toBeInTheDocument()
   })
 
-  it('🔴 시간초과는 결과와 나란히 뱃지 2개로 병기한다 — 독립 축이다', () => {
+  it('🔴 시간초과는 결과 옆 뱃지로 남는다 — 목록에 지점 소요 시간이 없어 옮길 칸이 없다', () => {
     renderRows([row({ overTimeYn: true })])
 
-    expect(screen.getByText('이상없음')).toBeInTheDocument()
+    expect(screen.getByText('인증')).toBeInTheDocument()
     expect(screen.getByText('시간초과')).toBeInTheDocument()
   })
 
@@ -88,10 +90,10 @@ describe('pointHistoryColumns', () => {
     expect(screen.queryByRole('button', { name: /순찰일시/ })).not.toBeInTheDocument()
   })
 
-  it('구간은 값만 보여주고 판정하지 않는다 (OQ-037-A — pauseTime 의미 미확정)', () => {
+  it('🔴 구간 칸이 없다 — pauseTime 은 걸린 시간이 아니라 교대 요청으로 멈춘 시간이다 (D15 · OQ-037-A 해소)', () => {
     renderRows([row({ pauseTime: '00:07:00' })])
 
-    expect(screen.getByText('7분')).toBeInTheDocument()
-    expect(screen.queryByText(/상한/)).not.toBeInTheDocument()
+    expect(screen.queryByText('구간')).not.toBeInTheDocument()
+    expect(screen.queryByText('7분')).not.toBeInTheDocument()
   })
 })

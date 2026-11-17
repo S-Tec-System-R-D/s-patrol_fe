@@ -1,5 +1,5 @@
 import { Fragment, useId } from 'react'
-import { ArrowLeftRightIcon, CameraIcon, ChevronDownIcon, ChevronRightIcon, ClockIcon, StickyNoteIcon } from 'lucide-react'
+import { ArrowLeftRightIcon, CameraIcon, ChevronDownIcon, ChevronRightIcon, ClockIcon, MessageSquareTextIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import AppBadge from '@/components/app/AppBadge'
@@ -74,7 +74,7 @@ const PointLine = ({ check, me }: { check: CheckDetailRow; me: number }) => {
       </div>
       {memo && (
         <div className="ml-7 flex items-start gap-2 rounded-sm bg-warning/10 px-2.5 py-1.5 text-caption">
-          <StickyNoteIcon size={13} className="mt-0.5 shrink-0 text-warning-foreground" aria-hidden />
+          <MessageSquareTextIcon size={13} className="mt-0.5 shrink-0 text-warning-foreground" aria-hidden />
           <span className="min-w-0 flex-1 whitespace-pre-line">{check.memos.map((item) => item.memo).join('\n')}</span>
           {photos > 0 && (
             <span className="inline-flex shrink-0 items-center gap-1 text-muted-foreground">
@@ -206,7 +206,7 @@ const UserRunRow = ({ row, userSeq, open, onToggle }: UserRunRowProps) => {
           )}
           {row.hasMemo && (
             <span className="inline-flex shrink-0 items-center gap-1 text-caption font-medium text-warning-foreground">
-              <StickyNoteIcon size={12} aria-hidden />
+              <MessageSquareTextIcon size={12} aria-hidden />
               특이사항
             </span>
           )}

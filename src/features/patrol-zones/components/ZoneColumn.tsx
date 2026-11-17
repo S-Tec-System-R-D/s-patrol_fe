@@ -1,8 +1,8 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { ArrowLeftRightIcon, ChevronRightIcon, MessageSquareTextIcon } from 'lucide-react'
+import { ArrowLeftRightIcon, ChevronRightIcon, ClockIcon, MessageSquareTextIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
-import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
+import { courseResultBadge } from '@/features/course-history/lib/historyBadge'
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
 import type { CourseHistoryRow } from '@/features/course-history/types'
 
@@ -60,7 +60,16 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
       const label = runnerLabel(row.original.userList)
       const missing = row.original.userList.length === 0
       return (
-        <span className={missing ? 'text-muted-foreground' : 'text-foreground'}>{label}</span>
+        <span className="inline-flex items-center gap-2">
+          <span className={missing ? 'text-muted-foreground' : 'text-foreground'}>{label}</span>
+          {/* 교대 — 처리한 사람이 둘 이상. 🔄 결과 칸에서 옮겼다(`spec 079` D15 — 사람에 대한 말은 순찰자 칸에) */}
+          {row.original.userList.length > 1 && (
+            <span className="inline-flex shrink-0 items-center gap-1 text-caption font-medium text-point-foreground">
+              <ArrowLeftRightIcon size={12} aria-hidden />
+              교대
+            </span>
+          )}
+        </span>
       )
     },
   },
@@ -96,11 +105,16 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
     accessorKey: 'actualElapsedTime',
     header: '소요',
     // 🔴 `'02:17:40'` 처럼 **시 단위가 온다** — 분으로 가정하면 2시간이 2분이 된다
-    cell: ({ getValue }) => (
-      <span className="tabular-nums text-muted-foreground">
-        {formatElapsed(getValue<string>())}
-      </span>
-    ),
+    // 🔄 시간초과는 여기에 표시한다(`spec 079` D15 — 결과 칸의 뱃지를 옮겼다. 시간에 대한 말은 소요 칸에)
+    cell: ({ row }) =>
+      row.original.overtimeYn ? (
+        <span className="inline-flex items-center gap-1 font-medium tabular-nums text-danger">
+          <ClockIcon size={12} aria-label="시간초과" />
+          {formatElapsed(row.original.actualElapsedTime)}
+        </span>
+      ) : (
+        <span className="tabular-nums text-muted-foreground">{formatElapsed(row.original.actualElapsedTime)}</span>
+      ),
   },
   {
     id: 'checked',
@@ -126,23 +140,10 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
     id: 'result',
     header: '순찰 결과',
     cell: ({ row }) => {
+      // 🔴 **결과 칸에는 뱃지 하나**(`spec 079` D15 · 사용자 결정 2026-11-17) — 시간초과는 소요 칸, 교대는 순찰자 칸,
+      //    특이사항은 제 칸에 있다. `overtimeYn` 은 `status` 와 독립 축이라 하나로 접지 않고 **자리를 나눴다**
       const result = courseResultBadge(row.original.status)
-      // 🔴 **뱃지 2개 병기**(사용자 결정 2026-10-16) — `overtimeYn` 은 `status` 와 독립
-      //    축이라 하나로 접으면 우선순위를 정해야 하고 어느 쪽이든 정보가 사라진다
-      const overtime = overtimeBadge(row.original.overtimeYn)
-      return (
-        <div className="flex flex-wrap items-center gap-1">
-          <AppBadge variant={result.variant}>{result.label}</AppBadge>
-          {overtime && <AppBadge variant={overtime.variant}>{overtime.label}</AppBadge>}
-          {/* 교대 — 처리한 사람이 둘 이상(`spec 079` D13: 회차 줄 어디서나 · 근무자 상세 줄과 같은 표시) */}
-          {row.original.userList.length > 1 && (
-            <span className="inline-flex items-center gap-1 text-caption font-medium text-point-foreground">
-              <ArrowLeftRightIcon size={12} aria-hidden />
-              교대
-            </span>
-          )}
-        </div>
-      )
+      return <AppBadge variant={result.variant}>{result.label}</AppBadge>
     },
   },
   {

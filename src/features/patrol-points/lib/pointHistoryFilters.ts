@@ -56,7 +56,7 @@ export const pointResultFilterOptions: AppSelectOption[] = [
   },
   {
     value: String(POINT_HISTORY_STATUS.COMPLETED),
-    // 🔴 `이상없음`·`순찰기록` 을 함께 거르는 값이라 **상위어**를 쓴다
-    label: '완료',
+    // 🔄 결과 뱃지와 같은 말(`spec 079` D15 — 뱃지가 `인증` 하나가 되어 상위어를 따로 둘 필요가 없다)
+    label: pointCheckBadge(POINT_HISTORY_STATUS.COMPLETED, false).label,
   },
 ]

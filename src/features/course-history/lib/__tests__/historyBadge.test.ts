@@ -41,15 +41,15 @@ describe('pointCheckBadge — 지점 사전(0~4)', () => {
     expect(pointCheckBadge(3, false)).toEqual({ variant: 'neutral', label: '미인증' })
   })
 
-  it('🔴 완료(4)는 hasMemo 로 이상없음 ↔ 순찰기록이 갈린다', () => {
-    // 서버 status 에 이 구분이 없다 — 조합으로 유도한다
+  it('🔴 완료(4)는 인증 — hasMemo 를 넘기면 특이사항(예외만 뱃지를 다는 자리용, D15)', () => {
+    // 결과 칸에는 결과만 — 목록 · 상세 머리는 false 로 부른다
     expect(pointCheckBadge(4, false)).toEqual({
       variant: 'success',
-      label: '이상없음',
+      label: '인증',
     })
     expect(pointCheckBadge(4, true)).toEqual({
-      variant: 'point',
-      label: '순찰기록',
+      variant: 'warning',
+      label: '특이사항',
     })
   })
 
@@ -75,7 +75,7 @@ describe('overtimeBadge — 🔴 독립 축이라 별 뱃지다', () => {
     // 하나로 접으면 우선순위를 정해야 하고 어느 쪽이든 정보가 사라진다
     const result = pointCheckBadge(4, true)
     const overtime = overtimeBadge(true)
-    expect(result.label).toBe('순찰기록')
+    expect(result.label).toBe('특이사항')
     expect(overtime?.label).toBe('시간초과')
   })
 })

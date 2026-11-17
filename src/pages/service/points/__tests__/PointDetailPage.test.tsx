@@ -296,11 +296,13 @@ describe('PointDetailPage — 인증 기록 (076)', () => {
 
     const groups = await screen.findAllByRole('region', { name: /기록$/ })
     const labels = groups.flatMap((group) =>
-      within(group).queryAllByText(/^(순찰기록|미인증|순찰제외|진행중|대기중)$/)
+      within(group).queryAllByText(/^(특이사항|미인증|순찰제외|진행중|대기중)$/)
     )
     expect(labels.length).toBeGreaterThan(0)
     // 🔴 정상 인증은 뱃지가 없다 — 줄마다 반복되면 뱃지가 의미를 잃는다(2026-11-13)
-    expect(screen.queryByText('이상없음')).not.toBeInTheDocument()
+    groups.forEach((group) => expect(within(group).queryByText('인증')).not.toBeInTheDocument())
+    // 🔄 D15 — 옛 이름은 없다
+    expect(screen.queryByText('순찰기록')).not.toBeInTheDocument()
     expect(screen.queryByText(/^누락/)).not.toBeInTheDocument()
   })
 })

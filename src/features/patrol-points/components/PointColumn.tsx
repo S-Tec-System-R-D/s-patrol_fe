@@ -2,7 +2,6 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { ChevronRightIcon, MessageSquareTextIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
-import { formatElapsed } from '@/features/course-history/lib/elapsed'
 import { overtimeBadge, pointCheckBadge } from '@/features/course-history/lib/historyBadge'
 import type { PointHistoryRow } from '@/features/course-history/types'
 
@@ -102,30 +101,17 @@ export const pointHistoryColumns = (): ColumnDef<PointHistoryRow>[] =>
         return value ? <span>{value}</span> : <span className="text-muted-foreground">-</span>
       },
     },
-    {
-      accessorKey: 'pauseTime',
-      header: '구간',
-      /**
-       * ⚠️ **`pauseTime` 이 무엇을 센 시간인지 확정되지 않았다**(OQ-037-A). 목업의
-       * "구간 +7분" 자리이지만 문서에 정의가 없다.
-       * 🔴 그래서 **값만 보여주고 판정하지 않는다** — "상한 +6분" 같은 비교 문구를 붙이면
-       * 기준을 모르는 채로 관리자에게 판단을 주게 된다(023·036 의 "색을 입히지 않는다" 와
-       * 같은 자리). ⚠️ 상세는 같은 필드가 **숫자**다(B-5).
-       */
-      cell: ({ getValue }) => (
-        <span className="tabular-nums text-muted-foreground">
-          {formatElapsed(getValue<string>())}
-        </span>
-      ),
-    },
+    /* 🔄 **`구간` 칸을 뺐다**(`spec 079` D15 · 사용자 결정 2026-11-17). `pauseTime` 은 지점에서 걸린 시간이 아니라
+       **교대 요청으로 멈춰 있던 시간**이다(실측 — 100건 중 90건이 0초 · 지점 값의 합 = 회차 `pauseTime`, OQ-037-A 해소).
+       ⚠️ 지점에서 걸린 시간은 목록 응답에 없다 — 받으면 소요 칸을 만들고 시간초과를 그 칸으로 옮긴다(B-70) */
     {
       id: 'result',
       header: '결과',
       cell: ({ row }) => {
-        const { status, hasMemo, overTimeYn } = row.original
-        const result = pointCheckBadge(status, hasMemo)
-        // 🔴 **뱃지 2개 병기** — `overTimeYn` 은 `status` 와 독립 축이라 하나로 접으면
-        //    우선순위를 정해야 하고 어느 쪽이든 정보가 사라진다(036 결정)
+        const { status, overTimeYn } = row.original
+        // 🔴 결과는 `인증` / `미인증` 뿐이다(D15) — 특이사항은 제 칸에 있다(`hasMemo` 를 넘기지 않는다)
+        const result = pointCheckBadge(status, false)
+        // 🔴 시간초과는 옮길 칸이 없어 **뱃지로 남긴다** — 목록에 지점 소요 시간이 없다(위 메모)
         const overtime = overtimeBadge(overTimeYn)
         return (
           <div className="flex flex-wrap items-center gap-1">
@@ -137,14 +123,15 @@ export const pointHistoryColumns = (): ColumnDef<PointHistoryRow>[] =>
     },
     {
       accessorKey: 'hasMemo',
-      header: '기록',
+      header: '특이사항',
       // 🔴 **건수가 아니라 아이콘** — 목록에 건수가 없다(§위 머리말). 내용은 상세에서 본다
+      // 🔄 이름을 `기록` → `특이사항` 으로(D15 — 코스 목록 · 상세 화면과 같은 이름)
       cell: ({ getValue }) =>
         getValue<boolean>() ? (
           <MessageSquareTextIcon
             size={16}
             className="text-warning-foreground"
-            aria-label="순찰 기록 있음"
+            aria-label="특이사항 있음"
           />
         ) : (
           <span className="text-muted-foreground">-</span>

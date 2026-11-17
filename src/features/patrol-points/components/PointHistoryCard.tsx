@@ -27,7 +27,8 @@ import type { PointHistoryRow } from '@/features/course-history/types'
 const formatDateTime = (value: string): string => value.replace('T', ' ').slice(0, 16)
 
 const PointHistoryCard = (row: PointHistoryRow) => {
-  const result = pointCheckBadge(row.status, row.hasMemo)
+  // 🔴 결과는 `인증` / `미인증` 뿐(`spec 079` D15 · 표와 같다) — 특이사항은 아이콘이 따로 말한다
+  const result = pointCheckBadge(row.status, false)
   const overtime = overtimeBadge(row.overTimeYn)
   // 🔴 미완료 행은 인증이 없어 `''` 다 — "모른다" 가 아니라 **없었다**는 뜻이라 뱃지를 뺀다
   const hasAuth = row.authMethod !== null && row.authMethodName !== ''
@@ -56,7 +57,7 @@ const PointHistoryCard = (row: PointHistoryRow) => {
               <MessageSquareTextIcon
                 size={13}
                 className="text-warning-foreground"
-                aria-label="순찰 기록 있음"
+                aria-label="특이사항 있음"
               />
             )}
           </span>
