@@ -17,6 +17,7 @@ import { useGroupList } from '@/features/groups/hooks/useGroupList'
 import EmergencyContactCard from '@/features/sites/components/EmergencyContactCard'
 import HealthCheckCard from '@/features/sites/components/HealthCheckCard'
 import SiteDeleteDialog from '@/features/sites/components/SiteDeleteDialog'
+import SiteFieldManagersCard from '@/features/sites/components/SiteFieldManagersCard'
 import SiteInfoCard from '@/features/sites/components/SiteInfoCard'
 import SiteManagersCard from '@/features/sites/components/SiteManagersCard'
 import { useSiteManagers } from '@/features/sites/hooks/useSiteManagers'
@@ -30,7 +31,7 @@ import { paths } from '@/router/paths'
 /**
  * 본사 사업장 상세 `/admin/locations/:id` (`spec 044` US3) — 목업 v2 `SiteDetail`.
  *
- * 머리(그룹 경로 · 이름 · `⋯`) → 좌 400px 기본정보 + 담당 관리자 / 우 헬스체크 · 비상연락망.
+ * 머리(그룹 경로 · 이름 · `⋯`) → 좌 400px 기본정보 + 담당 관리자 + 현장관리자(`spec 081`) / 우 헬스체크 · 비상연락망.
  * 🔄 **`spec 080`**(시안 `개선안/사업장`): 수정 · 삭제는 머리 `⋯`(근무자 상세와 같다) · 담당 관리자를 왼쪽 열로.
  * 🔴 목업의 KPI형 요약 · 탭 · [운영 중지] · 계약 기간은 **없다** — 다른 상세와 같은 좌우 구조로 한 화면에 둔다(사용자 결정 2026-10-23).
  *
@@ -181,6 +182,8 @@ const LocationDetailPage = () => {
             isError={managers.isError}
             onRetry={() => void managers.refetch()}
           />
+          {/* `spec 081` — 본사 계정은 현장에 못 들어가므로 현장관리자 계정을 여기서 만든다 */}
+          <SiteFieldManagersCard siteSeq={site.siteSeq} siteName={site.siteName} />
         </div>
 
         <div className="flex min-w-0 flex-col gap-4">

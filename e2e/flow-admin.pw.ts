@@ -2,7 +2,7 @@ import { test, expect } from './support/fixtures'
 import { ACCOUNT, goMenu, loginAdmin, openFirstRow } from './support/session'
 
 /**
- * 기능 흐름 확인 — 본사 S6 · S7(`spec 059` US2). 1280px 만 · 시스템관리자.
+ * 기능 흐름 확인 — 본사 S6 · S7(`spec 059` US2) · S9(`spec 081`). 1280px 만 · 시스템관리자.
  * 🔴 **쓰기 뒤 이동은 클릭으로만** — `goto` 로 새로 불러오면 MSW 메모리 상태가 사라진다.
  */
 
@@ -29,6 +29,29 @@ test('S6 관리자 추가 → 삭제', async ({ page }) => {
   await page.getByRole('dialog').getByRole('button', { name: '삭제', exact: true }).click()
   await page.getByRole('alertdialog').getByRole('button', { name: '삭제', exact: true }).click()
   await expect(page.getByRole('cell', { name, exact: true })).toHaveCount(0)
+})
+
+test('S9 현장관리자 추가 → 삭제', async ({ page }) => {
+  const name = 'e2e현장'
+  await openFirstRow(page)
+  await expect(page).toHaveURL(/\/admin\/locations\/\d+$/)
+
+  await page.getByRole('button', { name: '추가', exact: true }).click()
+  const form = page.getByRole('dialog', { name: '현장관리자 추가' })
+  await form.getByLabel('이름').fill(name)
+  await form.getByLabel('연락처').fill('010-8108-1081')
+  await form.getByLabel('사번').fill('81081081')
+  await form.getByLabel('초기 비밀번호').fill('test1234!')
+  await form.getByLabel('비밀번호 확인').fill('test1234!')
+  await form.getByRole('button', { name: '등록', exact: true }).click()
+  await expect(form).toBeHidden()
+
+  const menu = page.getByRole('button', { name: `${name} 메뉴` })
+  await expect(menu).toBeVisible()
+  await menu.click()
+  await page.getByRole('menuitem', { name: '삭제' }).click()
+  await page.getByRole('alertdialog').getByRole('button', { name: '삭제', exact: true }).click()
+  await expect(menu).toHaveCount(0)
 })
 
 test('S7 비상연락망 추가 → 해제', async ({ page }) => {
