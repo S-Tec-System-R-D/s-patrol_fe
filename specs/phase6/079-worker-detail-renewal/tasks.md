@@ -50,6 +50,9 @@
 - [x] T1333 지점 `미인증` 색 주황 → 회색 — 뱃지 · 순찰 상세 순번 원 · 지도 핀 · 머리 숫자 · 지점 상세 요약 · 막대 · 범례 · 회차 모달 · 대시보드 단계 · 진행 중 카드
 - [x] T1334 테스트 · e2e · api-spec(상태 사전 둘로 분리 · B-66 종료 · B-69 철회) · design-system · screens · roadmap
 
+- [x] T1344 D14 요약 · 차트 맞추기 — 끝난 회차만(`endedRuns`) · 요약 `미완료` 칸(5칸) · 하루 칸 `completed / incomplete / overtime`(`runKind` 삭제) in src/features/workers/lib/userPatrolRuns.ts
+- [x] T1345 D14 차트 — 막대 색 완료 / 미완료 · 막대 위 빨간 시간초과 수(`ReferenceDot` — `LabelList` 는 높이 0 칸에서 순번이 밀린다) · 범례 · 툴팁 in src/features/workers/components/detail/UserPatrolActivityCard.tsx · 테스트 · verify · test · 캡처 · screens
+- [x] T1346 mock 회차 상태를 기준에 맞춤 — `미인증 지점이 있으면 미완료` → `도중 종료(stopped)만 미완료`(7902 하나) in src/mocks/handlers/workerRuns.ts · 테스트
 - [x] T1335 D13 다듬기(사용자 확인 뒤) — 순찰 상세 타임라인 순번 숫자 세로 중앙 · 근무자 펼친 목록 위 요약(`특이사항 n` · `시간초과`) 삭제(교대 문장만 남김) · 순찰 상세 순번 원 테두리 + 연한 배경(대기 점선) · 교대 표시를 순찰이력 목록(표 · 카드) · 코스관리 기록 표에도 · mock 순찰 인증 내역 지점 번호를 코스 편성(1 · 2 · 3)과 맞춤(등록 좌표로 핀이 찍히지 않던 원인)
 
 ## Dependencies & Execution Order

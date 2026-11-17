@@ -1,6 +1,6 @@
 import { format, parseISO, subDays } from 'date-fns'
 
-import type { CourseHistoryRow } from '@/features/course-history/types'
+import { COURSE_HISTORY_STATUS, type CourseHistoryRow } from '@/features/course-history/types'
 
 /**
  * 근무자 상세의 **회차 기록** 계산 (`spec 079`). 모두 순수 함수다.
@@ -18,44 +18,65 @@ export const filterMyRuns = (rows: CourseHistoryRow[], userSeq: number): CourseH
 /** 교대 — 처리한 사람이 둘 이상. ⚠️ 교대받고 하나도 처리하지 않은 사람은 `userList` 에 없다(spec 제약 2) */
 export const hasHandOver = (row: CourseHistoryRow): boolean => row.userList.length > 1
 
+/**
+ * 🔴 **요약 · 차트는 끝난 회차만 센다**(D14) — 진행 중 회차는 아직 안 간 지점 때문에 인증 %를 낮추고,
+ * 차트에서 빼면 요약 숫자와 막대 합계가 어긋난다. 아래 회차 목록에는 진행 중도 그대로 나온다.
+ */
+export const endedRuns = (rows: CourseHistoryRow[]): CourseHistoryRow[] =>
+  rows.filter((row) => row.status !== COURSE_HISTORY_STATUS.IN_PROGRESS)
+
+const isIncomplete = (row: CourseHistoryRow) => row.status === COURSE_HISTORY_STATUS.INCOMPLETE
+
 export interface RunSummary {
   runs: number
   points: number
   checked: number
+  incomplete: number
   memo: number
   overtime: number
 }
 
-export const summarizeRuns = (rows: CourseHistoryRow[]): RunSummary => ({
-  runs: rows.length,
-  points: rows.reduce((sum, row) => sum + row.pointCount, 0),
-  checked: rows.reduce((sum, row) => sum + row.checkedCount, 0),
+export const summarizeRuns = (rows: CourseHistoryRow[]): RunSummary => {
+  const ended = endedRuns(rows)
+  return {
+    runs: ended.length,
+    points: ended.reduce((sum, row) => sum + row.pointCount, 0),
+    checked: ended.reduce((sum, row) => sum + row.checkedCount, 0),
+    incomplete: ended.filter(isIncomplete).length,
+    memo: ended.filter((row) => row.hasMemo).length,
+    overtime: ended.filter((row) => row.overtimeYn).length,
+  }
+}
 
-  memo: rows.filter((row) => row.hasMemo).length,
-  overtime: rows.filter((row) => row.overtimeYn).length,
-})
-
-/** 막대 색 — 정상 / 시간초과 두 가지(미인증은 회차 색이 아니다) */
-export type RunKind = 'normal' | 'overtime'
-
-export const runKind = (row: CourseHistoryRow): RunKind => (row.overtimeYn ? 'overtime' : 'normal')
-
+/**
+ * 하루 칸 — 🔴 **상태와 시간초과는 서로 다른 기준이다**(D14). 완료에도 미완료에도 시간초과가 있을 수 있어
+ * 한 막대를 세 색으로 나누면 어느 쪽 합계든 어긋난다. `completed + incomplete` = 그 날 끝난 회차 수(막대 높이),
+ * `overtime` 은 그 가운데 시간초과 수(막대 위 숫자) — 겹쳐 센다.
+ */
 export interface RunDayBucket {
   date: string // 'yyyy-MM-dd'
-  normal: number
+  completed: number
+  incomplete: number
   overtime: number
 }
 
 const dayOf = (row: CourseHistoryRow) => row.startDt.slice(0, 10)
 
 /** 오늘 포함 14일 — 기록 없는 날도 0 칸으로 둔다(막대 자리가 비어야 "안 했다" 가 보인다) */
-export const runDayBuckets = (rows: CourseHistoryRow[], today: Date, days: number = RUN_DAYS): RunDayBucket[] =>
-  Array.from({ length: days }, (_, i) => {
+export const runDayBuckets = (rows: CourseHistoryRow[], today: Date, days: number = RUN_DAYS): RunDayBucket[] => {
+  const ended = endedRuns(rows)
+  return Array.from({ length: days }, (_, i) => {
     const date = format(subDays(today, days - 1 - i), 'yyyy-MM-dd')
-    const bucket: RunDayBucket = { date, normal: 0, overtime: 0 }
-    rows.filter((row) => dayOf(row) === date).forEach((row) => (bucket[runKind(row)] += 1))
-    return bucket
+    const dayRows = ended.filter((row) => dayOf(row) === date)
+    const incomplete = dayRows.filter(isIncomplete).length
+    return {
+      date,
+      completed: dayRows.length - incomplete,
+      incomplete,
+      overtime: dayRows.filter((row) => row.overtimeYn).length,
+    }
   })
+}
 
 export interface RunDayGroup {
   date: string

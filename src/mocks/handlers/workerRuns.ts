@@ -51,6 +51,11 @@ interface RunSpec {
   /** 지점별 인증(1) / 미완료(0) */
   checks: number[]
   minutes: number
+  /**
+   * 도중에 `순찰 종료` 를 누른 회차 — 회차 상태 `미완료`(서버 2). 🔴 미인증 지점이 있다고 미완료가 아니다:
+   * 종료를 누르지 않고 끝나면 지점을 건너뛰어도 `완료`(1)다(백엔드 회신 2026-11-17 · `spec 079` D13)
+   */
+  stopped?: boolean
   overtime?: boolean
   memos?: Record<number, [string, number]>
   /** `at` = 교대가 일어난 지점(0부터) · `in` = 내가 받음 / `out` = 내가 넘김 */
@@ -60,7 +65,7 @@ interface RunSpec {
 
 const SPECS: RunSpec[] = [
   { historySeq: 7901, ago: 0, start: '14:28', course: 'a', checks: [1, 1, 0, 1], minutes: 12, overtime: true, memos: { 1: ['램프 차단기 작동 불량, 시설팀 전달', 2] } },
-  { historySeq: 7902, ago: 0, start: '09:28', course: 'a', checks: [1, 1, 1, 0], minutes: 9 },
+  { historySeq: 7902, ago: 0, start: '09:28', course: 'a', checks: [1, 1, 1, 0], minutes: 9, stopped: true },
   { historySeq: 7903, ago: 3, start: '09:37', course: 'b', checks: [1, 1, 1, 1, 1], minutes: 18, handover: { at: 2, other: SEO, dir: 'in' } },
   { historySeq: 7904, ago: 6, start: '09:46', course: 'b', checks: [1, 1, 1, 1, 1], minutes: 22, overtime: true, memos: { 3: ['집하장 문 잠김 해제 상태, 잠금 조치', 1] } },
   { historySeq: 7905, ago: 9, start: '14:55', course: 'a', checks: [1, 1, 1, 1], minutes: 8 },
@@ -139,7 +144,7 @@ const buildRow = (spec: RunSpec): CourseHistoryRow => {
   const course = COURSES[spec.course]
   const start = toMinutes(spec.start)
   const checked = spec.checks.filter(Boolean).length
-  const complete = checked === spec.checks.length
+  const complete = !spec.stopped
   // 🔴 `userList` 는 **지점을 처리한 사람만**(api-spec §5-1-D) — 처리 순서대로 중복 없이
   const users: Who[] = []
   spec.checks.forEach((done, j) => {

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { ChevronRightIcon, TriangleAlertIcon } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import AppEmpty from '@/components/app/AppEmpty'
 import { recentRange } from '@/features/course-history/lib/historyRange'
@@ -23,24 +23,31 @@ import UserRunRow from './UserRunRow'
 /**
  * 근무자 상세 오른쪽 **순찰 기록** (`spec 079`, 시안 `개선안/근무자` — 지점 상세 B 패턴).
  *
- * 요약 4칸 → 14일 막대(누르면 그 날만 — URL `?day=`) → 날짜별 **회차** 줄(펼치면 지점별).
- * 🔴 날짜 머리 · 막대에 **회차 수 숫자를 적지 않는다**(D1) — 높이가 말한다. 합계는 요약 `순찰 n회` 하나.
- * 🔴 `미인증` 은 **지점에만** 쓴다 — 요약 · 회차 줄에는 적지 않는다(D13: 요약의 `미인증 지점` 칸을 뺐다). 막대는
- *    정상 / 시간초과 두 색. 회차 줄의 `미완료` 는 서버 회차 상태(도중 종료)다.
+ * 요약 5칸 → 14일 막대(누르면 그 날만 — URL `?day=`) → 날짜별 **회차** 줄(펼치면 지점별).
+ * 🔴 **요약과 차트가 같은 숫자를 말한다**(D14) — 막대 높이의 합 = `순찰` · 회색 부분의 합 = `미완료` ·
+ *    막대 위 빨간 숫자의 합 = `시간초과`. 상태(완료 / 미완료)는 막대 색, 시간초과는 막대 위 숫자 — 둘은 겹칠 수 있는
+ *    다른 기준이라 한 막대에 색으로 함께 쌓지 않는다. 진행 중 회차는 요약 · 차트에서 뺀다(목록에는 나온다).
+ * 🔴 날짜 머리 · 막대에 **회차 수 숫자를 적지 않는다**(D1) — 높이가 말한다. 시간초과 수는 높이로 알 수 없어 적는다.
+ * 🔴 `미인증` 은 **지점에만** 쓴다 — 요약 · 회차 줄에는 적지 않는다(D13: 요약의 `미인증 지점` 칸을 뺐다).
  * 🔴 인증 %에 색을 입히지 않는다 — `pointCount` 가 순찰제외를 뺀 값인지 미확인(api-spec 15).
  */
 
 const DAY_PARAM = 'day'
 
 const COLORS = {
-  normal: 'var(--color-point)',
-  overtime: 'var(--color-danger)',
+  completed: 'var(--color-point)',
+  incomplete: 'var(--color-muted-foreground)',
 } as const
+const OVERTIME_COLOR = 'var(--color-danger)'
 
 const ChartTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: RunDayBucket }[] }) => {
   if (!active || !payload?.length) return null
-  const { date, normal, overtime } = payload[0].payload
-  const parts = [normal > 0 ? `정상 ${normal}` : null, overtime > 0 ? `시간초과 ${overtime}` : null].filter(Boolean)
+  const { date, completed, incomplete, overtime } = payload[0].payload
+  const parts = [
+    completed > 0 ? `완료 ${completed}` : null,
+    incomplete > 0 ? `미완료 ${incomplete}` : null,
+    overtime > 0 ? `시간초과 ${overtime}` : null,
+  ].filter(Boolean)
   return (
     <div className="rounded-sm border border-border bg-card px-2.5 py-1.5 text-caption shadow-sm">
       <p className="text-muted-foreground">{format(parseISO(date), 'yyyy.MM.dd')}</p>
@@ -119,6 +126,7 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
       {buckets.map((bucket) => (
         <Cell key={bucket.date} fill={COLORS[key]} fillOpacity={selected && selected !== bucket.date ? 0.25 : 1} />
       ))}
+
     </Bar>
   )
 
@@ -148,7 +156,7 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
           title="순찰 기록을 불러오지 못했습니다"
           description={runs.error?.message}
         />
-      ) : summary.runs === 0 ? (
+      ) : runs.runs.length === 0 ? (
         <AppEmpty
           illustration="route"
           title="순찰 기록이 없습니다"
@@ -164,17 +172,17 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
                 {summary.checked}/{summary.points}
               </span>
             </Stat>
-
-            <Stat label="특이사항">{summary.memo}회</Stat>
+            <Stat label="미완료">{summary.incomplete}회</Stat>
             <Stat label="시간초과">
               <span className={cn(summary.overtime > 0 && 'text-danger')}>{summary.overtime}회</span>
             </Stat>
+            <Stat label="특이사항">{summary.memo}회</Stat>
           </div>
 
           {/* 🔴 막대를 누르면 recharts 가 차트 전체에 포커스 테두리를 그린다 — 막대 색 변화로 충분해 지운다(076) */}
           <div className="h-[170px] w-full [&_*:focus]:outline-none">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={buckets} margin={{ top: 8, right: 8, bottom: 0, left: -28 }}>
+              <BarChart data={buckets} margin={{ top: 18, right: 8, bottom: 0, left: -28 }}>
                 <CartesianGrid vertical={false} stroke="var(--color-border)" strokeDasharray="2 4" />
                 <XAxis
                   dataKey="date"
@@ -191,15 +199,42 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
                   tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
                 />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-muted)', opacity: 0.6 }} />
-                {bar('normal', false)}
-                {bar('overtime', true)}
+                {bar('completed', false)}
+                {bar('incomplete', true)}
+                {/* 막대 위 시간초과 수 — 🔴 막대의 `LabelList` 로 그리지 않는다: 높이 0 인 칸(미완료 없는 날)은
+                    라벨이 빠지고 순번이 밀려 다른 날에 찍힌다. 날짜 · 막대 높이 좌표에 직접 찍는다 */}
+                {buckets
+                  .filter((bucket) => bucket.overtime > 0)
+                  .map((bucket) => (
+                    <ReferenceDot
+                      key={bucket.date}
+                      x={bucket.date}
+                      y={bucket.completed + bucket.incomplete}
+                      r={0}
+                      label={{
+                        value: bucket.overtime,
+                        position: 'top',
+                        offset: 4,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        fill: OVERTIME_COLOR,
+                        fillOpacity: selected && selected !== bucket.date ? 0.25 : 1,
+                      }}
+                    />
+                  ))}
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border pb-3 text-caption text-muted-foreground">
-            <Legend color={COLORS.normal} label="정상" />
-            <Legend color={COLORS.overtime} label="시간초과" />
+            <Legend color={COLORS.completed} label="완료" />
+            <Legend color={COLORS.incomplete} label="미완료" />
+            <span className="inline-flex items-center gap-1.5">
+              <span className="font-bold tabular-nums text-danger" aria-hidden>
+                n
+              </span>
+              시간초과
+            </span>
             <span className="ml-auto">
               {selected ? (
                 <>
