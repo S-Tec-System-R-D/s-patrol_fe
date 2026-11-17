@@ -18,3 +18,5 @@
 - [x] T1264 테스트 — AddCoursePointDialog(검색어로 만들기 · 만든 뒤 이름 검색 · 자동 체크 없음 · useYn true · 실패 시 입력 유지 · ← 돌아가기) · AddPointForm(onSuccess 이름 · hideUseYn)
 - [x] T1265 verify · test · e2e · 캡처(1280 · 390)
 - [x] T1266 문서 — screens.md 코스 상세 행 · roadmap 075 행
+- [x] T1342 수정(사용자 2026-11-17) — 새 지점을 만든 뒤 이어서 만들 때 이전 이름이 남던 문제: 검색 0건일 때만 검색어를 이름으로 넘긴다 in src/features/courses/components/detail/AddCoursePointDialog.tsx · 테스트
+- [x] T1343 수정(사용자 2026-11-17) — `지점 추가` 점선 버튼 테두리 잘림: 모달이 `translate(-50%)` 로 소수점 픽셀에 놓여 1px 점선이 흐려졌다 → 일반 모달 · 확인 창 가운데 정렬을 `inset-0 m-auto h-fit` 으로(위치 · 크기 같음) in src/components/ui/dialog.tsx · alert-dialog.tsx · verify · test · e2e

@@ -329,7 +329,12 @@ describe('AddCoursePointDialog — 새 지점 만들기 (spec 075)', () => {
     // 🔴 사용으로 고정 — 미사용은 후보에서 빠져 "만들었는데 없다" 가 된다
     expect(sent).toMatchObject({ useYn: true })
 
-    await user.click(created)
+    // 🔴 이어서 또 만들 때 방금 만든 이름이 남아 있으면 안 된다 — 검색창의 이름은 결과가 있는 검색어다
+    await user.click(screen.getByRole('button', { name: '새 지점 만들기' }))
+    expect(screen.getByLabelText(/이름/)).toHaveValue('')
+    await user.click(screen.getByRole('button', { name: '지점 고르기' }))
+
+    await user.click(screen.getByRole('checkbox', { name: /지하 창고/ }))
     await user.click(screen.getByRole('button', { name: '1개 추가' }))
     expect(onAdd).toHaveBeenCalledWith([expect.objectContaining({ pointName: '지하 창고' })])
     server.events.removeAllListeners()

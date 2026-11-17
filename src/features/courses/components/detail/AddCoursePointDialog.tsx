@@ -196,8 +196,10 @@ const AddCoursePointDialog = ({
             <ArrowLeftIcon size={14} aria-hidden />
             지점 고르기
           </button>
-          {/* 🔴 검색 0건에서 왔으면 검색어를 이름으로 미리 채운다 · 지점사용은 숨기고 사용 고정(D2) */}
-          <AddPointForm defaultName={keyword} hideUseYn onSuccess={handleCreated} />
+          {/* 🔴 **검색 0건에서 왔을 때만** 검색어를 이름으로 미리 채운다 · 지점사용은 숨기고 사용 고정(D2).
+              만든 직후엔 검색창에 그 이름이 들어 있다(`handleCreated`) — 결과가 있는 검색어까지 넘기면
+              이어서 만들 때 방금 만든 이름이 그대로 남는다(사용자 지적 2026-11-17) */}
+          <AddPointForm defaultName={visible.length === 0 ? keyword : ''} hideUseYn onSuccess={handleCreated} />
         </div>
       ) : (
         <div className="flex min-h-0 flex-col gap-3">
