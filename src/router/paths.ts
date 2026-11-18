@@ -71,6 +71,11 @@ export const paths = {
     locationDetail: adminLocationDetail,
     admins: '/admin/admins',
   },
+
+  // 개발 전용(`spec 082`) — 🔴 개발 서버에서만 라우트에 등록된다. 운영 빌드에는 없다
+  dev: {
+    simulator: '/dev/simulator',
+  },
 } as const
 
 /**

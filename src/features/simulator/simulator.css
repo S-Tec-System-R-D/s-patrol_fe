@@ -1,0 +1,95 @@
+/*
+ * 시뮬레이터 전용 테마 (`spec 082`).
+ *
+ * 🔴 **`.sim-root` 범위에서만** 값을 덮는다 — `src/index.css` 의 토큰은 건드리지 않는다.
+ * 페이지가 떠 있는 동안 `<html>` 에 `sim-root dark` 를 붙인다(선택 목록 · 입력 창이 `body` 에
+ * 그려지므로 페이지 안쪽 요소에 붙이면 팝업에 색이 닿지 않는다).
+ *
+ * 구성: shadcn Rhea · 기본색 Mist(다크) · 강조 Emerald · 다크 고정 · 모서리 작게.
+ * Mist 값 출처: https://ui.shadcn.com/r/colors/mist.json 의 dark (2026-11-18)
+ */
+@import '@fontsource-variable/manrope';
+@import '@fontsource-variable/geist-mono';
+
+html.sim-root {
+  --background: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.987 0.002 197.1);
+  --card: oklch(0.218 0.008 223.9);
+  --card-foreground: oklch(0.987 0.002 197.1);
+  --popover: oklch(0.218 0.008 223.9);
+  --popover-foreground: oklch(0.987 0.002 197.1);
+  --secondary: oklch(0.275 0.011 216.9);
+  --secondary-foreground: oklch(0.987 0.002 197.1);
+  --muted: oklch(0.275 0.011 216.9);
+  --muted-foreground: oklch(0.723 0.014 214.4);
+  --accent: oklch(0.275 0.011 216.9);
+  --accent-foreground: oklch(0.987 0.002 197.1);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+
+  /* 강조 = Emerald (Tailwind emerald-400 / 500 / 950) */
+  --primary: oklch(0.765 0.177 163.223);
+  --primary-foreground: oklch(0.262 0.051 172.552);
+  --ring: oklch(0.696 0.17 162.48);
+
+  /* 이 프로젝트는 destructive 를 --danger 에 물려 뒀다(index.css) */
+  --danger: oklch(0.704 0.191 22.216);
+  --destructive: oklch(0.704 0.191 22.216);
+
+  /* 중단 = 주황 (시뮬레이터 상태 색) */
+  --sim-warn: oklch(0.828 0.189 84.429);
+
+  /* Rhea 는 버튼에 rounded-2xl(= radius × 1.8)을 쓴다 → 3px 이면 버튼 5.4px · 패널 3px */
+  --radius: 0.1875rem;
+
+  color-scheme: dark;
+}
+
+html.sim-root body {
+  font-family: 'Manrope Variable', 'Pretendard Variable', sans-serif;
+  font-size: 13px;
+}
+
+/* 사번 · 번호 · 시각 · 로그 — 자릿수가 맞아야 읽기 쉽다 */
+.sim-mono {
+  font-family: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Trace 의 "실행 중" 반짝임.
+ * 원본은 `shimmer` 유틸리티를 쓰는데, 설치된 shadcn(4.7.0)의 tailwind.css 에 그 유틸리티가 없다.
+ * 같은 효과를 data 속성으로 직접 건다.
+ */
+@keyframes sim-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+html.sim-root [data-slot='trace-line'][data-status='running'] > [data-slot='trace-title'] {
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    var(--primary) 0%,
+    var(--primary) 40%,
+    var(--foreground) 50%,
+    var(--primary) 60%,
+    var(--primary) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: sim-shimmer 2.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.sim-root [data-slot='trace-line'][data-status='running'] > [data-slot='trace-title'] {
+    animation: none;
+    color: var(--primary);
+    background-image: none;
+  }
+}

@@ -182,6 +182,21 @@ export const router = createBrowserRouter([
     ],
   },
 
+  // 개발 전용 시뮬레이터(`spec 082`) — 가드 밖 · 지연 로딩.
+  // 🔴 `import.meta.env.DEV` 가 운영 빌드에서 `false` 로 굳으므로 이 가지와 그 안의 import() 가
+  //    통째로 빠진다 — 운영 산출물에 시뮬레이터 코드가 들어가지 않는다
+  ...(import.meta.env.DEV
+    ? [
+        {
+          path: paths.dev.simulator,
+          lazy: async () => ({
+            Component: (await import('@/pages/dev/SimulatorPage')).default,
+          }),
+          errorElement: <PageErrorFallback />,
+        },
+      ]
+    : []),
+
   // 404 catch-all (최하단)
   {
     path: '*',

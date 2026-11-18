@@ -198,6 +198,7 @@ src/
 | [`docs/flow.md`](./docs/flow.md) | 네비게이션·시나리오 Mermaid |
 | [`docs/data-model.md`](./docs/data-model.md) | DTO·요청·응답·엔티티 |
 | [`docs/api-spec.md`](./docs/api-spec.md) | **백엔드 실측 응답 스펙. 응답 형태의 SSOT**(swagger에 응답 스키마 없음) |
+| [`docs/app-api-spec.md`](./docs/app-api-spec.md) | **앱(모바일) API 실측 스펙.** 개발 전용 시뮬레이터(`/dev/simulator` · `spec 082`)가 쓴다. 요청 DTO는 `docs/swagger-app-api.json` |
 | [`docs/design-system.md`](./docs/design-system.md) | 디자인 토큰·컨벤션·접근성·콘텐츠 톤·의사결정 |
 | [`docs/components.md`](./docs/components.md) | App* 컴포넌트 + shadcn 원시 사용 가이드 |
 | [`docs/layout.md`](./docs/layout.md) | AppShell / Sidebar / TopNav / 컨텐츠 레이아웃 |

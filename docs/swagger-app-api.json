@@ -1,0 +1,3182 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "STSP 순찰 API",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/Course/M/sign/AddCourse": {
+      "post": {
+        "tags": [
+          "Course"
+        ],
+        "summary": "코스 추가 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_AddCourseDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_AddCourseDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_AddCourseDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_AddCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/M/sign/UpdateCourse": {
+      "put": {
+        "tags": [
+          "Course"
+        ],
+        "summary": "코스 수정",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_UpdateCourseDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_UpdateCourseDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_UpdateCourseDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_UpdateCourseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/M/sign/GetClassificationPoint": {
+      "get": {
+        "tags": [
+          "Course"
+        ],
+        "summary": "코스 추가시 지점 조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/M/sign/GetCourseList": {
+      "get": {
+        "tags": [
+          "Course"
+        ],
+        "summary": "코스 전체조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "lastCourseSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "searchKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/M/sign/GetCourseDetail": {
+      "get": {
+        "tags": [
+          "Course"
+        ],
+        "summary": "코스 상세조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "courseSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/M/sign/GetCourseHistoryList": {
+      "get": {
+        "tags": [
+          "Course"
+        ],
+        "summary": "코스 이력 리스트 조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "courseSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "lastHistorySeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/M/sign/GetPointInfo": {
+      "post": {
+        "tags": [
+          "Course"
+        ],
+        "summary": "지점 직접 등록시 인증 값에 해당하는 지점 값 조회 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_RequestAuthValueDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_RequestAuthValueDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_RequestAuthValueDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_RequestAuthValueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Course/M/sign/DeleteCourse": {
+      "delete": {
+        "tags": [
+          "Course"
+        ],
+        "summary": "코스 삭제",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Emergency/M/sign/GetEmergency": {
+      "get": {
+        "tags": [
+          "Emergency"
+        ],
+        "summary": "비상연락망 조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Geocode/M/sign/ReverseGeocode": {
+      "get": {
+        "tags": [
+          "Geocode"
+        ],
+        "summary": "좌표 → 주소 변환",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Healthcheck/M/sign/Respond": {
+      "post": {
+        "tags": [
+          "Healthcheck"
+        ],
+        "summary": "생체확인 확인 응답",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Healthcheck_Request_RespondHealthcheckDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Healthcheck_Request_RespondHealthcheckDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Healthcheck_Request_RespondHealthcheckDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Healthcheck_Request_RespondHealthcheckDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Healthcheck/M/sign/TriggerTest": {
+      "post": {
+        "tags": [
+          "Healthcheck"
+        ],
+        "summary": "생체확인 즉시 발사 (테스트용) - 정규 슬롯을 기다리지 않고 지금 한 번 보낸다",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Healthcheck_Request_TriggerTestDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Healthcheck_Request_TriggerTestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Healthcheck_Request_TriggerTestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Healthcheck_Request_TriggerTestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Healthcheck/M/sign/GetFailedUserList": {
+      "get": {
+        "tags": [
+          "Healthcheck"
+        ],
+        "summary": "생체확인 미응답자 명단 조회 - slotDt 를 주면 그 슬롯, 없으면 가장 최근 마감 슬롯",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "slotDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/M/sign/GetCourseHistory": {
+      "get": {
+        "tags": [
+          "History"
+        ],
+        "summary": "코스별 이력조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "lastHistorySeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fromDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "courseSeq",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "eventType",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/M/sign/GetCourseHistoryDetail": {
+      "get": {
+        "tags": [
+          "History"
+        ],
+        "summary": "코스 이력 상세조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/M/sign/UpsertCourseHistory": {
+      "patch": {
+        "tags": [
+          "History"
+        ],
+        "summary": "이력 수정",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "detailSeq",
+                  "historySeq"
+                ],
+                "type": "object",
+                "properties": {
+                  "historySeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "detailSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "memo.memoSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "memo.memo": {
+                    "type": "string"
+                  },
+                  "memo.memoAttach": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_History_Request_UpsertMemoAttachDto"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "historySeq": {
+                  "style": "form"
+                },
+                "detailSeq": {
+                  "style": "form"
+                },
+                "memo.memoSeq": {
+                  "style": "form"
+                },
+                "memo.memo": {
+                  "style": "form"
+                },
+                "memo.memoAttach": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/M/sign/GetPointAssignHistory": {
+      "get": {
+        "tags": [
+          "History"
+        ],
+        "summary": "지점인증 이력조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "lastDetailSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fromDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toDt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "courseSeq",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "pointSeq",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "authMethod",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "userSeq",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/M/sign/GetPointAssignHistoryDetail": {
+      "get": {
+        "tags": [
+          "History"
+        ],
+        "summary": "지점인증 상세조회",
+        "parameters": [
+          {
+            "name": "detailSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/History/M/sign/UpsertPointHistory": {
+      "patch": {
+        "tags": [
+          "History"
+        ],
+        "summary": "지점 이력 수정",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "detailSeq"
+                ],
+                "type": "object",
+                "properties": {
+                  "detailSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "memo.memoSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "memo.memo": {
+                    "type": "string"
+                  },
+                  "memo.memoAttach": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_History_Request_UpsertMemoAttachDto"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "detailSeq": {
+                  "style": "form"
+                },
+                "memo.memoSeq": {
+                  "style": "form"
+                },
+                "memo.memo": {
+                  "style": "form"
+                },
+                "memo.memoAttach": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Keyword/M/sign/AddKeyword": {
+      "post": {
+        "tags": [
+          "Keyword"
+        ],
+        "summary": "키워드 추가",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Keyword_Request_AddKeywordDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Keyword_Request_AddKeywordDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Keyword_Request_AddKeywordDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Keyword_Request_AddKeywordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Keyword/M/sign/GetKeyword": {
+      "get": {
+        "tags": [
+          "Keyword"
+        ],
+        "summary": "사업장 키워드 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Keyword/M/sign/UpdateKeyword": {
+      "put": {
+        "tags": [
+          "Keyword"
+        ],
+        "summary": "키워드 수정",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Keyword_Request_UpdateKeywordDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Keyword_Request_UpdateKeywordDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Keyword_Request_UpdateKeywordDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Keyword_Request_UpdateKeywordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Keyword/M/sign/DeleteKeyword": {
+      "delete": {
+        "tags": [
+          "Keyword"
+        ],
+        "summary": "키워드 삭제",
+        "parameters": [
+          {
+            "name": "keywordSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Login/M/Login": {
+      "post": {
+        "tags": [
+          "Login"
+        ],
+        "summary": "모바일 로그인 [테스트완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Login_Request_LoginDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Login_Request_LoginDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Login_Request_LoginDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Login_Request_LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Login/M/sign/RefreshToken": {
+      "post": {
+        "tags": [
+          "Login"
+        ],
+        "summary": "모바일 리프레시 토큰 [테스트완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Login_Request_RefreshTokenDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Login_Request_RefreshTokenDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Login_Request_RefreshTokenDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Login_Request_RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Login/M/sign/Logout": {
+      "post": {
+        "tags": [
+          "Login"
+        ],
+        "summary": "모바일 로그아웃 [테스트완료]",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Login/M/sign/AdminSiteSelect": {
+      "get": {
+        "tags": [
+          "Login"
+        ],
+        "summary": "관리자 사업장 선택 [테스트완료]",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Login/M/sign/UserSiteSelect": {
+      "get": {
+        "tags": [
+          "Login"
+        ],
+        "summary": "현장 사용자 사업장 선택 [테스트완료]",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notice/M/sign/AddNotice": {
+      "post": {
+        "tags": [
+          "Notice"
+        ],
+        "summary": "공지사항 추가",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "description",
+                  "isPin",
+                  "siteSeq",
+                  "title"
+                ],
+                "type": "object",
+                "properties": {
+                  "siteSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "isPin": {
+                    "type": "boolean"
+                  },
+                  "file": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "siteSeq": {
+                  "style": "form"
+                },
+                "title": {
+                  "style": "form"
+                },
+                "description": {
+                  "style": "form"
+                },
+                "isPin": {
+                  "style": "form"
+                },
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notice/M/sign/GetNoticeList": {
+      "get": {
+        "tags": [
+          "Notice"
+        ],
+        "summary": "공지사항 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "lastNoticeSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notice/M/sign/DetailNotice": {
+      "get": {
+        "tags": [
+          "Notice"
+        ],
+        "summary": "공지사항 상세조회",
+        "parameters": [
+          {
+            "name": "noticeSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notice/M/sign/UpsertNotice": {
+      "patch": {
+        "tags": [
+          "Notice"
+        ],
+        "summary": "공지사항 수정",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "noticeSeq"
+                ],
+                "type": "object",
+                "properties": {
+                  "noticeSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "isPin": {
+                    "type": "boolean"
+                  },
+                  "attachList": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Notice_Request_UpdateNoticeAttachDto"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "noticeSeq": {
+                  "style": "form"
+                },
+                "title": {
+                  "style": "form"
+                },
+                "description": {
+                  "style": "form"
+                },
+                "isPin": {
+                  "style": "form"
+                },
+                "attachList": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notice/M/sign/DeleteNotice": {
+      "delete": {
+        "tags": [
+          "Notice"
+        ],
+        "summary": "공지사항 삭제",
+        "parameters": [
+          {
+            "name": "noticeSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notify/M/sign/GetUnReadList": {
+      "get": {
+        "tags": [
+          "Notify"
+        ],
+        "summary": "안읽은 알림 리스트 조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "lastNotifySeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notify/M/sign/SetUnRead": {
+      "put": {
+        "tags": [
+          "Notify"
+        ],
+        "summary": "안읽은 알림 읽음 처리 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Notify_Request_SetNotifyDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Notify_Request_SetNotifyDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Notify_Request_SetNotifyDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Notify_Request_SetNotifyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Notify/M/sign/GetAllNotifyList": {
+      "get": {
+        "tags": [
+          "Notify"
+        ],
+        "summary": "모든 알림 리스트 조회",
+        "parameters": [
+          {
+            "name": "lastNotifySeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Point/M/sign/AddPoint": {
+      "post": {
+        "tags": [
+          "Point"
+        ],
+        "summary": "지점 등록 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Point_Request_AddPointDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Point_Request_AddPointDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Point_Request_AddPointDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Point_Request_AddPointDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Point/M/sign/GetPointList": {
+      "get": {
+        "tags": [
+          "Point"
+        ],
+        "summary": "지점 리스트 조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "lastPointSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "searchKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Point/M/sign/DetailPoint": {
+      "get": {
+        "tags": [
+          "Point"
+        ],
+        "summary": "지점 상세 조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "pointSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Point/M/sign/UpdatePoint": {
+      "patch": {
+        "tags": [
+          "Point"
+        ],
+        "summary": "지점 수정 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Point_Request_UpdatePointDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Point_Request_UpdatePointDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Point_Request_UpdatePointDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Point_Request_UpdatePointDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Point/M/sign/DeletePoint": {
+      "delete": {
+        "tags": [
+          "Point"
+        ],
+        "summary": "지점 삭제 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "pointSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "StspPatrolMobileService"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/Tts/M/sign/DownloadTtsVoice": {
+      "get": {
+        "tags": [
+          "Tts"
+        ],
+        "summary": "Download TTS voice file",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/GetTodayPatrolCount": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "금일 순찰 건수 + 근무중 여부 + 총 근무시간 [테스트 완료]",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/AddUser": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "유저 추가 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "loginId",
+                  "loginPw",
+                  "name",
+                  "phone",
+                  "siteSeq"
+                ],
+                "type": "object",
+                "properties": {
+                  "siteSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "codeSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "loginId": {
+                    "type": "string"
+                  },
+                  "loginPw": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "siteSeq": {
+                  "style": "form"
+                },
+                "codeSeq": {
+                  "style": "form"
+                },
+                "loginId": {
+                  "style": "form"
+                },
+                "loginPw": {
+                  "style": "form"
+                },
+                "name": {
+                  "style": "form"
+                },
+                "phone": {
+                  "style": "form"
+                },
+                "image": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/UserList": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "사용자 리스트 조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "lastUserSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "searchKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/DetailUser": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "사용자 상세조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "userSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/UpdateUser": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "사용자 수정 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "userSeq"
+                ],
+                "type": "object",
+                "properties": {
+                  "userSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "loginPw": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "phoneNumber": {
+                    "type": "string"
+                  },
+                  "isRemove": {
+                    "type": "boolean"
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "userSeq": {
+                  "style": "form"
+                },
+                "loginPw": {
+                  "style": "form"
+                },
+                "name": {
+                  "style": "form"
+                },
+                "phoneNumber": {
+                  "style": "form"
+                },
+                "isRemove": {
+                  "style": "form"
+                },
+                "image": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/MyProfile": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "내 프로필 조회 [테스트 완료]",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/WorkStatusChanged": {
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "근무중 상태변경 토글 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_WorkStatusDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_WorkStatusDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_WorkStatusDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_WorkStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/RemoveUser": {
+      "delete": {
+        "tags": [
+          "User"
+        ],
+        "summary": "유저 삭제 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "userSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/GetGroupTree": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "그룹 트리 조회 [테스트 완료]",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/UserAssignment": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "사업장 배치 등록 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_AssignmentDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_AssignmentDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_AssignmentDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_AssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/UserAssignmentReturn": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "사업장 복귀 등록 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_AssignmentReturnDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_AssignmentReturnDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_AssignmentReturnDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_AssignmentReturnDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/UserAssignmentList": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "사업장 배치 & 복귀 신청 조회 gubun = 0 : 배치 gubun = 1 : 복귀 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "gubun",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "lastAssignmentSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/AssignmentApprove": {
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "배치 허락 & 거절 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_RequestAssignmentDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_RequestAssignmentDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_RequestAssignmentDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_RequestAssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/AssignmentReturnApprove": {
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "복귀 허락 & 거절 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_RequestAssignmentDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_RequestAssignmentDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_RequestAssignmentDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_User_Request_RequestAssignmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/GetAssignmentHistory": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "해당 사용자의 배치 이력 조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "userSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "lastAssignmentSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/GetAssignCount": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "해당 사업장에 들어온 배치 & 복귀 요청 건 수",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/GetTodayEmergencyList": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "금일 비상연락망 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/GetNoticeList": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "해당 사업장 공지사항 최근 3건 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/User/M/sign/GetSiteInfo": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "사업장 정보 조회",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/UserPatrol/M/sign/GetAvailablePatrolList": {
+      "get": {
+        "tags": [
+          "UserPatrol"
+        ],
+        "summary": "해당 사업장에 순찰 가능한 리스트 조회 -> 순찰 가능한 리스트 조회 [테스트 완료]",
+        "parameters": [
+          {
+            "name": "siteSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/UserPatrol/M/sign/StartPatrol": {
+      "put": {
+        "tags": [
+          "UserPatrol"
+        ],
+        "summary": "순찰 시작 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_StartPatrolDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_StartPatrolDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_StartPatrolDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_StartPatrolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/UserPatrol/M/sign/GetMyActivePatrol": {
+      "get": {
+        "tags": [
+          "UserPatrol"
+        ],
+        "summary": "내가 현재 진행중인 순찰 조회 - 응답은 GetStartPatrolInfo와 동일 (없으면 data = null)",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/UserPatrol/M/sign/GetStartPatrolInfo": {
+      "get": {
+        "tags": [
+          "UserPatrol"
+        ],
+        "summary": "진행중인 순찰정보 상세조회 [테스트완료]",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/UserPatrol/M/sign/CertificationPatrol": {
+      "post": {
+        "tags": [
+          "UserPatrol"
+        ],
+        "summary": "순찰 인증 [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "detailSeq",
+                  "memoInfo.attachInfo.image",
+                  "memoInfo.memo",
+                  "skipYn"
+                ],
+                "type": "object",
+                "properties": {
+                  "historySeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "detailSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "skipYn": {
+                    "type": "boolean"
+                  },
+                  "authMethod": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "authValue": {
+                    "type": "string"
+                  },
+                  "gpsLat": {
+                    "type": "number",
+                    "format": "double"
+                  },
+                  "gpsLng": {
+                    "type": "number",
+                    "format": "double"
+                  },
+                  "memoInfo.memo": {
+                    "type": "string"
+                  },
+                  "memoInfo.attachInfo.image": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "historySeq": {
+                  "style": "form"
+                },
+                "detailSeq": {
+                  "style": "form"
+                },
+                "skipYn": {
+                  "style": "form"
+                },
+                "authMethod": {
+                  "style": "form"
+                },
+                "authValue": {
+                  "style": "form"
+                },
+                "gpsLat": {
+                  "style": "form"
+                },
+                "gpsLng": {
+                  "style": "form"
+                },
+                "memoInfo.memo": {
+                  "style": "form"
+                },
+                "memoInfo.attachInfo.image": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/UserPatrol/M/sign/EndPatrol": {
+      "put": {
+        "tags": [
+          "UserPatrol"
+        ],
+        "summary": "순찰 종료 (중도 종료) - 남은 지점을 미완료 처리하고 순찰을 미완료로 닫음",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/UserPatrol/M/sign/UpsertMemo": {
+      "patch": {
+        "tags": [
+          "UserPatrol"
+        ],
+        "summary": "메모 Upsert [테스트 완료]",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "detailSeq"
+                ],
+                "type": "object",
+                "properties": {
+                  "detailSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "memoSeq": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "memo": {
+                    "type": "string"
+                  },
+                  "attachList": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_UpsertMemoAttachDto"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "detailSeq": {
+                  "style": "form"
+                },
+                "memoSeq": {
+                  "style": "form"
+                },
+                "memo": {
+                  "style": "form"
+                },
+                "attachList": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/UserPatrol/M/sign/DeleteMemo": {
+      "delete": {
+        "tags": [
+          "UserPatrol"
+        ],
+        "summary": "메모 삭제",
+        "parameters": [
+          {
+            "name": "memoSeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/UserPatrol/M/sign/RequestHandOver": {
+      "put": {
+        "tags": [
+          "UserPatrol"
+        ],
+        "summary": "교대 요청 상태 등록 (코스를 교대중으로 변경)",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/UserPatrol/M/sign/CancelHandOver": {
+      "put": {
+        "tags": [
+          "UserPatrol"
+        ],
+        "summary": "교대 요청 취소 (요청자 본인만, 코스를 순찰중으로 복귀) - pauseTime: 멈춰있던 시간(초)",
+        "parameters": [
+          {
+            "name": "historySeq",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pauseTime",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/UserPatrol/M/sign/AcceptHandOver": {
+      "post": {
+        "tags": [
+          "UserPatrol"
+        ],
+        "summary": "교대 수락",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_AcceptHandOverDto"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_AcceptHandOverDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_AcceptHandOverDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_AcceptHandOverDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StspPatrolMobileService_Comm_Dto_v1_Course_Request_AddCourseDto": {
+        "required": [
+          "courseName",
+          "siteSeq"
+        ],
+        "type": "object",
+        "properties": {
+          "siteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "courseName": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "useYn": {
+            "type": "boolean"
+          },
+          "switchYn": {
+            "type": "boolean"
+          },
+          "totalMin": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_AddCoursePointDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Course_Request_AddCoursePointDto": {
+        "required": [
+          "orderNo",
+          "pointSeq"
+        ],
+        "type": "object",
+        "properties": {
+          "pointSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orderNo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "courseMin": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Course_Request_RequestAuthValueDto": {
+        "required": [
+          "authMethod",
+          "authValue",
+          "siteSeq"
+        ],
+        "type": "object",
+        "properties": {
+          "siteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "authMethod": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "authValue": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Course_Request_UpdateCourseDto": {
+        "type": "object",
+        "properties": {
+          "siteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "courseSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "courseName": {
+            "type": "string",
+            "nullable": true
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "useYn": {
+            "type": "boolean"
+          },
+          "switchYn": {
+            "type": "boolean"
+          },
+          "totalMin": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StspPatrolMobileService_Comm_Dto_v1_Course_Request_UpdateCoursePointDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Course_Request_UpdateCoursePointDto": {
+        "type": "object",
+        "properties": {
+          "pointSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coursePointSeq": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "orderNo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "courseMin": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Healthcheck_Request_RespondHealthcheckDto": {
+        "type": "object",
+        "properties": {
+          "callId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Healthcheck_Request_TriggerTestDto": {
+        "required": [
+          "siteSeq"
+        ],
+        "type": "object",
+        "properties": {
+          "siteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "userSeq": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_History_Request_UpsertMemoAttachDto": {
+        "type": "object",
+        "properties": {
+          "attachSeq": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isRemove": {
+            "type": "boolean"
+          },
+          "image": {
+            "type": "string",
+            "format": "binary",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Keyword_Request_AddKeywordDto": {
+        "required": [
+          "memo",
+          "siteKey"
+        ],
+        "type": "object",
+        "properties": {
+          "siteKey": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "memo": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Keyword_Request_UpdateKeywordDto": {
+        "required": [
+          "keywordSeq",
+          "memo"
+        ],
+        "type": "object",
+        "properties": {
+          "keywordSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "memo": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Login_Request_LoginDto": {
+        "required": [
+          "loginId",
+          "loginPw"
+        ],
+        "type": "object",
+        "properties": {
+          "loginId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "loginPw": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "deviceType": {
+            "type": "string",
+            "nullable": true
+          },
+          "fcmToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "voipToken": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Login_Request_RefreshTokenDto": {
+        "required": [
+          "refreshToken"
+        ],
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "fcmToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "deviceType": {
+            "type": "string",
+            "nullable": true
+          },
+          "voipToken": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Notice_Request_UpdateNoticeAttachDto": {
+        "type": "object",
+        "properties": {
+          "attachSeq": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isRemove": {
+            "type": "boolean"
+          },
+          "files": {
+            "type": "string",
+            "format": "binary",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Notify_Request_SetNotifyDto": {
+        "type": "object",
+        "properties": {
+          "readSignSeq": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Point_Request_AddPointDto": {
+        "required": [
+          "authMethod",
+          "name",
+          "siteSeq",
+          "useYn"
+        ],
+        "type": "object",
+        "properties": {
+          "siteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "authMethod": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "qrCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "nfcTagId": {
+            "type": "string",
+            "nullable": true
+          },
+          "gpsLat": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gpsLng": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "useYn": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_Point_Request_UpdatePointDto": {
+        "required": [
+          "pointSeq"
+        ],
+        "type": "object",
+        "properties": {
+          "pointSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "authMethod": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "reissueQrYn": {
+            "type": "boolean"
+          },
+          "nfcTagId": {
+            "type": "string",
+            "nullable": true
+          },
+          "clearNfcTagYn": {
+            "type": "boolean"
+          },
+          "gpsLat": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gpsLng": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "useYn": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_AcceptHandOverDto": {
+        "type": "object",
+        "properties": {
+          "historySeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pauseTime": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_StartPatrolDto": {
+        "type": "object",
+        "properties": {
+          "courseSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "siteSeq": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_UserPatrol_Request_UpsertMemoAttachDto": {
+        "type": "object",
+        "properties": {
+          "attachSeq": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isRemove": {
+            "type": "boolean"
+          },
+          "files": {
+            "type": "string",
+            "format": "binary",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_User_Request_AssignmentDto": {
+        "type": "object",
+        "properties": {
+          "userSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fromSiteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "toSiteSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_User_Request_AssignmentReturnDto": {
+        "type": "object",
+        "properties": {
+          "assignmentSeq": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_User_Request_RequestAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "assignmentSeq": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "approved": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StspPatrolMobileService_Comm_Dto_v1_User_Request_WorkStatusDto": {
+        "required": [
+          "workYn"
+        ],
+        "type": "object",
+        "properties": {
+          "workYn": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "description": "입력양식 - 'Bearer' [space] and then your token.\n                예: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Course"
+    },
+    {
+      "name": "Emergency"
+    },
+    {
+      "name": "Geocode"
+    },
+    {
+      "name": "Healthcheck"
+    },
+    {
+      "name": "History"
+    },
+    {
+      "name": "Keyword"
+    },
+    {
+      "name": "Login"
+    },
+    {
+      "name": "Notice"
+    },
+    {
+      "name": "Notify"
+    },
+    {
+      "name": "Point"
+    },
+    {
+      "name": "StspPatrolMobileService"
+    },
+    {
+      "name": "Tts"
+    },
+    {
+      "name": "User"
+    },
+    {
+      "name": "UserPatrol"
+    }
+  ]
+}
