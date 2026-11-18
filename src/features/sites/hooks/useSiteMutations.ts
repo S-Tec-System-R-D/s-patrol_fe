@@ -61,15 +61,10 @@ export const useUpdateHealthCheck = () => {
 
 /** 🔴 하위 사업장 · 지점까지 함께 지워진다(B-54) — 확인창은 호출부 책임 */
 export const useDeleteSite = () => {
-  const queryClient = useQueryClient()
   const invalidate = useInvalidateSites()
   return useMutation({
     mutationFn: (siteSeq: number) => deleteSite(siteSeq),
-    onSuccess: (_, siteSeq) => {
-      // 지운 상세를 다시 부르면 400 이다 — 무효화가 아니라 버린다
-      queryClient.removeQueries({ queryKey: siteKeys.detail(siteSeq) })
-      notify.success('사업장을 삭제했습니다.')
-    },
+    onSuccess: () => notify.success('사업장을 삭제했습니다.'),
     onSettled: () => invalidate(),
   })
 }

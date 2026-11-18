@@ -76,10 +76,9 @@ const NoticeDetailPage = () => {
   /** 🔴 실패 토스트는 전역 `MutationCache` 가 띄운다 — 여기서 또 띄우지 않는다 */
   const deleteMutation = useMutation({
     mutationFn: deleteNotice,
-    onSuccess: async (_, deletedSeq) => {
+    onSuccess: async () => {
       // 🔴 이동을 **무효화보다 먼저** 한다 — 지운 공지의 상세를 다시 읽어 실패 화면이 깜빡인다(029 승계)
       navigate(paths.service.notice, { replace: true })
-      queryClient.removeQueries({ queryKey: noticeKeys.detail(deletedSeq) })
       notify.success('공지를 삭제했습니다.')
       await queryClient.invalidateQueries({ queryKey: noticeKeys.lists })
     },

@@ -90,10 +90,9 @@ const UserDetailPage = () => {
 
   const deleteMutation = useMutation({
     mutationFn: removeUser,
-    onSuccess: async (_, deletedSeq) => {
+    onSuccess: async () => {
       // 🔴 이동을 **무효화보다 먼저** 한다 — 지운 근무자의 상세를 다시 읽어 실패 화면이 깜빡인다(029 승계)
       navigate(paths.service.users, { replace: true })
-      queryClient.removeQueries({ queryKey: userKeys.detail(deletedSeq) })
       notify.success('근무자를 삭제했습니다.')
       await queryClient.invalidateQueries({ queryKey: userKeys.lists })
     },
