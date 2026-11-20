@@ -90,18 +90,19 @@ describe('CourseCard', () => {
  * 크기로 인식되어 충돌하지 않는다.
  */
 describe('CourseCard — 뱃지 색 유지', () => {
-  it('🔴 크기를 줄여도 variant 색이 남아 있다', () => {
+  // 🔄 `spec 083`: 색은 글자가 아니라 **아이콘**이 진다 — 크기를 줄여도 아이콘 색이 남는지 본다
+  it('🔴 크기를 줄여도 아이콘 색이 남아 있다', () => {
     render(<>{CourseCard(course())}</>)
 
     const badge = screen.getByText('사용')
-    expect(badge.className).toContain('text-success-foreground')
+    expect(badge.querySelector('svg')).toHaveClass('text-success')
     // 크기는 줄었다
-    expect(badge.className).toContain('text-[10.5px]')
+    expect(badge.className).toContain('text-[11px]')
   })
 
   it('미사용 뱃지도 마찬가지다', () => {
     render(<>{CourseCard(course({ useYn: false }))}</>)
 
-    expect(screen.getByText('미사용').className).toContain('text-muted-foreground')
+    expect(screen.getByText('미사용').querySelector('svg')).toHaveClass('text-muted-foreground')
   })
 })

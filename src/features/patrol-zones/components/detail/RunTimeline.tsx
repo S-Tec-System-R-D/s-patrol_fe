@@ -63,11 +63,11 @@ const moveText = (next: RunStep | undefined): string | null => {
 
 const AuthChip = ({ authMethod }: { authMethod: number | null }) =>
   authMethod === AUTH_METHOD.QR ? (
-    <AppBadge variant="point" className={cardBadge}>
+    <AppBadge variant="plain" className={cardBadge}>
       QR
     </AppBadge>
   ) : authMethod === AUTH_METHOD.NFC ? (
-    <AppBadge variant="success" className={cardBadge}>
+    <AppBadge variant="plain" className={cardBadge}>
       NFC
     </AppBadge>
   ) : null

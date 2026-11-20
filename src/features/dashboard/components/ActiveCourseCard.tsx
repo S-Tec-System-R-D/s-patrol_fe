@@ -62,7 +62,7 @@ const ActiveCourseCard = ({ course, elapsedMin, handOvers = [] }: ActiveCourseCa
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-panel-title font-bold text-foreground">{course.courseName}</h3>
         {over > 0 && (
-          <AppBadge variant="danger" className={cn(cardBadge, 'gap-1')}>
+          <AppBadge variant="danger" icon={false} className={cn(cardBadge, 'gap-1')}>
             <ClockAlertIcon size={12} strokeWidth={2} />
             시간초과 +{over}분
           </AppBadge>
@@ -82,7 +82,7 @@ const ActiveCourseCard = ({ course, elapsedMin, handOvers = [] }: ActiveCourseCa
         <span className="flex items-center gap-1.5">
           <span className="font-medium text-foreground">{userName ?? '-'}</span>
           {course.handoverCount > 0 && handOverOrders.length === 0 && (
-            <AppBadge variant="muted" className={cn(cardBadge, 'gap-1')}>
+            <AppBadge variant="plain" className={cn(cardBadge, 'gap-1')}>
               <RepeatIcon size={11} strokeWidth={2} />
               교대
             </AppBadge>

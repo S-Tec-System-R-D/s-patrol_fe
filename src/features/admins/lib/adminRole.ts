@@ -24,8 +24,8 @@ const LABEL: Record<number, string> = {
 export const adminRoleLabel = (codeSeq: number, codeName: string): string => LABEL[codeSeq] ?? codeName
 
 /** 뱃지 — 시스템관리자 · 마스터를 강조하고 매니저는 기본(근무자 화면 `roleBadgeVariant` 와 같은 판단) */
-export const adminRoleVariant = (codeSeq: number): 'point' | 'muted' =>
-  codeSeq === ADMIN_CODE.MANAGER ? 'muted' : 'point'
+export const adminRoleVariant = (codeSeq: number): 'chip' | 'plain' =>
+  codeSeq === ADMIN_CODE.MANAGER ? 'plain' : 'chip'
 
 /** 권한 필터 — 목업 세그먼트 "전체 / 마스터 / 매니저". 값은 URL `?role=`(`adminList` `filterAdminRows`) */
 export const adminRoleFilterOptions: AppSelectOption[] = [

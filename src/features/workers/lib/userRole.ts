@@ -27,5 +27,5 @@ export const workFilterOptions: AppSelectOption[] = [
 ]
 
 /** 권한 뱃지 — 관리자만 강조한다(근무자 화면이라 근무자가 기본값이다) */
-export const roleBadgeVariant = (codeSeq: number): 'point' | 'muted' =>
-  codeSeq === USER_ROLE.FIELD_MANAGER ? 'point' : 'muted'
+export const roleBadgeVariant = (codeSeq: number): 'chip' | 'plain' =>
+  codeSeq === USER_ROLE.FIELD_MANAGER ? 'chip' : 'plain'

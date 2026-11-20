@@ -17,20 +17,28 @@ import { cva } from 'class-variance-authority'
  * 각자 선언했고 `AddCoursePointDialog` 는 문자열을 그대로 적었다. 위 함정 설명이
  * **사본마다 복제돼 있었다** — 그게 제일 위험하다(한쪽만 고쳐지면 나머지가 틀린 설명이 된다).
  */
-export const cardBadge = 'px-1.5 py-0.5 text-[10.5px] leading-4'
+export const cardBadge = 'text-[11px] leading-4'
 
 export const badgeVariants = cva(
-  'inline-flex w-fit items-center rounded-md px-2 py-1 text-badge font-semibold whitespace-nowrap',
+  // 🔄 `spec 083`: 색 바탕 알약 → **아이콘 + 글자**. 색은 아이콘에만 준다(`badgeIconClass`) — 빨강만 글자도 빨강
+  'inline-flex w-fit items-center gap-1 text-badge whitespace-nowrap',
   {
     variants: {
       variant: {
-        success: 'bg-success-bg text-success-foreground',
-        point: 'bg-point-bg text-point-foreground',
-        warning: 'bg-warning-bg text-warning-foreground',
-        danger: 'bg-danger-bg text-danger-foreground',
-        muted: 'bg-muted text-muted-foreground',
-        // 회차 `미완료` · 지점 `미인증`(`spec 079` D13) — 회색(#64748B) 계열. `muted`(대기 · 모름)보다 한 단계 진하다
-        neutral: 'bg-muted-foreground/15 text-foreground/75',
+        success: 'text-foreground',
+        point: 'text-foreground',
+        // 주황을 쓰지 않는다(`spec 083`) — 아이콘 없이 글자만. 쓰는 곳(특이사항 · 순찰제외 · 배치예정)은 084 에서 옮긴다
+        warning: 'text-foreground/75',
+        danger: 'font-medium text-danger',
+        muted: 'text-foreground',
+        // 회차 `미완료` · 지점 `미인증`(`spec 079` D13)
+        neutral: 'text-foreground',
+        // 아직 차례가 아님(지점 `대기중`) — 미완료(했어야 하는데 안 함)와 아이콘으로 구분한다
+        pending: 'text-foreground',
+        // 상태가 아닌 **분류 · 설정 값**(권한 · 인증수단 · 교대) — 아이콘 없이 글자만
+        plain: 'text-foreground/75',
+        // 분류 값 가운데 눈에 띄어야 하는 것(현장 관리자 · 마스터) — 옅은 회색 칩
+        chip: 'rounded-[5px] bg-muted px-1.5 py-0.5 font-medium text-foreground',
       },
     },
     defaultVariants: {
@@ -38,3 +46,13 @@ export const badgeVariants = cva(
     },
   }
 )
+
+/** 종류별 아이콘 색 — 글자는 본문색이고 색은 아이콘이 진다 */
+export const badgeIconClass: Record<string, string> = {
+  success: 'text-success',
+  point: 'text-point',
+  danger: 'text-danger',
+  muted: 'text-muted-foreground',
+  neutral: 'text-muted-foreground',
+  pending: 'text-muted-foreground',
+}

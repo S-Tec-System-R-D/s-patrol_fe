@@ -72,7 +72,7 @@ const PointHistoryInfoCard = ({ detail, map }: PointHistoryInfoCardProps) => {
               label="인증수단"
               value={
                 hasAuth ? (
-                  <AppBadge variant="point">{detail.authMethodName}</AppBadge>
+                  <AppBadge variant="plain">{detail.authMethodName}</AppBadge>
                 ) : notChecked ? (
                   <span className="text-muted-foreground">인증하지 않음</span>
                 ) : (

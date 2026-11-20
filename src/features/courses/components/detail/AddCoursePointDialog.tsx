@@ -302,7 +302,7 @@ const AddCoursePointDialog = ({
                             주인공은 이름이고 인증수단은 곁들이는 정보다 */}
                         {method && (
                           <AppBadge
-                            variant={method === 'QR' ? 'point' : 'success'}
+                            variant="plain"
                             className={cardBadge}
                           >
                             {method}

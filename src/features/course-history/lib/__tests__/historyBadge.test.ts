@@ -31,7 +31,8 @@ describe('courseResultBadge — 코스 사전(0·1·2)', () => {
 
 describe('pointCheckBadge — 지점 사전(0~4)', () => {
   it('0=대기중 / 1=진행중 / 2=순찰제외', () => {
-    expect(pointCheckBadge(0, false)).toEqual({ variant: 'muted', label: '대기중' })
+    // 🔄 `spec 083`: 대기는 미완료와 아이콘으로 구분한다(멈춤 원 — `pending`)
+    expect(pointCheckBadge(0, false)).toEqual({ variant: 'pending', label: '대기중' })
     expect(pointCheckBadge(1, false)).toEqual({ variant: 'point', label: '진행중' })
     expect(pointCheckBadge(2, false)).toEqual({ variant: 'warning', label: '순찰제외' })
   })

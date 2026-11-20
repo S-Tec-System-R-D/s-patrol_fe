@@ -71,13 +71,13 @@ export const courseColumns = (): ColumnDef<CourseRow>[] => [
     accessorKey: 'switchYn',
     header: '교대',
     // 🔴 **양쪽 다 뱃지다**(사용자 결정 2026-10-12). 처음에는 "켜진 것만 표시" 로 두었는데
-    // (`-`), 같은 열에 뱃지와 하이픈이 섞여 **빈 칸처럼 읽혔다.** 구분은 variant 가 준다 —
-    // 허용은 `success`, 허용 안 함은 `muted` 로 톤이 눌린다
+    // (`-`), 같은 열에 뱃지와 하이픈이 섞여 **빈 칸처럼 읽혔다.**
+    // 🔄 `spec 083`: 교대는 상태가 아니라 설정 값이라 아이콘 없이 글자만(`plain`) — 구분은 문구가 준다
     cell: ({ row }) =>
       row.original.switchYn ? (
-        <AppBadge variant={row.original.useYn ? 'success' : 'muted'}>허용</AppBadge>
+        <AppBadge variant="plain">허용</AppBadge>
       ) : (
-        <AppBadge variant="muted">허용 안 함</AppBadge>
+        <AppBadge variant="plain">허용 안 함</AppBadge>
       ),
   },
   {

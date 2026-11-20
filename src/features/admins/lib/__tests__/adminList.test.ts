@@ -162,8 +162,9 @@ describe('adminRole', () => {
   })
 
   it('매니저만 기본 뱃지 · 시스템관리자 판정', () => {
-    expect(adminRoleVariant(4)).toBe('muted')
-    expect(adminRoleVariant(3)).toBe('point')
+    // 🔄 `spec 083`: 권한은 분류 값 — 매니저는 글자만 · 그 위는 옅은 회색 칩
+    expect(adminRoleVariant(4)).toBe('plain')
+    expect(adminRoleVariant(3)).toBe('chip')
     expect(isSystemAdmin(2)).toBe(true)
     expect(isSystemAdmin(3)).toBe(false)
   })

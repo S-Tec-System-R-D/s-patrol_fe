@@ -118,7 +118,7 @@ const DiagramNode = ({ point }: { point: CourseDetailPoint }) => {
       <span className="text-body font-semibold">{point.pointName}</span>
       {/* 모르는 코드면 뱃지를 숨긴다 — 없는 이름을 만들지 않는다 */}
       {method && (
-        <AppBadge variant={!active ? 'muted' : method === 'QR' ? 'point' : 'success'}>
+        <AppBadge variant="plain" className={active ? undefined : 'opacity-60'}>
           {method}
         </AppBadge>
       )}

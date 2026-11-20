@@ -4,7 +4,7 @@ import { ChevronRightIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 
-import { resolveAuthMethodLabel, toAuthMethodLabel } from '../lib/authMethod'
+import { resolveAuthMethodLabel } from '../lib/authMethod'
 import type { PointRow } from '../types'
 
 /**
@@ -63,17 +63,12 @@ export const pointColumns = (): ColumnDef<PointRow>[] => [
       // 표시할 라벨이 없으면 뱃지를 숨긴다 — 없는 인증수단 이름을 만들지 않는다(A1)
       if (!label) return <span className="text-muted-foreground">-</span>
 
-      const method = toAuthMethodLabel(authMethod)
-      // 미사용이면 뱃지도 함께 톤다운한다 — 행 안에서 강조가 하나만 튀면 어색하다
-      const variant = !useYn
-        ? 'muted'
-        : method === 'QR'
-          ? 'point'
-          : method === 'NFC'
-            ? 'success'
-            : 'muted'
-
-      return <AppBadge variant={variant}>{label}</AppBadge>
+      // 🔄 `spec 083`: 인증수단은 상태가 아니라 분류라 아이콘 없이 글자만 — 미사용 지점은 흐리게
+      return (
+        <AppBadge variant="plain" className={useYn ? undefined : 'opacity-60'}>
+          {label}
+        </AppBadge>
+      )
     },
   },
   {

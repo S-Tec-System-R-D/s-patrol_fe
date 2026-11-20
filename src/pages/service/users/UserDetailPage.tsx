@@ -9,6 +9,7 @@ import {
   Trash2Icon,
   TriangleAlertIcon,
   UserRoundIcon,
+  CircleDotIcon,
 } from 'lucide-react'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
@@ -151,7 +152,10 @@ const UserDetailPage = () => {
         icon={UserRoundIcon}
         titleSuffix={
           <span className="flex flex-wrap items-center gap-2">
-            <AppBadge variant={user.workYn ? 'success' : 'muted'}>{workLabel(user.workYn)}</AppBadge>
+            {/* 근무 중은 체크가 아니라 점 원(`spec 083`) */}
+            <AppBadge variant={user.workYn ? 'success' : 'muted'} icon={user.workYn ? CircleDotIcon : undefined}>
+              {workLabel(user.workYn)}
+            </AppBadge>
             {/* 시안 — 상태 옆 소속 사업장. 상세 `siteName` 은 소속지다(실측) */}
             {user.siteName && <span className="text-caption text-muted-foreground">{user.siteName}</span>}
           </span>

@@ -89,7 +89,7 @@ export const pointHistoryColumns = (): ColumnDef<PointHistoryRow>[] =>
         if (authMethod === null || authMethodName === '') {
           return <span className="text-muted-foreground">-</span>
         }
-        return <AppBadge variant="point">{authMethodName}</AppBadge>
+        return <AppBadge variant="plain">{authMethodName}</AppBadge>
       },
     },
     {

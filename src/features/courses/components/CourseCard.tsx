@@ -54,7 +54,7 @@ const CourseCard = (course: CourseRow) => (
           )}
           {/* 🔴 교대는 **양쪽 다 뱃지**다(테이블과 같은 규칙) — 한쪽만 표시하면 같은
               자리에 뱃지와 빈 칸이 섞여 "누락" 처럼 읽힌다 */}
-          <AppBadge variant="muted" className={CARD_BADGE}>
+          <AppBadge variant="plain" className={CARD_BADGE}>
             {course.switchYn ? '교대 허용' : '교대 없음'}
           </AppBadge>
         </span>

@@ -28,7 +28,7 @@ import { COURSE_HISTORY_STATUS, POINT_HISTORY_STATUS } from '../types'
  * 하고 어느 쪽이든 정보가 사라진다. 그래서 `overtimeBadge()` 가 **별 함수**다.
  */
 
-export type BadgeVariant = 'success' | 'point' | 'warning' | 'danger' | 'muted' | 'neutral'
+export type BadgeVariant = 'success' | 'point' | 'warning' | 'danger' | 'muted' | 'neutral' | 'pending'
 
 export interface HistoryBadge {
   variant: BadgeVariant
@@ -86,7 +86,7 @@ export const courseResultBadge = (status: number): HistoryBadge => {
 export const pointCheckBadge = (status: number, hasMemo: boolean): HistoryBadge => {
   switch (status) {
     case POINT_HISTORY_STATUS.WAITING:
-      return { variant: 'muted', label: '대기중' }
+      return { variant: 'pending', label: '대기중' }
     case POINT_HISTORY_STATUS.IN_PROGRESS:
       return { variant: 'point', label: '진행중' }
     case POINT_HISTORY_STATUS.EXCLUDED:
