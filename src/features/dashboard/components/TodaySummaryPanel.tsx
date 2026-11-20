@@ -1,5 +1,6 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
+import AppChartTooltip from '@/components/app/AppChartTooltip'
 import type { CourseHistoryRow } from '@/features/course-history/types'
 import { countByCourse, countByHour, isCapped, RECENT_COURSE_CAP } from '../lib/todayStats'
 import type { AreaState } from '../types'
@@ -21,15 +22,7 @@ const HOUR_TICKS = [0, 6, 12, 18, 23]
 const HourTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: { hour: number; count: number } }[] }) => {
   const item = active ? payload?.[0]?.payload : undefined
   if (!item) return null
-  return (
-    <div className="min-w-[110px] rounded-lg border border-border/60 bg-card px-2.5 py-1.5 text-caption shadow-lg">
-      <p className="font-medium text-foreground tabular-nums">{item.hour}시</p>
-      <p className="flex items-center gap-2 text-muted-foreground">
-        순찰
-        <span className="ml-auto font-medium text-foreground tabular-nums">{item.count}회</span>
-      </p>
-    </div>
-  )
+  return <AppChartTooltip title={`${item.hour}시`} rows={[{ label: '순찰', value: `${item.count}회` }]} />
 }
 
 interface TodaySummaryPanelProps {
@@ -72,6 +65,7 @@ const TodaySummaryPanel = ({ rows, courses, today, currentHour, state, onRetry }
                 <XAxis
                   dataKey="hour"
                   ticks={HOUR_TICKS}
+                  interval={0}
                   tickFormatter={(hour: number) => `${hour}시`}
                   tickLine={false}
                   axisLine={false}

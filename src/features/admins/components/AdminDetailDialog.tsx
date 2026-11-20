@@ -120,7 +120,6 @@ const AdminDetailBody = ({
         {/* 사번 · 연락처는 본문보다 한 단계 크게(사용자 요청 2026-10-23) */}
         <div className="flex flex-col text-section-title">
           <AppDetailRow
-            variant="fixed"
             label="사번"
             value={
               detail.isError ? (
@@ -142,7 +141,6 @@ const AdminDetailBody = ({
             }
           />
           <AppDetailRow
-            variant="fixed"
             label="연락처"
             value={<span className="tabular-nums">{formatPhone(admin.phone)}</span>}
           />

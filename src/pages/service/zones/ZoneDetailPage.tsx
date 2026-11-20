@@ -106,6 +106,8 @@ const ZoneDetailPage = () => {
 
   const rows = history.data?.items ?? []
   const stats = courseHistoryStats(rows, history.data?.totalCount ?? 0)
+  /** 가장 최근에 시작한 회차 — 진행 중이면 마지막 순찰 칸이 진행 표시로 바뀐다(`spec 084`) */
+  const latest = rows.length > 0 ? rows.reduce((a, b) => (b.startDt > a.startDt ? b : a)) : null
   /**
    * 지도에 찍을 좌표 (`spec 032`). 🔴 **조회가 늘지 않는다** — 상세 응답을 다시 셀 뿐이다.
    * `useMemo` 인 이유: `CourseMapCard` 가 `pins` 참조로 지도를 다시 그린다(렌더마다 새
@@ -132,7 +134,6 @@ const ZoneDetailPage = () => {
         <>
           <AppPageHeader
             title={course.courseName}
-            icon={RouteIcon}
             // 🔴 설명(`memo`)을 여기 넣지 않는다 — 기본정보 카드에 이미 있고, 같은 문장이
             // 한 화면에 두 번 나오면 사용자는 둘이 다른 값인지 확인하려 눈을 왕복한다
             titleSuffix={
@@ -192,11 +193,12 @@ const ZoneDetailPage = () => {
           />
 
           {/* 🔴 **KPI 는 전체 폭, 헤더 바로 아래** — 평균 · 인증률은 프론트가 더한 값(서버 집계 없음) */}
-          <CourseKpiRow stats={stats} />
+          <CourseKpiRow stats={stats} latest={latest} />
 
           {/* 2열 골격 — 왼쪽 2/3 = 경로 · 기록, 오른쪽 1/3 = 기본정보 · 시간대별 · 근무자별(`spec 074`). `xl` 미만 1단 */}
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <div className="flex min-w-0 flex-col gap-4 xl:col-span-2">
+          {/* 🔄 `spec 084`: 카드 상자 없이 두 단 — 오른쪽 단은 340px 고정 · 단 사이 세로 선 · 영역 사이 28px */}
+          <div className="grid grid-cols-1 gap-y-7 pt-2 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="flex min-w-0 flex-col gap-7 xl:pr-8">
               <CourseRouteCard
                 points={course.points}
                 pins={coords.pins}
@@ -214,7 +216,7 @@ const ZoneDetailPage = () => {
               />
             </div>
 
-            <div className="flex min-w-0 flex-col gap-4">
+            <div className="flex min-w-0 flex-col gap-7 xl:border-l xl:border-border xl:pl-7">
               <CourseInfo course={course} onEdit={() => setEditOpen(true)} />
               <CourseHourlyCard rows={rows} isPending={history.isPending} />
               <CourseWorkerCard rows={rows} isPending={history.isPending} />

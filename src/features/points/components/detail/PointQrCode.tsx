@@ -42,8 +42,9 @@ const PointQrCode = ({ qrCode, pointName }: { qrCode: string | null; pointName: 
      * 인증되지 않는다**는 뜻이다.
      */
     return (
-      <div className="flex items-start gap-2 rounded-sm border border-warning/40 bg-warning-bg/40 p-3">
-        <TriangleAlertIcon size={16} className="mt-0.5 shrink-0 text-warning-foreground" />
+      <div className="flex items-start gap-2 rounded-sm border border-danger/30 bg-danger-bg/50 p-3">
+        {/* 🔄 `spec 084`(사용자 결정 2026-11-20): 주황 → 빨강 — 현장에서 인증되지 않는 실제 문제 상태다(주황은 쓰지 않는다) */}
+        <TriangleAlertIcon size={16} className="mt-0.5 shrink-0 text-danger" />
         <div className="flex flex-col gap-0.5">
           <p className="text-body font-medium">QR 코드가 발급되지 않았습니다.</p>
           <p className="text-caption text-muted-foreground">

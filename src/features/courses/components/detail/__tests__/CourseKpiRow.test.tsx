@@ -136,6 +136,6 @@ describe('CourseKpiRow — 🔴 순찰제외 때문에 인증률에 색을 입�
     // danger 톤이 어디에도 쓰이지 않는다
     expect(container.querySelector('.bg-danger-bg')).toBeNull()
     // 회차 인증률이 달라도 그래프 색은 하나다
-    expect(screen.getByRole('img', { name: '최근 2회 인증률' })).toHaveClass('text-chart-2')
+    expect(screen.getByRole('img', { name: '최근 2회 인증률' })).toHaveClass('text-point')
   })
 })

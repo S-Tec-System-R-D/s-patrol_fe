@@ -1,6 +1,5 @@
 import { LockIcon, NfcIcon, QrCodeIcon, SquarePenIcon } from 'lucide-react'
 
-import AppEmpty from '@/components/app/AppEmpty'
 import AppLinkButton from '@/components/app/AppLinkButton'
 import { HISTORY_DAYS } from '@/features/course-history/lib/historyRange'
 import { toAuthMethodLabel } from '@/features/points/lib/authMethod'
@@ -52,13 +51,10 @@ const CourseRouteCard = ({ points, pins, missing, runs, onEdit }: CourseRouteCar
     const rate = rates.get(point.coursePointSeq)
     return rate && rate.total > 0 ? rate.checked / rate.total : null
   })
-  // 🔴 미사용 지점은 강조하지 않는다 — 돌지 않는 지점이 "가장 약한 지점" 으로 읽히면 안 된다
-  const known = ratios.filter((ratio, index): ratio is number => ratio !== null && sorted[index].useYn)
-  const lowest = known.length > 1 ? Math.min(...known) : null
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
-      <div className="flex items-center justify-between gap-2">
+    <section className="flex flex-col gap-2.5">
+      <div className="flex items-baseline justify-between gap-2">
         <span className="flex items-baseline gap-2">
           <h2 className="text-panel-title font-semibold">순찰 경로</h2>
           <span className="text-caption text-muted-foreground">지점별 인증률 · 최근 {HISTORY_DAYS}일</span>
@@ -69,11 +65,7 @@ const CourseRouteCard = ({ points, pins, missing, runs, onEdit }: CourseRouteCar
       </div>
 
       {sorted.length === 0 ? (
-        <AppEmpty
-          illustration="route"
-          title="편성된 지점이 없습니다"
-          description="코스에 지점을 추가하면 순서대로 표시됩니다."
-        />
+        <p className="py-6 text-center text-caption text-muted-foreground">편성된 지점이 없습니다</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           {pins.length > 0 ? (
@@ -87,29 +79,28 @@ const CourseRouteCard = ({ points, pins, missing, runs, onEdit }: CourseRouteCar
               {sorted.map((point, index) => {
                 const rate = rates.get(point.coursePointSeq)
                 const ratio = ratios[index]
-                const weak = point.useYn && lowest !== null && ratio === lowest
                 return (
                   <li
                     key={point.coursePointSeq}
                     className={cn(
-                      'flex items-center gap-3 border-b border-border px-2 py-2.5 last:border-0',
+                      'flex items-center gap-3 border-b border-border px-2 py-[9px] last:border-0',
                       !point.useYn && 'bg-muted/70'
                     )}
                   >
                     {point.useYn ? (
-                      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-foreground text-[11px] font-bold text-background">
+                      <span className="grid size-5 shrink-0 place-items-center rounded-full border border-point/30 bg-point-bg text-[10px] font-bold text-point tabular-nums">
                         {index + 1}
                       </span>
                     ) : (
-                      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-background text-muted-foreground">
-                        <LockIcon size={12} aria-hidden />
+                      <span className="grid size-5 shrink-0 place-items-center rounded-full bg-background text-muted-foreground">
+                        <LockIcon size={11} aria-hidden />
                         <span className="sr-only">미사용</span>
                       </span>
                     )}
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span
                         className={cn(
-                          'truncate text-body font-semibold',
+                          'truncate font-medium',
                           point.useYn ? 'text-foreground' : 'text-muted-foreground'
                         )}
                       >
@@ -126,22 +117,16 @@ const CourseRouteCard = ({ points, pins, missing, runs, onEdit }: CourseRouteCar
                     </span>
                     {ratio !== null && (
                       <>
-                        <span aria-hidden className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted sm:block">
+                        <span aria-hidden className="hidden h-1 w-16 overflow-hidden rounded-full bg-muted sm:block">
                           <span
-                            /* 인증 비율은 메인 포인트색 · 가장 낮은 지점만 주황 · 비활성 지점은 회색(2026-11-16) */
-                            className={cn(
-                              'block h-full rounded-full',
-                              !point.useYn ? 'bg-muted-foreground/60' : weak ? 'bg-warning' : 'bg-point'
-                            )}
+                            /* 인증 비율은 메인 포인트색 · 비활성 지점은 회색(2026-11-16).
+                               🔄 `spec 084`(사용자 결정 2026-11-20): **가장 낮은 지점의 주황 강조를 없앴다** — 가장 낮다는 것은
+                               순위일 뿐 문제라는 뜻이 아니고, 막대 길이가 이미 낮음을 보여 준다 */
+                            className={cn('block h-full rounded-full', point.useYn ? 'bg-point' : 'bg-muted-foreground/60')}
                             style={{ width: `${ratio * 100}%` }}
                           />
                         </span>
-                        <span
-                          className={cn(
-                            'w-10 text-right text-caption font-semibold tabular-nums',
-                            weak ? 'text-warning-foreground' : 'text-foreground'
-                          )}
-                        >
+                        <span className="w-10 text-right text-caption font-medium text-foreground tabular-nums">
                           {Math.round(ratio * 100)}%
                         </span>
                       </>

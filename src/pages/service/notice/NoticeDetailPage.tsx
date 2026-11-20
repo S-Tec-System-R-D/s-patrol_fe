@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeftIcon,
-  MegaphoneIcon,
   PinIcon,
   SquarePenIcon,
   Trash2Icon,
@@ -136,7 +135,6 @@ const NoticeDetailPage = () => {
 
       <AppPageHeader
         title={notice.title}
-        icon={MegaphoneIcon}
         /* 🔴 **기본정보 카드를 없애고 부제 한 줄로 올렸다**(사용자 결정 2026-10-20). 카드 4행 중
            고정은 제목 옆 핀이, 첨부 수는 이미지·첨부파일 카드 제목이 이미 말해서 **남는 것이
            작성자·작성일시뿐**이었다 — 카드 하나를 차지할 분량이 아니다 */

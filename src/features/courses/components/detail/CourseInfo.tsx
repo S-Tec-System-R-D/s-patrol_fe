@@ -23,15 +23,15 @@ const CourseInfo = ({ course, onEdit }: { course: CourseDetail; onEdit: () => vo
   const siteName = getSiteName()
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-panel-title font-semibold">기본정보</span>
+    <section className="flex flex-col gap-2.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="text-panel-title font-semibold">기본정보</h2>
         <AppLinkButton icon={SquarePenIcon} onClick={onEdit}>
           수정
         </AppLinkButton>
       </div>
 
-      <div className="flex flex-col text-body">
+      <div className="flex flex-col">
         <AppDetailRow label="사업장" value={siteName ?? '-'} />
         <AppDetailRow
           label="설명"
@@ -44,7 +44,7 @@ const CourseInfo = ({ course, onEdit }: { course: CourseDetail; onEdit: () => vo
           value={course.useYn ? '사용' : <span className="text-muted-foreground">미사용</span>}
         />
       </div>
-    </div>
+    </section>
   )
 }
 

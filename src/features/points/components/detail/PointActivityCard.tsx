@@ -8,17 +8,17 @@ import {
   CircleMinusIcon,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
 import AppBadge from '@/components/app/AppBadge'
 import { cardBadge } from '@/components/app/AppBadge.variants'
-import AppEmpty from '@/components/app/AppEmpty'
+import AppChartTooltip from '@/components/app/AppChartTooltip'
 import { pointCheckBadge } from '@/features/course-history/lib/historyBadge'
 import type { PointHistoryRow } from '@/features/course-history/types'
 import { cn } from '@/lib/utils'
 import { paths } from '@/router/paths'
 
-import { groupHistoryByDay, type PatrolDayBucket, type PatrolSummary } from '../../lib/patrolSummary'
+import { formatSinceLabel, groupHistoryByDay, type PatrolDayBucket, type PatrolSummary } from '../../lib/patrolSummary'
 
 /**
  * 지점 상세 **인증 기록** — 활동 타임라인 (`spec 076` 시안 개선 B).
@@ -26,6 +26,8 @@ import { groupHistoryByDay, type PatrolDayBucket, type PatrolSummary } from '../
  * 요약 3칸(인증 n/m · 미인증 · 최근 순찰) → 14일 **쌓은 막대**(인증 · 미인증) → **날짜별 묶음** 목록.
  * 🔄 `미완료` → `건너뜀`(077) → **`미인증` · 주황**(`spec 079` D8 — 서버 상태 3 하나를 화면 어디서나 한 이름으로).
  * 데이터는 그대로 `GetPointHistory` 한 번(14일 · 100건 상한)이다.
+ * 🔄 **`spec 084`**: 카드 상자 제거 · 숫자는 **상자 없는 한 줄**(인증 · 미인증 · 최근 순찰) · 🆕 최근 순찰에 **순찰자 · 코스 · 시각**
+ * (받은 기록 중 가장 최근에 인증한 줄에서 — 요청이 늘지 않는다) · 14일 막대는 차트 카드 말풍선 · 세로 눈금 숫자 없음.
  *
  * - 🔴 **막대를 누르면 그날만** 보인다 — 한 번 더 누르거나 `전체 보기` 로 풀린다.
  * - 🔄 **행 상태는 순찰이력 화면과 같은 뱃지**(`pointCheckBadge` — 이상없음 · 순찰기록 · 미완료 ·
@@ -58,6 +60,11 @@ const timeOf = (row: PointHistoryRow): string => {
 }
 
 const dayLabel = (date: string) => format(parseISO(date), 'MM.dd')
+/** 최근 순찰 칸 — 오늘이 아닐 수 있어 날짜까지 적는다 */
+const dateTimeOf = (row: PointHistoryRow): string => {
+  const parsed = parseISO(row.checkDt)
+  return isValid(parsed) ? format(parsed, 'MM.dd HH:mm') : '—'
+}
 /** 요일 한 글자 — locale 묶음을 들이지 않으려고 직접 고른다 */
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 const weekday = (date: string) => `(${WEEKDAYS[parseISO(date).getDay()]})`
@@ -66,22 +73,30 @@ const ChartTooltip = ({ active, payload }: { active?: boolean; payload?: { paylo
   if (!active || !payload?.length) return null
   const { date, count, missed } = payload[0].payload
   return (
-    <div className="rounded-sm border border-border bg-card px-2.5 py-1.5 text-caption shadow-sm">
-      <p className="text-muted-foreground">{format(parseISO(date), 'yyyy.MM.dd')}</p>
-      <p className="font-semibold text-foreground">
-        인증 {count}
-        {missed > 0 && <span className="text-muted-foreground"> · 미인증 {missed}</span>}
-      </p>
-    </div>
+    <AppChartTooltip
+      title={format(parseISO(date), 'yyyy.MM.dd')}
+      rows={[
+        { label: '인증', value: `${count}회` },
+        { label: '미인증', value: `${missed}회`, color: 'var(--muted-foreground)' },
+      ]}
+    />
   )
 }
 
-const Stat = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="flex flex-col gap-0.5">
-    <span className="text-caption text-muted-foreground">{label}</span>
-    <span className="text-xl font-bold tabular-nums text-foreground">{children}</span>
+/** 상자 없는 한 줄 숫자의 한 칸 — `이름 **값** 덧말`. 칸 사이는 세로 선 */
+const Stat = ({ label, value, note }: { label: string; value: React.ReactNode; note?: React.ReactNode }) => (
+  <div className="flex items-baseline gap-1.5 border-l border-border pr-1 pl-4 text-[12px] text-muted-foreground first:border-l-0 first:pl-0">
+    {label}
+    <span className="text-[18px] font-semibold text-foreground tabular-nums">{value}</span>
+    {note && <span className="tabular-nums">{note}</span>}
   </div>
 )
+
+/** 받은 기록 중 가장 최근에 **인증한** 줄 — 최근 순찰 칸의 순찰자 · 코스 · 시각 */
+const latestDone = (rows: PointHistoryRow[]): PointHistoryRow | null => {
+  const done = rows.filter((row) => row.status === STATUS.DONE)
+  return done.length > 0 ? done.reduce((a, b) => (b.checkDt > a.checkDt ? b : a)) : null
+}
 
 interface PointActivityCardProps {
   summary: PatrolSummary
@@ -99,17 +114,19 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
   const groups = groupHistoryByDay(rows, today).filter((group) => !selected || group.date === selected)
   const rate = summary.attempted > 0 ? Math.round((summary.total / summary.attempted) * 100) : null
   const toggle = (date: string) => setSelected((prev) => (prev === date ? null : date))
+  const latest = latestDone(rows)
+  const todayKey = format(today, 'yyyy-MM-dd')
 
   return (
-    <section className="flex min-w-0 flex-col gap-4 rounded-lg border border-border bg-card p-5">
-      <div className="flex items-start justify-between gap-4">
+    <section className="flex min-w-0 flex-col gap-3.5">
+      <div className="flex items-baseline justify-between gap-4">
         <span className="flex items-baseline gap-2">
-          <span className="text-panel-title font-semibold text-foreground">인증 기록</span>
+          <h2 className="text-panel-title font-semibold text-foreground">인증 기록</h2>
           <span className="text-caption text-muted-foreground">최근 14일</span>
         </span>
         <Link
           to={paths.service.patrolPoints}
-          className="inline-flex shrink-0 items-center gap-0.5 text-caption text-muted-foreground hover:text-foreground"
+          className="inline-flex shrink-0 items-center gap-0.5 text-caption font-medium text-point hover:underline"
         >
           전체 기록
           <ChevronRightIcon size={13} aria-hidden />
@@ -119,49 +136,48 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
       {isPending ? (
         <div className="h-[220px] animate-pulse rounded-sm bg-muted" />
       ) : summary.attempted === 0 ? (
-        /* 🔴 기능은 있고 데이터가 없는 것 — placeholder 가 아니다 */
-        <AppEmpty
-          illustration="route"
-          title="순찰 기록이 없습니다"
-          description="코스에 배정된 뒤 근무자가 인증하면 이곳에 날짜별로 표시됩니다."
-        />
+        /* 🔴 기능은 있고 데이터가 없는 것 — placeholder 가 아니다. 한 영역 안이라 글자 한 줄(`spec 084`) */
+        <p className="py-6 text-center text-caption text-muted-foreground">순찰 기록이 없습니다</p>
       ) : (
         <>
           {/* 🔴 인증률에 색을 입히지 않는다 — 분모를 확신할 수 없다(`spec 023`) */}
-          <div className="flex flex-wrap gap-x-10 gap-y-3">
-            <Stat label="인증">
-              {summary.total}/{summary.attempted}
-              {rate !== null && <span className="ml-1.5 text-caption font-semibold text-muted-foreground">{rate}%</span>}
-            </Stat>
-            <Stat label="미인증">{summary.missed}</Stat>
-            <Stat label="최근 순찰">{sinceLabel ?? '-'}</Stat>
+          <div className="flex flex-wrap gap-y-2">
+            <Stat
+              label="인증"
+              value={summary.total}
+              note={`/ ${summary.attempted}회${rate !== null ? ` · ${rate}%` : ''}`}
+            />
+            <Stat label="미인증" value={summary.missed} note="회" />
+            <Stat
+              label="최근 순찰"
+              /* 지점의 마지막 순찰 시각이 없으면(또는 읽을 수 없으면) 받은 기록의 가장 최근 인증으로 센다 */
+              value={sinceLabel ?? (latest && formatSinceLabel(latest.checkDt, today)) ?? '-'}
+              note={latest && [latest.userName || '근무자 없음', latest.courseName, dateTimeOf(latest)].join(' · ')}
+            />
           </div>
 
           {/* 🔴 막대를 누르면 recharts 가 차트 전체에 포커스 테두리를 그린다 — 막대 색 변화로 충분해 지운다 */}
-          <div className="h-[170px] w-full [&_*:focus]:outline-none">
+          <div className="h-[150px] w-full [&_*:focus]:outline-none">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={summary.buckets} margin={{ top: 8, right: 8, bottom: 0, left: -28 }}>
-                <CartesianGrid vertical={false} stroke="var(--color-border)" strokeDasharray="2 4" />
+              <BarChart data={summary.buckets} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+                <CartesianGrid vertical={false} stroke="var(--border)" />
                 <XAxis
                   dataKey="date"
                   interval={0}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(value: string) => format(parseISO(value), 'dd')}
-                  tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }}
+                  tickMargin={8}
+                  tickFormatter={(value: string) => (value === todayKey ? '오늘' : `${format(parseISO(value), 'd')}일`)}
+                  fontSize={11}
+                  stroke="var(--muted-foreground)"
                 />
-                <YAxis
-                  allowDecimals={false}
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
-                />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-muted)', opacity: 0.6 }} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--muted)' }} />
                 {/* 🔴 쌓기 — 인증(파랑) 위에 미인증(주황 — 행 뱃지 · 대시보드와 같은 색). 고른 날 말고는 흐리게 */}
                 <Bar
                   dataKey="count"
                   stackId="day"
                   maxBarSize={22}
+                  radius={[4, 4, 0, 0]}
                   className="cursor-pointer"
                   onClick={(data: { payload?: PatrolDayBucket }) => data.payload && toggle(data.payload.date)}
                   isAnimationActive={false}
@@ -178,7 +194,7 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                   dataKey="missed"
                   stackId="day"
                   maxBarSize={22}
-                  radius={[2, 2, 0, 0]}
+                  radius={[4, 4, 0, 0]}
                   className="cursor-pointer"
                   onClick={(data: { payload?: PatrolDayBucket }) => data.payload && toggle(data.payload.date)}
                   isAnimationActive={false}
@@ -195,7 +211,7 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
             </ResponsiveContainer>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border pb-3 text-caption text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-caption text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <span className="size-2 rounded-xs bg-point" aria-hidden />
               인증
@@ -223,10 +239,10 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
           ) : (
             <div className="flex flex-col">
               {groups.map((group) => (
-                <section key={group.date} aria-label={`${dayLabel(group.date)} 기록`} className="border-b border-border/60 last:border-0">
-                  <div className="flex items-center gap-2 pt-3 pb-1">
-                    <span className="text-body font-semibold tabular-nums">{dayLabel(group.date)}</span>
-                    <span className="text-caption text-muted-foreground">
+                <section key={group.date} aria-label={`${dayLabel(group.date)} 기록`} className="mt-3.5 first:mt-0">
+                  <div className="flex h-[30px] items-center gap-1.5 border-b border-border text-caption text-muted-foreground">
+                    <span className="tabular-nums">{dayLabel(group.date)}</span>
+                    <span>
                       {weekday(group.date)} · {group.rows.length}회
                     </span>
                   </div>
@@ -235,15 +251,15 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                       const status = statusIcon(row)
                       const badge = pointCheckBadge(row.status, row.hasMemo)
                       return (
-                        <li key={row.detailSeq}>
+                        <li key={row.detailSeq} className="border-b border-border last:border-0">
                           <Link
                             to={paths.service.patrolPointDetail(row.detailSeq)}
-                            className="group -mx-2 flex items-center gap-3 rounded-sm px-2 py-2.5 hover:bg-muted/50"
+                            className="group flex h-[46px] items-center gap-3 px-1 hover:bg-muted/50"
                           >
-                            <span className="w-11 shrink-0 text-body tabular-nums text-muted-foreground">{timeOf(row)}</span>
+                            <span className="w-11 shrink-0 font-medium tabular-nums text-foreground">{timeOf(row)}</span>
                             <status.icon size={14} className={cn('shrink-0', status.className)} aria-hidden />
                             <span className="flex min-w-0 flex-1 items-baseline gap-2">
-                              <span className="shrink-0 text-body font-semibold">{row.userName || '근무자 없음'}</span>
+                              <span className="shrink-0 text-sub-foreground">{row.userName || '근무자 없음'}</span>
                               <span className="min-w-0 truncate text-caption text-muted-foreground">{row.courseName}</span>
                             </span>
                             {/* 🔴 **`이상없음` 은 뱃지를 달지 않는다**(사용자 결정 2026-11-13) — 정상이 대부분이라

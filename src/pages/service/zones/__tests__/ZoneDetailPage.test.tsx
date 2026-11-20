@@ -45,9 +45,9 @@ const renderPage = (initialEntry: string) => {
   )
 }
 
-/** 카드 제목으로 그 카드 DOM 을 집는다 — 버튼이 **어느 카드 안**인지 보려면 필요하다 */
+/** 영역 제목으로 그 영역 DOM 을 집는다 — 버튼이 **어느 영역 안**인지 보려면 필요하다(`spec 084` — 카드 상자가 없어져 `section` 으로 집는다) */
 const cardOf = (title: string): HTMLElement => {
-  const card = screen.getByText(title).closest('.rounded-lg')
+  const card = screen.getByRole('heading', { name: title }).closest('section')
   if (card === null) throw new Error(`카드를 찾지 못했다: ${title}`)
   return card as HTMLElement
 }

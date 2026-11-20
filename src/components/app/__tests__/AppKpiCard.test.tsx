@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react'
-import { ActivityIcon } from 'lucide-react'
 import { describe, expect, it } from 'vitest'
 
 import AppKpiCard from '../AppKpiCard'
@@ -12,7 +11,7 @@ import AppKpiCard from '../AppKpiCard'
 
 describe('AppKpiCard', () => {
   it('값만 주면 단위가 없다', () => {
-    render(<AppKpiCard icon={ActivityIcon} label="평균 소요시간" value="50분" />)
+    render(<AppKpiCard label="평균 소요시간" value="50분" />)
 
     expect(screen.getByText('평균 소요시간')).toBeInTheDocument()
     expect(screen.getByText('50분')).toBeInTheDocument()
@@ -21,7 +20,6 @@ describe('AppKpiCard', () => {
   it('단위와 오른쪽 그림을 주면 함께 그린다', () => {
     render(
       <AppKpiCard
-        icon={ActivityIcon}
         label="평균 소요시간"
         value="50분"
         unit="초과 1/7"
@@ -35,7 +33,7 @@ describe('AppKpiCard', () => {
 
   it('🔴 그림이 없으면 빈 자리를 두지 않는다', () => {
     const { container } = render(
-      <AppKpiCard icon={ActivityIcon} label="마지막 순찰" value="-" aside={false} />
+      <AppKpiCard label="마지막 순찰" value="-" aside={false} />
     )
 
     expect(container.querySelector('div.shrink-0')).toBeNull()
@@ -44,7 +42,6 @@ describe('AppKpiCard', () => {
   it('foot 은 스크린리더 글자로만 남는다', () => {
     render(
       <AppKpiCard
-        icon={ActivityIcon}
         label="평균 소요시간"
         value="50분"
         foot={{ left: '최단 42분', right: '최장 58분' }}
@@ -55,9 +52,9 @@ describe('AppKpiCard', () => {
   })
 
   it('🔴 라벨에는 **색을 입히지 않는다** — 굵기와 명도로 세운다', () => {
-    render(<AppKpiCard icon={ActivityIcon} label="지점 인증률" value="62%" />)
+    render(<AppKpiCard label="지점 인증률" value="62%" />)
 
-    const label = screen.getByText('지점 인증률').parentElement as HTMLElement
+    const label = screen.getByText('지점 인증률')
     expect(label.className).toContain('font-medium')
     expect(label.className).not.toMatch(/text-(point|success|warning|danger)/)
   })

@@ -8,7 +8,6 @@ import {
   SquarePenIcon,
   Trash2Icon,
   TriangleAlertIcon,
-  UserRoundIcon,
   CircleDotIcon,
 } from 'lucide-react'
 
@@ -149,7 +148,6 @@ const UserDetailPage = () => {
 
       <AppPageHeader
         title={user.userName}
-        icon={UserRoundIcon}
         titleSuffix={
           <span className="flex flex-wrap items-center gap-2">
             {/* 근무 중은 체크가 아니라 점 원(`spec 083`) */}

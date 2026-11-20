@@ -20,11 +20,11 @@ const DetailSection = ({
   children: React.ReactNode
 }) => {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-2">
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-baseline justify-between gap-2">
         <div className="flex flex-col gap-1">
           <span className="flex items-baseline gap-2">
-            <span className="text-panel-title font-semibold text-foreground">{title}</span>
+            <h2 className="text-panel-title font-semibold text-foreground">{title}</h2>
             {count && <span className="text-caption text-muted-foreground">{count}</span>}
           </span>
           {description && <p className="text-caption text-muted-foreground/80">{description}</p>}

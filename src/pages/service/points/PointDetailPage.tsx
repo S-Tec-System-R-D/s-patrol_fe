@@ -101,7 +101,6 @@ const PointDetailPage = () => {
         <>
           <AppPageHeader
             title={point.name}
-            icon={MapPinIcon}
             // 상태는 제목 옆, 액션은 헤더 맨 우측 — 성격이 달라 자리를 섞지 않는다
             titleSuffix={
               point.useYn ? (
@@ -149,7 +148,8 @@ const PointDetailPage = () => {
           {/* 🔄 **`spec 076` 개선 B**: 왼쪽 **속성 패널**(고정 폭 — 지도 · 기본정보 · 소속 코스 · TAG ID) /
               오른쪽 **인증 기록**(나머지 폭). `xl` 미만 1단 — DOM 순서대로 패널이 먼저다
               ("이 지점이 무엇인가" 가 "언제 찍혔나" 보다 앞선다 — 027 의 order 뒤집기와 같은 결론) */}
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[400px_minmax(0,1fr)]">
+          {/* 🔄 `spec 084`: 카드 상자 없이 두 단 — 단 사이 세로 선 */}
+          <div className="grid grid-cols-1 gap-y-7 pt-2 xl:grid-cols-[400px_minmax(0,1fr)] xl:[&>section:first-child]:pr-7 xl:[&>section:nth-child(2)]:border-l xl:[&>section:nth-child(2)]:border-border xl:[&>section:nth-child(2)]:pl-8">
             <PointDetail point={point} onEdit={() => setEditOpen(true)} />
 
             <PointActivityCard

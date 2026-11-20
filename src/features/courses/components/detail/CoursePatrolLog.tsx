@@ -3,7 +3,6 @@ import { ArrowLeftRightIcon, ChevronRightIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import AppBadge from '@/components/app/AppBadge'
-import AppEmpty from '@/components/app/AppEmpty'
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
 import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
 import { HISTORY_DAYS } from '@/features/course-history/lib/historyRange'
@@ -62,12 +61,22 @@ const CoursePatrolLog = ({ courseSeq, rows, totalCount, isPending, onSelect }: C
   const preview = rows.slice(0, LOG_PREVIEW)
 
   return (
-    <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
-      <div className="flex items-baseline gap-2">
+    <section className="flex flex-col gap-2.5">
+      <div className="flex flex-wrap items-baseline gap-x-2">
         <h2 className="text-panel-title font-semibold">최근 순찰 기록</h2>
         <span className="text-caption text-muted-foreground">
           최근 {HISTORY_DAYS}일 · {totalCount}건 · 행을 누르면 회차 상세
         </span>
+        {/* 🔄 `spec 084`: 표 아래 가운데 → 영역 제목 줄 오른쪽(대시보드의 `전체 보기` 와 같은 자리 · 같은 색) */}
+        {!isPending && totalCount > preview.length && (
+          <Link
+            to={`${paths.service.patrolZones}?course=${courseSeq}`}
+            className="ml-auto inline-flex items-center gap-0.5 text-caption font-medium text-point hover:underline"
+          >
+            전체 기록 {totalCount}건 보기
+            <ChevronRightIcon size={13} aria-hidden />
+          </Link>
+        )}
       </div>
 
       {isPending ? (
@@ -78,22 +87,18 @@ const CoursePatrolLog = ({ courseSeq, rows, totalCount, isPending, onSelect }: C
           ))}
         </div>
       ) : rows.length === 0 ? (
-        <AppEmpty
-          illustration="route"
-          title="순찰 기록이 없습니다"
-          description={`최근 ${HISTORY_DAYS}일 동안 이 코스로 수행된 순찰이 없습니다.`}
-        />
+        <p className="py-6 text-center text-caption text-muted-foreground">순찰 기록이 없습니다</p>
       ) : (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full text-body">
+            <table className="w-full">
               <thead>
-                <tr className="border-b text-caption whitespace-nowrap text-foreground/70">
-                  <th className="py-2 pr-3 text-left font-medium">시작</th>
-                  <th className="py-2 pr-3 text-left font-medium">근무자</th>
-                  <th className="py-2 pr-3 text-left font-medium">인증</th>
-                  <th className="py-2 pr-3 text-right font-medium">소요</th>
-                  <th className="py-2 text-left font-medium">상태</th>
+                <tr className="border-b text-caption whitespace-nowrap text-muted-foreground">
+                  <th className="h-9 pr-3 text-left font-medium">시작</th>
+                  <th className="h-9 pr-3 text-left font-medium">근무자</th>
+                  <th className="h-9 pr-3 text-left font-medium">인증</th>
+                  <th className="h-9 pr-3 text-right font-medium">소요</th>
+                  <th className="h-9 text-left font-medium">상태</th>
                 </tr>
               </thead>
               <tbody>
@@ -112,28 +117,28 @@ const CoursePatrolLog = ({ courseSeq, rows, totalCount, isPending, onSelect }: C
                           onSelect(row)
                         }
                       }}
-                      className="cursor-pointer border-b last:border-0 hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none"
+                      className="h-[46px] cursor-pointer border-b text-sub-foreground last:border-0 hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none"
                     >
-                      <td className="py-2.5 pr-3 whitespace-nowrap tabular-nums">{startLabel}</td>
-                      <td className="max-w-[280px] truncate py-2.5 pr-3">
+                      <td className="pr-3 font-medium whitespace-nowrap text-foreground tabular-nums">{startLabel}</td>
+                      <td className="max-w-[280px] truncate pr-3">
                         {row.userList.length === 0 ? (
                           <span className="text-muted-foreground">근무자 없음</span>
                         ) : (
                           row.userList.map((user) => user.userName).join(', ')
                         )}
                       </td>
-                      <td className="py-2.5 pr-3 whitespace-nowrap">
+                      <td className="pr-3 whitespace-nowrap">
                         <span className="flex items-center gap-2 tabular-nums">
-                          <span aria-hidden className="hidden h-1.5 w-24 overflow-hidden rounded-full bg-muted sm:block">
+                          <span aria-hidden className="hidden h-1 w-24 overflow-hidden rounded-full bg-muted sm:block">
                             <span className="block h-full rounded-full bg-point" style={{ width: `${ratio * 100}%` }} />
                           </span>
                           {row.checkedCount}/{row.pointCount}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-3 text-right whitespace-nowrap tabular-nums">
+                      <td className="pr-3 text-right whitespace-nowrap tabular-nums">
                         {formatElapsed(row.actualElapsedTime)}
                       </td>
-                      <td className="py-2.5 whitespace-nowrap">
+                      <td className="whitespace-nowrap">
                         <StatusBadges row={row} />
                       </td>
                     </tr>
@@ -148,15 +153,6 @@ const CoursePatrolLog = ({ courseSeq, rows, totalCount, isPending, onSelect }: C
             <p className="text-caption text-muted-foreground">
               평균 소요 · 인증률 · 시간대 · 근무자 집계는 최근 {rows.length}건 기준입니다.
             </p>
-          )}
-          {totalCount > preview.length && (
-            <Link
-              to={`${paths.service.patrolZones}?course=${courseSeq}`}
-              className="mx-auto flex items-center gap-0.5 pt-1 text-caption font-medium text-muted-foreground hover:text-foreground"
-            >
-              전체 기록 {totalCount}건 보기
-              <ChevronRightIcon size={14} />
-            </Link>
           )}
         </>
       )}

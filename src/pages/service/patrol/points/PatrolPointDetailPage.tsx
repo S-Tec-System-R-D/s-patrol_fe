@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, HistoryIcon, MapPinIcon, MessageSquareTextIcon, TriangleAlertIcon } from 'lucide-react'
+import { ArrowLeftIcon, MapPinIcon, MessageSquareTextIcon, TriangleAlertIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
@@ -138,7 +138,6 @@ const PatrolPointDetailPage = () => {
     <div className="flex flex-col gap-4 p-4 xl:p-8">
 
       <AppPageHeader
-        icon={HistoryIcon}
         title={data.pointName}
         subtitle={subtitle}
         titleSuffix={

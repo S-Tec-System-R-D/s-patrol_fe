@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, HistoryIcon, RouteIcon, TriangleAlertIcon } from 'lucide-react'
+import { ArrowLeftIcon, RouteIcon, TriangleAlertIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
@@ -169,7 +169,6 @@ const PatrolZoneDetailPage = () => {
     <div className="flex flex-col gap-4 p-4 xl:p-8">
 
       <AppPageHeader
-        icon={HistoryIcon}
         title={data.courseName}
         /* 🔄 `spec 077`: 부제 = **순찰자**(교대가 있으면 `· 교대 n`) — 036 의 `순찰 정보` 카드가 하던 일.
            🔴 순찰자 없는 이력이 실측 35% 다 — 빈 칸으로 두지 않는다 */

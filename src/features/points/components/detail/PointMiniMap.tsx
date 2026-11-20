@@ -43,7 +43,7 @@ const PointMiniMap = ({
     L.marker([lat, lng], {
       icon: L.divIcon({
         className: '',
-        html: `<span role="img" aria-label="${name} 위치" class="grid size-7 place-items-center rounded-full bg-foreground text-background shadow"><span class="size-2 rounded-full bg-background"></span></span>`,
+        html: `<span role="img" aria-label="${name} 위치" class="grid size-7 place-items-center rounded-full bg-point text-white shadow"><span class="size-2 rounded-full bg-white"></span></span>`,
         iconSize: [28, 28],
         iconAnchor: [14, 14],
       }),

@@ -15,11 +15,12 @@ interface AppDetailCardProps {
 
 /**
  * 마스터-디테일 우측 상세 패널 표준 컨테이너 (patterns.md §1, §11).
+ * 🔄 `spec 084`: **상자(테두리 · 흰 바탕 · 안쪽 여백)를 없앴다** — 영역 제목 + 내용만 남는다. 영역 사이는 화면이 여백 · 선으로 나눈다.
  * 정보행은 children 안에서 AppDetailRow로 조립한다.
  */
 const AppDetailCard = ({ icon: Icon, title, badge, footer, children }: AppDetailCardProps) => {
   return (
-    <div className="flex h-full flex-col gap-4 rounded-lg border border-border bg-card p-5">
+    <div className="flex h-full flex-col gap-2.5">
       {/**
        * 🔴 **`badge` 는 제목 **바로 옆**이다**(2026-10-20, 사용자 판단).
        *
@@ -35,7 +36,7 @@ const AppDetailCard = ({ icon: Icon, title, badge, footer, children }: AppDetail
        * 옮겨도 번지지 않는다.
        */}
       <div className="flex items-baseline gap-2">
-        <div className="flex items-center gap-1.5 text-panel-title font-bold text-foreground">
+        <div className="flex items-center gap-1.5 text-panel-title font-semibold text-foreground">
           {Icon && <Icon size={16} strokeWidth={1.75} />}
           <span>{title}</span>
         </div>

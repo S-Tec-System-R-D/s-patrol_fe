@@ -45,10 +45,11 @@ const PointHistoryInfoCard = ({ detail, map }: PointHistoryInfoCardProps) => {
   const notChecked = detail.status !== POINT_HISTORY_STATUS.COMPLETED
 
   return (
-    /* 🔴 지도를 받으면 카드 틀은 이 바깥 상자가 갖는다 — 안쪽 `AppDetailCard` 의 테두리 · 모서리를 지운다 */
+    /* 🔴 지도를 받으면 카드 틀은 이 바깥 상자가 갖는다. 🔄 `spec 084`: `AppDetailCard` 의 상자가 없어져 안쪽 여백을 여기서 준다
+       (이 화면의 상자 자체는 지점 인증 상세 개편 — T1505 — 에서 정리한다) */
     <div className="overflow-hidden rounded-lg border border-border bg-card">
       {map}
-      <div className="[&>div]:rounded-none [&>div]:border-0">
+      <div className="p-5">
         <AppDetailCard title="인증 정보">
           {/* 🔴 **행을 한 번 감싼다**(`spec 050`) — `AppDetailCard` 의 `gap-4` 가 행 사이에 끼면 구분선이 윗행 밑에 붙는다 */}
           <div className="flex flex-col">

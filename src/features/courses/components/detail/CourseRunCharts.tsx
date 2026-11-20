@@ -1,6 +1,7 @@
 import { useId, type ReactElement } from 'react'
 import { format, isValid, parseISO } from 'date-fns'
 
+import AppChartTooltip from '@/components/app/AppChartTooltip'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { formatDuration } from '@/features/course-history/lib/elapsed'
@@ -14,6 +15,10 @@ import { RECENT_RUN_LIMIT, type RecentRun } from '@/features/course-history/lib/
  *
  * 🔴 **값이 없는 회차는 빈 칸이다**(진행 중이라 소요시간이 없거나 분모가 0). 0 높이로 그리면
  * "0분" · "0%" 로 읽힌다.
+ *
+ * 🔄 **`spec 084`**: 칸 폭 120 × 30 · 막대는 바탕 칸 없이 옅은 파랑(시간초과만 빨강) · 말풍선은 차트 카드
+ * (`AppChartTooltip`) — 윗줄 **순찰 시작 일시**, 아랫줄 이름 + 값 · 단위(전에는 날짜와 값만 있었다).
+ * 🔴 Recharts 로 옮기지 않았다 — 30px 높이의 그림이고 "7칸 고정 · 중앙값 2배 눈금" 규칙을 직접 쥐고 있다. 모양만 맞춘다.
  */
 
 const padded = (runs: RecentRun[]): (RecentRun | null)[] => [
@@ -23,21 +28,25 @@ const padded = (runs: RecentRun[]): (RecentRun | null)[] => [
 
 const dateLabel = (value: string): string => {
   const parsed = parseISO(value)
-  return isValid(parsed) ? format(parsed, 'MM.dd') : value
+  return isValid(parsed) ? format(parsed, 'MM.dd HH:mm') : value
 }
 
 interface RunTipText {
+  /** 순찰 시작 일시 */
   date: string
+  /** 값의 이름 — `소요` · `인증률` */
+  label: string
+  /** 단위까지 붙인 값 */
   value: string
+  color?: string
 }
 
-/** 회차 하나의 말풍선 — 날짜를 작게, 값을 진하게 */
+/** 회차 하나의 말풍선 — 차트 카드 */
 const RunTip = ({ tip, children }: { tip: RunTipText; children: ReactElement }) => (
   <Tooltip>
     <TooltipTrigger asChild>{children}</TooltipTrigger>
-    <TooltipContent className="tabular-nums">
-      <p className="opacity-70">{tip.date}</p>
-      <p className="font-semibold">{tip.value}</p>
+    <TooltipContent className="bg-transparent p-0">
+      <AppChartTooltip title={tip.date} rows={[{ label: tip.label, value: tip.value, color: tip.color }]} />
     </TooltipContent>
   </Tooltip>
 )
@@ -48,15 +57,15 @@ interface RunBarsProps {
 }
 
 const RunBars = ({ label, bars }: RunBarsProps) => (
-  <div className="flex h-9 items-end" role="img" aria-label={label}>
+  <div className="flex h-[30px] w-[120px] items-end" role="img" aria-label={label}>
     {bars.map((bar, index) => {
-      /* 🔴 **좌우 여백까지 마우스 영역이다** — 막대가 8px 라 막대만 잡으면 맞추기 어렵다 */
+      /* 🔴 **좌우 여백까지 마우스 영역이다** — 막대만 잡으면 맞추기 어렵다 */
       const slot = (
-        <span key={index} className="h-full px-0.5">
-          <span className="relative block h-full w-2 overflow-hidden rounded-full bg-muted">
+        <span key={index} className="h-full flex-1 px-[1.5px]">
+          <span className="relative block h-full w-full">
             {bar && bar.ratio !== null && (
               <span
-                className={cn('absolute inset-x-0 bottom-0 rounded-full', bar.color)}
+                className={cn('absolute inset-x-0 bottom-0 rounded-[3px]', bar.color)}
                 style={{ height: `${Math.max(bar.ratio, 0.08) * 100}%` }}
               />
             )}
@@ -97,10 +106,12 @@ export const RunElapsedBars = ({ runs }: { runs: RecentRun[] }) => {
           run && {
             ratio: run.elapsedSec === null || scale === 0 ? null : Math.min(run.elapsedSec / scale, 1),
             // 🔄 `spec 079` D11 — 시간초과는 빨강(주황은 미인증)
-            color: run.overtime ? 'bg-danger' : 'bg-point',
+            color: run.overtime ? 'bg-danger' : 'bg-point opacity-35',
             tip: {
               date: dateLabel(run.startDt),
+              label: '소요',
               value: `${formatDuration(run.elapsedSec)}${run.overtime ? ' · 시간초과' : ''}`,
+              color: run.overtime ? 'var(--danger)' : undefined,
             },
           }
       )}
@@ -108,15 +119,15 @@ export const RunElapsedBars = ({ runs }: { runs: RecentRun[] }) => {
   )
 }
 
-const CHART_W = 80
-const CHART_H = 36
+const CHART_W = 120
+const CHART_H = 30
 const CHART_PAD = 3
 
 /**
  * 회차별 인증률 곡선 그래프 — 위가 100%, 아래가 0% 다.
  * 🔴 곡선의 조절점을 두 점의 가운데 x · 각 점의 y 에 둔다 — 값이 두 점 사이를 벗어나지 않아
  * 100% 위나 0% 아래로 튀지 않는다. 점은 최신 회차만 보이고, 회차마다 세로 칸 전체가 말풍선 영역이다.
- * 🔴 **색은 값과 상관없이 하나다.** 분모를 확신할 수 없어 좋고 나쁨을 칠하지 않는다.
+ * 🔴 **색은 값과 상관없이 하나다**(🔄 `spec 084`: 하늘색 → 포인트 파랑 — 색 수를 줄인다). 분모를 확신할 수 없어 좋고 나쁨을 칠하지 않는다.
  * 🔴 분모가 0 인 회차는 점을 찍지 않고 건너뛴다 — 0% 로 그리면 없는 실패가 생긴다.
  */
 export const RunAuthLine = ({ runs }: { runs: RecentRun[] }) => {
@@ -130,6 +141,7 @@ export const RunAuthLine = ({ runs }: { runs: RecentRun[] }) => {
             y: CHART_PAD + (1 - run.checkedCount / run.pointCount) * (CHART_H - CHART_PAD * 2),
             tip: {
               date: dateLabel(run.startDt),
+              label: '인증률',
               value: `${Math.round((run.checkedCount / run.pointCount) * 100)}% · ${run.checkedCount}/${run.pointCount}`,
             },
           },
@@ -152,7 +164,7 @@ export const RunAuthLine = ({ runs }: { runs: RecentRun[] }) => {
       width={CHART_W}
       height={CHART_H}
       viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-      className="text-chart-2"
+      className="text-point"
       role="img"
       aria-label={`최근 ${runs.length}회 인증률`}
     >

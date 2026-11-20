@@ -120,7 +120,7 @@ const CourseMapCard = ({ pins, missing, embedded = false }: CourseMapCardProps) 
   return (
     <Shell missing={missing} embedded={embedded}>
       {/* 🔴 높이를 고정한다 — 지도는 자기 크기를 모른다(부모가 0이면 타일이 안 뜬다) */}
-      <div ref={containerRef} className="h-[320px] w-full rounded-sm" />
+      <div ref={containerRef} className="h-[320px] w-full overflow-hidden rounded-[10px] border border-border" />
     </Shell>
   )
 }

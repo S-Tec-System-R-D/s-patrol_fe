@@ -49,7 +49,7 @@ const TagIdValue = ({ tagId }: { tagId: string }) => {
     <span className="flex items-center gap-1.5">
       <span
         title={tagId}
-        className="min-w-0 flex-1 truncate rounded-sm border border-border bg-muted/40 px-2 py-1 font-mono text-caption"
+        className="min-w-0 truncate font-mono text-caption"
       >
         {tagId}
       </span>
@@ -57,7 +57,7 @@ const TagIdValue = ({ tagId }: { tagId: string }) => {
         type="button"
         onClick={copy}
         aria-label="TAG ID 복사"
-        className="inline-flex shrink-0 items-center gap-1 rounded-sm border border-border bg-card px-2 py-1 text-caption font-medium hover:bg-muted"
+        className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-medium text-sub-foreground hover:bg-border"
       >
         <CopyIcon size={12} aria-hidden />
         복사
@@ -93,10 +93,13 @@ const PointDetail = ({ point, onEdit }: { point: PointDetailData; onEdit?: () =>
   const method = toAuthMethodLabel(point.authMethod)
 
   return (
-    <section className="overflow-hidden rounded-lg border border-border bg-card xl:self-start">
-      <PointMiniMap lat={point.gpsLat} lng={point.gpsLng} name={point.name} />
+    <section className="flex min-w-0 flex-col gap-7 xl:self-start">
+      {/* 🔄 `spec 084`: 상자가 없어져 지도가 자기 테두리 · 둥근 모서리를 갖는다 */}
+      <div className="overflow-hidden rounded-[10px] border border-border">
+        <PointMiniMap lat={point.gpsLat} lng={point.gpsLng} name={point.name} />
+      </div>
 
-      <div className="p-5">
+      <div>
         <DetailSection
           title="기본정보"
           action={
@@ -107,9 +110,8 @@ const PointDetail = ({ point, onEdit }: { point: PointDetailData; onEdit?: () =>
             )
           }
         >
-          <div className="flex flex-col divide-y divide-border/60">
+          <div className="flex flex-col">
             <AppDetailRow
-              variant="fixed"
               label="인증수단"
               value={
                 method ? (
@@ -120,15 +122,14 @@ const PointDetail = ({ point, onEdit }: { point: PointDetailData; onEdit?: () =>
                 )
               }
             />
-            <AppDetailRow variant="fixed" label="소속 코스" value={<CourseListValue point={point} />} />
+            <AppDetailRow label="소속 코스" value={<CourseListValue point={point} />} />
             {/* 사업장명은 서버 응답이 아니라 **선택 결과**에서 온다(spec 021) */}
-            <AppDetailRow variant="fixed" label="사업장" value={getSiteName() ?? '-'} />
-            <AppDetailRow variant="fixed" label="설명" value={point.memo?.trim() || '-'} />
+            <AppDetailRow label="사업장" value={getSiteName() ?? '-'} />
+            <AppDetailRow label="설명" value={point.memo?.trim() || '-'} />
             {/* 🔴 좌표는 표시만 한다(029 A안) — 서버에 범위 검증이 없다(B-33) */}
-            <AppDetailRow variant="fixed" label="좌표" value={formatCoords(point)} />
+            <AppDetailRow label="좌표" value={formatCoords(point)} />
             {method === 'NFC' && (
               <AppDetailRow
-                variant="fixed"
                 label="TAG ID"
                 value={
                   point.nfcTagId ? (
