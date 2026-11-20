@@ -24,9 +24,28 @@
   - 2026-11-20: Manrope 에 한글이 없어 한글은 Pretendard 로 그려지고 있었다 → 예비 글꼴을 `Noto Sans KR Variable` 로(사용자 결정 — 색 · 틀은 그대로, 한글 글꼴만 따라간다). spec 의 해당 문장 3곳 수정.
 - [x] T1438 [US1] 전역 줄바꿈 `word-break: keep-all` · 본문 크기 13px in src/index.css
   - 2026-11-20: `body` 에 `word-break: keep-all` · 12.5px → 13px. 제목(h1~h4) 기본값은 크기 단계와 함께 T1439 에서 본다.
-- [ ] T1439 [US1] 크기 단계 토큰 값 맞추기(화면 제목 20 · 영역 제목 15/600 · 내용 13 · 보조 12 · 11) — 토큰 이름은 유지 in src/index.css
-- [ ] T1440 [US1] 색 토큰 값 맞추기(파랑 `#2563eb` · 설명용 회색 `#64748b` · 선 · 옅은 바탕) · 다크 값도 같은 관계로 따라가기 in src/index.css
-- [ ] T1441 [US1] 주황(`warning`) 을 쓰는 곳 전수 조사 → 표로 정리(여기서 옮길 곳 / 084 · 085 로 넘길 곳) in specs/phase7/083-design-renewal-foundation/tasks.md
+- [x] T1439 [US1] 크기 단계 토큰 값 맞추기(화면 제목 20 · 영역 제목 15/600 · 내용 13 · 보조 12 · 11) — 토큰 이름은 유지 in src/index.css
+  - 2026-11-20: page-title 22→20 · panel-title 16→15 · section-title 14→13 · tab 14→13 · body 12.5→13 · badge 11→12 · meta 11.5→11 · label 10.5→11(panel-header 15 · caption 12 는 그대로). 굵기는 쓰는 곳에 적혀 있어 부품 · 화면을 고칠 때 맞춘다.
+- [x] T1440 [US1] 색 토큰 값 맞추기(파랑 `#2563eb` · 설명용 회색 `#64748b` · 선 · 옅은 바탕) · 다크 값도 같은 관계로 따라가기 in src/index.css
+  - 2026-11-20: 라이트 값만 — point · ring · chart-1 `#3b82f6`→`#2563eb` · success `#22c55e`→`#16a34a` · danger `#ef4444`→`#dc2626`. 🔴 **다크 값은 그대로 뒀다** — 어두운 바탕에서는 지금의 밝은 값이 대비가 낫다(계획에서는 같이 바꾼다고 했으나 고치며 판단을 바꿨다). `primary`(남색)는 건드리지 않았다 — 주 버튼 파랑은 T1457. 선 두 단계(`#e8ecf1` · `#dde3ea`)는 틀 · 표 태스크에서.
+- [x] T1441 [US1] 주황(`warning`) 을 쓰는 곳 전수 조사 → 표로 정리(여기서 옮길 곳 / 084 · 085 로 넘길 곳) in specs/phase7/083-design-renewal-foundation/tasks.md
+  - 2026-11-20 조사 결과(시뮬레이터 · 테스트 제외 · 14개 파일 27곳). 🔴 **여기(083)서 옮기는 것은 뱃지 종류 정의 하나뿐**이고 나머지는 화면 코드라 084 · 085 로 넘긴다.
+
+  | 곳 | 지금 주황의 뜻 | 옮길 색(제안) | 어디서 |
+  |---|---|---|---|
+  | `AppBadge.variants.ts` 의 `warning` 종류 | 뱃지 색 | 종류 이름은 남기고 모양을 새 상태 표시로(회색 아이콘) | **083 T1453 · T1456** |
+  | 특이사항 표시 — `ZoneColumn` · `ZoneHistoryCard` · `PointColumn` · `PointHistoryCard` · `RunSummaryStrip`(건수) · `RunTimeline` · `UserRunRow`(2곳) · `PatrolPointDetailPage` 뱃지 · `historyBadge` 의 `특이사항` | 메모가 있음 | 진한 회색 말풍선(확정된 규칙) | 084 |
+  | `historyBadge` 의 `순찰제외` | 지점이 순찰에서 빠짐 | 회색(미인증과 같은 계열) — 판단 필요 | 084 |
+  | `AssignmentStatusBadge` 의 배치예정 | 아직 시작 전 | 회색(목업) | 084 |
+  | `DeploymentPendingPanel` 의 기다린 시간(`n일 전` 류) | 오래 기다림 | 회색 보조 글자 — 판단 필요 | 084 |
+  | `DashboardUpdatedAt` 의 연결 점(끊김) | 실시간 연결 안 됨 | 회색 점 — 판단 필요(문제로 보면 빨강) | 084 |
+  | `CourseRouteCard` 의 인증률이 가장 낮은 지점 막대 · 숫자 | 약한 지점 | 빨강 또는 강조 없음 — 판단 필요 | 084 |
+  | `PointQrCode` 의 QR 미발급 안내 상자 | 인증이 안 되는 이상 상태 | 빨강(문제) | 084 |
+  | 검색어 강조 — `AddCoursePointDialog` · `GroupPicker` | 찾은 글자 표시 | 옅은 파랑 바탕 + 파란 글자 | 084 · 085 |
+  | `EmergencyAddDialog` 의 `배치 중` 표시 | 다른 사업장에 가 있음 | 회색 — 판단 필요 | 085 |
+  | `EmergencyContactCard` 의 빈 요일 | 담당자 없음 | 빨강 점선(확정) | 085 |
+  | `index.css` 의 `--warning` 3종 · `--chart-4` | 토큰 | 쓰는 곳이 0 이 되면 지운다 | 084 T1513 |
+  | `notify.warning`(토스트 종류) | 색 토큰이 아니다 · 쓰는 곳 0 | 그대로 | — |
 - [ ] T1442 [US1] 회귀 확인 — 현장 전 화면 · 본사 3화면 · 로그인 · 시뮬레이터를 브라우저로 열어 글자가 잘리거나 넘치는 곳 목록화 · e2e 캡처의 글꼴 대기 문구 확인 in e2e/capture.pw.ts
 
 ## Phase 2: Foundational — 바깥 틀 (US2)
