@@ -15,10 +15,15 @@
 
 > 독립 테스트 기준: 모든 화면의 글꼴이 Noto Sans KR 로 보이고, 화면 배치는 그대로다. 시뮬레이터는 변함없다.
 
-- [ ] T1435 글꼴 패키지 고르기 — Noto Sans KR 을 앱에 묶어 싣는 패키지 후보와 굵기(400 · 500 · 600 · 700)별 용량을 재서 표로 보고(코드 변경 없음) in package.json
-- [ ] T1436 [US1] 글꼴 교체 — 고른 패키지 설치 · `pretendard` 제거 · `--font-sans` 교체 in package.json · src/index.css
-- [ ] T1437 [US1] 시뮬레이터가 Pretendard 를 예비 글꼴로 적고 있다 — 빠진 뒤에도 모양이 같은지 확인하고 필요하면 예비 글꼴만 고친다 in src/features/simulator/simulator.css
-- [ ] T1438 [US1] 전역 줄바꿈 `word-break: keep-all` · 본문 크기 13px · 제목 기본값 정리 in src/index.css
+- [x] T1435 글꼴 패키지 고르기 — Noto Sans KR 을 앱에 묶어 싣는 패키지 후보와 굵기(400 · 500 · 600 · 700)별 용량을 재서 표로 보고(코드 변경 없음) in package.json
+  - 실측(2026-11-20 · 두 패키지 5.3.1 · 라이선스 OFL-1.1): **`@fontsource-variable/noto-sans-kr`** = woff2 124조각 합계 3.5MB 로 굵기 100~900 전부(조각 하나 최대 65KB · 화면에 나온 글자가 든 조각만 받는다) / `@fontsource/noto-sans-kr` = 굵기 하나에 125조각 2.4MB → 네 굵기 9.8MB(굵기마다 따로 받는다) / 지금 Pretendard = 2.06MB 한 파일을 통째로 받는다.
+  - 결론: 가변 글꼴 패키지(`@fontsource-variable/noto-sans-kr`). 목업이 쓴 구글 웹폰트도 같은 가변 글꼴 조각 방식이다. 사용자 승인 대기.
+- [x] T1436 [US1] 글꼴 교체 — 고른 패키지 설치 · `pretendard` 제거 · `--font-sans` 교체 in package.json · src/index.css
+  - 2026-11-20: `@fontsource-variable/noto-sans-kr` 5.3.1 설치 · `pretendard` 제거 · `--font-sans: 'Noto Sans KR Variable'`. verify 통과 · test 1604건 통과 · 개발 서버 로그인 화면에서 적용 글꼴과 조각 8개만 받는 것 확인.
+- [x] T1437 [US1] 시뮬레이터가 Pretendard 를 예비 글꼴로 적고 있다 — 빠진 뒤에도 모양이 같은지 확인하고 필요하면 예비 글꼴만 고친다 in src/features/simulator/simulator.css
+  - 2026-11-20: Manrope 에 한글이 없어 한글은 Pretendard 로 그려지고 있었다 → 예비 글꼴을 `Noto Sans KR Variable` 로(사용자 결정 — 색 · 틀은 그대로, 한글 글꼴만 따라간다). spec 의 해당 문장 3곳 수정.
+- [x] T1438 [US1] 전역 줄바꿈 `word-break: keep-all` · 본문 크기 13px in src/index.css
+  - 2026-11-20: `body` 에 `word-break: keep-all` · 12.5px → 13px. 제목(h1~h4) 기본값은 크기 단계와 함께 T1439 에서 본다.
 - [ ] T1439 [US1] 크기 단계 토큰 값 맞추기(화면 제목 20 · 영역 제목 15/600 · 내용 13 · 보조 12 · 11) — 토큰 이름은 유지 in src/index.css
 - [ ] T1440 [US1] 색 토큰 값 맞추기(파랑 `#2563eb` · 설명용 회색 `#64748b` · 선 · 옅은 바탕) · 다크 값도 같은 관계로 따라가기 in src/index.css
 - [ ] T1441 [US1] 주황(`warning`) 을 쓰는 곳 전수 조사 → 표로 정리(여기서 옮길 곳 / 084 · 085 로 넘길 곳) in specs/phase7/083-design-renewal-foundation/tasks.md

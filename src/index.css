@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-@import 'pretendard/dist/web/variable/pretendardvariable.css';
+@import '@fontsource-variable/noto-sans-kr';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------ */
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: 'Pretendard Variable', sans-serif;
+  --font-sans: 'Noto Sans KR Variable', sans-serif;
 
   --color-background: var(--background);
   --color-contents-background: var(--contents-bg);
@@ -260,8 +260,10 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-size: 12.5px;
+    font-size: 13px;
     line-height: 1.4;
+    /* 한글 문장이 단어 중간에서 끊기지 않게(`spec 083` T1438). 긴 이름은 쓰는 쪽에서 말줄임한다 */
+    word-break: keep-all;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

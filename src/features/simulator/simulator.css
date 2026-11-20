@@ -46,7 +46,8 @@ html.sim-root {
 }
 
 html.sim-root body {
-  font-family: 'Manrope Variable', 'Pretendard Variable', sans-serif;
+  /* 한글은 Manrope 에 없어 예비 글꼴로 그려진다 — 앱과 같은 Noto Sans KR(`spec 083` T1437, 전에는 Pretendard) */
+  font-family: 'Manrope Variable', 'Noto Sans KR Variable', sans-serif;
   font-size: 13px;
 }
 
