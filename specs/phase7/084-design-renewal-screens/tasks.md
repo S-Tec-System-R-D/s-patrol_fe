@@ -12,7 +12,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T1476 083 이월 항목 옮기기 · 주황을 쓰던 곳 중 화면별 판단이 필요한 곳 표 확정 in specs/phase7/084-design-renewal-screens/spec.md
+- [ ] T1476 083 이월 항목 옮기기(🔴 083 `tasks.md` 의 `## 다음 spec으로 이월` — 공용 조각 3종(083 T1469~T1471) · 탭 · 주황 26곳 · 한 영역 안의 빈 상태 · 근무 상태 점 등. 이 목록의 태스크에 빠진 것이 있으면 여기서 태스크를 더한다) · 주황을 쓰던 곳 중 화면별 판단이 필요한 곳 표 확정 in specs/phase7/084-design-renewal-screens/spec.md
 - [ ] T1477 개편 전 화면 캡처 보관(대조용 — 태그 `design-before-renewal-2026-11` 에서 현장 14화면 1920×911) in e2e/capture.pw.ts
 - [ ] T1478 React Bits `Counter` 의 의존성과 그 라이선스 확인 → 보고(설치는 T1486) in package.json
 

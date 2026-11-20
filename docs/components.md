@@ -1,5 +1,7 @@
 # 컴포넌트 카탈로그 (components.md)
 
+> 🔄 **`spec 083`(2026-11-20) 에서 바뀜 — 아래 본문은 아직 옛 내용이다.** `AppBadge`(아이콘 + 글자 · `pending` · `plain` · `chip` · `icon` prop) · `AppButton`(30px · 주 버튼 파랑 · `soft`) · `AppIconButton`(`variant` outline / soft / ghost) · `AppInput` · `AppSelect` · `AppDatePicker`(30px · 폼 34px) · `AppTable`(상자 테두리 없음 · 줄 46px) · `AppPagination`(`« ‹ 번호 다섯 개 › »`) · `AppEmpty`(흰 타일 아이콘 — 그림 없음) · 새 `TopBar`. 본문은 `spec 084` 마지막에 고친다.
+
 > 본 프로젝트에서 사용하는 **앱 공용 컴포넌트** + **shadcn 원시 컴포넌트**의 사용 가이드.
 > 디자인 토큰·컨벤션·접근성·콘텐츠 톤은 [`design-system.md`](./design-system.md) 참조.
 > 레이아웃 / 상호작용 패턴은 [`layout.md`](./layout.md) / [`patterns.md`](./patterns.md) 참조.
