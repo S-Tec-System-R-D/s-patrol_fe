@@ -34,8 +34,8 @@ export const workerColumns = (): ColumnDef<UserRow>[] =>
       header: '이름',
       cell: ({ row }) => (
         <div className="flex min-w-0 flex-col">
-          <span className="font-medium">{row.original.userName}</span>
-          <span className="text-meta tabular-nums text-muted-foreground">{row.original.loginId}</span>
+          <span className="font-medium text-foreground">{row.original.userName}</span>
+          <span className="text-meta tabular-nums text-sub-foreground">{row.original.loginId}</span>
         </div>
       ),
     },
@@ -83,7 +83,7 @@ export const workerColumns = (): ColumnDef<UserRow>[] =>
       accessorKey: 'createDt',
       header: '등록일',
       cell: ({ getValue }) => (
-        <span className="tabular-nums text-muted-foreground">{formatDate(getValue<string>())}</span>
+        <span className="tabular-nums text-sub-foreground">{formatDate(getValue<string>())}</span>
       ),
     },
     {

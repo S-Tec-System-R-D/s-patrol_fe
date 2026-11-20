@@ -41,7 +41,7 @@ export const courseColumns = (): ColumnDef<CourseRow>[] => [
     header: '코스명',
     cell: ({ row }) => (
       <span
-        className={`font-semibold ${row.original.useYn ? 'text-foreground' : 'text-muted-foreground'}`}
+        className={`font-medium ${row.original.useYn ? 'text-foreground' : 'text-muted-foreground'}`}
       >
         {row.original.courseName}
       </span>
@@ -51,7 +51,7 @@ export const courseColumns = (): ColumnDef<CourseRow>[] => [
     accessorKey: 'pointCount',
     header: '지점 수',
     cell: ({ row }) => (
-      <span className={`tabular-nums text-muted-foreground ${dim(row.original.useYn)}`}>
+      <span className={`tabular-nums text-sub-foreground ${dim(row.original.useYn)}`}>
         {/* 🔴 0개도 그대로 보여준다 — 자동 조치·경고를 하지 않는다(spec 규칙 12).
             의도적으로 비워 둔 코스가 있을 수 있고, "비어 있다 → 잘못됐다" 는 우리 추측이다 */}
         {row.original.pointCount}
@@ -62,7 +62,7 @@ export const courseColumns = (): ColumnDef<CourseRow>[] => [
     accessorKey: 'totalMin',
     header: '총 소요시간',
     cell: ({ row }) => (
-      <span className={`tabular-nums text-muted-foreground ${dim(row.original.useYn)}`}>
+      <span className={`tabular-nums text-sub-foreground ${dim(row.original.useYn)}`}>
         {row.original.totalMin}분
       </span>
     ),
@@ -87,7 +87,7 @@ export const courseColumns = (): ColumnDef<CourseRow>[] => [
       // 🔴 이력이 없으면 `history` 자체가 null 이다 — 빈 객체가 아니다
       const formatted = formatPatrolDt(row.original.history?.historyEndDt)
       return (
-        <span className={`tabular-nums text-muted-foreground ${dim(row.original.useYn)}`}>
+        <span className={`tabular-nums text-sub-foreground ${dim(row.original.useYn)}`}>
           {formatted ?? '기록 없음'}
         </span>
       )

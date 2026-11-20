@@ -8,9 +8,9 @@ import { ArrowRightIcon } from 'lucide-react'
  */
 const SiteRoute = ({ from, to }: { from: string; to: string }) => (
   <span className="flex min-w-0 items-center gap-1.5">
-    <span className="truncate text-muted-foreground">{from}</span>
+    <span className="truncate text-sub-foreground">{from}</span>
     <ArrowRightIcon size={13} className="shrink-0 text-muted-foreground" aria-label="에서" />
-    <span className="truncate font-semibold text-foreground">{to}</span>
+    <span className="truncate font-medium text-foreground">{to}</span>
   </span>
 )
 

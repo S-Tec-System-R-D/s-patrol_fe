@@ -17,7 +17,7 @@ export const adminColumns = (root: GroupNode): ColumnDef<AdminRow>[] => {
     {
       id: 'name',
       header: '이름',
-      cell: ({ row }) => <span className="font-medium">{row.original.admin.userName}</span>,
+      cell: ({ row }) => <span className="font-medium text-foreground">{row.original.admin.userName}</span>,
     },
     {
       id: 'role',
@@ -35,7 +35,7 @@ export const adminColumns = (root: GroupNode): ColumnDef<AdminRow>[] => {
     {
       id: 'groups',
       header: '담당 그룹',
-      cell: ({ row }) => <span className="text-muted-foreground">{adminGroupSummary(root, row.original)}</span>,
+      cell: ({ row }) => <span className="text-sub-foreground">{adminGroupSummary(root, row.original)}</span>,
     },
   ]
   // 응답 순서 그대로 둔다

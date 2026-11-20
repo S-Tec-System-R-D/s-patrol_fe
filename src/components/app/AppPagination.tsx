@@ -22,7 +22,7 @@ interface AppPaginationProps {
 
 /** 번호 · 화살표 한 칸 — 테두리 없는 30px 칸 */
 const cell =
-  'place-items-center h-[30px] min-w-[30px] rounded-[7px] px-1.5 font-medium tabular-nums text-foreground/75 transition-colors hover:bg-muted hover:text-foreground cursor-pointer disabled:pointer-events-none disabled:opacity-35'
+  'place-items-center h-[30px] min-w-[30px] rounded-[7px] px-1.5 font-medium tabular-nums text-sub-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer disabled:pointer-events-none disabled:opacity-35'
 
 interface ArrowProps {
   icon: LucideIcon

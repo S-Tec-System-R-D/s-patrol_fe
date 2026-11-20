@@ -51,7 +51,7 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
   {
     accessorKey: 'courseName',
     header: '코스명',
-    cell: ({ getValue }) => <span className="font-medium">{getValue<string>()}</span>,
+    cell: ({ getValue }) => <span className="font-medium text-foreground">{getValue<string>()}</span>,
   },
   {
     id: 'runner',
@@ -77,7 +77,7 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
     accessorKey: 'startDt',
     header: '시작 일시',
     cell: ({ getValue }) => (
-      <span className="tabular-nums text-muted-foreground">
+      <span className="tabular-nums text-sub-foreground">
         {formatDateTime(getValue<string>())}
       </span>
     ),
@@ -97,7 +97,7 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
        */
       if (value === null) return <span className="text-muted-foreground">-</span>
       return (
-        <span className="tabular-nums text-muted-foreground">{formatDateTime(value)}</span>
+        <span className="tabular-nums text-sub-foreground">{formatDateTime(value)}</span>
       )
     },
   },
@@ -113,7 +113,7 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
           {formatElapsed(row.original.actualElapsedTime)}
         </span>
       ) : (
-        <span className="tabular-nums text-muted-foreground">{formatElapsed(row.original.actualElapsedTime)}</span>
+        <span className="tabular-nums text-sub-foreground">{formatElapsed(row.original.actualElapsedTime)}</span>
       ),
   },
   {

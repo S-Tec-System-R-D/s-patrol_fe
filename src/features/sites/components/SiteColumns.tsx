@@ -28,7 +28,7 @@ export const siteColumns = (): ColumnDef<SiteRow>[] => {
         return (
           // 하위 사업장은 단계마다 16px 들여쓰고 `└` 를 붙인다
           <div className="flex flex-col" style={{ paddingLeft: depth * 16 }}>
-            <span className="font-medium">
+            <span className="font-medium text-foreground">
               {depth > 0 && <span className="mr-1 text-muted-foreground">└</span>}
               {site.siteName}
             </span>
@@ -41,18 +41,18 @@ export const siteColumns = (): ColumnDef<SiteRow>[] => {
     {
       id: 'hq',
       header: '본부',
-      cell: ({ row }) => <span className="text-muted-foreground">{row.original.hqName ?? EMPTY}</span>,
+      cell: ({ row }) => <span className="text-sub-foreground">{row.original.hqName ?? EMPTY}</span>,
     },
     {
       id: 'branch',
       header: '지사',
-      cell: ({ row }) => <span className="text-muted-foreground">{row.original.branchName ?? EMPTY}</span>,
+      cell: ({ row }) => <span className="text-sub-foreground">{row.original.branchName ?? EMPTY}</span>,
     },
     {
       id: 'address',
       header: '주소',
       meta: { className: 'hidden xl:table-cell' },
-      cell: ({ row }) => <span className="text-muted-foreground">{row.original.site.address ?? EMPTY}</span>,
+      cell: ({ row }) => <span className="text-sub-foreground">{row.original.site.address ?? EMPTY}</span>,
     },
     {
       id: 'open',

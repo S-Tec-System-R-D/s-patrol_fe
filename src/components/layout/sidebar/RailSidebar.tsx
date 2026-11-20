@@ -89,7 +89,7 @@ export const RailSidebar = ({ menus, tag, badges, siteSwitch, siteName }: RailSi
                   'flex h-[30px] items-center gap-2 rounded-md px-2',
                   isActive
                     ? 'bg-sidebar-accent font-medium text-foreground'
-                    : 'text-foreground/70 hover:bg-sidebar-accent/60 hover:text-foreground'
+                    : 'text-sub-foreground hover:bg-sidebar-accent/60 hover:text-foreground'
                 )}
               >
                 <Icon

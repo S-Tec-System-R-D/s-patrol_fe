@@ -41,7 +41,7 @@ export const noticeColumns = (): ColumnDef<NoticeRow>[] =>
         const { title, attachCount } = row.original
         return (
           <span className="flex min-w-0 items-center gap-1.5">
-            <span className="truncate font-medium">{title}</span>
+            <span className="truncate font-medium text-foreground">{title}</span>
             {attachCount > 0 && (
               <PaperclipIcon
                 size={13}
@@ -61,7 +61,7 @@ export const noticeColumns = (): ColumnDef<NoticeRow>[] =>
       accessorKey: 'createDt',
       header: '작성일',
       cell: ({ getValue }) => (
-        <span className="tabular-nums text-muted-foreground">{formatDate(getValue<string>())}</span>
+        <span className="tabular-nums text-sub-foreground">{formatDate(getValue<string>())}</span>
       ),
     },
     {

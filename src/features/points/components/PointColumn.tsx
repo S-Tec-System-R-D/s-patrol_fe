@@ -48,7 +48,7 @@ export const pointColumns = (): ColumnDef<PointRow>[] => [
     header: '지점명',
     cell: ({ row }) => (
       <span
-        className={`font-semibold ${row.original.useYn ? 'text-foreground' : 'text-muted-foreground'}`}
+        className={`font-medium ${row.original.useYn ? 'text-foreground' : 'text-muted-foreground'}`}
       >
         {row.original.pointName}
       </span>
@@ -75,7 +75,7 @@ export const pointColumns = (): ColumnDef<PointRow>[] => [
     accessorKey: 'usedCount',
     header: '소속 코스',
     cell: ({ row }) => (
-      <span className={`tabular-nums text-muted-foreground ${dim(row.original.useYn)}`}>
+      <span className={`tabular-nums text-sub-foreground ${dim(row.original.useYn)}`}>
         {row.original.usedCount}
       </span>
     ),
@@ -86,7 +86,7 @@ export const pointColumns = (): ColumnDef<PointRow>[] => [
     cell: ({ row }) => {
       const formatted = formatPatrolDt(row.original.lastPatrolDt)
       return (
-        <span className={`tabular-nums text-muted-foreground ${dim(row.original.useYn)}`}>
+        <span className={`tabular-nums text-sub-foreground ${dim(row.original.useYn)}`}>
           {formatted ?? '기록 없음'}
         </span>
       )

@@ -26,6 +26,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-sub-foreground: var(--sub-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--danger);
@@ -124,7 +125,10 @@
   --secondary-foreground: oklch(0.279 0.041 264);
 
   --muted: oklch(0.97 0.004 247);
-  --muted-foreground: oklch(0.554 0.046 257); /* #64748b */
+  --muted-foreground: oklch(0.554 0.046 257); /* #64748b — 설명 · 표 머리 · 단위 · 회색 아이콘 */
+  /* 보조 글자 · 표의 일반 칸 · 메뉴 이름(`spec 083`) — 본문(foreground)과 설명(muted-foreground) 사이. 전에는 이 자리에도
+     muted-foreground 를 써서 화면이 옅어 보였다(사용자 지적 2026-11-20) */
+  --sub-foreground: oklch(0.446 0.043 257.281); /* #475569 */
 
   /* ── 액센트 ── */
   --accent: oklch(0.97 0.004 247);
@@ -207,6 +211,7 @@
 
   --muted: oklch(0.372 0.044 264);
   --muted-foreground: oklch(0.704 0.036 257); /* #94a3b8 */
+  --sub-foreground: oklch(0.869 0.022 252.894); /* #cbd5e1 */
 
   --accent: oklch(0.372 0.044 264);
   --accent-foreground: oklch(0.984 0.003 247);

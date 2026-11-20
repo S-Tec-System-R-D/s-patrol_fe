@@ -17,7 +17,7 @@ interface AppIconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<AppIconButtonVariant, string> = {
   outline: 'border border-border bg-card text-muted-foreground hover:bg-muted',
-  soft: 'bg-muted text-foreground/75 hover:bg-border',
+  soft: 'bg-muted text-sub-foreground hover:bg-border',
   ghost: 'text-muted-foreground hover:bg-muted',
 }
 

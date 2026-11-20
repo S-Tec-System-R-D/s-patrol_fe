@@ -39,7 +39,7 @@ const AppEmpty = ({
         aria-hidden
         className={cn(
           'grid size-12 place-items-center rounded-xl border border-border bg-card shadow-[0_1px_2px_rgb(15_23_42/0.06),0_4px_10px_rgb(15_23_42/0.06)]',
-          failed ? 'text-danger' : 'text-foreground/70'
+          failed ? 'text-danger' : 'text-sub-foreground'
         )}
       >
         <Icon size={22} strokeWidth={1.7} />

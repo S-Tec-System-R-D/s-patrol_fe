@@ -26,7 +26,7 @@ export const deploymentHistoryColumns = (siteName: string): ColumnDef<Assignment
       accessorKey: 'userName',
       header: '근무자',
       cell: ({ row }) => (
-<span className="whitespace-nowrap font-medium">{row.original.userName}</span>
+<span className="whitespace-nowrap font-medium text-foreground">{row.original.userName}</span>
       ),
     },
     {
@@ -46,7 +46,7 @@ export const deploymentHistoryColumns = (siteName: string): ColumnDef<Assignment
       id: 'period',
       header: '기간',
       cell: ({ row }) => (
-        <span className="tabular-nums whitespace-nowrap text-muted-foreground">
+        <span className="tabular-nums whitespace-nowrap text-sub-foreground">
           {formatPeriod(row.original.startDt, row.original.endDt)}
         </span>
       ),

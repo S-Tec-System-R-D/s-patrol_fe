@@ -26,7 +26,7 @@ export const returnRequestColumns = (siteSeq: number): ColumnDef<AssignmentReque
       accessorKey: 'userName',
       header: '근무자',
       cell: ({ row }) => (
-<span className="whitespace-nowrap font-medium">{row.original.userName}</span>
+<span className="whitespace-nowrap font-medium text-foreground">{row.original.userName}</span>
       ),
     },
     {
@@ -58,7 +58,7 @@ export const returnRequestColumns = (siteSeq: number): ColumnDef<AssignmentReque
       accessorKey: 'createDt',
       header: '요청일',
       cell: ({ getValue }) => (
-        <span className="tabular-nums whitespace-nowrap text-muted-foreground">{formatDate(getValue<string>())}</span>
+        <span className="tabular-nums whitespace-nowrap text-sub-foreground">{formatDate(getValue<string>())}</span>
       ),
     },
     {

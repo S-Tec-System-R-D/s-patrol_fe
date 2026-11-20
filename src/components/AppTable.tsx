@@ -192,7 +192,7 @@ const AppTable = <TData,>({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className={`h-[46px] text-body font-normal px-3 py-1 ${cell.column.columnDef.meta?.className ?? ''}`}
+                      className={`h-[46px] text-body font-normal text-sub-foreground px-3 py-1 ${cell.column.columnDef.meta?.className ?? ''}`}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>

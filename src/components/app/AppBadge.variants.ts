@@ -28,7 +28,7 @@ export const badgeVariants = cva(
         success: 'text-foreground',
         point: 'text-foreground',
         // 주황을 쓰지 않는다(`spec 083`) — 아이콘 없이 글자만. 쓰는 곳(특이사항 · 순찰제외 · 배치예정)은 084 에서 옮긴다
-        warning: 'text-foreground/75',
+        warning: 'text-sub-foreground',
         danger: 'font-medium text-danger',
         muted: 'text-foreground',
         // 회차 `미완료` · 지점 `미인증`(`spec 079` D13)
@@ -36,7 +36,7 @@ export const badgeVariants = cva(
         // 아직 차례가 아님(지점 `대기중`) — 미완료(했어야 하는데 안 함)와 아이콘으로 구분한다
         pending: 'text-foreground',
         // 상태가 아닌 **분류 · 설정 값**(권한 · 인증수단 · 교대) — 아이콘 없이 글자만
-        plain: 'text-foreground/75',
+        plain: 'text-sub-foreground',
         // 분류 값 가운데 눈에 띄어야 하는 것(현장 관리자 · 마스터) — 옅은 회색 칩
         chip: 'rounded-[5px] bg-muted px-1.5 py-0.5 font-medium text-foreground',
       },

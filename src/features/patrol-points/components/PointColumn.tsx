@@ -69,12 +69,12 @@ export const pointHistoryColumns = (): ColumnDef<PointHistoryRow>[] =>
     {
       accessorKey: 'pointName',
       header: '순찰지점',
-      cell: ({ getValue }) => <span className="font-medium">{getValue<string>()}</span>,
+      cell: ({ getValue }) => <span className="font-medium text-foreground">{getValue<string>()}</span>,
     },
     {
       accessorKey: 'courseName',
       header: '순찰코스',
-      cell: ({ getValue }) => <span className="text-muted-foreground">{getValue<string>()}</span>,
+      cell: ({ getValue }) => <span className="text-sub-foreground">{getValue<string>()}</span>,
     },
     {
       accessorKey: 'authMethodName',
