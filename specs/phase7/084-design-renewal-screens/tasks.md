@@ -30,7 +30,7 @@
 - [ ] T1483 [US2] 오늘 기록 집계 함수(시간대별 24칸 · 코스별 횟수 · 0회 코스 포함) + 단위 테스트. 하루 건수가 100건을 넘는 사업장이 있는지 실서버에서 확인해 보고(OQ-084-A) in src/features/dashboard/lib/todayStats.ts
 - [ ] T1484 [US2] 오늘 시간대별 순찰(세로 막대 · 지금 시간대 강조) · 오늘 코스별 순찰(가로 막대 + 횟수) in src/features/dashboard/components/TodayHourChart.tsx · src/features/dashboard/components/TodayCourseBars.tsx
 - [ ] T1485 [US1] 움직임 — 진행 중 코스에서 약 4초(아이콘 회전 · 다음 지점 물결 · 점선 흐름) · 화면이 뜰 때 + 실시간 알림이 온 코스에서 다시 · `prefers-reduced-motion` in src/features/dashboard/components/ActiveCourseCard.tsx · src/index.css
-- [ ] T1486 [US1] 숫자 굴러감 — React Bits `Counter` 를 복사해 넣고(파일 머리에 저작권 표시 · 허가 문구) 제목 오른쪽 숫자에 적용 in src/components/app/ · src/features/dashboard/components/DashboardKpiCard.tsx
+- [~] T1486 [US1] ~~숫자 굴러감 — React Bits `Counter`~~ — **보류**(사용자 결정 2026-11-20): React Bits 를 쓰지 않고, 쓸지는 나중에 방향을 정해서 적용한다. 숫자는 움직임 없이 바로 바뀐다(지금 동작 그대로).
 - [ ] T1487 [US1] 빈 상태 · 불러오지 못함 — 진행 중은 상자 안 타일, 나머지는 글자 한 줄, 코스별은 0회 줄(목업 `29`) in src/features/dashboard/components/AreaFallback.tsx
 - [ ] T1488 [US1] 회귀 확인 — 실시간 연결 · 새로고침 · `마지막 갱신` · 승인 · 반려 · e2e · 캡처 대조 in e2e/
 
@@ -101,8 +101,8 @@
 ## Dependencies & Execution Order
 
 - 🔴 083 완료 → T1476 부터.
-- T1476~T1478 은 모든 Phase 선행. T1478 → T1486.
-- Phase 2: T1479 → T1480~T1482(파일이 달라 순서 자유) → T1483 → T1484 → T1485 → T1486 → T1487 → T1488.
+- T1476~T1478 은 모든 Phase 선행. (T1486 은 보류 — React Bits)
+- Phase 2: T1479 → T1480~T1482(파일이 달라 순서 자유) → T1483 → T1484 → T1485 → T1487 → T1488.
 - Phase 3~6 은 Phase 2 와 독립이지만, 🔴 **대시보드를 먼저** 한다(주 화면 — 규칙이 실제로 맞는지 가장 먼저 드러난다).
 - Phase 4 의 `[P]` 는 화면이 달라 병렬 가능. T1500(배치관리)은 탭 · 숫자 줄이 달라 따로.
 - Phase 6 은 Phase 3 뒤(코스 상세가 모달의 바탕).
