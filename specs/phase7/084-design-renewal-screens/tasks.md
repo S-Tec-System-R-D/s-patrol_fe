@@ -12,15 +12,18 @@
 
 ## Phase 1: Setup
 
-- [ ] T1476 083 이월 항목 옮기기(🔴 083 `tasks.md` 의 `## 다음 spec으로 이월` — 공용 조각 3종(083 T1469~T1471) · 탭 · 주황 26곳 · 한 영역 안의 빈 상태 · 근무 상태 점 등. 이 목록의 태스크에 빠진 것이 있으면 여기서 태스크를 더한다) · 주황을 쓰던 곳 중 화면별 판단이 필요한 곳 표 확정 in specs/phase7/084-design-renewal-screens/spec.md
-- [ ] T1477 개편 전 화면 캡처 보관(대조용 — 태그 `design-before-renewal-2026-11` 에서 현장 14화면 1920×911) in e2e/capture.pw.ts
-- [ ] T1478 React Bits `Counter` 의 의존성과 그 라이선스 확인 → 보고(설치는 T1486) in package.json
+- [x] T1476 083 이월 항목 옮기기(🔴 083 `tasks.md` 의 `## 다음 spec으로 이월` — 공용 조각 3종(083 T1469~T1471) · 탭 · 주황 26곳 · 한 영역 안의 빈 상태 · 근무 상태 점 등. 이 목록의 태스크에 빠진 것이 있으면 여기서 태스크를 더한다) · 주황을 쓰던 곳 중 화면별 판단이 필요한 곳 표 확정 in specs/phase7/084-design-renewal-screens/spec.md
+  - 2026-11-20: spec §0 을 이월 표로 다시 썼다(17건 — 어느 태스크에서 다루는지 함께). 빠진 것을 태스크로 더했다 — T1519(제목 아이콘 타일 · 영역 제목 굵기) · T1520(캡처 기준본) · T1521(좁은 화면 일괄 확인). 주황 26곳 중 색을 정해야 하는 5곳은 그 화면을 시작할 때 묻는다.
+- [x] T1477 개편 전 화면 캡처 보관(대조용 — 태그 `design-before-renewal-2026-11` 에서 현장 14화면 1920×911) in e2e/capture.pw.ts
+  - 2026-11-20: 태그의 코드를 임시 폴더에 꺼내(`git worktree`) 따로 설치하고 가짜 서버(5175)로 현장 14화면을 1920×911 로 찍었다 → `docs/ui-mock/현장/개선안/디자인개편-2026-11/개편전-캡처/`(14장 · 약 1.1MB). 찍는 스크립트 = `_gen/shot-app.cjs`(개편 뒤 화면도 같은 스크립트로 찍어 대조한다 — 임시 폴더로 복사해 돌린다). 🔴 `docs/ui-current` 는 2026-10-21 것이라 개편 전 기준으로 쓸 수 없었다(073~082 가 반영되지 않았다). 임시 폴더는 지웠다.
+- [x] T1478 React Bits `Counter` 의 의존성과 그 라이선스 확인 → 보고(설치는 T1486) in package.json
+  - 2026-11-20: 공식 등록 정보(`reactbits.dev/r/Counter-TS-TW`)를 읽었다 — **npm 의존성 0개**(`dependencies: []`). import 는 `react` 뿐이고 움직임은 직접 쓴 스프링 + `requestAnimationFrame`. `prefers-reduced-motion` 이면 바로 값으로 붙는다. 약 450~500줄(추정). 라이선스는 MIT + Commons Clause(2026-11-20 원문 확인 — 제품 안 사용 가능 · 복사한 파일에 저작권 표시 유지). 🔴 숫자 네 개를 굴리려고 500줄을 들이는 셈이라, T1486 에서 "그대로 복사"와 "같은 움직임을 짧게 직접 쓰기"를 놓고 다시 묻는다. React 19 · Tailwind v4 에서 돌려 보지는 않았다.
 
 ## Phase 2: US1 · US2 — 대시보드
 
 > 독립 테스트 기준: 1920×911 에서 목업 `01` 과 같은 배치다. 실시간 알림이 온 코스가 약 4초 움직이고, 움직임 줄이기 설정에서는 움직이지 않는다. 승인 · 반려 · 새로고침이 그대로 동작한다.
 
-- [ ] T1479 [US1] 영역 배치 — 제목 오른쪽 한 줄 숫자 네 개 → 진행 중 전체 폭 → 세 칸 in src/pages/service/dashboard/DashboardPage.tsx · src/features/dashboard/components/DashboardKpiCard.tsx
+- [ ] T1479 [US1] 영역 배치 — 제목 오른쪽 한 줄 숫자 네 개(🔴 공용 조각 "상자 없는 한 줄 숫자"를 여기서 만든다 — 083 T1469) → 진행 중 전체 폭 → 세 칸 · 실시간 표시 · 새로고침을 `TopBar` 오른쪽 자리로 in src/pages/service/dashboard/DashboardPage.tsx · src/features/dashboard/components/DashboardKpiCard.tsx
 - [ ] T1480 [US1] 진행 중 코스 상자 — 가로 경로 · `순찰 시작` 점 + 시작 시각 · 지점별 인증 시각 · 다음 지점 강조 · 점선 구간 · 미인증 · 교대. 지점이 많은 코스의 지금 처리(여러 줄)를 먼저 확인(OQ-084-B) · `순찰 시작` 점은 검정을 쓰지 않는다(OQ-084-D) in src/features/dashboard/components/ActiveCourseCard.tsx · src/features/dashboard/components/CourseStepper.tsx · src/features/dashboard/components/ActiveCourseSection.tsx
 - [ ] T1481 [US1] 미완료 · 시간초과 / 종료된 순찰 — 탭 두 개인 한 상자 → 위아래 두 영역(내용 · 문구 유지 · 테스트 수정) in src/features/dashboard/components/RecentRecordPanel.tsx
 - [ ] T1482 [US1] 배치 대기 · 공지사항 — 오른쪽 칸 · 선으로 나눈 줄 목록(승인 · 반려 동작 유지) in src/features/dashboard/components/DeploymentPendingPanel.tsx · src/features/dashboard/components/DashboardNoticePanel.tsx
@@ -50,7 +53,7 @@
 - [ ] T1496 [P] [US4] 순찰이력 — 지점(인증수단 글자만) in src/pages/service/patrol/points/PatrolPointsPage.tsx · src/features/patrol-points/components/PointColumn.tsx
 - [ ] T1497 [P] [US4] 코스 목록 in src/pages/service/zones/ZonesPage.tsx
 - [ ] T1498 [P] [US4] 지점 목록 in src/pages/service/points/PointsPage.tsx
-- [ ] T1499 [P] [US4] 근무자 목록 · 빈 상태 두 종류(목록 영역 가운데 — 목업 `27` · `28`) in src/pages/service/users/UsersPage.tsx · src/features/workers/components/WorkerColumns.tsx
+- [ ] T1499 [P] [US4] 근무자 목록 · `근무 중 / 근무 종료` 를 새 상태 표시로 · 권한 표시를 아이콘으로 구분하는 안 두 가지 제시 → 결정(본사 관리자 화면도 같은 규칙) · 빈 상태 두 종류(목록 영역 가운데 — 목업 `27` · `28`) in src/pages/service/users/UsersPage.tsx · src/features/workers/components/WorkerColumns.tsx
 - [ ] T1500 [US4] 배치관리 — 제목 오른쪽 한 줄 숫자(전출 · 전입 인원) · 탭 4개(요청 건수 파란 알약) · 표 4종. 복귀 요청 경로 방향을 지금 구현과 대조 in src/pages/service/deployments/DeploymentsPage.tsx · src/features/deployments/components/DeploymentBoard.tsx · src/features/deployments/components/DeploymentPeopleStats.tsx
 - [ ] T1501 [P] [US4] 공지사항 목록 in src/pages/service/notice/NoticeListPage.tsx · src/features/notice/components/NoticeColumn.tsx
 - [ ] T1502 [US4] 좁은 폭 카드(`WorkerCard` · `NoticeCard` · `DeploymentRequestCard` 등)가 새 색 · 글꼴에서 깨지지 않는지 확인(모양은 유지) in src/features/
@@ -77,6 +80,9 @@
 
 ## Phase 7: Polish — 문서 정리
 
+- [ ] T1519 화면 제목 왼쪽의 남색 아이콘 타일(`AppPageHeader` 의 `icon` — 목업에는 없다)을 어떻게 할지 제시 → 결정 · 영역 제목 굵기 600 맞춤 in src/components/app/AppPageHeader.tsx · src/components/app/AppDetailCard.tsx
+- [ ] T1520 캡처 기준본(`docs/ui-current`) 다시 찍기 · README 변경 이력 in docs/ui-current/
+- [ ] T1521 🔴 좁은 화면(1280px 미만) 일괄 확인 — 전 화면을 390px · 768px · 1024px 로 찍어 보고 고칠 곳을 목록으로 제시 → 결정 → 수정(아래 메뉴 · 카드 · 페이지 이동 · 본문 여백) in e2e/
 - [ ] T1513 남은 주황 · 한 영역 안의 타일 빈 상태 · 본문 안 카드 상자 전수 확인(예외 3곳만 남는다)
 - [ ] T1514 `design-system.md` 를 새 규칙으로 — `디자인-규칙.md` 의 확정 항목을 옮기고 뒤집힌 결정을 정리 in docs/design-system.md
 - [ ] T1515 [P] `layout.md`(틀) · `components.md`(공용 구성 요소) · `patterns.md`(목록 · 상세 · 모달 유형) 정리 in docs/layout.md · docs/components.md · docs/patterns.md
@@ -100,4 +106,4 @@
 - Phase 3~6 은 Phase 2 와 독립이지만, 🔴 **대시보드를 먼저** 한다(주 화면 — 규칙이 실제로 맞는지 가장 먼저 드러난다).
 - Phase 4 의 `[P]` 는 화면이 달라 병렬 가능. T1500(배치관리)은 탭 · 숫자 줄이 달라 따로.
 - Phase 6 은 Phase 3 뒤(코스 상세가 모달의 바탕).
-- Phase 7 은 전부 끝난 뒤. T1514 → T1515 · T1516(`[P]`).
+- Phase 7 은 전부 끝난 뒤. T1519 는 화면 작업 중 언제든(제목 줄을 처음 고치는 화면에서). T1521 → T1520(좁은 화면까지 고친 뒤 기준본을 찍는다). T1514 → T1515 · T1516(`[P]`).
