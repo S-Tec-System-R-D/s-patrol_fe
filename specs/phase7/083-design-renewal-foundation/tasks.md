@@ -112,10 +112,14 @@
 
 > 독립 테스트 기준: 근무자 목록에서 처음부터 없음 / 조건에 맞는 것 없음 / 불러오지 못함이 서로 다른 아이콘 · 문구로 보이고, 목록 영역의 가운데(살짝 위)에 놓인다.
 
-- [ ] T1465 [US5] 빈 상태 모양 — 흰 타일 아이콘 → 제목 → 설명 · 겹친 카드 그림과 순찰 경로 그림 제거(`illustration` 을 쓰는 곳 정리) in src/components/app/AppEmpty.tsx
-- [ ] T1466 [US5] 불러오지 못함은 빨간 아이콘 — 지금 `TriangleAlertIcon` 을 넘기는 곳을 그대로 두고 색만 구분할 방법을 계획으로 제시 in src/components/app/AppEmpty.tsx
-- [ ] T1467 [US5] 안내 화면 두 장(권한 없음 · 찾을 수 없음)이 새 모양으로 보이는지 확인 in src/pages/errors/ForbiddenPage.tsx · src/pages/errors/NotFoundPage.tsx
-- [ ] T1468 [US5] 테스트 고치기 · 쓰는 곳 32곳 훑어 한 영역 안에서 타일을 쓰는 곳 목록화(084 에서 글자 한 줄로 바꿀 곳) in src/components/app/__tests__
+- [x] T1465 [US5] 빈 상태 모양 — 흰 타일 아이콘 → 제목 → 설명 · 겹친 카드 그림과 순찰 경로 그림 제거(`illustration` 을 쓰는 곳 정리) in src/components/app/AppEmpty.tsx
+  - 2026-11-20: 겹친 카드 그림 · 순찰 경로 그림을 없애고 흰 타일 아이콘(48px · 테두리 + 옅은 그림자) → 제목 15px/600 → 설명 → 버튼. `illustration` prop 은 받기만 한다 — `route` 를 넘기던 9곳은 고치지 않아도 경로 아이콘이 나온다. 남은 영역의 가운데 배치는 원래 구조 그대로(`flex-1` + 가운데 정렬).
+- [x] T1466 [US5] 불러오지 못함은 빨간 아이콘 — 지금 `TriangleAlertIcon` 을 넘기는 곳을 그대로 두고 색만 구분할 방법을 계획으로 제시 in src/components/app/AppEmpty.tsx
+  - 2026-11-20: 따로 종류를 받지 않고 **아이콘으로 가린다** — `TriangleAlertIcon` 을 넘기면 아이콘이 빨강. 불러오지 못함을 그리는 곳이 모두 그 아이콘을 넘기고 있어 쓰는 쪽 변경이 없다.
+- [x] T1467 [US5] 안내 화면 두 장(권한 없음 · 찾을 수 없음)이 새 모양으로 보이는지 확인 in src/pages/errors/ForbiddenPage.tsx · src/pages/errors/NotFoundPage.tsx
+  - 2026-11-20: 캡처로 404 확인(타일 아이콘 + 제목 + 설명 + 파란 `홈으로 이동`). 403 은 같은 구성 요소 · 같은 구조라 따로 보지 않았다.
+- [x] T1468 [US5] 테스트 고치기 · 쓰는 곳 32곳 훑어 한 영역 안에서 타일을 쓰는 곳 목록화(084 에서 글자 한 줄로 바꿀 곳) in src/components/app/__tests__
+  - 2026-11-20: 테스트는 고칠 것이 없었다(그림을 확인하는 테스트 없음 · 1636건 통과). 🔴 **084 에서 글자 한 줄로 바꿀 곳**(한 영역 안에서 타일 빈 상태를 쓰는 곳 — 지금은 카드 안에 큰 빈 상태가 들어간다): 코스 상세 `CourseDiagramCard` · `CoursePatrolLog` · `CourseRouteCard` / 지점 상세 `PointActivityCard` / 지점 인증 상세 `PointHistoryMemoCard` / 근무자 상세 `UserAssignmentCard`(2) · `UserPatrolActivityCard`(2) / 본사 `SiteManagersCard`(2) · `SiteFieldManagersCard`(2) · `EmergencyContactCard` · `EmergencyAddDialog` · `GroupPicker`(085). 넓은 자리라 타일을 유지할 곳: 목록 화면 9개 · 상세 화면의 불러오지 못함 · 대시보드 진행 중(`ActiveCourseSection`) · 배치관리 탭(`DeploymentBoard`) · 안내 화면 2개. `index.css` 의 `bounce-anim` 설명 주석은 그림이 없어져 낡았다 — 084 문서 정리 때 고친다.
 
 ## Phase 6: 084 가 쓸 공용 조각
 

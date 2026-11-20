@@ -1,11 +1,12 @@
 import type { LucideIcon } from 'lucide-react'
-import { InboxIcon } from 'lucide-react'
+import { InboxIcon, RouteIcon, TriangleAlertIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface AppEmptyProps {
   icon?: LucideIcon
   /**
-   * `cards` = 겹친 카드(가운데 `icon`) · `route` = 순찰 경로 그림(`icon` 을 쓰지 않는다).
-   * 🔴 `route` 는 **순찰 기록 · 코스가 없을 때만** 쓴다 — 오류 · 검색 결과 없음은 `cards` 다.
+   * 🔄 `spec 083`: 그림 두 종류(겹친 카드 · 순찰 경로)를 없앴다 — 어느 쪽이든 **흰 타일 아이콘** 하나다.
+   * 값은 받기만 한다: `route`(순찰 기록 · 코스가 없을 때)는 `icon` 을 넘기지 않아도 경로 아이콘을 쓴다.
    */
   illustration?: 'cards' | 'route'
   title?: string
@@ -13,61 +14,47 @@ interface AppEmptyProps {
   action?: React.ReactNode
 }
 
-const CardsIllustration = ({ icon: Icon }: { icon: LucideIcon }) => (
-  <div aria-hidden className="relative h-[118px] w-[190px]">
-    <span className="absolute inset-x-7 top-0 h-10 rounded-lg border border-border bg-card opacity-50" />
-    <span className="absolute inset-x-3.5 top-3 h-10 rounded-lg border border-border bg-card opacity-80" />
-    <span className="absolute inset-x-0 top-[26px] bottom-0 flex items-center gap-3 rounded-lg border border-border bg-card p-3.5 shadow-md">
-      <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-        <Icon size={22} strokeWidth={1.5} />
-      </span>
-      <span className="flex flex-1 flex-col gap-2">
-        <span className="h-2 rounded-sm bg-muted" />
-        <span className="h-2 w-3/5 rounded-sm bg-muted" />
-      </span>
-    </span>
-  </div>
-)
-
-const RouteIllustration = () => (
-  <svg aria-hidden viewBox="0 0 200 110" className="h-[110px] w-[200px] max-w-full">
-    <path
-      d="M16 90C56 90 52 32 100 42S150 88 184 26"
-      fill="none"
-      strokeWidth={2}
-      strokeDasharray="2 7"
-      strokeLinecap="round"
-      className="stroke-muted-foreground/45"
-    />
-    <circle cx={16} cy={90} r={6} strokeWidth={2} className="fill-card stroke-muted-foreground/55" />
-    <circle cx={100} cy={42} r={6} strokeWidth={2} className="fill-card stroke-muted-foreground/55" />
-    <circle cx={184} cy={26} r={7} className="fill-muted-foreground/55" />
-  </svg>
-)
-
+/**
+ * 데이터가 없을 때의 자리 — **흰 타일 아이콘 → 제목 → 설명 → (버튼)**(`spec 083`, 목업 `27` · `28`).
+ * 남은 영역의 가운데에 놓인다(`flex-1` + 가운데 정렬 — 감싸는 쪽이 세로 flex 여야 한다).
+ *
+ * - 처음부터 없음 / 조건에 맞는 것 없음 / 불러오지 못함은 **아이콘과 문구**로 구분한다(쓰는 쪽이 넘긴다).
+ * - 🔴 불러오지 못함(`TriangleAlertIcon`)은 아이콘이 빨강이다 — 쓰는 곳이 모두 그 아이콘을 넘기고 있어
+ *   따로 종류를 받지 않고 아이콘으로 가린다.
+ * - 🔴 넓은 자리용이다. 화면의 한 영역 안(카드 · 옆 단)에서는 회색 글자 한 줄을 쓴다(`디자인-규칙.md` — 084 에서 옮긴다).
+ */
 const AppEmpty = ({
-  icon = InboxIcon,
+  icon,
   illustration = 'cards',
   title = '데이터가 없습니다',
   description,
   action,
 }: AppEmptyProps) => {
+  const Icon = icon ?? (illustration === 'route' ? RouteIcon : InboxIcon)
+  const failed = Icon === TriangleAlertIcon
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-5 p-10 text-center">
-      {illustration === 'route' ? <RouteIllustration /> : <CardsIllustration icon={icon} />}
+    <div className="flex flex-1 flex-col items-center justify-center p-10 text-center">
+      <span
+        aria-hidden
+        className={cn(
+          'grid size-12 place-items-center rounded-xl border border-border bg-card shadow-[0_1px_2px_rgb(15_23_42/0.06),0_4px_10px_rgb(15_23_42/0.06)]',
+          failed ? 'text-danger' : 'text-foreground/70'
+        )}
+      >
+        <Icon size={22} strokeWidth={1.7} />
+      </span>
 
       {/* 텍스트 */}
-      <div className="flex flex-col gap-1.5">
-        <p className="text-[15px] font-bold text-text-primary">{title}</p>
-        {description && (
-          <p className="max-w-[230px] text-[13px] leading-relaxed text-muted-foreground">
-            {description}
-          </p>
-        )}
-      </div>
+      <p className="mt-[18px] text-[15px] font-semibold text-foreground">{title}</p>
+      {description && (
+        <p className="mt-1.5 max-w-[260px] text-[13px] leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+      )}
 
       {/* 액션 */}
-      {action && <div className="mt-1">{action}</div>}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   )
 }
