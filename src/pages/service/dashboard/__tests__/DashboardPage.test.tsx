@@ -139,7 +139,7 @@ describe('DashboardPage — API 연결', () => {
   it('진행 중 카드 — 시간초과 → 경과 비율 순, 기준 없음은 맨 뒤, 회차 상세로 간다', async () => {
     renderPage()
     await screen.findByRole('heading', { name: 'C코스' })
-    const cards = within(section('진행 중인 순찰')).getAllByRole('link')
+    const cards = within(section('진행 중')).getAllByRole('link')
     expect(cards.map((card) => within(card).getByRole('heading').textContent)).toEqual([
       'C코스',
       'A코스',
@@ -245,8 +245,9 @@ describe('DashboardPage — API 연결', () => {
       expect(within(el).getAllByRole('listitem')).toHaveLength(3)
       return el
     })
-    expect(panel).toHaveTextContent('배치 요청 2')
-    expect(panel).toHaveTextContent('복귀 요청 1')
+    // 🔄 `spec 084`: 묶음 없이 한 목록 — 줄마다 요청 종류를 적는다
+    expect(within(panel).getAllByText(/^배치 요청 · /)).toHaveLength(2)
+    expect(within(panel).getAllByText(/^복귀 요청 · /)).toHaveLength(1)
     expect(panel).toHaveTextContent('해운대 마린시티')
     expect(panel).toHaveTextContent('강서 스퀘어타워')
     expect(within(panel).getAllByText(/일 대기$/).length).toBeGreaterThan(0)
@@ -281,7 +282,7 @@ describe('DashboardPage — API 연결', () => {
     // KPI 는 정상
     expect(await screen.findByRole('region', { name: '오늘 순찰' })).toBeInTheDocument()
 
-    await userEvent.click(within(section('진행 중인 순찰')).getByRole('button', { name: '다시 시도' }))
+    await userEvent.click(within(section('진행 중')).getByRole('button', { name: '다시 시도' }))
     expect(await screen.findByRole('heading', { name: 'C코스' })).toBeInTheDocument()
   })
 

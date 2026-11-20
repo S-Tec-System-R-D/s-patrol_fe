@@ -62,7 +62,7 @@ const ActiveCourseCard = ({ course, elapsedMin, handOvers = [] }: ActiveCourseCa
             시간초과 +{over}분
           </AppBadge>
         ) : (
-          /* 문제없이 도는 회차 — 파란 고리. 화면이 뜰 때 · 알림이 올 때 약 4초 돈다(`course-spin-anim`). 멈춘 회차(교대 요청 중)는 적지 않는다 */
+          /* 문제없이 도는 회차 — 파란 고리. 순찰 중인 동안 계속 돈다(`course-spin-anim`). 멈춘 회차(교대 요청 중)는 적지 않는다 */
           !course.pausedYn && (
             <AppBadge variant="point" className="course-spin-anim">
               순찰 중

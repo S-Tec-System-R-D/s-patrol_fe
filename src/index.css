@@ -388,12 +388,14 @@
 }
 
 /*
- * 대시보드 진행 중 코스의 움직임 — 약 4초 뒤 멈춘다(`spec 084`, 사용자 결정 2026-11-19 · 11-20).
- * 종일 띄워 두는 화면이라 계속 움직이면 피로하다. 화면이 뜰 때 한 번, 그리고 실시간 알림이 온 코스에서 다시 움직인다
- * (다시 움직이게 하는 일은 카드가 `key` 를 바꿔 다시 붙이는 것으로 한다). 움직임 줄이기 설정이면 아래 전역 규칙이 끈다.
+ * 대시보드 진행 중 코스의 움직임 — **순찰 중인 동안 계속**(`spec 084`).
+ * 🔄 사용자 결정 2026-11-20(시뮬레이터로 돌려 본 뒤): 약 4초 뒤 멈추던 것을 계속 반복으로 — 멈춰 있으면 오류로 끊긴 것처럼
+ * 어색했다(11-19 에는 "종일 띄워 두는 화면이라 피로하다"고 4초로 정했었다). 고리 회전 · 다음 지점 둘레 물결 · 점선 흐름 셋 다.
+ * 멈춘 회차(교대 요청 중)는 움직이지 않는다. 움직임 줄이기 설정이면 아래 전역 규칙이 끈다.
  */
 .step-pulse-anim {
-  animation: step-pulse 2s ease-out 2;
+  /* 🔴 순찰 중인 동안 계속 — 고리 회전 · 점선 흐름과 같다(사용자 결정 2026-11-20). 멈춘 회차는 화면이 그리지 않는다 */
+  animation: step-pulse 2s ease-out infinite;
 }
 
 @keyframes course-spin {
@@ -402,9 +404,10 @@
   }
 }
 
-/* 뱃지에 건다 — 그 안의 아이콘(고리)만 돈다 */
+/* 뱃지에 건다 — 그 안의 아이콘(고리)만 돈다.
+   🔴 순찰 중인 동안 **계속** 돈다(사용자 결정 2026-11-20) — 4바퀴 돌고 멈추면 오류로 끊긴 것처럼 읽혔다 */
 .course-spin-anim > svg {
-  animation: course-spin 1s linear 4;
+  animation: course-spin 1s linear infinite;
 }
 
 @keyframes course-march {
@@ -419,7 +422,7 @@
   background-size: 8px 2px;
   background-repeat: repeat-x;
   background-position: 0 0;
-  animation: course-march 0.8s linear 5;
+  animation: course-march 0.8s linear infinite;
 }
 
 /*

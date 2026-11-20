@@ -1,5 +1,5 @@
 import { format, isValid, parseISO } from 'date-fns'
-import { ChevronRightIcon, PinIcon } from 'lucide-react'
+import { ChevronRightIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import type { NoticeRow } from '@/features/notice/types/notice'
@@ -30,10 +30,11 @@ const DashboardNoticePanel = ({ rows, state, onRetry }: DashboardNoticePanelProp
       <h2 className="text-panel-title font-semibold text-foreground">공지사항</h2>
       <Link
         to={paths.service.notice}
-        className="ml-auto flex shrink-0 items-center text-caption text-point hover:underline"
+        aria-label="공지사항 전체"
+        className="ml-auto flex shrink-0 items-center text-caption font-medium text-point hover:underline"
       >
-        전체 보기
-        <ChevronRightIcon size={14} />
+        전체
+        <ChevronRightIcon size={14} aria-hidden />
       </Link>
     </div>
 
@@ -47,13 +48,15 @@ const DashboardNoticePanel = ({ rows, state, onRetry }: DashboardNoticePanelProp
           <li key={row.noticeSeq} className="border-b border-border last:border-0">
             <Link
               to={paths.service.noticeDetail(row.noticeSeq)}
-              className="flex items-center gap-2 rounded-sm px-1 py-2.5 text-body hover:bg-muted/40"
+              className="block py-[9px] hover:bg-muted/40"
             >
-              {row.isPin && <PinIcon size={14} className="shrink-0 text-point" aria-label="고정 공지" />}
-              <span className="min-w-0 flex-1 truncate text-foreground">{row.title}</span>
-              <span className="shrink-0 text-caption text-muted-foreground tabular-nums">
+              {/* 🔄 `spec 084`(사용자 결정 2026-11-20 — 목업대로): 제목 / 아래 작은 글자 `고정 · 작성자 · 날짜`. 고정은 핀 아이콘 → 글자 */}
+              <p className="truncate font-medium text-foreground">{row.title}</p>
+              <p className="truncate text-caption text-muted-foreground tabular-nums">
+                {row.isPin && <span aria-label="고정 공지">고정 · </span>}
+                {row.userName && `${row.userName} · `}
                 {formatDate(row.createDt)}
-              </span>
+              </p>
             </Link>
           </li>
         ))}

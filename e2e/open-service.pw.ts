@@ -29,7 +29,7 @@ test('대시보드 — 로그인 착지(현장 홈, spec 066) · 본문(spec 067
   await expectHeading(page, '대시보드')
   // 값은 mock 핸들러(`mocks/handlers/dashboard.ts`) 응답
   await expect(page.getByRole('region', { name: '오늘 순찰' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: '진행 중인 순찰' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '진행 중', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'C코스' })).toBeVisible()
   await expect(page.getByRole('link', { name: /임시코스/ })).toContainText('기준 없음')
   // 배치 대기(spec 073) — 값은 mock 핸들러(`mocks/handlers/deployments.ts`)

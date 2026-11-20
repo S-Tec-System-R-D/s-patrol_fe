@@ -47,8 +47,13 @@ const ActiveCourseSection = ({ courses, state, receivedAt, onRetry, handOvers = 
 
   return (
     <section className="flex flex-col gap-3">
-      {/* 개수 없음 — 바로 위 KPI `진행 중` 과 같은 값(사용자 결정 2026-11-12, `spec 073` T1226) */}
-      <h2 className="text-panel-title font-semibold text-foreground">진행 중인 순찰</h2>
+      {/* 🔄 `spec 084`(사용자 결정 2026-11-20 — 목업대로): 제목은 `진행 중` · 옆에 건수(전에는 `진행 중인 순찰` · 건수 없음) */}
+      <div className="flex items-baseline gap-2">
+        <h2 className="text-panel-title font-semibold text-foreground">진행 중</h2>
+        {state === 'ready' && courses.length > 0 && (
+          <span className="text-caption text-muted-foreground tabular-nums">{courses.length}</span>
+        )}
+      </div>
 
       {state === 'loading' ? (
         <div className="flex flex-col gap-3" aria-label="불러오는 중">
@@ -80,9 +85,7 @@ const ActiveCourseSection = ({ courses, state, receivedAt, onRetry, handOvers = 
         <div className="flex flex-col gap-3">
           {sortActiveCourses(courses, receivedAt, now).map((course) => (
             <ActiveCourseCard
-              /* 🔴 `key` 에 지점 상태를 넣는다(`spec 084`) — 알림으로 지점이 인증 · 미인증으로 바뀌거나 회차가 멈추면 카드가
-                 다시 붙어 약 4초 움직임이 그 코스에서만 다시 돈다. 1분마다의 경과 갱신으로는 다시 붙지 않는다 */
-              key={`${course.historySeq}:${course.pausedYn}:${course.points.map((point) => point.status).join('')}`}
+              key={course.historySeq}
               course={course}
               elapsedMin={elapsedMinAt(course, receivedAt, now)}
               handOvers={handOvers[course.historySeq]}
