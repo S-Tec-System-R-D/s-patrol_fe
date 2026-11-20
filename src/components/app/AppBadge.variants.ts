@@ -21,7 +21,7 @@ export const cardBadge = 'text-[11px] leading-4'
 
 export const badgeVariants = cva(
   // 🔄 `spec 083`: 색 바탕 알약 → **아이콘 + 글자**. 색은 아이콘에만 준다(`badgeIconClass`) — 빨강만 글자도 빨강
-  'inline-flex w-fit items-center gap-1 text-badge whitespace-nowrap',
+  'inline-flex w-fit items-center gap-1 text-[12px] whitespace-nowrap',
   {
     variants: {
       variant: {

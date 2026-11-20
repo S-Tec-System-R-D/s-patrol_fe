@@ -33,7 +33,7 @@ describe('workerColumns', () => {
 
     expect(screen.getByText('김민준')).toBeInTheDocument()
     expect(screen.getByText('240101')).toBeInTheDocument()
-    expect(screen.getByText('현장 근무자')).toBeInTheDocument()
+    expect(screen.getByText('근무자')).toBeInTheDocument()
     expect(screen.getByText('근무 중')).toBeInTheDocument()
     expect(screen.getByText('2025-09-12')).toBeInTheDocument()
   })

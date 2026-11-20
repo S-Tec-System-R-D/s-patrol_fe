@@ -3,7 +3,7 @@ import { ChevronRightIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import { workLabel } from '../lib/userFormat'
-import { roleBadgeVariant } from '../lib/userRole'
+import { roleBadgeVariant, roleDisplayName } from '../lib/userRole'
 import type { UserRow } from '../types/user'
 
 /**
@@ -43,7 +43,7 @@ export const workerColumns = (): ColumnDef<UserRow>[] =>
       accessorKey: 'codeName',
       header: '권한',
       cell: ({ row }) => (
-        <AppBadge variant={roleBadgeVariant(row.original.codeSeq)}>{row.original.codeName}</AppBadge>
+        <AppBadge variant={roleBadgeVariant(row.original.codeSeq)}>{roleDisplayName(row.original.codeName)}</AppBadge>
       ),
     },
     {

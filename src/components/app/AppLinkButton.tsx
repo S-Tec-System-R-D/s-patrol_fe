@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react'
+import { PlusIcon, type LucideIcon } from 'lucide-react'
 import type { ButtonHTMLAttributes } from 'react'
 
 /**
@@ -19,7 +19,8 @@ interface AppLinkButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const AppLinkButton = ({ icon: Icon, type = 'button', className, children, ...props }: AppLinkButtonProps) => (
   <button type={type} className={className ? `${linkClass} ${className}` : linkClass} {...props}>
-    {Icon && <Icon size={13} />}
+    {/* `+` 는 화소에 맞춰 그린다 — `AppButton` 의 `iconRendering` 과 같은 이유 */}
+    {Icon && <Icon size={Icon === PlusIcon ? 14 : 13} shapeRendering={Icon === PlusIcon ? 'crispEdges' : undefined} />}
     {children}
   </button>
 )

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import type { LucideIcon } from 'lucide-react'
+import { PlusIcon, type LucideIcon } from 'lucide-react'
 import type { ButtonHTMLAttributes } from 'react'
 
 /**
@@ -40,6 +40,13 @@ const sizeStyles: Record<AppButtonSize, string> = {
   fit: 'w-fit h-[30px] px-3 text-[12px]',
 }
 
+/**
+ * 🔴 **`+` 아이콘은 화소에 맞춰 그린다**(사용자 지적 2026-11-20 — 흐릿했다). 가로 · 세로 선뿐인 아이콘이라
+ * 선의 가운데가 화소 경계에 걸리면(14px 아이콘 · 30px 버튼) 1.2px 선이 두 화소에 반씩 번진다. `crispEdges` 는 선을
+ * 화소에 붙여 또렷한 2px 로 그린다. 🔴 다른 아이콘에는 쓰지 않는다 — 비스듬한 선 · 곡선이 계단처럼 깨진다.
+ */
+const iconRendering = (icon: LucideIcon) => (icon === PlusIcon ? ('crispEdges' as const) : undefined)
+
 const AppButton = ({
   variant = 'default',
   size = 'fit',
@@ -61,9 +68,13 @@ const AppButton = ({
       )}
       {...props}
     >
-      {Icon && iconPosition === 'left' && <Icon size={iconSize} strokeWidth={iconStrokeWidth} />}
+      {Icon && iconPosition === 'left' && (
+        <Icon size={iconSize} strokeWidth={iconStrokeWidth} shapeRendering={iconRendering(Icon)} />
+      )}
       {children}
-      {Icon && iconPosition === 'right' && <Icon size={iconSize} strokeWidth={iconStrokeWidth} />}
+      {Icon && iconPosition === 'right' && (
+        <Icon size={iconSize} strokeWidth={iconStrokeWidth} shapeRendering={iconRendering(Icon)} />
+      )}
     </button>
   )
 }

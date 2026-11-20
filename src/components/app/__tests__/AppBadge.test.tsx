@@ -40,12 +40,12 @@ describe('AppBadge', () => {
   it('분류 값 — plain 은 글자만 · chip 은 옅은 회색 칩', () => {
     render(
       <>
-        <AppBadge variant="plain">현장 근무자</AppBadge>
-        <AppBadge variant="chip">현장 관리자</AppBadge>
+        <AppBadge variant="plain">근무자</AppBadge>
+        <AppBadge variant="chip">관리자</AppBadge>
       </>
     )
-    expect(screen.getByText('현장 근무자').className).not.toMatch(/bg-/)
-    expect(screen.getByText('현장 관리자')).toHaveClass('bg-muted')
+    expect(screen.getByText('근무자').className).not.toMatch(/bg-/)
+    expect(screen.getByText('관리자')).toHaveClass('bg-muted')
   })
 
   it('icon 을 넘기면 기본 아이콘 대신 그것을 그린다 — 색은 종류를 따른다', () => {

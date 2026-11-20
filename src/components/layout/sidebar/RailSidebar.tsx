@@ -77,7 +77,7 @@ export const RailSidebar = ({ menus, tag, badges, siteSwitch, siteName }: RailSi
           return (
             <Fragment key={url}>
               {startsGroup && (
-                <div className={cn('px-2 pb-1 text-label text-muted-foreground', index > 0 ? 'pt-3' : 'pt-1')}>
+                <div className={cn('px-2 pb-1 text-[11px] text-muted-foreground', index > 0 ? 'pt-3' : 'pt-1')}>
                   {group}
                 </div>
               )}

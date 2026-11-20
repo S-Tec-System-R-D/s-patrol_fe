@@ -55,8 +55,9 @@ const AppSelect = ({
   const field = useFormFieldIds()
 
   /*
-   * 🔴 **필터 표시 — 이름 · "이름: 값"**(사용자 결정 2026-10-30, `spec 065`). 전에는 미선택이 `전체` 여서
-   * 무슨 필터인지 아이콘으로만 알 수 있었다(코스/지점의 옛 `AppFilterPopover` 가 이 표시였다 — 통일하며 옮겨 왔다).
+   * 🔴 **필터 표시 — 고르기 전에는 필터 이름, 고르면 고른 값만**(사용자 결정 2026-11-20 — 전에는 `이름: 값` 이었는데
+   * 이름이 불필요하게 길게 만들었다. 무슨 필터인지는 아이콘과 걸린 색이 말한다). 미선택이 `전체` 가 아니라 이름인 것은
+   * `spec 065` 그대로다 — `전체` 만 보이면 무슨 필터인지 아이콘으로만 알 수 있다.
    * `undefined` 면 `SelectValue` 가 고른 항목 글자를 그대로 그린다(폼 안의 셀렉트).
    */
   const selectedLabel = options.find((option) => option.value === value)?.label
@@ -64,7 +65,7 @@ const AppSelect = ({
     active === undefined || !ariaLabel
       ? undefined
       : active && selectedLabel
-        ? `${ariaLabel}: ${selectedLabel}`
+        ? selectedLabel
         : ariaLabel
 
   return (
@@ -117,6 +118,8 @@ const AppSelect = ({
                그대로(사용자 결정 2026-10-30, `spec 065`). 체크와 함께 줘서 색만으로 전달하지 않는다(design-system §3).
                폼 안의 셀렉트(`active` 없음)는 그대로 */
             className={cn(
+              // 펼친 목록의 글자 — 트리거와 같은 크기(필터 12px · 폼 13px). 기본 14px 은 트리거보다 커 보였다(사용자 2026-11-20)
+              active === undefined ? 'text-[13px]' : 'text-[12px]',
               active !== undefined &&
                 'data-[state=checked]:font-semibold data-[state=checked]:text-point data-[state=checked]:[&_svg]:size-3.5'
             )}

@@ -1,6 +1,7 @@
 import AppDetailCard from '@/components/app/AppDetailCard'
 import AppDetailRow from '@/components/app/AppDetailRow'
 import { formatPhone } from '../../lib/userFormat'
+import { roleDisplayName } from '../../lib/userRole'
 import type { UserDetail } from '../../types/user'
 
 /**
@@ -16,7 +17,7 @@ const UserInfoCard = ({ user }: { user: UserDetail }) => (
   <AppDetailCard title="기본정보">
     <div className="flex flex-col">
       <AppDetailRow label="사번" value={user.loginId} />
-      <AppDetailRow label="권한" value={user.codeName} />
+      <AppDetailRow label="권한" value={roleDisplayName(user.codeName)} />
       <AppDetailRow label="연락처" value={formatPhone(user.phone)} />
       <AppDetailRow label="소속 사업장" value={user.siteName} />
       {/* 🔄 `spec 079`: `근무 상태` 행을 뺐다 — 머리 뱃지와 같은 말이다 */}

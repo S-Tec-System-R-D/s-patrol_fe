@@ -3,7 +3,7 @@ import { CalendarIcon, ChevronRightIcon, IdCardIcon } from 'lucide-react'
 import AppBadge from '@/components/app/AppBadge'
 import { cardBadge as CARD_BADGE } from '@/components/app/AppBadge.variants'
 import { workLabel } from '../lib/userFormat'
-import { roleBadgeVariant } from '../lib/userRole'
+import { roleBadgeVariant, roleDisplayName } from '../lib/userRole'
 import type { UserRow } from '../types/user'
 
 /**
@@ -25,7 +25,7 @@ const WorkerCard = (row: UserRow) => (
       <div className="flex items-center gap-2">
         <span className="truncate text-body font-semibold text-foreground">{row.userName}</span>
         <AppBadge variant={roleBadgeVariant(row.codeSeq)} className={CARD_BADGE}>
-          {row.codeName}
+          {roleDisplayName(row.codeName)}
         </AppBadge>
       </div>
 

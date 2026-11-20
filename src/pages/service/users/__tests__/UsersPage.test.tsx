@@ -108,7 +108,7 @@ describe('UsersPage — 서버 목록', () => {
     renderPage()
 
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
-    expect(inTable().getByText('현장 관리자')).toBeInTheDocument()
+    expect(inTable().getByText('관리자')).toBeInTheDocument()
   })
 
   it('배치 컬럼(예전 원소속) — Seq 가 있는 행에만 소속지 이름 (OQ-038-B)', async () => {
@@ -188,7 +188,7 @@ describe('UsersPage — 필터가 서버로 나간다', () => {
     await user.click(inFilters().getByLabelText('권한'))
 
     const options = await screen.findAllByRole('option')
-    expect(options.map((option) => option.textContent)).toEqual(['전체', '현장 관리자', '현장 근무자'])
+    expect(options.map((option) => option.textContent)).toEqual(['전체', '관리자', '근무자'])
   })
 
   it('🔴 필터를 바꾸면 첫 페이지로 돌아가고 "전체" 는 키를 지운다', async () => {

@@ -73,7 +73,7 @@ describe('UserDetailPage — 정상', () => {
     expect(screen.getByText('기본정보')).toBeInTheDocument()
     expect(screen.getByText('240101')).toBeInTheDocument()
     // 권한 행 — 상세 응답 `codeName` 그대로(D12)
-    expect(screen.getByText('현장 근무자')).toBeInTheDocument()
+    expect(screen.getByText('근무자')).toBeInTheDocument()
     // 머리 + 기본정보 소속 사업장
     expect(screen.getAllByText('강동 테크노타워')).toHaveLength(2)
     // 🔴 머리 뱃지와 같은 말이라 카드 행을 뺐다

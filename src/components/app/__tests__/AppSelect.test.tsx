@@ -91,11 +91,11 @@ describe('AppSelect', () => {
       expect(screen.getByRole('combobox', { name: '결과' })).toHaveTextContent(/^결과$/)
     })
 
-    it('선택하면 "이름: 값" 을 보여준다', () => {
+    it('선택하면 고른 값만 보여준다 — 이름을 앞에 붙이지 않는다(사용자 결정 2026-11-20)', () => {
       render(
         <AppSelect aria-label="결과" options={filterOptions} value="INCOMPLETE" onChange={() => {}} active />
       )
-      expect(screen.getByRole('combobox', { name: '결과' })).toHaveTextContent('결과: 미완료')
+      expect(screen.getByRole('combobox', { name: '결과' })).toHaveTextContent(/^미완료$/)
     })
 
     it('폼 안의 셀렉트(active 없음)는 고른 값만 보여준다', () => {
