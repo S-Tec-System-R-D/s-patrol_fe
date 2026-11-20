@@ -43,13 +43,13 @@ describe('AdminLayout', () => {
   it('레일 — ADMIN 태그 · 메뉴 2개(사업장·관리자) · 현재 메뉴 활성', () => {
     renderAdmin('/admin/locations')
     expect(screen.getByText('ADMIN')).toBeInTheDocument()
-    expect(rail().getByLabelText('사업장')).toHaveClass('bg-rail-2')
-    expect(rail().getByLabelText('관리자')).not.toHaveClass('bg-rail-2')
+    expect(rail().getByLabelText('사업장')).toHaveAttribute('aria-current', 'page')
+    expect(rail().getByLabelText('관리자')).not.toHaveAttribute('aria-current')
   })
 
   it('사업장 상세 경로에서도 사업장 메뉴가 활성', () => {
     renderAdmin('/admin/locations/3')
-    expect(rail().getByLabelText('사업장')).toHaveClass('bg-rail-2')
+    expect(rail().getByLabelText('사업장')).toHaveAttribute('aria-current', 'page')
   })
 
   it('floating nav (spec 053) — 메뉴 2개 · 현재 메뉴 활성 · 로그아웃', () => {

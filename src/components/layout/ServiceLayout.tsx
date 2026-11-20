@@ -10,6 +10,7 @@ import { getSiteName, getSiteSeq, setSite } from '@/lib/auth/site'
 import { paths } from '@/router/paths'
 import { FloatingNav } from './sidebar/FloatingNav'
 import { RailSidebar } from './sidebar/RailSidebar'
+import { TopBar } from './TopBar'
 import type { SiteSwitchProps } from './sidebar/SiteSwitchButton'
 import { ServiceMenus } from './sidebar/sidebar.config'
 
@@ -21,7 +22,7 @@ const SITE_SWITCH_TIMEOUT_MS = 10_000
 
 /**
  * 현장 사이트(`/*`) 셸. 리디자인(007) 반영.
- * - TopNav 없음. `xl` 이상 68px `RailSidebar` · 미만 하단 `FloatingNav`(`spec 053`).
+ * - 🔄 `spec 083`: `xl` 이상 224px 밝은 `RailSidebar` + **본문 카드 한 장**(맨 위 `TopBar` — 지금 위치) · 미만 하단 `FloatingNav`(`spec 053`).
  * - 🔴 `xl` 미만 `pb-24` — floating nav 가 마지막 행 · 페이지네이션을 가리지 않게 스크롤 끝에 여백을 둔다.
  *   `min-h-screen` — 레일이 사라지면 짧은 페이지 아래가 배경색 없이 비어 보인다.
  * - `.app-shell`(overflow:hidden) 미사용 — 페이지 자연 스크롤.
@@ -103,9 +104,16 @@ const ServiceLayout = () => {
   return (
     <>
       {/* 🔴 `inert` — 오버레이는 클릭만 막는다. 키보드 포커스는 뒤를 통째로 꺼서 막는다 */}
-      <div className="flex" inert={switching}>
-        <RailSidebar menus={ServiceMenus} badges={{ deploymentPending }} siteSwitch={siteSwitch} />
-        <div className="flex flex-1 flex-col min-w-0 min-h-screen pb-24 xl:pb-0 bg-contents-background">
+      <div className="flex bg-contents-background" inert={switching}>
+        <RailSidebar
+          menus={ServiceMenus}
+          badges={{ deploymentPending }}
+          siteSwitch={siteSwitch}
+          siteName={getSiteName()}
+        />
+        {/* 본문 카드 한 장(`spec 083`) — `xl` 이상에서만 카드로 띄운다. 미만은 화면 전체를 쓴다(위 줄만 남는다) */}
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col bg-card pb-24 xl:my-2 xl:mr-2 xl:min-h-[calc(100vh-1rem)] xl:rounded-xl xl:border xl:border-border xl:pb-0">
+          <TopBar />
           <Outlet key={siteSeq} />
         </div>
         <FloatingNav menus={ServiceMenus} badges={{ deploymentPending }} siteSwitch={siteSwitch} />

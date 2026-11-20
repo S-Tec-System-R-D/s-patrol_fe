@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, ChevronRightIcon, HistoryIcon, MapPinIcon, MessageSquareTextIcon, TriangleAlertIcon } from 'lucide-react'
+import { ArrowLeftIcon, HistoryIcon, MapPinIcon, MessageSquareTextIcon, TriangleAlertIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
@@ -40,16 +40,6 @@ const PatrolPointDetailPage = () => {
 
   const detail = usePointHistoryDetail(detailSeq)
 
-  const crumb = (
-    <nav className="flex items-center gap-1 text-caption text-muted-foreground">
-      <Link to={paths.service.patrolPoints} className="hover:text-foreground">
-        순찰이력
-      </Link>
-      <ChevronRightIcon size={14} aria-hidden />
-      <span className="text-foreground">지점 인증 상세</span>
-    </nav>
-  )
-
   /**
    * 🔴🔴 **주소가 잘못된 경우를 로딩보다 먼저 분기한다**(T557 이 잡아낸 결함).
    *
@@ -63,7 +53,6 @@ const PatrolPointDetailPage = () => {
   if (detailSeq === null) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        {crumb}
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
             icon={TriangleAlertIcon}
@@ -88,7 +77,6 @@ const PatrolPointDetailPage = () => {
   if (detail.isPending) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        {crumb}
         <div className="h-9 w-80 animate-pulse rounded-md bg-muted" />
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
           <div className="h-64 animate-pulse rounded-lg bg-muted lg:col-span-2" />
@@ -101,7 +89,6 @@ const PatrolPointDetailPage = () => {
   if (detail.isError || !detail.data) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        {crumb}
         <div className="rounded-lg border border-border bg-card">
           {/* 🔴 **"삭제되었다" 고 단정하지 않는다** — 네트워크 실패·권한·잘못된 주소가 모두
               이 분기로 떨어진다. 사용자가 할 수 있는 일(다시 시도 / 목록으로)만 준다 */}
@@ -149,7 +136,6 @@ const PatrolPointDetailPage = () => {
 
   return (
     <div className="flex flex-col gap-4 p-4 xl:p-8">
-      {crumb}
 
       <AppPageHeader
         icon={HistoryIcon}

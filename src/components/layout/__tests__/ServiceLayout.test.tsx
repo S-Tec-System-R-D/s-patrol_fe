@@ -56,7 +56,7 @@ const renderLayout = (initialPath: string) => {
         <Routes>
           <Route element={<ServiceLayout />}>
             <Route path="/dashboard" element={<HomeProbe />} />
-            <Route path="/points/:pointSeq" element={<p>지점 상세</p>} />
+            <Route path="/points/:pointSeq" element={<p>지점 화면</p>} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -97,13 +97,15 @@ describe('ServiceLayout — 사업장 전환', () => {
     expect(options[1]).not.toHaveAttribute('aria-current')
   })
 
-  it('🔴 선택지 1개(555555)면 버튼이 없다', async () => {
+  it('🔴 선택지 1개(555555)면 버튼이 없다 — 사이드바에는 사업장 이름만 보인다(spec 083)', async () => {
     setAccessToken(makeAccessToken({ loginId: '555555' }))
     renderLayout('/points/12')
 
     await waitFor(() => expect(requested).toContain(USER_SITE_SELECT))
     await new Promise((resolve) => setTimeout(resolve, 50))
     expect(screen.queryByRole('button', { name: '사업장 전환' })).not.toBeInTheDocument()
+    // 저장된 사업장 이름은 누를 수 없는 글자로 남는다
+    expect(rail().getByText('테스트 사업장2')).toBeInTheDocument()
   })
 
   it('다른 사업장 → 저장값 교체 · 오버레이 · 홈 이동 · 홈 조회가 끝나면 오버레이 해제', async () => {
@@ -143,7 +145,7 @@ describe('ServiceLayout — 사업장 전환', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(screen.getByText('지점 상세')).toBeInTheDocument()
+    expect(screen.getByText('지점 화면')).toBeInTheDocument()
     expect(getSiteSeq()).toBe(6)
   })
 

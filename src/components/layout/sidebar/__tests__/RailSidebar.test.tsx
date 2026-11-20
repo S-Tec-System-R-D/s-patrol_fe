@@ -47,10 +47,24 @@ describe('RailSidebar (현장)', () => {
     expect(rail.getByLabelText('공지사항')).toBeInTheDocument()
   })
 
-  it('현재 경로(/zones)에 해당하는 메뉴가 활성 상태(bg-rail-2)', () => {
+  it('현재 경로(/zones)에 해당하는 메뉴가 활성 상태(aria-current)', () => {
     const rail = renderRail('/zones')
-    expect(rail.getByLabelText('코스/지점')).toHaveClass('bg-rail-2')
-    expect(rail.getByLabelText('근무자')).not.toHaveClass('bg-rail-2')
+    expect(rail.getByLabelText('코스/지점')).toHaveAttribute('aria-current', 'page')
+    expect(rail.getByLabelText('근무자')).not.toHaveAttribute('aria-current')
+  })
+
+  it('🔴 이름이 글자로 보이고 묶음 제목이 있다 (spec 083)', () => {
+    const rail = renderRail('/zones')
+    expect(rail.getByText('현황')).toBeInTheDocument()
+    expect(rail.getByText('관리')).toBeInTheDocument()
+    expect(rail.getByText('순찰이력')).toBeVisible()
+  })
+
+  it('사업장 이름 · 사용자 이름 · 권한이 사이드바에 보인다 (spec 083)', () => {
+    renderRail('/zones')
+    const sidebar = within(screen.getByRole('navigation', { name: '메뉴' }).parentElement!)
+    expect(sidebar.getByText('강동 테크노타워')).toBeInTheDocument()
+    expect(sidebar.getByText('현장관리자')).toBeInTheDocument()
   })
 
   it('🔴 배치관리 뱃지는 요약 쿼리의 대기 건수다 (spec 039 — store 직접 읽기 제거)', async () => {

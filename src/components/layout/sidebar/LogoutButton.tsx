@@ -10,6 +10,8 @@ import { isAdminArea, paths } from '@/router/paths'
 interface LogoutButtonProps {
   /** 툴팁 방향 — 레일 `right` · 하단 floating nav `top` */
   tooltipSide: 'right' | 'top'
+  /** `rail` = 어두운 바탕의 44px 버튼(하단 floating nav) · `inline` = 밝은 사이드바 사용자 줄 옆의 작은 버튼(`spec 083`) */
+  variant?: 'rail' | 'inline'
 }
 
 /**
@@ -22,7 +24,7 @@ interface LogoutButtonProps {
  * 로그아웃: 토큰 clear + 영역별 로그인 이동. 토큰이 사라지면 `useMe` 가 바로 `isError` 가 되므로
  * 별도 캐시 무효화가 필요 없다(020).
  */
-export const LogoutButton = ({ tooltipSide }: LogoutButtonProps) => {
+export const LogoutButton = ({ tooltipSide, variant = 'rail' }: LogoutButtonProps) => {
   const { data } = useMe()
   const navigate = useNavigate()
   const location = useLocation()
@@ -44,9 +46,13 @@ export const LogoutButton = ({ tooltipSide }: LogoutButtonProps) => {
             type="button"
             aria-label="로그아웃"
             onClick={() => setOpen(true)}
-            className="w-11 h-11 rounded-[10px] grid place-items-center text-rail-icon hover:text-white cursor-pointer"
+            className={
+              variant === 'inline'
+                ? 'grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground cursor-pointer'
+                : 'w-11 h-11 rounded-[10px] grid place-items-center text-rail-icon hover:text-white cursor-pointer'
+            }
           >
-            <LogOutIcon size={20} strokeWidth={1.5} />
+            <LogOutIcon size={variant === 'inline' ? 15 : 20} strokeWidth={variant === 'inline' ? 2 : 1.5} />
           </button>
         </TooltipTrigger>
         <TooltipContent side={tooltipSide}>{name ? `${name} · 로그아웃` : '로그아웃'}</TooltipContent>

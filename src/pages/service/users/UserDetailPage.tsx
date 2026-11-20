@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeftIcon,
-  ChevronRightIcon,
   EllipsisIcon,
   KeyRoundIcon,
   SquarePenIcon,
@@ -53,16 +52,6 @@ import { paths } from '@/router/paths'
  * 🔄 세 동작은 머리 `⋯` 메뉴 안이다(079 — 076 지점 상세 · 074 코스 상세와 같다).
  */
 
-const Breadcrumb = () => (
-  <nav aria-label="현재 위치" className="flex items-center gap-1 text-caption">
-    <Link to={paths.service.users} className="text-muted-foreground hover:text-foreground">
-      근무자
-    </Link>
-    <ChevronRightIcon size={13} className="text-muted-foreground/60" />
-    <span className="font-medium text-foreground">근무자 상세</span>
-  </nav>
-)
-
 /** 🔴 실패 화면에서는 브레드크럼이 빠져나갈 길로 읽히지 않는다 — 복귀 수단을 따로 둔다(023) */
 const BackToList = () => (
   <Link
@@ -106,7 +95,6 @@ const UserDetailPage = () => {
   if (userSeq === null) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        <Breadcrumb />
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
             icon={TriangleAlertIcon}
@@ -125,7 +113,6 @@ const UserDetailPage = () => {
   if (detail.isPending) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        <Breadcrumb />
         <div className="h-12 w-80 animate-pulse rounded-md bg-muted" />
         <div className="h-48 animate-pulse rounded-lg bg-muted" />
       </div>
@@ -135,7 +122,6 @@ const UserDetailPage = () => {
   if (detail.isError || !detail.data) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        <Breadcrumb />
         <div className="rounded-lg border border-border bg-card">
           {/* 🔴 "삭제되었다"·"권한이 없다" 고 단정하지 않는다 — 403(B-41)·네트워크·없는 번호가 모두 여기로 온다 */}
           <AppEmpty
@@ -159,7 +145,6 @@ const UserDetailPage = () => {
 
   return (
     <div className="flex flex-col gap-4 p-4 xl:p-8">
-      <Breadcrumb />
 
       <AppPageHeader
         title={user.userName}

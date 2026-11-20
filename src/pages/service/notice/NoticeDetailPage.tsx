@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeftIcon,
-  ChevronRightIcon,
   MegaphoneIcon,
   PinIcon,
   SquarePenIcon,
@@ -37,16 +36,6 @@ import { paths } from '@/router/paths'
  * 수정은 모달 → `UpsertNotice`(`spec 040` US2) — 성공해야 닫힌다.
  * 삭제는 확인 → `DeleteNotice` → 목록(`spec 040` US3). 실패하면 상세에 머문다.
  */
-
-const Breadcrumb = () => (
-  <nav aria-label="현재 위치" className="flex items-center gap-1 text-caption">
-    <Link to={paths.service.notice} className="text-muted-foreground hover:text-foreground">
-      공지사항
-    </Link>
-    <ChevronRightIcon size={13} className="text-muted-foreground/60" />
-    <span className="font-medium text-foreground">공지 상세</span>
-  </nav>
-)
 
 /** 🔴 실패 화면에서는 브레드크럼이 **빠져나갈 길로 읽히지 않는다** — 복귀 수단을 따로 둔다(023) */
 const BackToList = () => (
@@ -95,7 +84,6 @@ const NoticeDetailPage = () => {
   if (noticeSeq === null) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        <Breadcrumb />
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
             icon={TriangleAlertIcon}
@@ -114,7 +102,6 @@ const NoticeDetailPage = () => {
   if (detail.isPending) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        <Breadcrumb />
         <div className="h-9 w-80 animate-pulse rounded-md bg-muted" />
         <div className="h-64 animate-pulse rounded-lg bg-muted" />
       </div>
@@ -124,7 +111,6 @@ const NoticeDetailPage = () => {
   if (detail.isError || !detail.data) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        <Breadcrumb />
         <div className="rounded-lg border border-border bg-card">
           {/* 🔴 **"삭제되었다" 고 단정하지 않는다** — 네트워크·권한·없는 번호가 모두 여기로 온다 */}
           <AppEmpty
@@ -147,7 +133,6 @@ const NoticeDetailPage = () => {
 
   return (
     <div className="flex flex-col gap-4 p-4 xl:p-8">
-      <Breadcrumb />
 
       <AppPageHeader
         title={notice.title}

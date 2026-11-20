@@ -25,10 +25,15 @@ export interface MenuItemType {
    * config(모듈 상수)에서는 **훅을 부를 수 없다**. 무엇을 셀지만 적고, 세는 일은 컴포넌트가 한다.
    */
   badge?: 'deploymentPending'
+  /**
+   * 사이드바 묶음 제목(`spec 083`) — 같은 값이 이어지는 메뉴끼리 한 묶음이고, 묶음이 바뀌는 자리에 제목을 그린다.
+   * 없으면 제목 없이 그린다(본사). 아래 메뉴(`FloatingNav`)는 쓰지 않는다.
+   */
+  group?: string
 }
 
 /**
- * 현장 사이드바(RailSidebar) 메뉴 — flat 6개, 그룹 헤더 없음.
+ * 현장 사이드바(RailSidebar) 메뉴 — 6개. 묶음 제목 `현황`(대시보드 · 순찰이력) · `관리`(나머지)는 `spec 083`.
  * 순서 고정: 순찰이력 → 코스/지점 → 근무자 → 배치관리 → 공지사항 (리디자인 결정 2026-07-23).
  * 맨 앞에 대시보드(현장 홈, `spec 066` 2026-10-30).
  */
@@ -36,34 +41,40 @@ export const ServiceMenus: MenuItemType[] = [
   {
     icon: LayoutDashboardIcon,
     title: '대시보드',
+    group: '현황',
     url: paths.service.dashboard,
   },
   {
     icon: ClockAlertIcon,
     title: '순찰이력',
+    group: '현황',
     url: paths.service.patrolZones,
     activeUrl: [paths.service.patrolZones, paths.service.patrolPoints],
   },
   {
     icon: MapPinIcon,
     title: '코스/지점',
+    group: '관리',
     url: paths.service.zones,
     activeUrl: [paths.service.zones, paths.service.points],
   },
   {
     icon: UsersIcon,
     title: '근무자',
+    group: '관리',
     url: paths.service.users,
   },
   {
     icon: ArrowLeftRightIcon,
     title: '배치관리',
+    group: '관리',
     url: paths.service.deployments,
     badge: 'deploymentPending',
   },
   {
     icon: MegaphoneIcon,
     title: '공지사항',
+    group: '관리',
     url: paths.service.notice,
   },
 ]

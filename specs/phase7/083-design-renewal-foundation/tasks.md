@@ -53,16 +53,26 @@
 
 > 독립 테스트 기준: `xl` 이상에서 224px 사이드바 + 본문 카드 한 장으로 보이고, 메뉴 이동 · 사업장 전환 · 로그아웃이 지금과 같다. 1920×911 캡처의 틀이 목업과 같다.
 
-- [ ] T1443 [US2] 메뉴 구성에 묶음 제목 추가(현장 `현황` · `관리` / 본사는 없음) — 메뉴 6개 · 순서 · 주소는 그대로 in src/components/layout/sidebar/sidebar.config.ts
-- [ ] T1444 [US2] 사이드바를 224px 밝은 모양으로 — 로고 · 메뉴(아이콘 + 이름) · 묶음 제목 · 건수 알약 · 아래 사용자 이름 · 권한 in src/components/layout/sidebar/RailSidebar.tsx
-- [ ] T1445 [US2] 사업장 선택 칸(현장) — 사이드바 위쪽으로 옮기고 선택지 1개면 이름만 보이게 in src/components/layout/sidebar/SiteSwitchButton.tsx
-- [ ] T1446 [US2] 로그아웃 자리 옮기기(사이드바 아래 사용자 줄) in src/components/layout/sidebar/LogoutButton.tsx
-- [ ] T1447 [US2] 현장 틀 — 본문 카드 한 장 + 맨 위 줄(지금 위치) · `<Outlet key={siteSeq}>` · 전환 오버레이 유지 in src/components/layout/ServiceLayout.tsx
-- [ ] T1448 [US2] 본사 틀 — 같은 모양 · 사업장 선택 칸 없음 · 배치 대기 조회를 부르지 않는 규칙 유지 in src/components/layout/AdminLayout.tsx
-- [ ] T1449 [US2] 맨 위 줄의 지금 위치(`부모 › 지금`) — 화면마다 그리던 경로 표시(`Breadcrumb`)와 겹치지 않게 한 곳으로 모으는 방법을 계획으로 제시 in src/components/app/AppPageHeader.tsx
-- [ ] T1450 [US2] `xl` 미만 — 아래 메뉴의 색 · 글꼴만 맞추기(동작 유지) in src/components/layout/sidebar/FloatingNav.tsx
-- [ ] T1451 [US2] 틀 테스트 고치기 in src/components/layout/__tests__ · src/components/layout/sidebar/__tests__
+- [x] T1443 [US2] 메뉴 구성에 묶음 제목 추가(현장 `현황` · `관리` / 본사는 없음) — 메뉴 6개 · 순서 · 주소는 그대로 in src/components/layout/sidebar/sidebar.config.ts
+  - 2026-11-20: `MenuItemType.group` 추가 · 현장 6개에 `현황` / `관리`.
+- [x] T1444 [US2] 사이드바를 224px 밝은 모양으로 — 로고 · 메뉴(아이콘 + 이름) · 묶음 제목 · 건수 알약 · 아래 사용자 이름 · 권한 in src/components/layout/sidebar/RailSidebar.tsx
+  - 2026-11-20: 224px 밝은 사이드바로 다시 썼다 — 로고 + `S-Patrol`(+ 본사 `ADMIN`) · 사업장 칸 · 묶음 제목 · 메뉴(아이콘 + 이름 · 활성 = 옅은 회색 바탕 + 파란 아이콘 · `aria-current`) · 건수 파란 알약 · 아래 사용자 이름 · 권한. 링크의 `aria-label` 은 남겼다(건수가 접근 이름에 섞이지 않게 · 테스트가 이 이름으로 찾는다).
+- [x] T1445 [US2] 사업장 선택 칸(현장) — 사이드바 위쪽으로 옮기고 선택지 1개면 이름만 보이게 in src/components/layout/sidebar/SiteSwitchButton.tsx
+  - 2026-11-20: `SiteSwitchField` 추가(건물 아이콘 + 이름 + 위아래 화살표 · 같은 전환 창). 선택지가 하나면 틀이 `siteName` 만 넘겨 누를 수 없는 글자로 보인다. 기존 `SiteSwitchButton` 은 아래 메뉴가 계속 쓴다.
+- [x] T1446 [US2] 로그아웃 자리 옮기기(사이드바 아래 사용자 줄) in src/components/layout/sidebar/LogoutButton.tsx
+  - 2026-11-20: `LogoutButton` 에 `variant="inline"`(사용자 줄 옆 작은 버튼). 확인 창 · 동작은 그대로.
+- [x] T1447 [US2] 현장 틀 — 본문 카드 한 장 + 맨 위 줄(지금 위치) · `<Outlet key={siteSeq}>` · 전환 오버레이 유지 in src/components/layout/ServiceLayout.tsx
+  - 2026-11-20: 바깥 바탕 + 본문 카드 한 장(`xl` 이상만 카드 — 모서리 12px · 테두리 · 사방 8px. 미만은 화면 전체) + 맨 위 `TopBar`. `inert` · `key={siteSeq}` · 오버레이 그대로.
+- [x] T1448 [US2] 본사 틀 — 같은 모양 · 사업장 선택 칸 없음 · 배치 대기 조회를 부르지 않는 규칙 유지 in src/components/layout/AdminLayout.tsx
+  - 2026-11-20: 같은 구조 · `tag="ADMIN"` · 사업장 칸 없음 · 배치 요약을 부르지 않는 테스트 통과.
+- [x] T1449 [US2] 맨 위 줄의 지금 위치(`부모 › 지금`) — 화면마다 그리던 경로 표시(`Breadcrumb`)와 겹치지 않게 한 곳으로 모으는 방법을 계획으로 제시 in src/components/app/AppPageHeader.tsx
+  - 2026-11-20(사용자 결정): 새 `src/components/layout/TopBar.tsx` — 주소로 지금 위치를 정한다(`부모 › 지금` · 부모는 목록 링크 · `aria-label="현재 위치"` 유지). 🔴 **현장 상세 6화면이 각자 그리던 경로 표시를 지웠다**(코스 · 지점 · 근무자 · 공지 · 코스 순찰 · 지점 인증 상세). 본사 사업장 상세는 지사를 고른 목록으로 돌아가는 링크라 그대로 두고 085 에서 옮긴다(위 줄에는 부모 없이 `사업장` 만). 목록 화면도 위 줄에 이름을 적는다(화면 제목과 겹쳐도 — 목업대로). 위 줄 왼쪽의 사이드바 접기 아이콘은 넣지 않았다(접는 기능이 없다). `AppPageHeader` 는 건드리지 않았다.
+- [x] T1450 [US2] `xl` 미만 — 아래 메뉴의 색 · 글꼴만 맞추기(동작 유지) in src/components/layout/sidebar/FloatingNav.tsx
+  - 2026-11-20: 동작 · 모양 그대로, 건수 뱃지만 빨강 → 파랑.
+- [x] T1451 [US2] 틀 테스트 고치기 in src/components/layout/__tests__ · src/components/layout/sidebar/__tests__
+  - 2026-11-20: 활성 확인을 클래스(`bg-rail-2`) → `aria-current` 로 · 선택지 1개 테스트에 "이름은 보인다" 추가 · 사이드바 테스트 2건 추가 · 화면 테스트의 경로 표시 확인 4건을 새 `TopBar.test.tsx`(19건)로 옮김. verify 통과 · test 1623건 통과(검증과 동시에 돌린 첫 실행에서 3건 시간 초과 → 따로 돌려 통과).
 - [ ] T1452 [US2] 회귀 확인 — `npm run e2e`(1280px · 390px) · 현장 전 화면 + 본사 3화면 브라우저 확인 · 1920×911 캡처 대조 in e2e/
+  - 2026-11-20 진행분: e2e 40건 통과(1280 + 390 — 경로 표시 링크를 누르는 흐름 포함). 1280px 캡처로 코스 상세 · 근무자 목록 확인. 🔴 **남은 확인**: 1920×911 목업 대조 · 본사 3화면 · 390px 모양 · 사업장 전환 실제 동작(브라우저). 🔴 발견: 1280px 에서 코스 상세의 순찰 경로 지점 줄이 좁아져 지점 이름이 말줄임되고 `QR · 3/7회` 가 두 줄로 꺾인다(사이드바가 68 → 224px 로 넓어져 본문이 156px 줄었다) — 084 에서 이 화면을 다시 짤 때 본다.
 
 ## Phase 3: US3 — 상태 표시
 

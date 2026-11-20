@@ -73,13 +73,6 @@ describe('NoticeDetailPage — 정상', () => {
     expect(screen.getByText('첨부파일 2')).toBeInTheDocument()
   })
 
-  it('브레드크럼으로 목록에 돌아간다', async () => {
-    renderAt('4')
-
-    const crumb = await screen.findByRole('navigation', { name: '현재 위치' })
-    expect(within(crumb).getByRole('link', { name: '공지사항' })).toHaveAttribute('href', '/notice')
-  })
-
   it('첨부파일을 링크로 나열한다', async () => {
     renderAt('4')
 

@@ -52,7 +52,7 @@ export const FloatingNav = ({ menus, badges, siteSwitch }: FloatingNavProps) => 
                   <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-point" />
                 )}
                 {!!count && count > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-3.5 h-3.5 px-0.5 rounded-full bg-danger text-white text-[9px] leading-3.5 text-center">
+                  <span className="absolute -top-1 -right-1 min-w-3.5 h-3.5 px-0.5 rounded-full bg-point text-white text-[9px] leading-3.5 text-center">
                     {count}
                   </span>
                 )}

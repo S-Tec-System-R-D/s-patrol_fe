@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, ChevronRightIcon, HistoryIcon, RouteIcon, TriangleAlertIcon } from 'lucide-react'
+import { ArrowLeftIcon, HistoryIcon, RouteIcon, TriangleAlertIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import AppButton from '@/components/app/AppButton'
@@ -78,16 +78,6 @@ const PatrolZoneDetailPage = () => {
     setExpanded(open ? new Set(checks.filter((row) => row.memos.length > 0).map((row) => row.detailSeq)) : new Set())
 
 
-  const crumb = (
-    <nav className="flex items-center gap-1 text-caption text-muted-foreground">
-      <Link to={paths.service.patrolZones} className="hover:text-foreground">
-        순찰이력
-      </Link>
-      <ChevronRightIcon size={14} aria-hidden />
-      <span className="text-foreground">순찰 상세</span>
-    </nav>
-  )
-
   /**
    * 🔴🔴 **주소가 잘못된 경우를 로딩보다 먼저 분기한다**(`spec 037` Phase 4 에서 발견).
    *
@@ -105,7 +95,6 @@ const PatrolZoneDetailPage = () => {
   if (historySeq === null) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        {crumb}
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
             icon={TriangleAlertIcon}
@@ -131,7 +120,6 @@ const PatrolZoneDetailPage = () => {
   if (detail.isPending) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        {crumb}
         <div className="h-9 w-80 animate-pulse rounded-md bg-muted" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -146,7 +134,6 @@ const PatrolZoneDetailPage = () => {
   if (detail.isError || !detail.data) {
     return (
       <div className="flex flex-col gap-4 p-4 xl:p-8">
-        {crumb}
         <div className="rounded-lg border border-border bg-card">
           <AppEmpty
             icon={TriangleAlertIcon}
@@ -180,7 +167,6 @@ const PatrolZoneDetailPage = () => {
 
   return (
     <div className="flex flex-col gap-4 p-4 xl:p-8">
-      {crumb}
 
       <AppPageHeader
         icon={HistoryIcon}

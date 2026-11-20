@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { ChevronRightIcon, EllipsisIcon, MapPinIcon, Trash2Icon } from 'lucide-react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { EllipsisIcon, MapPinIcon, Trash2Icon } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
 import AppBadge from '@/components/app/AppBadge'
@@ -53,17 +53,6 @@ import { paths } from '@/router/paths'
  * 사업장의 지점**이라는 뜻이다. 목록으로 돌아갈 수단과 함께 안내한다.
  */
 
-/** `코스/지점 › 지점 상세` — 첫 조각이 목록 링크를 겸한다 */
-const Breadcrumb = () => (
-  <nav aria-label="현재 위치" className="flex items-center gap-1 text-caption">
-    <Link to={paths.service.points} className="text-muted-foreground hover:text-foreground">
-      코스/지점
-    </Link>
-    <ChevronRightIcon size={13} className="text-muted-foreground/60" />
-    <span className="font-medium text-foreground">지점 상세</span>
-  </nav>
-)
-
 const PointDetailPage = () => {
   const { pointSeq: pointSeqParam } = useParams<{ pointSeq: string }>()
   const navigate = useNavigate()
@@ -107,7 +96,6 @@ const PointDetailPage = () => {
 
   return (
     <div className="flex flex-col gap-4 p-4 xl:p-8">
-      <Breadcrumb />
 
       {point ? (
         <>

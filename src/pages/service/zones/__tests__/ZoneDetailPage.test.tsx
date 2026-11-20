@@ -82,13 +82,6 @@ describe('ZoneDetailPage', () => {
     expect(await screen.findByText(/A동 1층~지하 주차장 순찰/)).toBeInTheDocument()
   })
 
-  it('목록으로 돌아갈 수단이 있다 — 브레드크럼 첫 조각이 링크다', async () => {
-    renderPage('/zones/1')
-
-    await screen.findByText('A동 순찰코스')
-    expect(screen.getByRole('link', { name: '코스/지점' })).toHaveAttribute('href', '/zones')
-  })
-
   it('🔴 없는 courseSeq 는 안내 + 목록 복귀 수단으로 끝난다 — /404 로 보내지 않는다', async () => {
     renderPage('/zones/9999')
 
