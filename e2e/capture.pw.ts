@@ -113,7 +113,7 @@ test.beforeEach(async ({ context, page }) => {
 const open = async (page: Page, path: string) => {
   await page.goto(path)
   await page.waitForLoadState('networkidle')
-  // 🔴 **웹폰트가 적용된 뒤에 찍는다.** Pretendard 가 늦게 들어오면 같은 코드로 찍어도
+  // 🔴 **웹폰트가 적용된 뒤에 찍는다.** 웹폰트(Noto Sans KR — `spec 083` 전에는 Pretendard)가 늦게 들어오면 같은 코드로 찍어도
   // 글자 모양이 달라져 baseline 이 흔들린다(027 재촬영에서 겪었다).
   await page.evaluate(() => document.fonts.ready)
   // MSW 응답 후 react-query 렌더 + 트랜지션 안착 여유
