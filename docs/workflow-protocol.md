@@ -29,7 +29,7 @@ WF-00(개요)·WF-0(골격)은 `docs/`에서 이미 완료. 매 사이클 반복
 | **3~5** (화면 작업) | **화면 단위 1:1** 1 spec | `012-login`, `013-zones`, ... |
 | **6** (마감) | **체크리스트 1 spec** | `999-finalize` |
 
-- 폴더: `specs/phase{N}/{NNN-feature-name}/` (`N`=roadmap Phase 0~6, `NNN`=Phase 무관 글로벌 일련번호 3자리)
+- 폴더: `specs/phase{N}/{NNN-feature-name}/` (`N`=roadmap Phase 0~7, `NNN`=Phase 무관 글로벌 일련번호 3자리)
 - 템플릿은 Phase 무관 → `specs/_templates/`에 그대로 둔다(Phase 폴더 안에 두지 않음)
 - Phase ↔ spec 매핑은 [`roadmap.md`](./roadmap.md) §3(소속 spec 컬럼)·§12에서 추적
 
