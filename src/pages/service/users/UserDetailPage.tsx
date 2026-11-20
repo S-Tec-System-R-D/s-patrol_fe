@@ -165,7 +165,7 @@ const UserDetailPage = () => {
              modal={false} — 메뉴 항목에서 모달을 열 때 body pointer-events 가 남는 Radix 문제 회피 */
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="근무자 메뉴" className="bg-card" />
+              <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="근무자 메뉴" variant="soft" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-auto">
               <DropdownMenuItem className="cursor-pointer" onSelect={() => setEditOpen(true)}>

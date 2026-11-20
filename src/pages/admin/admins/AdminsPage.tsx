@@ -170,7 +170,7 @@ const AdminsPage = () => {
                     icon={PlusIcon}
                     iconSize={14}
                     aria-label="관리자 추가"
-                    className="h-9 px-3 xl:px-4"
+                    className="px-3 xl:px-4"
                   >
                     <span className="hidden xl:inline">관리자 추가</span>
                   </AppButton>

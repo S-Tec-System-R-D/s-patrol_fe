@@ -49,7 +49,7 @@ const AppDatePicker = ({
         disabled={disabled}
         data-active={active}
         className={cn(
-          'flex h-8 w-full items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1 text-sm text-foreground outline-hidden transition-colors',
+          'flex h-[30px] w-full items-center gap-2 rounded-[7px] border border-border bg-card px-2.5 text-[12px] text-foreground outline-hidden transition-colors',
           'focus-visible:border-point focus-visible:ring-2 focus-visible:ring-point/20',
           'disabled:pointer-events-none disabled:opacity-50',
           'data-[active=true]:border-point data-[active=true]:bg-point-bg data-[active=true]:text-point-foreground',

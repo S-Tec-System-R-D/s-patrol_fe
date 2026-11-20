@@ -145,7 +145,7 @@ const LocationDetailPage = () => {
         {/* modal={false} — 메뉴 항목에서 모달을 열 때 body pointer-events 가 남는 Radix 문제 회피(079 와 같다) */}
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
-            <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="사업장 메뉴" className="shrink-0 bg-card" />
+            <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="사업장 메뉴" variant="soft" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-auto">
             {/* 소속 그룹 · 하위 여부가 목록 노드에서 나온다 — 찾기 전에는 열지 않는다 */}

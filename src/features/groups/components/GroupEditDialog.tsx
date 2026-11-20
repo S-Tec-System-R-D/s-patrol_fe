@@ -75,7 +75,8 @@ export const GroupEditDialog = ({
           icon={EllipsisVerticalIcon}
           iconSize={14}
           aria-label={`${group.groupName} 메뉴`}
-          className="shrink-0 border-0 p-1.5"
+          variant="ghost"
+          className="size-7"
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto">

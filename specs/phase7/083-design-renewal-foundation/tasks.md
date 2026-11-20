@@ -91,14 +91,22 @@
 
 > 독립 테스트 기준: 목록 화면 하나(근무자)에서 검색 · 필터 · 표 · 페이지 이동이 목업 모양이고 동작은 그대로다.
 
-- [ ] T1457 [P] [US4] 버튼 — 높이 30px · 주 버튼 파랑 · 화면 제목 오른쪽 버튼(회색 채움 · 삭제는 빨강 채움) in src/components/ui/button.variants.ts · src/components/app/AppButton.tsx · src/components/app/AppIconButton.tsx · src/components/app/AppLinkButton.tsx
-- [ ] T1458 [P] [US4] 검색 칸 · 필터(아이콘 + `이름 · 값` + 꺾쇠 · 걸리면 파란 테두리) 높이 30px in src/components/app/AppInput.tsx · src/components/app/AppSelect.tsx · src/components/app/AppDatePicker.tsx
-- [ ] T1459 [US4] 표 — 줄 46px · 카드 테두리 없음 · 줄 전체가 누르는 대상 · 고른 줄 옅은 회색 in src/components/AppTable.tsx
-- [ ] T1460 [US4] 페이지 번호 계산 바꾸기 — 지금 페이지를 가운데에 둔 다섯 개(앞뒤가 모자라면 반대쪽으로 채움) + 단위 테스트 in src/components/app/AppPagination.pageItems.ts · src/components/app/__tests__
-- [ ] T1461 [US4] 페이지 이동 모양 — `« ‹ 번호 › »` · 1280px 미만 `‹ ›` · 왼쪽 `현재 / 전체 페이지` · 테두리 없는 30px 칸 · 지금 페이지 옅은 파랑 in src/components/app/AppPagination.tsx
-- [ ] T1462 [US4] 탭(밑줄 · 건수 알약) in src/components/ui/tabs.tsx · src/components/ui/tabs.variants.ts
-- [ ] T1463 [US4] 모달 틀 — 입력 폼(가로 전체 폭 버튼 유지) · 확인 창(아이콘 · 제목 · 설명 가운데 + 버튼 반반) in src/components/app/AppDialog.tsx · src/components/AppAlertDialog.tsx
+- [x] T1457 [P] [US4] 버튼 — 높이 30px · 주 버튼 파랑 · 화면 제목 오른쪽 버튼(회색 채움 · 삭제는 빨강 채움) in src/components/ui/button.variants.ts · src/components/app/AppButton.tsx · src/components/app/AppIconButton.tsx · src/components/app/AppLinkButton.tsx
+  - 2026-11-20: `AppButton` — `fit` 30px / `full` 36px · 주 버튼 남색 → 파랑(`bg-point`) · 🆕 `soft`(옅은 회색 채움) · `destructive` 테두리 제거 · 모서리 7px · 아이콘 기본 14px. `AppIconButton` — 30px 네모 · 🆕 `variant`(outline / soft / ghost). `AppLinkButton` 은 그대로(색 토큰만 따라간다). 🔴 사용자 결정으로 화면에도 적용: 상세 4화면의 `…`(코스 · 지점 · 근무자 · 본사 사업장) → `soft` · 코스 순찰 상세 · 지점 인증 상세의 이동 링크 → 회색 채움 · 공지 상세 `수정` → `soft` · 줄 메뉴 3곳 → `ghost` · `추가` 버튼 6곳의 높이 지정(`h-9`) 제거. shadcn `button.variants.ts` 는 건드리지 않았다(`primary` 토큰을 그대로 둔다).
+- [x] T1458 [P] [US4] 검색 칸 · 필터(아이콘 + `이름 · 값` + 꺾쇠 · 걸리면 파란 테두리) 높이 30px in src/components/app/AppInput.tsx · src/components/app/AppSelect.tsx · src/components/app/AppDatePicker.tsx
+  - 2026-11-20: `AppInput` 검색 30px · 폼 34px · `AppSelect` 필터(`active` 를 넘긴 쪽) 30px · 폼 34px · `AppDatePicker` 30px. 🔴 **필터에 `이름 · 값` 표기는 넣지 않는다**(사용자 결정 2026-11-20 — 필터 이름이 있을 필요가 없다. 지금처럼 값만). 디자인-규칙.md · spec 수정.
+- [x] T1459 [US4] 표 — 줄 46px · 카드 테두리 없음 · 줄 전체가 누르는 대상 · 고른 줄 옅은 회색 in src/components/AppTable.tsx
+  - 2026-11-20: 상자 테두리 · 머리줄 바탕 제거 — 선만. 머리줄 32px(12px · 회색) · 줄 46px · 올린 줄 옅은 회색. 🔴 "고른 줄 옅은 회색"은 표에 고르는 기능이 없어 넣지 않았다(펼치는 목록은 화면별 구성 요소라 084). 표 안의 페이지 이동(`TablePagination`)은 쓰는 화면이 없어(15곳 모두 `hidePagination`) 그대로 뒀다.
+- [x] T1460 [US4] 페이지 번호 계산 바꾸기 — 지금 페이지를 가운데에 둔 다섯 개(앞뒤가 모자라면 반대쪽으로 채움) + 단위 테스트 in src/components/app/AppPagination.pageItems.ts · src/components/app/__tests__
+  - 2026-11-20: `pageItems` 가 지금 페이지를 가운데에 둔 다섯 개(`number[]`)를 준다 — `…` · 양끝 번호 없음. 단위 테스트 6건(가운데 · 앞 채움 · 뒤 채움 · 다섯 쪽 · 경계).
+- [x] T1461 [US4] 페이지 이동 모양 — `« ‹ 번호 › »` · 1280px 미만 `‹ ›` · 왼쪽 `현재 / 전체 페이지` · 테두리 없는 30px 칸 · 지금 페이지 옅은 파랑 in src/components/app/AppPagination.tsx
+  - 2026-11-20: `« ‹ 번호 › »`(번호 · 처음 · 마지막은 `xl` 이상만) · 테두리 없는 30px 칸 · 지금 페이지 옅은 파랑 + `aria-current`. 문구(사용자 결정): 왼쪽 `전체 N개 항목` + `페이지당 행 수`(지금 문구 유지) / 오른쪽 `현재 / 전체 페이지`. 범위 표시(`1–12`)는 없앴다. 테스트 13건.
+- [x] T1462 [US4] 탭(밑줄 · 건수 알약) in src/components/ui/tabs.tsx · src/components/ui/tabs.variants.ts
+  - 2026-11-20: **083 에서 할 것이 없다** — 공용 탭(`ui/tabs`)을 쓰는 화면이 0곳이고 탭은 화면마다 따로 그린다(배치관리 · 대시보드 · 순찰이력 · 코스/지점). 084 에서 화면별로 맞춘다(이월).
+- [x] T1463 [US4] 모달 틀 — 입력 폼(가로 전체 폭 버튼 유지) · 확인 창(아이콘 · 제목 · 설명 가운데 + 버튼 반반) in src/components/app/AppDialog.tsx · src/components/AppAlertDialog.tsx
+  - 2026-11-20: `AppDialog` 안쪽 여백 16 → 24px · 제목 600. 확인 창(`AppAlertDialog`)은 이미 아이콘 · 제목 · 설명 가운데 + 버튼 반반이라 구조를 건드리지 않았다. 모서리는 원래 12px.
 - [ ] T1464 [US4] 회귀 확인 — 목록 화면 전부(순찰이력 2 · 코스 · 지점 · 근무자 · 배치관리 4탭 · 공지 · 본사 2)와 모달 대표 3종 브라우저 확인 in e2e/
+  - 2026-11-20 진행분: verify 통과 · test 1636건 통과 · e2e 40건 통과(1280 + 390). 1280px 캡처로 코스 순찰이력 목록 · 배치관리 확인. 🔴 **남은 확인**: 나머지 목록 화면 · 본사 2화면 · 모달(입력 폼 · 확인 창 · 편집 창)의 실제 모양 · 1920×911 목업 대조 · 390px.
 
 ## Phase 5: US5 — 빈 상태
 

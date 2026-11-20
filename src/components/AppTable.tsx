@@ -141,9 +141,10 @@ const AppTable = <TData,>({
           소비처는 **클래스조차 붙지 않아** 지금과 완전히 같다(`spec 030` 제약 2).
           🔴 `overflow-x-auto` — 카드가 없는 표가 좁은 폭에서 문서를 넓히지 않고 상자 안에서만 스크롤한다(`spec 053`).
           `relative` 가 없으면 셀 안 `sr-only`(absolute)가 상자를 빠져나가 문서를 다시 넓힌다 */}
-      <div className={`relative border rounded-sm overflow-x-auto ${renderCard ? 'hidden xl:block' : ''}`}>
+      {/* 🔄 `spec 083`: 상자 테두리 · 머리줄 바탕을 없애고 선만 둔다 — 머리줄 32px · 줄 46px */}
+      <div className={`relative overflow-x-auto ${renderCard ? 'hidden xl:block' : ''}`}>
         <table className="w-full text-sm">
-          <thead className="border-b bg-muted/50">
+          <thead className="border-b">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -151,7 +152,7 @@ const AppTable = <TData,>({
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
                     className={`
-                      text-left text-xs px-3 py-3 font-medium text-foreground/70
+                      h-8 text-left text-xs px-3 font-normal text-muted-foreground whitespace-nowrap
                       ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-foreground' : ''}
                       ${header.column.columnDef.meta?.className ?? ''}
                     `}
@@ -167,14 +168,14 @@ const AppTable = <TData,>({
               </tr>
             ))}
           </thead>
-          <tbody className="bg-card">
+          <tbody>
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
                 /* 🔴 **키보드로도 열려야 한다**(OQ-999-A, `047`) — `tabIndex` + Enter/Space. `CheckDetailTable`(036) 과 같다.
                    `onRowClick` 이 없으면 아무것도 걸지 않는다(눌릴 것처럼 보이지 않게) */
                 <tr
                   key={row.id}
-                  className={`border-b last:border-0 hover:bg-muted/50 transition-colors ${onRowClick ? 'cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring' : ''} ${rowClassName?.(row.original) ?? ''}`}
+                  className={`border-b hover:bg-muted/60 transition-colors ${onRowClick ? 'cursor-pointer focus-visible:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring' : ''} ${rowClassName?.(row.original) ?? ''}`}
                   onClick={() => onRowClick?.(row.original)}
                   {...(onRowClick && {
                     tabIndex: 0,
@@ -191,7 +192,7 @@ const AppTable = <TData,>({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className={`text-body font-normal px-3 py-3 ${cell.column.columnDef.meta?.className ?? ''}`}
+                      className={`h-[46px] text-body font-normal px-3 py-1 ${cell.column.columnDef.meta?.className ?? ''}`}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>

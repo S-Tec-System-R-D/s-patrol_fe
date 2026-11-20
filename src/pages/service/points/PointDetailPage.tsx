@@ -117,7 +117,7 @@ const PointDetailPage = () => {
               <div className="flex items-center gap-2">
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
-                    <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="지점 메뉴" className="bg-card" />
+                    <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="지점 메뉴" variant="soft" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-auto">
                     <DropdownMenuItem

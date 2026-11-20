@@ -160,7 +160,7 @@ const ZoneDetailPage = () => {
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     {/* 🔴 흰 배경 — 회색 페이지 위에서 투명 버튼은 테두리만 떠 보인다(2026-11-13) */}
-                    <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="코스 메뉴" className="bg-card" />
+                    <AppIconButton icon={EllipsisIcon} iconSize={16} aria-label="코스 메뉴" variant="soft" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-auto">
                     <DropdownMenuItem

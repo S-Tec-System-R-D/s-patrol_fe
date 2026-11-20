@@ -190,7 +190,7 @@ const SortableRow = ({ draft, order, isFirst, isLast, onCourseMinChange, onMove,
           <AppIconButton
             icon={EllipsisIcon}
             aria-label={`${draft.pointName} 메뉴`}
-            className="border-transparent"
+            variant="ghost"
             disabled={disabled}
           />
         </DropdownMenuTrigger>

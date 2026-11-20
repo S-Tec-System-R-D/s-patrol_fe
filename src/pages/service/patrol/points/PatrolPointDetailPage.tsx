@@ -157,7 +157,7 @@ const PatrolPointDetailPage = () => {
         action={
           <Link
             to={paths.service.pointDetail(data.pointSeq)}
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-body font-medium hover:bg-muted"
+            className="inline-flex h-[30px] items-center gap-1.5 rounded-[7px] bg-muted px-3 text-caption font-medium text-foreground hover:bg-border"
           >
             <MapPinIcon size={14} aria-hidden />
             지점 상세

@@ -60,7 +60,9 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
             id={id}
             type={inputType}
             className={cn(
-              'w-full rounded-sm border border-border bg-card px-3 py-2 text-sm text-foreground',
+              // 🔄 `spec 083`: 검색 칸 30px(버튼 · 필터와 같다) · 폼 입력 칸 34px
+              'w-full rounded-[7px] border border-border bg-card px-3 text-foreground',
+              isSearch ? 'h-[30px] text-[12px]' : 'h-[34px] text-[13px]',
               'placeholder:text-muted-foreground',
               'focus:outline-none focus:border-point focus:ring-2 focus:ring-point/20',
               'disabled:cursor-not-allowed disabled:opacity-50',

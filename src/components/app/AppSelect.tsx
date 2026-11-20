@@ -77,6 +77,8 @@ const AppSelect = ({
         data-active={active}
         className={cn(
           'bg-card focus-visible:border-point focus-visible:ring-point/20',
+          // 🔄 `spec 083`: 필터(`active` 를 넘긴 쪽)는 30px · 폼 안의 셀렉트는 입력 칸과 같은 34px
+          active === undefined ? 'h-[34px] rounded-[7px] text-[13px]' : 'h-[30px] rounded-[7px] text-[12px]',
           'data-[active=true]:border-point data-[active=true]:bg-point-bg data-[active=true]:text-point-foreground',
           /**
            * 🔴 **미선택 톤을 기간 필터와 맞춘다**(사용자 지적 2026-10-20).

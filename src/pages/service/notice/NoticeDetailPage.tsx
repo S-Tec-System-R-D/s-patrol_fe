@@ -160,7 +160,7 @@ const NoticeDetailPage = () => {
               open={editOpen}
               onOpenChange={setEditOpen}
               trigger={
-                <AppButton icon={SquarePenIcon} variant="sub" className="bg-card">
+                <AppButton icon={SquarePenIcon} variant="soft">
                   수정
                 </AppButton>
               }

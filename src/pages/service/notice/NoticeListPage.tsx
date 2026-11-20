@@ -164,7 +164,7 @@ const NoticeListPage = () => {
               aria-label="공지 작성"
               // 사업장이 없으면 목록도 요청하지 않는다 — 같은 기준으로 막는다
               disabled={siteSeq === null}
-              className="h-9 px-3 xl:px-4"
+              className="px-3 xl:px-4"
             >
               <span className="hidden xl:inline">공지 작성</span>
             </AppButton>

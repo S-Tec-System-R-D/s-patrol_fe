@@ -121,7 +121,7 @@ const LocationsPage = () => {
                   aria-label="사업장 추가"
                   // 선택지가 목록 응답에서 나온다 — 받기 전에는 열지 않는다
                   disabled={!list.data}
-                  className="h-9 px-3 xl:px-4"
+                  className="px-3 xl:px-4"
                 >
                   <span className="hidden xl:inline">사업장 추가</span>
                 </AppButton>
