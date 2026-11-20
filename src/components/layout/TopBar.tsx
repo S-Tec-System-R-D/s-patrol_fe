@@ -38,15 +38,20 @@ const CRUMBS: Crumb[] = [
 ]
 
 interface TopBarProps {
-  /** 오른쪽 끝 자리 — 대시보드의 실시간 표시 등(`spec 084` 에서 쓴다) */
+  /** 오른쪽 끝에 바로 그릴 것 */
   right?: ReactNode
+  /**
+   * 오른쪽 자리의 DOM 요소를 틀에 넘긴다 — 화면이 `TopBarRight` 로 그 안에 그린다(`spec 084` — 대시보드의 실시간 표시).
+   * 🔴 `useState` 의 setter 를 그대로 넘긴다(ref 콜백) — 요소가 붙은 뒤 틀이 다시 그려져 화면이 자리를 받는다.
+   */
+  slotRef?: (element: HTMLDivElement | null) => void
 }
 
 /**
  * 본문 카드 맨 위의 가는 띠 — 지금 위치를 적는다(`spec 083`). 현장 · 본사 공용.
  * 맞는 주소가 없으면(찾을 수 없는 주소 등) 글자 없이 띠만 그린다.
  */
-export const TopBar = ({ right }: TopBarProps) => {
+export const TopBar = ({ right, slotRef }: TopBarProps) => {
   const { pathname } = useLocation()
   const crumb = CRUMBS.find(({ pattern }) => matchPath({ path: pattern, end: true }, pathname))
 
@@ -67,7 +72,9 @@ export const TopBar = ({ right }: TopBarProps) => {
           </span>
         </nav>
       )}
-      {right && <div className="ml-auto flex shrink-0 items-center gap-3">{right}</div>}
+      <div ref={slotRef} className="ml-auto flex shrink-0 items-center gap-3">
+        {right}
+      </div>
     </div>
   )
 }

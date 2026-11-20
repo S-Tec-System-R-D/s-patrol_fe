@@ -162,13 +162,19 @@ describe('DashboardPage — API 연결', () => {
     expect(card).toHaveTextContent('교대')
     expect(card).not.toHaveTextContent('다음:')
     expect(card).toHaveTextContent('미인증 1')
+    // 🔄 `spec 084`: 맨 앞에 `순찰 시작` 칸이 생겼다(시작 시각) — 지점은 그 뒤 5칸. 번호는 그리지 않는다
     const steps = within(card).getAllByRole('listitem')
-    expect(steps).toHaveLength(5)
-    expect(steps[2]).toHaveTextContent('3창고 (미인증)')
-    expect(steps[4]).toHaveTextContent('5옥상 (다음)')
+    expect(steps).toHaveLength(6)
+    expect(steps[0]).toHaveTextContent('순찰 시작')
+    expect(steps[0]).toHaveTextContent(/[0-9]{2}:[0-9]{2}/)
+    expect(steps[3]).toHaveTextContent('창고 (미인증)')
+    expect(steps[5]).toHaveTextContent('옥상 (다음)')
+    expect(steps[5]).toHaveTextContent('다음 지점')
+    // 인증한 지점은 인증 시각을 적는다
+    expect(steps[1]).toHaveTextContent(/주차장 \(인증\)[0-9]{2}:[0-9]{2}/)
 
     const night = courseCard('야간코스')
-    expect(night).toHaveTextContent('출발')
+    expect(night).toHaveTextContent('순찰 시작')
     expect(night).toHaveTextContent('0/4 지점')
     expect(night).not.toHaveTextContent('교대')
   })
@@ -194,11 +200,13 @@ describe('DashboardPage — API 연결', () => {
     renderPage()
     await screen.findByRole('heading', { name: 'B코스' })
     const card = courseCard('B코스')
-    await waitFor(() => expect(within(card).getAllByRole('listitem')[0]).toHaveTextContent('교대'))
+    // 맨 앞 칸은 `순찰 시작` 이다(spec 084) — 지점 1 · 2 는 둘째 · 셋째 칸
+    await waitFor(() => expect(within(card).getAllByRole('listitem')[1]).toHaveTextContent('교대'))
 
     const steps = within(card).getAllByRole('listitem')
-    expect(steps[1]).toHaveTextContent('교대')
-    expect(steps[2]).not.toHaveTextContent('교대')
+    expect(steps[0]).not.toHaveTextContent('교대')
+    expect(steps[2]).toHaveTextContent('교대')
+    expect(steps[3]).not.toHaveTextContent('교대')
     expect(within(card).getAllByText('교대')).toHaveLength(2)
     expect(card).toHaveTextContent('김철수')
   })
@@ -344,7 +352,8 @@ describe('DashboardPage — 최근 종료된 순찰', () => {
     // 예외만 뱃지 — 정상 완료 행에는 결과 뱃지가 없다
     expect(within(rows[2]).queryByText('완료')).toBeNull()
     expect(within(rows[0]).getByRole('link')).toHaveAttribute('href', '/patrol/zones/191')
-    expect(within(section('최근 기록')).getAllByRole('link', { name: /전체 보기/ })[0]).toHaveAttribute(
+    // 🔄 `spec 084`: `최근 기록` 한 상자 → 영역 둘. 각 영역 머리에 `전체 보기` 가 있다
+    expect(within(section('종료된 순찰')).getAllByRole('link', { name: /전체 보기/ })[0]).toHaveAttribute(
       'href',
       '/patrol/zones'
     )
@@ -362,7 +371,7 @@ describe('DashboardPage — 최근 종료된 순찰', () => {
     expect((await screen.findAllByText('최근 기록을 불러오지 못했습니다')).length).toBeGreaterThan(0)
     expect(await screen.findByRole('heading', { name: 'C코스' })).toBeInTheDocument()
 
-    await userEvent.click(within(section('최근 기록')).getAllByRole('button', { name: '다시 시도' })[0])
+    await userEvent.click(within(section('미완료 · 시간초과')).getAllByRole('button', { name: '다시 시도' })[0])
     expect((await screen.findAllByRole('link', { name: /오늘 중단 코스/ })).length).toBeGreaterThan(0)
   })
 
@@ -401,7 +410,7 @@ describe('ActiveCourseSection — 경과 1분 증가', () => {
     ...overrides,
   })
 
-  it('2xl — 1개면 1열 · 2개부터 2열(xl 은 열이 절반이라 1열)', () => {
+  it('🔄 한 줄에 코스 하나 — 몇 개든 2열로 나누지 않는다(spec 084 — 전체 폭에 지점 경로를 편다)', () => {
     const renderCards = (courses: DashboardCourse[]) =>
       render(
         <MemoryRouter>
@@ -413,7 +422,7 @@ describe('ActiveCourseSection — 경과 1분 증가', () => {
     one.unmount()
 
     const two = renderCards([course({}), course({ historySeq: 2 })])
-    expect(two.container.querySelector('[class~="2xl:grid-cols-2"]')).not.toBeNull()
+    expect(two.container.querySelector('[class*="grid-cols-2"]')).toBeNull()
   })
 
   it('현재 위치 링 — 진행 중만 · 멈춘 회차는 끈다', () => {
@@ -461,7 +470,7 @@ describe('DashboardKpiCard — 색', () => {
     const { container, unmount } = render(
       <DashboardKpiCard summary={zero} activeCount={null} state="ready" onRetry={() => {}} />
     )
-    expect(container.querySelector('.text-danger-foreground')).toBeNull()
+    expect(container.querySelector('.text-danger')).toBeNull()
     expect(screen.getAllByRole('definition')[0]).toHaveTextContent('-건')
     unmount()
 
@@ -478,6 +487,6 @@ describe('DashboardKpiCard — 색', () => {
     expect(screen.getAllByRole('definition')[2]).toHaveTextContent('1건')
     expect(screen.queryByText('미인증 지점')).not.toBeInTheDocument()
     expect(filled.container.querySelectorAll('.text-warning-foreground')).toHaveLength(0)
-    expect(filled.container.querySelectorAll('.text-danger-foreground')).toHaveLength(1)
+    expect(filled.container.querySelectorAll('.text-danger')).toHaveLength(1)
   })
 })

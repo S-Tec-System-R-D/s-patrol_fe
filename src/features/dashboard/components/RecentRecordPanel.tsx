@@ -1,6 +1,5 @@
 import { format, isToday, isValid, parseISO } from 'date-fns'
 import { ChevronRightIcon } from 'lucide-react'
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import AppBadge from '@/components/app/AppBadge'
@@ -8,7 +7,6 @@ import { cardBadge } from '@/components/app/AppBadge.variants'
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
 import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
 import { COURSE_HISTORY_STATUS, type CourseHistoryRow } from '@/features/course-history/types'
-import { cn } from '@/lib/utils'
 import { paths } from '@/router/paths'
 
 import type { AreaState } from '../types'
@@ -18,7 +16,8 @@ import AreaFallback from './AreaFallback'
  * 최근 기록 — `spec 073` T1218. `최근 미완료 · 시간초과`(067) 와 `최근 종료된 순찰`(069) 을 **한 패널**에 둔다.
  * 진행 중(카드 여러 장)과 구분되게 흰 패널 하나 · 두 목록이다(분석 문서 §3).
  *
- * 🔴 **탭 + 숫자 뱃지, `2xl` 부터 두 목록을 나란히** — xl 에서는 이 패널이 화면 절반 열이라 나란히 두면 좁다.
+ * 🔄 **`spec 084`: 탭 두 개인 한 상자 → 위아래 두 영역**(상자 없음 · 영역 제목 + 건수 + `전체 보기`). 세 칸 배치의 첫 칸에 놓인다.
+ * (전: 탭 + 숫자 뱃지, `2xl` 부터 두 목록을 나란히 — xl 에서는 이 패널이 화면 절반 열이라 나란히 두면 좁았다.)
  * 숫자 뱃지가 없으면 숨은 쪽을 놓친다(분석 §4).
  * 🔴 **미완료 · 시간초과는 회차 1건 = 1행 · 회차 상태만**(`spec 079` D13) — 놓친 지점 이름 · `미인증 n` 은 적지 않는다
  *    (회차를 열면 보인다). 행마다 인증 내역을 부르던 호출도 없어졌다.
@@ -157,21 +156,10 @@ const ListBody = ({
     </ul>
   )
 
-const CountBadge = ({ count, alert = false }: { count: number; alert?: boolean }) => (
-  <span
-    className={cn(
-      'rounded-sm px-1.5 py-0.5 text-label font-semibold tabular-nums',
-      alert && count > 0 ? 'bg-danger-bg text-danger-foreground' : 'bg-muted text-muted-foreground'
-    )}
-  >
-    {count}
-  </span>
-)
-
 const AllLink = () => (
   <Link
     to={paths.service.patrolZones}
-    className="ml-auto flex shrink-0 items-center text-caption text-muted-foreground hover:text-foreground"
+    className="ml-auto flex shrink-0 items-center text-caption text-point hover:underline"
   >
     전체 보기
     <ChevronRightIcon size={14} />
@@ -186,52 +174,26 @@ interface RecentRecordPanelProps {
 }
 
 const RecentRecordPanel = ({ issues, finished, state, onRetry }: RecentRecordPanelProps) => {
-  const [tab, setTab] = useState<Tab>('issue')
   const lists: { key: Tab; rows: CourseHistoryRow[] }[] = [
     { key: 'issue', rows: issues },
     { key: 'finished', rows: finished },
   ]
 
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-panel-title font-bold text-foreground">최근 기록</h2>
-      <div className="rounded-lg border border-border bg-card">
-        {/* 탭 — `2xl` 미만 */}
-        <div className="flex items-center gap-1 border-b border-border px-4 2xl:hidden" role="tablist">
-          {lists.map(({ key, rows }) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={tab === key}
-              onClick={() => setTab(key)}
-              className={cn(
-                '-mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-2 py-2.5 text-body font-semibold text-muted-foreground transition-colors hover:text-foreground',
-                tab === key && 'border-point font-bold text-foreground'
-              )}
-            >
-              {TAB_LABEL[key]}
-              {state === 'ready' && <CountBadge count={rows.length} alert={key === 'issue'} />}
-            </button>
-          ))}
-          <AllLink />
-        </div>
-
-        <div className="grid grid-cols-1 2xl:grid-cols-2 2xl:divide-x 2xl:divide-border">
-          {lists.map(({ key, rows }) => (
-            <div key={key} className={cn('flex-col gap-1 p-4 2xl:flex', tab === key ? 'flex' : 'hidden')}>
-              {/* 목록 머리 — `2xl` 에서만(그 아래는 탭이 대신한다) */}
-              <div className="hidden items-center gap-2 pb-1 2xl:flex">
-                <h3 className="text-body font-semibold text-foreground">{TAB_LABEL[key]}</h3>
-                {state === 'ready' && <CountBadge count={rows.length} alert={key === 'issue'} />}
-                <AllLink />
-              </div>
-              <ListBody tab={key} rows={rows} state={state} onRetry={onRetry} />
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+    <div className="flex flex-col gap-7">
+      {lists.map(({ key, rows }) => (
+        <section key={key} className="flex flex-col gap-1">
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-panel-title font-semibold text-foreground">{TAB_LABEL[key]}</h2>
+            {state === 'ready' && (
+              <span className="text-caption text-muted-foreground tabular-nums">{rows.length}</span>
+            )}
+            <AllLink />
+          </div>
+          <ListBody tab={key} rows={rows} state={state} onRetry={onRetry} />
+        </section>
+      ))}
+    </div>
   )
 }
 

@@ -73,7 +73,8 @@ const RequestGroup = ({ title, kind, rows, siteSeq }: GroupProps) => (
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="flex items-baseline gap-2 text-body">
               <span className="font-semibold text-foreground">{row.userName}</span>
-              <span className="shrink-0 text-caption font-medium text-warning-foreground">
+              {/* 기다린 날수 — 주황을 쓰지 않는다(`spec 084` — 사용자 결정: 회색 보조 글자) */}
+              <span className="shrink-0 text-caption text-muted-foreground">
                 {waitingLabel(row.createDt)}
               </span>
             </span>
@@ -104,13 +105,13 @@ const DeploymentPendingPanel = ({ siteSeq, requests, returns, state, onRetry }: 
   const total = requests.length + returns.length
 
   return (
-    <section className="flex flex-col gap-2 rounded-lg border border-border bg-card p-5">
-      <div className="flex items-center gap-2">
+    <section className="flex flex-col gap-1">
+      <div className="flex items-baseline gap-2">
         {/* 합계 없음 — 아래 `배치 요청 N` · `복귀 요청 N` 과 겹친다(사용자 결정 2026-11-12, T1226) */}
-        <h2 className="text-panel-title font-bold text-foreground">배치 대기</h2>
+        <h2 className="text-panel-title font-semibold text-foreground">배치 대기</h2>
         <Link
           to={paths.service.deployments}
-          className="ml-auto flex shrink-0 items-center text-caption text-muted-foreground hover:text-foreground"
+          className="ml-auto flex shrink-0 items-center text-caption text-point hover:underline"
         >
           배치관리
           <ChevronRightIcon size={14} />

@@ -387,8 +387,39 @@
   }
 }
 
+/*
+ * 대시보드 진행 중 코스의 움직임 — 약 4초 뒤 멈춘다(`spec 084`, 사용자 결정 2026-11-19 · 11-20).
+ * 종일 띄워 두는 화면이라 계속 움직이면 피로하다. 화면이 뜰 때 한 번, 그리고 실시간 알림이 온 코스에서 다시 움직인다
+ * (다시 움직이게 하는 일은 카드가 `key` 를 바꿔 다시 붙이는 것으로 한다). 움직임 줄이기 설정이면 아래 전역 규칙이 끈다.
+ */
 .step-pulse-anim {
-  animation: step-pulse 2s ease-out infinite;
+  animation: step-pulse 2s ease-out 2;
+}
+
+@keyframes course-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 뱃지에 건다 — 그 안의 아이콘(고리)만 돈다 */
+.course-spin-anim > svg {
+  animation: course-spin 1s linear 4;
+}
+
+@keyframes course-march {
+  to {
+    background-position: 16px 0;
+  }
+}
+
+/* 이동 중 구간의 점선 — 테두리 점선은 흐르게 할 수 없어 바탕 무늬로 그린다 */
+.course-march-anim {
+  background-image: linear-gradient(90deg, var(--point) 50%, transparent 50%);
+  background-size: 8px 2px;
+  background-repeat: repeat-x;
+  background-position: 0 0;
+  animation: course-march 0.8s linear 5;
 }
 
 /*

@@ -23,16 +23,25 @@
 
 > 독립 테스트 기준: 1920×911 에서 목업 `01` 과 같은 배치다. 실시간 알림이 온 코스가 약 4초 움직이고, 움직임 줄이기 설정에서는 움직이지 않는다. 승인 · 반려 · 새로고침이 그대로 동작한다.
 
-- [ ] T1479 [US1] 영역 배치 — 제목 오른쪽 한 줄 숫자 네 개(🔴 공용 조각 "상자 없는 한 줄 숫자"를 여기서 만든다 — 083 T1469) → 진행 중 전체 폭 → 세 칸 · 실시간 표시 · 새로고침을 `TopBar` 오른쪽 자리로 in src/pages/service/dashboard/DashboardPage.tsx · src/features/dashboard/components/DashboardKpiCard.tsx
-- [ ] T1480 [US1] 진행 중 코스 상자 — 가로 경로 · `순찰 시작` 점 + 시작 시각 · 지점별 인증 시각 · 다음 지점 강조 · 점선 구간 · 미인증 · 교대. 지점이 많은 코스의 지금 처리(여러 줄)를 먼저 확인(OQ-084-B) · `순찰 시작` 점은 검정을 쓰지 않는다(OQ-084-D) in src/features/dashboard/components/ActiveCourseCard.tsx · src/features/dashboard/components/CourseStepper.tsx · src/features/dashboard/components/ActiveCourseSection.tsx
-- [ ] T1481 [US1] 미완료 · 시간초과 / 종료된 순찰 — 탭 두 개인 한 상자 → 위아래 두 영역(내용 · 문구 유지 · 테스트 수정) in src/features/dashboard/components/RecentRecordPanel.tsx
-- [ ] T1482 [US1] 배치 대기 · 공지사항 — 오른쪽 칸 · 선으로 나눈 줄 목록(승인 · 반려 동작 유지) in src/features/dashboard/components/DeploymentPendingPanel.tsx · src/features/dashboard/components/DashboardNoticePanel.tsx
-- [ ] T1483 [US2] 오늘 기록 집계 함수(시간대별 24칸 · 코스별 횟수 · 0회 코스 포함) + 단위 테스트. 하루 건수가 100건을 넘는 사업장이 있는지 실서버에서 확인해 보고(OQ-084-A) in src/features/dashboard/lib/todayStats.ts
-- [ ] T1484 [US2] 오늘 시간대별 순찰(세로 막대 · 지금 시간대 강조) · 오늘 코스별 순찰(가로 막대 + 횟수) in src/features/dashboard/components/TodayHourChart.tsx · src/features/dashboard/components/TodayCourseBars.tsx
-- [ ] T1485 [US1] 움직임 — 진행 중 코스에서 약 4초(아이콘 회전 · 다음 지점 물결 · 점선 흐름) · 화면이 뜰 때 + 실시간 알림이 온 코스에서 다시 · `prefers-reduced-motion` in src/features/dashboard/components/ActiveCourseCard.tsx · src/index.css
+- [x] T1479 [US1] 영역 배치 — 제목 오른쪽 한 줄 숫자 네 개(🔴 공용 조각 "상자 없는 한 줄 숫자"를 여기서 만든다 — 083 T1469) → 진행 중 전체 폭 → 세 칸 · 실시간 표시 · 새로고침을 `TopBar` 오른쪽 자리로 in src/pages/service/dashboard/DashboardPage.tsx · src/features/dashboard/components/DashboardKpiCard.tsx
+  - 2026-11-20: 제목 오른쪽 한 줄 숫자(26px · 상자 없음 — `DashboardKpiCard` 를 그 모양으로. 따로 공용 조각을 만들지는 않았다 — 쓰는 곳이 아직 여기뿐) → 진행 중 전체 폭 → 세 칸(`2xl` 3칸 · `xl` 2칸 · 그 아래 1칸). 실시간 표시 · 새로고침은 위 줄 오른쪽으로 — 🆕 `TopBarRight`(틀이 잡은 자리에 portal · 틀이 없으면 제자리) · `TopBarSlotContext`. 🔴 숫자 줄은 `xl` 미만에서 제목 아래로 내린다 — 제목 옆에 두면 390px 에서 부제가 가려졌다(e2e 로 발견).
+- [x] T1480 [US1] 진행 중 코스 상자 — 가로 경로 · `순찰 시작` 점 + 시작 시각 · 지점별 인증 시각 · 다음 지점 강조 · 점선 구간 · 미인증 · 교대. 지점이 많은 코스의 지금 처리(여러 줄)를 먼저 확인(OQ-084-B) · `순찰 시작` 점은 검정을 쓰지 않는다(OQ-084-D) in src/features/dashboard/components/ActiveCourseCard.tsx · src/features/dashboard/components/CourseStepper.tsx · src/features/dashboard/components/ActiveCourseSection.tsx
+  - 2026-11-20: 알약 뱃지 → 선 위의 점(이름 · 인증 시각이 아래). 맨 앞 `순찰 시작` 점 + 시작 시각(카드 둘째 줄의 `08:20 시작` 을 옮김). 지나온 구간 파란 실선 · 다음 지점까지 점선 · 남은 구간 옅은 선. 🔴 **한 줄 최대 10칸**(순찰 시작 포함 — 사용자 결정) · 넘으면 다음 줄 · 10칸 이하면 칸 수만큼 똑같이 나눔. 번호는 그리지 않는다. 카드 머리 한 줄 = 이름 · `순찰 중`(🆕 — 멈춘 회차는 적지 않는다) / `시간초과 +n분` · `미인증 n` | 순찰자 · 막대 · `n/N 지점`. 시간초과의 빨간 테두리는 없앴다. 🔴 점 색은 목업대로 **인증 = 파랑**(전에는 초록)이다 — 경로는 "어디까지 갔나"(진행)라 파랑으로 봤다. `순찰 시작` 점은 옅은 파랑(검정 아님 — OQ-084-D 해소).
+- [x] T1481 [US1] 미완료 · 시간초과 / 종료된 순찰 — 탭 두 개인 한 상자 → 위아래 두 영역(내용 · 문구 유지 · 테스트 수정) in src/features/dashboard/components/RecentRecordPanel.tsx
+  - 2026-11-20: 탭 두 개인 한 상자 → 위아래 두 영역(영역 제목 + 건수 + `전체 보기`). 줄 내용 · 문구는 그대로. 건수 뱃지(빨강 / 회색 칩)는 회색 숫자로.
+- [x] T1482 [US1] 배치 대기 · 공지사항 — 오른쪽 칸 · 선으로 나눈 줄 목록(승인 · 반려 동작 유지) in src/features/dashboard/components/DeploymentPendingPanel.tsx · src/features/dashboard/components/DashboardNoticePanel.tsx
+  - 2026-11-20: 상자를 없애고 영역 제목 + 선으로 나눈 목록. 구성은 그대로(요청 종류별 묶음 · 기다린 날수 · 출발지 · 기간 · `승인` · `반려`). 기다린 날수 주황 → 회색(사용자 결정). 실시간 연결이 끊겼을 때의 점 주황 → 회색(사용자 결정).
+- [x] T1483 [US2] 오늘 기록 집계 함수(시간대별 24칸 · 코스별 횟수 · 0회 코스 포함) + 단위 테스트. 하루 건수가 100건을 넘는 사업장이 있는지 실서버에서 확인해 보고(OQ-084-A) in src/features/dashboard/lib/todayStats.ts
+  - 2026-11-20: `countByHour`(0~23시 · 시작 시각 기준 · 오늘 것만) · `countByCourse`(많은 순 · 코스 목록을 주면 0회 포함) · `isCapped`(100건). 단위 테스트 9건 — 🔴 테스트가 결함을 잡았다(시각이 없는 기록을 0시로 셌다 — `Number('')` 가 0). 🔴 **하루 건수가 100건을 넘는 사업장이 있는지는 실서버에서 확인하지 못했다**(OQ-084-A 그대로) — 받은 것이 100건이면 `최근 100건 기준` 이라고 적는다(사용자 결정).
+- [x] T1484 [US2] 오늘 시간대별 순찰(세로 막대 · 지금 시간대 강조) · 오늘 코스별 순찰(가로 막대 + 횟수) in src/features/dashboard/components/TodayHourChart.tsx · src/features/dashboard/components/TodayCourseBars.tsx
+  - 2026-11-20: `TodaySummaryPanel` 하나에 두 영역(파일 둘로 나누지 않았다 — 같은 자료 · 같은 조회 상태). 시간대별 = Recharts 세로 막대(가로 격자만 · 축 선 없음 · 둥근 막대 · 카드 툴팁 · 지금 시간대만 진하게) · 코스별 = 직접 그린 가로 막대(0회 줄 포함 — 사용 중인 코스 목록을 한 번 더 받는다 · 실패해도 영역은 그린다). 조회 상태는 `최근 기록` 과 같이 움직인다. 테스트 7건. 🔴 차트 공용 조각은 만들지 않았다 — 두 번째로 쓰는 화면(코스 상세)에서 공통 부분을 뽑는다.
+- [x] T1485 [US1] 움직임 — 진행 중 코스에서 약 4초(아이콘 회전 · 다음 지점 물결 · 점선 흐름) · 화면이 뜰 때 + 실시간 알림이 온 코스에서 다시 · `prefers-reduced-motion` in src/features/dashboard/components/ActiveCourseCard.tsx · src/index.css
+  - 2026-11-20: CSS 만으로 — `순찰 중` 고리 회전(1초 × 4) · 다음 지점 둘레 물결(2초 × 2 — 전에는 무한) · 다음 지점까지의 점선 흐름(0.8초 × 5). 🔴 **실시간 알림이 온 코스에서 다시** = 카드의 `key` 에 지점 상태를 넣었다 — 지점이 인증 · 미인증으로 바뀌거나 회차가 멈추면 그 카드만 다시 붙어 움직임이 처음부터 돈다(1분마다의 경과 갱신으로는 다시 붙지 않는다). 움직임 줄이기 설정은 전역 규칙이 끈다. 🔴 실제로 움직이는 모습은 브라우저에서 보지 못했다(캡처는 정지 화면 · 움직임 줄이기로 찍는다).
 - [~] T1486 [US1] ~~숫자 굴러감 — React Bits `Counter`~~ — **보류**(사용자 결정 2026-11-20): React Bits 를 쓰지 않고, 쓸지는 나중에 방향을 정해서 적용한다. 숫자는 움직임 없이 바로 바뀐다(지금 동작 그대로).
-- [ ] T1487 [US1] 빈 상태 · 불러오지 못함 — 진행 중은 상자 안 타일, 나머지는 글자 한 줄, 코스별은 0회 줄(목업 `29`) in src/features/dashboard/components/AreaFallback.tsx
-- [ ] T1488 [US1] 회귀 확인 — 실시간 연결 · 새로고침 · `마지막 갱신` · 승인 · 반려 · e2e · 캡처 대조 in e2e/
+- [x] T1487 [US1] 빈 상태 · 불러오지 못함 — 진행 중은 상자 안 타일, 나머지는 글자 한 줄, 코스별은 0회 줄(목업 `29`) in src/features/dashboard/components/AreaFallback.tsx
+  - 2026-11-20: 진행 중 없음 = 상자 안 타일 빈 상태(083 의 `AppEmpty`) · 나머지 영역 = 회색 글자 한 줄(기존 문구) · 코스별은 코스가 있으면 0회 줄 · 조회 중 = 줄 모양 · 실패 = 문구 + `다시 시도`. 새 문구는 `오늘 시작한 순찰이 없습니다` 하나.
+- [x] T1488 [US1] 회귀 확인 — 실시간 연결 · 새로고침 · `마지막 갱신` · 승인 · 반려 · e2e · 캡처 대조 in e2e/
+  - 2026-11-20: verify 통과 · test 150파일 1652건 · e2e 40건(1280 + 390). 1920 폭 전체 길이 캡처로 목업과 대조 — 배치 · 경로 · 세 칸이 맞다. e2e 가 잡은 것 2가지를 고쳤다: 없어진 탭을 누르던 단계 · 390px 에서 숫자 줄이 부제를 가리던 것. 🔴 못 본 것: 실제 움직임 · 승인 · 반려를 브라우저에서 직접 누르는 것(단위 테스트는 통과) · 지점이 20개 넘는 코스(가짜 서버 자료는 최대 12개 — 두 줄로 꺾이는 것까지 확인).
 
 ## Phase 3: US3 — 코스 · 지점 상세
 

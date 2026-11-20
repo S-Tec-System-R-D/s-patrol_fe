@@ -36,10 +36,12 @@ test('대시보드 — 로그인 착지(현장 홈, spec 066) · 본문(spec 067
   const deploy = page.locator('section', { has: page.getByRole('heading', { name: '배치 대기' }) })
   await expect(deploy.getByRole('listitem')).toHaveCount(3)
   await expect(page.getByRole('heading', { name: '공지사항' })).toBeVisible()
-  // 최근 기록(spec 073) — 2xl 미만은 탭. 값은 mock 핸들러(`mocks/handlers/history.ts`) 오늘 시드
+  // 최근 기록(spec 073 → 🔄 spec 084: 탭 없이 두 영역이 함께 보인다). 값은 mock 핸들러(`mocks/handlers/history.ts`) 오늘 시드
   await expect(page.getByRole('list', { name: '미완료 · 시간초과' }).getByRole('listitem')).toHaveCount(2)
-  await page.getByRole('tab', { name: /종료된 순찰/ }).click()
   await expect(page.getByRole('list', { name: '종료된 순찰' }).getByRole('listitem')).toHaveCount(3)
+  // 오늘 요약(spec 084) — 이미 받은 기록으로 센다
+  await expect(page.getByRole('heading', { name: '오늘 시간대별 순찰' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '오늘 코스별 순찰' })).toBeVisible()
   // 실시간 연결(spec 069) — mock 은 연결만 흉내 낸다. 좁은 폭에서도 보인다
   await expect(page.getByRole('status').filter({ hasText: '실시간' })).toBeVisible()
   await expectNoOverflowNow(page)

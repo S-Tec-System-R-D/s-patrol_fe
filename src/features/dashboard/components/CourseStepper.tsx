@@ -1,35 +1,26 @@
-import { RepeatIcon } from 'lucide-react'
+import { CheckIcon, MinusIcon, PlayIcon, RepeatIcon } from 'lucide-react'
+import { format, isValid, parseISO } from 'date-fns'
 
 import { cn } from '@/lib/utils'
-
 import { pointSteps } from '../lib/activeCourse'
 import type { DashboardCoursePoint, PointStepStatus } from '../types'
 
 /**
- * 진행 중 회차의 지점 단계 — `spec 067`. 상태는 서버 `status` 그대로(`spec 068` — `pointSteps`).
+ * 진행 중 회차의 지점 경로 — `spec 067`. 상태는 서버 `status` 그대로(`spec 068` — `pointSteps`).
  *
- * 🔴 **뱃지형이다**(사용자 결정 2026-10-30) — 번호 + 지점명을 상태색 뱃지 하나로 묶고 선을 바로 붙인다.
- * 번호 원 + 이름(숫자 스테퍼)과 나란히 비교해 골랐다: 선이 이어진 느낌이 강하고 색만으로 어디까지 갔는지 보인다.
- * 🔴 **색은 회차 상세 지도 핀과 같은 규칙이다** — 인증 `success` · 미인증(서버 3, `spec 079` D8) 진한 회색(D13) · 아직 안 감 흰 바탕 + 옅은 회색.
- * 파랑(`point`)은 **다음 지점** 하나에만 쓴다(점선 뱃지 + 점선 연결).
- * 🔴 **가로 스크롤 대신 줄바꿈** — 지점이 12개여도 390px 에서 전부 읽힌다.
+ * 🔄 **`spec 084`: 알약 뱃지 → 선 위의 점**(목업 `01-대시보드`). 점 아래에 지점 이름 · 그 아래 인증 시각을 적는다.
+ * - 맨 앞은 **`순찰 시작`** 점 + 시작 시각(전에는 카드 둘째 줄의 `08:20 시작` 이었다).
+ * - 지나온 구간은 파란 실선 · 마지막으로 인증한 지점에서 다음 지점까지는 **점선** · 남은 구간은 옅은 선.
+ * - 점: 인증 = 파란 바탕 체크 / 미인증(서버 3) = 회색 빼기 / 다음 = 흰 바탕 파란 테두리 + 둘레 / 대기 = 빈 원 /
+ *   순찰 시작 = 옅은 파랑 바탕 + 파란 재생 표시(🔴 검정 원을 쓰지 않는다 — 순서 번호 규칙과 같다).
+ * - 🔴 **한 줄에 최대 10칸**(순찰 시작 포함) — 넘으면 다음 줄로 이어 간다(사용자 결정 2026-11-20). 지점이 많은 코스에서
+ *   칸이 좁아져 이름이 다 잘리는 것을 막는다. 10칸 이하면 칸 수만큼 똑같이 나눠 한 줄을 채운다.
+ * - 가로 스크롤은 쓰지 않는다(067 결정 유지 — 한눈에 다 보여야 한다).
+ * (전 — 2026-10-30: 번호 + 지점명을 상태색 알약 하나로 묶고 줄바꿈했다. 색은 인증 초록이었다.)
  */
 
-/** 뱃지 — 바탕은 상태의 옅은 색 */
-const pillStyles: Record<PointStepStatus, string> = {
-  done: 'border-success/30 bg-success-bg text-success-foreground',
-  skipped: 'border-muted-foreground/40 bg-muted-foreground/15 text-foreground/75',
-  next: 'border-dashed border-point bg-point-bg font-semibold text-point-foreground',
-  pending: 'border-border bg-card text-muted-foreground',
-}
-
-/** 뱃지 안 번호 원 — 진한 색 */
-const numberStyles: Record<PointStepStatus, string> = {
-  done: 'bg-success text-white',
-  skipped: 'bg-muted-foreground text-white',
-  next: 'bg-point text-white',
-  pending: 'bg-muted text-muted-foreground',
-}
+/** 한 줄에 놓는 칸 수(순찰 시작 포함) */
+const PER_ROW = 10
 
 const statusText: Record<PointStepStatus, string> = {
   done: '인증',
@@ -38,98 +29,125 @@ const statusText: Record<PointStepStatus, string> = {
   pending: '대기',
 }
 
-/**
- * 단계 **앞** 연결선 — 지나온 구간은 실선, 지금 가는 구간은 점선, 남은 구간은 옅은 선.
- *
- * 🔴 **줄 끝에 선이 혼자 남지 않게**(사용자 지적 2026-10-30) — 선을 단계 **뒤**에 붙이면 줄바꿈될 때
- * 윗줄 끝에 다음 단계 없는 선이 남는다. 그래서 **앞**에 붙이고, 목록을 선 폭(24px)만큼 왼쪽으로
- * 당겨 잘라낸다(`-ml-[24px]` + 감싼 `overflow-hidden`) — 줄 첫머리의 선은 늘 잘린 자리에 선다.
- * ⚠️ 폭(`w-6`)을 바꾸면 `-ml-[24px]` 도 같이 바꾼다.
- */
+const dotStyles: Record<PointStepStatus | 'start', string> = {
+  start: 'border-point/30 bg-point-bg text-point',
+  done: 'border-point bg-point text-white',
+  skipped: 'border-muted-foreground/40 bg-muted text-muted-foreground',
+  next: 'border-2 border-point bg-card',
+  pending: 'border-border bg-card',
+}
+
+const formatTime = (value: string | null): string => {
+  if (value === null) return ''
+  const parsed = parseISO(value)
+  return isValid(parsed) ? format(parsed, 'HH:mm') : value
+}
+
+/** 칸으로 들어오는 선 — 칸 왼쪽 절반 + 앞 칸 오른쪽 절반을 한 줄로 잇는다 */
 const Connector = ({ kind }: { kind: 'passed' | 'current' | 'rest' }) => (
   <span
     aria-hidden
     className={cn(
-      'w-6 shrink-0 border-t-2',
-      kind === 'passed' && 'border-success/60',
-      kind === 'current' && 'border-dashed border-point',
-      kind === 'rest' && 'border-border'
+      'absolute top-[9px] right-1/2 left-[-50%] h-0.5',
+      kind === 'passed' && 'bg-point',
+      kind === 'current' && 'course-march-anim',
+      kind === 'rest' && 'bg-border'
     )}
   />
 )
 
+interface Cell {
+  key: string
+  step: PointStepStatus | 'start'
+  name: string
+  /** 이름 아래 한 줄 — 시각 · `다음 지점` · `미인증` */
+  note: string
+  noteTone?: 'point'
+  connector: 'passed' | 'current' | 'rest' | null
+  handOver?: boolean
+}
+
 interface CourseStepperProps {
   points: DashboardCoursePoint[]
-  /** 교대가 일어난 지점 순번 — 그 뱃지 안에 `교대` 를 적는다(`spec 070` → `spec 073`) */
+  /** 순찰 시작 일시 — 맨 앞 `순찰 시작` 점 아래에 시각을 적는다 */
+  startDt: string
+  /** 교대가 일어난 지점 순번 — 그 점 위에 `교대` 를 적는다(`spec 070` → `spec 073`) */
   handOverOrders?: number[]
-  /** 멈춘 회차(교대 요청 중) — 진행 중이 아니라 현재 위치 링을 끈다 */
+  /** 멈춘 회차(교대 요청 중) — 진행 중이 아니라 현재 위치 둘레를 끈다 */
   paused?: boolean
 }
 
-const CourseStepper = ({ points, handOverOrders = [], paused = false }: CourseStepperProps) => {
+const CourseStepper = ({ points, startDt, handOverOrders = [], paused = false }: CourseStepperProps) => {
   const steps = pointSteps(points)
   const nextIndex = steps.indexOf('next')
 
+  const cells: Cell[] = [
+    { key: 'start', step: 'start', name: '순찰 시작', note: formatTime(startDt), connector: null },
+    ...points.map((point, index): Cell => {
+      const step = steps[index]
+      return {
+        key: String(point.detailSeq),
+        step,
+        name: point.pointName,
+        note: step === 'next' ? '다음 지점' : step === 'skipped' ? '미인증' : formatTime(point.checkDt),
+        noteTone: step === 'next' ? 'point' : undefined,
+        // 이 칸으로 들어오는 선 — 다음 지점으로 가는 구간만 점선
+        connector: index === nextIndex ? 'current' : index < nextIndex || nextIndex === -1 ? 'passed' : 'rest',
+        handOver: handOverOrders.includes(point.orderNo),
+      }
+    }),
+  ]
+  const columns = Math.min(cells.length, PER_ROW)
+
   return (
-    // `pt-1.5` · `pb-1.5` · `pr-1` · `gap-y-3` — 현재 위치 링(4px)이 잘리지 않게.
-    // 왼쪽은 여백을 두지 않는다 — 선이 뱃지에 바로 붙어 여백을 두면 줄 첫머리에 선 끝이 보인다.
-    // 그래서 줄 첫머리 뱃지의 링은 왼쪽이 잘린다
-    <div className="overflow-hidden pt-1.5 pr-1 pb-1.5">
-      <ol className="-ml-[24px] flex flex-wrap items-center gap-y-3" aria-label="지점 진행">
-        {/* 아무 지점도 안 찍었으면 맨 앞에 출발 점 — 다음 지점까지 점선으로 잇는다 */}
-        {nextIndex === 0 && (
-          <li className="flex items-center text-caption text-muted-foreground">
-            <Connector kind="rest" />
-            <span aria-hidden className="size-2 rounded-full bg-point" />
-            <span className="ml-1.5">출발</span>
-          </li>
-        )}
-        {points.map((point, index) => {
-          const step = steps[index]
-          // 이 단계로 들어오는 선 — 다음 지점으로 가는 구간만 점선
-          const connector = index === nextIndex ? 'current' : index < nextIndex || nextIndex === -1 ? 'passed' : 'rest'
-          return (
-            <li key={point.detailSeq} className="flex items-center">
-              <Connector kind={connector} />
+    <ol
+      aria-label="지점 진행"
+      className="grid gap-y-4 pt-4"
+      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+    >
+      {cells.map((cell, index) => (
+        <li key={cell.key} className="relative flex min-w-0 flex-col items-center text-center">
+          {/* 줄의 첫 칸은 들어오는 선을 그리지 않는다 — 윗줄 끝에서 이어진다 */}
+          {cell.connector && index % PER_ROW !== 0 && <Connector kind={cell.connector} />}
+          {cell.handOver && (
+            <span className="absolute -top-4 inline-flex items-center gap-0.5 text-[10px] leading-3.5 font-semibold text-sub-foreground">
+              <RepeatIcon size={10} strokeWidth={2.5} aria-hidden />
+              교대
+            </span>
+          )}
+          <span className={cn('relative grid size-5 place-items-center rounded-full border', dotStyles[cell.step])}>
+            {cell.step === 'next' && !paused && (
               <span
-                className={cn(
-                  'relative inline-flex items-center gap-1.5 rounded-full border py-0.5 pr-2.5 pl-1 text-body font-medium whitespace-nowrap',
-                  pillStyles[step]
-                )}
-              >
-                {step === 'next' && !paused && (
-                  <span
-                    aria-hidden
-                    data-testid="step-pulse"
-                    className="step-pulse-anim pointer-events-none absolute -inset-px rounded-full motion-reduce:hidden"
-                  />
-                )}
-                {/* 🔴 **숫자 세로 중앙**(사용자 지적 2026-10-30) — 중앙 정렬만으로는 Pretendard 숫자가 위로
-                    뜬다. 투명 1px 테두리 + 줄 높이 20px(`leading-5`)로 맞춘다(4배 캡처로 측정 — 18px 은 0.75px 위로 떴다) */}
-                <span
-                  className={cn(
-                    'size-5 shrink-0 rounded-full border border-transparent text-center text-[10.5px] leading-5 font-bold tabular-nums',
-                    numberStyles[step]
-                  )}
-                >
-                  {point.orderNo}
-                </span>
-                {point.pointName}
-                <span className="sr-only"> ({statusText[step]})</span>
-                {/* 🔴 **교대는 뱃지 안**(`spec 073` — 070 의 "뱃지 위" 를 바꿨다): 위에 떠 있으면 줄 간격을 벌려야 하고
-                    어느 뱃지 것인지 흐려진다(분석 문서 §2) */}
-                {handOverOrders.includes(point.orderNo) && (
-                  <span className="inline-flex items-center gap-0.5 rounded-full border border-foreground/40 bg-card px-1.5 text-[10px] leading-3.5 font-bold text-foreground">
-                    <RepeatIcon size={10} strokeWidth={2.5} aria-hidden />
-                    교대
-                  </span>
-                )}
-              </span>
-            </li>
-          )
-        })}
-      </ol>
-    </div>
+                aria-hidden
+                data-testid="step-pulse"
+                className="step-pulse-anim pointer-events-none absolute -inset-1 rounded-full motion-reduce:hidden"
+              />
+            )}
+            {cell.step === 'start' && <PlayIcon size={8} fill="currentColor" strokeWidth={0} aria-hidden />}
+            {cell.step === 'done' && <CheckIcon size={11} strokeWidth={3.5} aria-hidden />}
+            {cell.step === 'skipped' && <MinusIcon size={11} strokeWidth={3} aria-hidden />}
+          </span>
+          <span
+            className={cn(
+              'mt-1.5 w-full truncate px-1 text-caption',
+              cell.step === 'pending' ? 'text-muted-foreground' : 'text-sub-foreground',
+              cell.step === 'next' && 'font-medium text-foreground'
+            )}
+          >
+            {cell.name}
+            {cell.step !== 'start' && <span className="sr-only"> ({statusText[cell.step]})</span>}
+          </span>
+          <span
+            className={cn(
+              'h-4 text-[11px] leading-4 tabular-nums',
+              cell.noteTone === 'point' ? 'font-medium text-point' : 'text-muted-foreground'
+            )}
+          >
+            {cell.note}
+          </span>
+        </li>
+      ))}
+    </ol>
   )
 }
 

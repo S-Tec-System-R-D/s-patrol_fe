@@ -11,6 +11,7 @@ import { paths } from '@/router/paths'
 import { FloatingNav } from './sidebar/FloatingNav'
 import { RailSidebar } from './sidebar/RailSidebar'
 import { TopBar } from './TopBar'
+import { TopBarSlotContext } from './topBarSlot'
 import type { SiteSwitchProps } from './sidebar/SiteSwitchButton'
 import { ServiceMenus } from './sidebar/sidebar.config'
 
@@ -38,6 +39,8 @@ const ServiceLayout = () => {
   const queryClient = useQueryClient()
   const { data: me } = useMe()
   const [switching, setSwitching] = useState(false)
+  /** 위 줄 오른쪽 자리 — 화면이 `TopBarRight` 로 그 안에 그린다(`spec 084`) */
+  const [topBarSlot, setTopBarSlot] = useState<HTMLDivElement | null>(null)
 
   const siteSeq = getSiteSeq()
 
@@ -113,8 +116,10 @@ const ServiceLayout = () => {
         />
         {/* 본문 카드 한 장(`spec 083`) — `xl` 이상에서만 카드로 띄운다. 미만은 화면 전체를 쓴다(위 줄만 남는다) */}
         <div className="flex min-h-screen min-w-0 flex-1 flex-col bg-card pb-24 xl:my-2 xl:mr-2 xl:min-h-[calc(100vh-1rem)] xl:rounded-xl xl:border xl:border-border xl:pb-0">
-          <TopBar />
-          <Outlet key={siteSeq} />
+          <TopBar slotRef={setTopBarSlot} />
+          <TopBarSlotContext.Provider value={topBarSlot}>
+            <Outlet key={siteSeq} />
+          </TopBarSlotContext.Provider>
         </div>
         <FloatingNav menus={ServiceMenus} badges={{ deploymentPending }} siteSwitch={siteSwitch} />
       </div>

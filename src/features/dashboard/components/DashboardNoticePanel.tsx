@@ -25,12 +25,12 @@ interface DashboardNoticePanelProps {
 }
 
 const DashboardNoticePanel = ({ rows, state, onRetry }: DashboardNoticePanelProps) => (
-  <section className="flex flex-col gap-2 rounded-lg border border-border bg-card p-5">
-    <div className="flex items-center gap-2">
-      <h2 className="text-panel-title font-bold text-foreground">공지사항</h2>
+  <section className="flex flex-col gap-1">
+    <div className="flex items-baseline gap-2">
+      <h2 className="text-panel-title font-semibold text-foreground">공지사항</h2>
       <Link
         to={paths.service.notice}
-        className="ml-auto flex shrink-0 items-center text-caption text-muted-foreground hover:text-foreground"
+        className="ml-auto flex shrink-0 items-center text-caption text-point hover:underline"
       >
         전체 보기
         <ChevronRightIcon size={14} />

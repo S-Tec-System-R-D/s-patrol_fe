@@ -27,7 +27,7 @@ const DashboardUpdatedAt = ({ updatedAt, realtime, refreshing, onRefresh }: Dash
     <span role="status" className="flex items-center gap-1.5">
       <span
         aria-hidden
-        className={cn('size-2 rounded-full', realtime === 'connected' ? 'bg-success' : 'bg-warning')}
+        className={cn('size-2 rounded-full', realtime === 'connected' ? 'bg-success' : 'bg-muted-foreground')}
       />
       {realtime === 'connected' ? '실시간' : '다시 연결 중'}
     </span>
