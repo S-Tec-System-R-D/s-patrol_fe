@@ -280,12 +280,12 @@ describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
     expect(screen.getByText('인증 시점 좌표')).toBeInTheDocument()
   })
 
-  it('🔴 메모가 있으면 지도는 오른쪽 인증 정보 패널 맨 위로 — 카드 제목 없이 좌표 한 줄 (spec 078)', async () => {
+  it('🔄 메모가 있으면 지도는 오른쪽 단의 `인증 위치` 영역 — 제목 옆에 좌표 한 줄 (spec 078 → spec 084: 인증 정보 아래 · 제목이 생겼다)', async () => {
     seed()
     renderPage()
 
     expect(await screen.findByText('인증 시점 좌표 · 37.4936, 127.0286')).toBeInTheDocument()
-    expect(screen.queryByText('인증 위치')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '인증 위치' })).toBeInTheDocument()
   })
 
   it('🔴 좌표가 없으면 오른쪽에 지도 자리를 두고 안내한다 — 메모는 왼쪽 그대로 (spec 078 D5)', async () => {
@@ -295,7 +295,8 @@ describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
     await waitDetail()
     expect(screen.getByText('인증 시점 좌표가 없습니다')).toBeInTheDocument()
     expect(screen.getByText('3층 비상등 점멸')).toBeInTheDocument()
-    expect(screen.queryByText('인증 위치')).not.toBeInTheDocument()
+    // 🔄 `spec 084`: 좌표가 없어도 영역 제목은 있다 — 자리가 무엇인지 말한다
+    expect(screen.getByRole('heading', { name: '인증 위치' })).toBeInTheDocument()
   })
 
   it('🔴 메모 · 좌표 둘 다 없으면 왼쪽 순찰 기록 빈 상태 + 오른쪽 좌표 없음 (spec 078 D5)', async () => {
@@ -307,7 +308,7 @@ describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
     // 🔄 D7 — 미인증은 찍지 않아 위치가 없는 게 맞다(완료인데 좌표 없음과 문구를 나눈다)
     expect(screen.getByText('인증하지 않아 위치가 없습니다')).toBeInTheDocument()
     expect(screen.queryByText('인증 시점 좌표가 없습니다')).not.toBeInTheDocument()
-    expect(screen.queryByText('인증 위치')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '인증 위치' })).toBeInTheDocument()
   })
 
   it('🔴 범위 밖 좌표는 좌표 없음과 같이 다룬다 (B-33 — gpsLat: 123 이 실재한다)', async () => {

@@ -169,7 +169,8 @@ const PatrolPointDetailPage = () => {
           - 메모 없음 · 좌표 있음: 왼쪽 **지도**(인증 위치 카드) / 오른쪽 인증 정보
           🔄 최근 14일 한 줄은 뺐다(D6 — 머리 `지점 상세` 와 겹친다).
           🔴 `items-start` — 오른쪽이 왼쪽 높이만큼 늘어나지 않게(036). `xl` 미만 1단 — DOM 순서대로 본문이 먼저 */}
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_440px]">
+      {/* 🔄 `spec 084`(목업 `13`): 영역의 카드 상자를 없애고 두 단 사이 세로 선 — 순찰 상세와 같은 틀 */}
+      <div className="grid grid-cols-1 items-start gap-y-7 pt-2 xl:grid-cols-[minmax(0,1fr)_440px] xl:[&>*:first-child]:pr-8 xl:[&>*:nth-child(2)]:border-l xl:[&>*:nth-child(2)]:border-border xl:[&>*:nth-child(2)]:pl-7">
         <section className="min-w-0">
           {recordFirst ? <PointHistoryMemoCard detail={data} /> : <PointLocationMapCard detail={data} />}
         </section>

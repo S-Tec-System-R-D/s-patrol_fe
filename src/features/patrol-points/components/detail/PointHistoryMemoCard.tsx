@@ -64,7 +64,10 @@ const PointHistoryMemoCard = ({ detail }: PointHistoryMemoCardProps) => {
       }
     >
       {hasMemo ? (
-        <CheckDetailMemo row={toCheckDetailRow(detail)} />
+        /* 🔄 `spec 084`(목업 `13`): 회색 바탕 상자 대신 위아래 선 — 메모 사이는 부품이 선으로 나눈다 */
+        <div className="border-y border-border py-3.5">
+          <CheckDetailMemo row={toCheckDetailRow(detail)} />
+        </div>
       ) : (
         /* 🔴 **"기록이 없다" 와 "불러오지 못했다" 를 섞지 않는다** — 메모 없는 인증이
            정상이고 대부분이다. 조회 실패는 페이지 단위로 따로 그린다 */

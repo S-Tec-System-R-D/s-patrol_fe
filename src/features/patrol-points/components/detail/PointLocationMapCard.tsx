@@ -118,32 +118,39 @@ const PointLocationMapCard = ({ detail, bare = false }: PointLocationMapCardProp
     if (!bare) return null
     const notChecked = detail.status !== POINT_HISTORY_STATUS.COMPLETED
     return (
-      <div className="flex h-[260px] w-full flex-col items-center justify-center gap-2 bg-muted/50 text-muted-foreground">
-        <MapPinOffIcon size={20} aria-hidden />
-        <span className="text-caption">
-          {notChecked ? '인증하지 않아 위치가 없습니다' : '인증 시점 좌표가 없습니다'}
-        </span>
-      </div>
+      <section className="flex flex-col gap-2.5">
+        <h2 className="text-panel-title font-semibold">인증 위치</h2>
+        <div className="flex h-[260px] w-full flex-col items-center justify-center gap-2 rounded-[10px] border border-border bg-muted/50 text-muted-foreground">
+          <MapPinOffIcon size={20} aria-hidden />
+          <span className="text-caption">
+            {notChecked ? '인증하지 않아 위치가 없습니다' : '인증 시점 좌표가 없습니다'}
+          </span>
+        </div>
+      </section>
     )
   }
 
   if (bare) {
+    /* 🔄 `spec 084`(목업 `13`): 오른쪽 단의 한 영역 — 제목 옆에 좌표(전에는 지도 위에 얹은 글자였다) */
     return (
-      <div className="relative">
-        <div ref={containerRef} className="h-[260px] w-full" />
-        <span className="pointer-events-none absolute bottom-2 left-2 z-[400] rounded-sm bg-card/90 px-1.5 py-0.5 text-label text-muted-foreground tabular-nums">
-          인증 시점 좌표 · {lat?.toFixed(4)}, {lng?.toFixed(4)}
-        </span>
-      </div>
+      <section className="flex flex-col gap-2.5">
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <h2 className="text-panel-title font-semibold">인증 위치</h2>
+          <span className="text-caption text-muted-foreground tabular-nums">
+            인증 시점 좌표 · {lat?.toFixed(4)}, {lng?.toFixed(4)}
+          </span>
+        </div>
+        <div ref={containerRef} className="h-[260px] w-full overflow-hidden rounded-[10px] border border-border" />
+      </section>
     )
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
+    <section className="flex flex-col gap-2.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         {/* 🔴 제목이 **무엇의 좌표인지** 말한다 — "지점 위치" 라고 쓰면 지점이 등록된 자리로
             읽히는데, 이 값은 **인증을 찍은 위치**다 */}
-        <span className="text-panel-title font-semibold">인증 위치</span>
+        <h2 className="text-panel-title font-semibold">인증 위치</h2>
         {/* 🔴 아이콘을 **`MapPinOff` 에서 바꿨다**(캡쳐에서 발견 2026-10-20) — 그건 "위치
             없음" 을 뜻하는 아이콘이라, 좌표가 **있어서 그린 지도** 옆에 붙으니 뜻이 반대였다 */}
         <span className="inline-flex items-center gap-1 text-caption text-muted-foreground">
@@ -153,8 +160,8 @@ const PointLocationMapCard = ({ detail, bare = false }: PointLocationMapCardProp
       </div>
       {/* 🔴 높이를 고정한다 — 지도는 자기 크기를 모른다(부모가 0이면 타일이 안 뜬다).
           좌측 2/3 폭으로 옮기며 `HistoryMapCard`(036)와 같은 높이로 맞췄다(050) */}
-      <div ref={containerRef} className="h-[320px] w-full rounded-sm" />
-    </div>
+      <div ref={containerRef} className="h-[320px] w-full overflow-hidden rounded-[10px] border border-border" />
+    </section>
   )
 }
 

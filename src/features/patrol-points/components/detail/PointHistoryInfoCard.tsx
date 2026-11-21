@@ -45,11 +45,9 @@ const PointHistoryInfoCard = ({ detail, map }: PointHistoryInfoCardProps) => {
   const notChecked = detail.status !== POINT_HISTORY_STATUS.COMPLETED
 
   return (
-    /* 🔴 지도를 받으면 카드 틀은 이 바깥 상자가 갖는다. 🔄 `spec 084`: `AppDetailCard` 의 상자가 없어져 안쪽 여백을 여기서 준다
-       (이 화면의 상자 자체는 지점 인증 상세 개편 — T1505 — 에서 정리한다) */
-    <div className="overflow-hidden rounded-lg border border-border bg-card">
-      {map}
-      <div className="p-5">
+    /* 🔄 `spec 084`(목업 `13`): 바깥 상자를 없애고 **인증 정보(위) → 인증 위치(아래)** 순서로(전에는 상자 안에 지도가 위였다) */
+    <div className="flex flex-col gap-7">
+      <div>
         <AppDetailCard title="인증 정보">
           {/* 🔴 **행을 한 번 감싼다**(`spec 050`) — `AppDetailCard` 의 `gap-4` 가 행 사이에 끼면 구분선이 윗행 밑에 붙는다 */}
           <div className="flex flex-col">
@@ -57,7 +55,7 @@ const PointHistoryInfoCard = ({ detail, map }: PointHistoryInfoCardProps) => {
               label="순찰코스"
               value={
                 /* ✅ 코스 **관리** 상세로 간다 — 회차(`historySeq`)를 몰라 "순찰 상세" 로는 보낼 수 없다(US4) */
-                <Link to={paths.service.courseDetail(detail.courseSeq)} className="text-point-foreground hover:underline">
+                <Link to={paths.service.courseDetail(detail.courseSeq)} className="text-point hover:underline">
                   {detail.courseName}
                 </Link>
               }
@@ -84,6 +82,7 @@ const PointHistoryInfoCard = ({ detail, map }: PointHistoryInfoCardProps) => {
           </div>
         </AppDetailCard>
       </div>
+      {map}
     </div>
   )
 }
