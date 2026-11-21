@@ -118,7 +118,7 @@ const NoticeListPage = () => {
           variant="search"
           placeholder="제목·내용 검색"
           aria-label="제목·내용 검색"
-          className="w-full xl:w-[260px]"
+          className="w-full xl:w-[240px] xl:shrink-0"
           value={keywordDraft}
           onChange={(event) => {
             setKeywordDraft(event.target.value)
@@ -223,7 +223,6 @@ const NoticeListPage = () => {
             renderCard={NoticeCard}
             // 🔴 고정 공지는 **행 전체**를 칠한다 — 핀 아이콘 하나로는 훑어볼 때 잘 안 보인다
             //    (사용자 요청 2026-10-20). 셀 단위로 칠하면 배경이 끊긴다(027 톤다운과 같은 이유)
-            rowClassName={(notice) => (notice.isPin ? 'bg-point-bg/50' : '')}
             onRowClick={(row) => navigate(paths.service.noticeDetail(row.noticeSeq))}
           />
 

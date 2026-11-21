@@ -67,15 +67,23 @@
 
 > 독립 테스트 기준: 일곱 화면이 같은 순서(제목 → 탭 → 검색 · 필터 → 표 → 페이지 이동)이고, 표의 칸 · 필터 · URL 쿼리 동작이 개편 전과 같다.
 
-- [ ] T1495 [P] [US4] 순찰이력 — 코스(특이사항은 순찰 결과 옆 회색 말풍선) in src/pages/service/patrol/zones/PatrolZonesPage.tsx
-- [ ] T1496 [P] [US4] 순찰이력 — 지점(인증수단 글자만) in src/pages/service/patrol/points/PatrolPointsPage.tsx · src/features/patrol-points/components/PointColumn.tsx
-- [ ] T1497 [P] [US4] 코스 목록 in src/pages/service/zones/ZonesPage.tsx
-- [ ] T1498 [P] [US4] 지점 목록 in src/pages/service/points/PointsPage.tsx
-- [ ] T1499 [P] [US4] 근무자 목록 · `근무 중 / 근무 종료` 를 새 상태 표시로 · 권한 표시를 아이콘으로 구분하는 안 두 가지 제시 → 결정(본사 관리자 화면도 같은 규칙) · 빈 상태 두 종류(목록 영역 가운데 — 목업 `27` · `28`) in src/pages/service/users/UsersPage.tsx · src/features/workers/components/WorkerColumns.tsx
-- [ ] T1500 [US4] 배치관리 — 제목 오른쪽 한 줄 숫자(전출 · 전입 인원) · 탭 4개(요청 건수 파란 알약) · 표 4종. 복귀 요청 경로 방향을 지금 구현과 대조 in src/pages/service/deployments/DeploymentsPage.tsx · src/features/deployments/components/DeploymentBoard.tsx · src/features/deployments/components/DeploymentPeopleStats.tsx
-- [ ] T1501 [P] [US4] 공지사항 목록 in src/pages/service/notice/NoticeListPage.tsx · src/features/notice/components/NoticeColumn.tsx
+- [x] T1495 [P] [US4] 순찰이력 — 코스(특이사항은 순찰 결과 옆 회색 말풍선) in src/pages/service/patrol/zones/PatrolZonesPage.tsx
+  - 2026-11-21: 목업 `02` 를 앱과 같은 크기로 띄워 대조. `특이사항` 칸을 없애고 순찰 결과 옆 **회색 말풍선**으로(주황 제거). 🔴 **일곱 화면 공통으로 고친 것**(공용 부품): ① 필터가 검색 바로 옆(왼쪽)에 선다 — 전에는 오른쪽 끝이었는데, 원인은 검색 칸(`AppInput`)의 폭 지정이 입력 칸에만 걸리고 감싼 요소가 줄의 남는 폭을 다 차지하던 것(사용자 결정: 목업대로). 검색 폭 260 → 240px ② 표(`AppTable`)를 좌우 8px 넓게 깔아 첫 칸 글자가 화면 제목과 같은 왼쪽 선에 서고, 줄에 올렸을 때 바탕이 8px 넓게 칠해진다. 꺾쇠 칸은 32px 로 오른쪽 끝 ③ 탭 3종 — 밑줄이 글자 폭 · 높이 34px · 사이 20px · 굵기 500. 본사 사업장 · 관리자 목록도 같은 부품이라 ① ② 가 같이 적용됐다. 유지한 것: 정렬 화살표(기능) · 아래 문구 `전체 n개 항목 · 페이지당 행 수` · 필터 표기(083 결정).
+- [x] T1496 [P] [US4] 순찰이력 — 지점(인증수단 글자만) in src/pages/service/patrol/points/PatrolPointsPage.tsx · src/features/patrol-points/components/PointColumn.tsx
+  - 2026-11-21: `특이사항` 칸 → 결과 옆 회색 말풍선(코스 이력과 같다). 인증수단은 이미 글자만이었다.
+- [x] T1497 [P] [US4] 코스 목록 in src/pages/service/zones/ZonesPage.tsx
+  - 2026-11-21: 지점 수에 단위(`3개` — 사용자 결정) · 나머지는 공통 수정.
+- [x] T1498 [P] [US4] 지점 목록 in src/pages/service/points/PointsPage.tsx
+  - 2026-11-21: 소속 코스에 단위(`2개`) · 나머지는 공통 수정.
+- [x] T1499 [P] [US4] 근무자 목록 · `근무 중 / 근무 종료` 를 새 상태 표시로 · 권한 표시를 아이콘으로 구분하는 안 두 가지 제시 → 결정(본사 관리자 화면도 같은 규칙) · 빈 상태 두 종류(목록 영역 가운데 — 목업 `27` · `28`) in src/pages/service/users/UsersPage.tsx · src/features/workers/components/WorkerColumns.tsx
+  - 2026-11-21: 근무 상태를 작은 점 → 상태 표시(근무 중 = 초록 점 원 · 근무 종료 = 회색 빼기 원 — 근무자 상세의 제목 옆과 같다). 🔴 **권한을 아이콘으로 구분하는 안은 하지 않았다** — 사용자가 "지금 당장 할 작업은 아니다"(2026-11-20)라고 해 이번 대조에서 뺐다. 정하면 본사 관리자 화면과 같이 한다. 빈 상태 두 종류(목업 `27` · `28`)는 083 에서 이미 목록 영역 가운데로 맞췄다 — 이번에 다시 대조하지는 않았다.
+- [x] T1500 [US4] 배치관리 — 제목 오른쪽 한 줄 숫자(전출 · 전입 인원) · 탭 4개(요청 건수 파란 알약) · 표 4종. 복귀 요청 경로 방향을 지금 구현과 대조 in src/pages/service/deployments/DeploymentsPage.tsx · src/features/deployments/components/DeploymentBoard.tsx · src/features/deployments/components/DeploymentPeopleStats.tsx
+  - 2026-11-21: 탭의 아이콘 제거 · 건수 알약 빨강 → 파랑(사이드바의 건수 표시와 같은 색). 승인 · 반려 = **반려(테두리 없는 글자) → 승인(파랑)** 순서 · 아이콘 없음 · 칸 제목 `처리`(사용자 결정 — 🔴 대시보드 배치 대기도 같은 부품이라 같이 바뀌었다). 제목 오른쪽 한 줄 숫자는 이미 그 모양이었다. 🔴 하지 않은 것: 이름 옆 사번(목업에는 있다) — 요청 목록 응답에 사번이 없다. 복귀 요청 탭 · 전입 · 전출 이력 탭(목업 `16` · `17` · `18`)은 따로 캡처해 대조하지 않았다(같은 표 부품).
+- [x] T1501 [P] [US4] 공지사항 목록 in src/pages/service/notice/NoticeListPage.tsx · src/features/notice/components/NoticeColumn.tsx
+  - 2026-11-21: 고정 공지 줄의 옅은 파랑 바탕 제거(파란 압정만) · 나머지는 공통 수정.
 - [ ] T1502 [US4] 좁은 폭 카드(`WorkerCard` · `NoticeCard` · `DeploymentRequestCard` 등)가 새 색 · 글꼴에서 깨지지 않는지 확인(모양은 유지) in src/features/
-- [ ] T1503 [US4] 회귀 확인 — 일곱 화면의 검색 · 필터 · 페이지 이동 · 줄 누르기 · e2e · 캡처 대조 in e2e/
+- [x] T1503 [US4] 회귀 확인 — 일곱 화면의 검색 · 필터 · 페이지 이동 · 줄 누르기 · e2e · 캡처 대조 in e2e/
+  - 2026-11-21: verify 통과 · test 150파일 1652건 · e2e 40건(1280 + 390 — 검색 · 필터 · 줄 누르기 포함). 1920 폭 캡처로 여섯 화면 확인(지점 목록은 코스 목록과 같은 부품이라 따로 보지 않았다). 테스트는 구조가 바뀐 5곳만 고쳤다.
 
 ## Phase 5: US5 — 나머지 상세
 

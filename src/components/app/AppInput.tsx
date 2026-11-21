@@ -38,7 +38,9 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
     const inputType = isPassword ? (showPassword ? 'text' : 'password') : type
 
     return (
-      <div className="flex flex-col gap-1 w-full">
+      /* 🔴 검색 칸의 `className`(폭)은 **감싼 요소**에 건다(`spec 084`) — 입력 칸에만 걸면 감싼 요소가 `w-full` 로
+         줄의 남는 폭을 다 차지해 옆의 필터가 오른쪽 끝으로 밀렸다(목업은 검색 바로 옆) */
+      <div className={cn('flex flex-col gap-1 w-full', isSearch && className)}>
         {label && (
           <label htmlFor={id} className="text-sm font-medium text-foreground">
             {label}
@@ -69,7 +71,7 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
               isSearch && 'pl-9', // 왼쪽 아이콘 자리 확보
               isPassword && 'pr-9', // 오른쪽 아이콘 자리 확보
               error && 'border-danger focus:ring-danger',
-              className
+              !isSearch && className
             )}
             {...props}
             aria-invalid={error || field?.invalid ? true : props['aria-invalid']}

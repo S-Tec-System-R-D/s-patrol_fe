@@ -141,8 +141,11 @@ const AppTable = <TData,>({
           소비처는 **클래스조차 붙지 않아** 지금과 완전히 같다(`spec 030` 제약 2).
           🔴 `overflow-x-auto` — 카드가 없는 표가 좁은 폭에서 문서를 넓히지 않고 상자 안에서만 스크롤한다(`spec 053`).
           `relative` 가 없으면 셀 안 `sr-only`(absolute)가 상자를 빠져나가 문서를 다시 넓힌다 */}
-      {/* 🔄 `spec 083`: 상자 테두리 · 머리줄 바탕을 없애고 선만 둔다 — 머리줄 32px · 줄 46px */}
-      <div className={`relative overflow-x-auto ${renderCard ? 'hidden xl:block' : ''}`}>
+      {/* 🔄 `spec 083`: 상자 테두리 · 머리줄 바탕을 없애고 선만 둔다 — 머리줄 32px · 줄 46px
+          🔄 `spec 084`(목업 대조): 표를 **좌우 8px 넓게** 깔고 첫 칸 · 끝 칸에 8px 안쪽 여백 — 첫 칸 글자가 화면 제목과 같은
+          왼쪽 선에 서고, 줄에 올렸을 때의 바탕이 글자보다 8px 넓게 칠해진다. 칸 사이는 오른쪽 12px.
+          꺾쇠 칸(`id: 'open'`)은 32px 폭으로 오른쪽 끝에 붙인다 */}
+      <div className={`relative -mx-2 overflow-x-auto ${renderCard ? 'hidden xl:block' : ''}`}>
         <table className="w-full text-sm">
           <thead className="border-b">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -152,7 +155,8 @@ const AppTable = <TData,>({
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
                     className={`
-                      h-8 text-left text-xs px-3 font-normal text-muted-foreground whitespace-nowrap
+                      h-8 text-left text-xs pr-3 pl-0 first:pl-2 last:pr-2 font-normal text-muted-foreground whitespace-nowrap
+                      ${header.column.id === 'open' ? 'w-8' : ''}
                       ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-foreground' : ''}
                       ${header.column.columnDef.meta?.className ?? ''}
                     `}
@@ -192,7 +196,7 @@ const AppTable = <TData,>({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className={`h-[46px] text-body font-normal text-sub-foreground px-3 py-1 ${cell.column.columnDef.meta?.className ?? ''}`}
+                      className={`h-[46px] text-body font-normal text-sub-foreground pr-3 pl-0 py-1 first:pl-2 last:pr-2 first:rounded-l-md last:rounded-r-md ${cell.column.id === 'open' ? 'w-8 [&>svg]:ml-auto' : ''} ${cell.column.columnDef.meta?.className ?? ''}`}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>

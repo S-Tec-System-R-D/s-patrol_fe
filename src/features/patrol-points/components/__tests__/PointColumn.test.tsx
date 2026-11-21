@@ -48,12 +48,12 @@ describe('pointHistoryColumns', () => {
     expect(screen.getByText('인증')).toBeInTheDocument()
   })
 
-  it('🔴 완료 + 메모 있음 → 결과는 그대로 인증 · 특이사항은 제 칸의 아이콘 (D15)', () => {
+  it('🔴 완료 + 메모 있음 → 결과는 그대로 인증 · 특이사항은 결과 옆 말풍선 (D15 → 🔄 spec 084: 제 칸을 없앴다)', () => {
     renderRows([row({ hasMemo: true })])
 
     expect(screen.getByText('인증')).toBeInTheDocument()
     expect(screen.queryByText('순찰기록')).not.toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: '특이사항' })).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: '특이사항' })).not.toBeInTheDocument()
     expect(screen.getByLabelText('특이사항 있음')).toBeInTheDocument()
   })
 

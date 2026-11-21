@@ -59,7 +59,7 @@ const PointTopNav = ({ search, onSearchChange, filters }: PointTopNavProps) => {
       <AppInput
         variant="search"
         placeholder="지점 이름 검색"
-        className="w-full xl:w-[260px]"
+        className="w-full xl:w-[240px] xl:shrink-0"
         value={draft}
         onChange={(event) => {
           setDraft(event.target.value)

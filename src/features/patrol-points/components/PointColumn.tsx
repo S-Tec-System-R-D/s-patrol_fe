@@ -114,28 +114,14 @@ export const pointHistoryColumns = (): ColumnDef<PointHistoryRow>[] =>
         // 🔴 시간초과는 옮길 칸이 없어 **뱃지로 남긴다** — 목록에 지점 소요 시간이 없다(위 메모)
         const overtime = overtimeBadge(overTimeYn)
         return (
-          <div className="flex flex-wrap items-center gap-1">
+          <div className="flex flex-wrap items-center gap-2">
             <AppBadge variant={result.variant}>{result.label}</AppBadge>
             {overtime && <AppBadge variant={overtime.variant}>{overtime.label}</AppBadge>}
+            {/* 🔄 `spec 084`(목업 `03`): `특이사항` 칸을 없애고 결과 옆 회색 말풍선으로 */}
+            {row.original.hasMemo && <MessageSquareTextIcon size={14} className="shrink-0 text-muted-foreground" aria-label="특이사항 있음" />}
           </div>
         )
       },
-    },
-    {
-      accessorKey: 'hasMemo',
-      header: '특이사항',
-      // 🔴 **건수가 아니라 아이콘** — 목록에 건수가 없다(§위 머리말). 내용은 상세에서 본다
-      // 🔄 이름을 `기록` → `특이사항` 으로(D15 — 코스 목록 · 상세 화면과 같은 이름)
-      cell: ({ getValue }) =>
-        getValue<boolean>() ? (
-          <MessageSquareTextIcon
-            size={16}
-            className="text-warning-foreground"
-            aria-label="특이사항 있음"
-          />
-        ) : (
-          <span className="text-muted-foreground">-</span>
-        ),
     },
     {
       id: 'open',

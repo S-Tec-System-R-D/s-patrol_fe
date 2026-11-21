@@ -206,7 +206,7 @@ const PatrolPointsPage = () => {
           variant="search"
           placeholder="순찰자 검색"
           aria-label="순찰자 검색"
-          className="w-full xl:w-[260px]"
+          className="w-full xl:w-[240px] xl:shrink-0"
           value={userDraft}
           onChange={(event) => {
             setUserDraft(event.target.value)

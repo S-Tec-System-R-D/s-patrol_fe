@@ -108,7 +108,8 @@ describe('courseColumns — 값 표시', () => {
   it('🔴 지점 0개도 그대로 보여준다 — 경고·자동 조치가 없다 (규칙 12)', () => {
     renderRow({ pointCount: 0 })
 
-    expect(screen.getByText('0')).toBeInTheDocument()
+    // 🔄 `spec 084`: 개수에 단위를 붙인다
+    expect(screen.getByText('0개')).toBeInTheDocument()
     // "지점을 추가하세요" 류의 경고를 행에 넣지 않는다
     expect(screen.queryByText(/추가/)).not.toBeInTheDocument()
   })

@@ -83,9 +83,9 @@ describe('PatrolPointsPage — 서버 목록', () => {
     expect(screen.getByText('순찰지점')).toBeInTheDocument()
     // 필터 버튼에도 '인증수단' 이 보인다(spec 065 — 이름 표시) — 표 머리글로 좁힌다
     expect(screen.getByRole('columnheader', { name: /인증수단/ })).toBeInTheDocument()
-    // 🔄 D15 — `구간` 칸은 뺐고 `기록` 은 `특이사항` 이 됐다
+    // 🔄 D15 — `구간` 칸은 뺐다 · 🔄 `spec 084` — `특이사항` 칸도 없앴다(결과 옆 말풍선)
     expect(screen.queryByText('구간')).not.toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: '특이사항' })).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: '특이사항' })).not.toBeInTheDocument()
     expect(inTable().getAllByRole('row').length).toBeGreaterThan(1)
   })
 

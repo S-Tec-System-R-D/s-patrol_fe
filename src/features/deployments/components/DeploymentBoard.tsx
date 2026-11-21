@@ -5,11 +5,7 @@ import {
   FilterXIcon,
   InboxIcon,
   RotateCcwIcon,
-  Undo2Icon,
-  SquareArrowRightEnterIcon,
-  SquareArrowRightExitIcon,
   TriangleAlertIcon,
-  type LucideIcon,
 } from 'lucide-react'
 
 import AppButton from '@/components/app/AppButton'
@@ -68,16 +64,15 @@ import { returnRequestColumns } from './ReturnRequestColumns'
 interface TabDef {
   key: DeploymentTab
   label: string
-  icon: LucideIcon
 }
 
 const TABS: TabDef[] = [
-  { key: 'requests', label: '배치 요청', icon: InboxIcon },
+  { key: 'requests', label: '배치 요청' },
   // 🔴 요청 탭 둘이 나란히(사용자 요청 2026-10-21) — 처리할 일이 앞이다
-  { key: 'returns', label: '복귀 요청', icon: Undo2Icon },
+  { key: 'returns', label: '복귀 요청' },
   // 🔴 전입이 전출보다 먼저다(사용자 요청 2026-10-21) — 승인한 배치 요청은 **전입**으로 이어진다
-  { key: 'in', label: '전입 이력', icon: SquareArrowRightEnterIcon },
-  { key: 'out', label: '전출 이력', icon: SquareArrowRightExitIcon },
+  { key: 'in', label: '전입 이력' },
+  { key: 'out', label: '전출 이력' },
 ]
 
 const EMPTY_TITLE: Record<DeploymentTab, string> = {
@@ -210,9 +205,9 @@ const DeploymentBoard = () => {
         ref={tabListRef}
         role="tablist"
         aria-label="배치 목록"
-        className="scrollbar-hidden relative flex items-center gap-1 overflow-x-auto overflow-y-hidden shadow-[inset_0_-1px_0_var(--color-border)] xl:overflow-visible"
+        className="scrollbar-hidden relative flex items-center gap-5 overflow-x-auto overflow-y-hidden shadow-[inset_0_-1px_0_var(--color-border)] xl:overflow-visible"
       >
-        {TABS.map(({ key, label, icon: Icon }) => {
+        {TABS.map(({ key, label }) => {
           const selected = tab === key
           /* 배치 요청 = `pendingCount` · 복귀 요청 = `pendingReturnCount` — 사이드바는 둘의 합(2026-11-16) */
           const pending =
@@ -229,11 +224,10 @@ const DeploymentBoard = () => {
               aria-selected={selected}
               onClick={() => selectTab(key)}
               className={cn(
-                'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-3 py-2.5 text-tab font-semibold text-muted-foreground transition-colors hover:text-foreground',
-                selected && 'border-point font-bold text-foreground'
+                'inline-flex h-[34px] shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent text-tab text-muted-foreground transition-colors hover:text-foreground',
+                selected && 'border-point font-medium text-foreground'
               )}
             >
-              <Icon size={14} strokeWidth={1.75} />
               {label}
               {/* 🔴 대기 건수 — 0 이거나 모르면 그리지 않는다(숫자를 지어내지 않는다) */}
               {summaryFailed && (key === 'requests' || key === 'returns') && (
@@ -245,9 +239,9 @@ const DeploymentBoard = () => {
                 </span>
               )}
               {!!pending && (
-                /* 🔴 **사이드바 뱃지와 같은 빨강**(사용자 요청 2026-10-21) — 연한 주황은 탭 글자에 묻혔다.
-                   같은 숫자가 두 곳에서 같은 모양이어야 같은 것으로 읽힌다 */
-                <span className="min-w-[18px] rounded-full bg-danger px-1.5 text-center text-label font-semibold leading-[18px] text-white">
+                /* 🔄 `spec 084`(목업 `10`): 빨강 → **파랑 알약** — 사이드바의 건수 표시가 083 에서 파랑이 됐다.
+                   같은 숫자가 두 곳에서 같은 모양이어야 같은 것으로 읽힌다(2026-10-21 의 이유 그대로) */
+                <span className="min-w-[18px] rounded-full bg-point px-1.5 text-center text-[11px] font-semibold leading-[18px] text-white">
                   {pending}
                 </span>
               )}
@@ -264,7 +258,7 @@ const DeploymentBoard = () => {
             variant="search"
             placeholder="이름 검색"
             aria-label="이름 검색"
-            className="w-full xl:w-[260px]"
+            className="w-full xl:w-[240px] xl:shrink-0"
             value={keywordDraft}
             onChange={(event) => {
               setKeywordDraft(event.target.value)

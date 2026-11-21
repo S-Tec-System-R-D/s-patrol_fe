@@ -121,13 +121,13 @@ describe('NoticeListPage — 서버 목록', () => {
     expect(inTable().getAllByRole('row')[1].textContent).toBe(firstRowBefore)
   })
 
-  it('🔴 고정 공지 행만 배경을 칠한다', async () => {
+  it('🔄 고정 공지 행에 배경을 칠하지 않는다 — 파란 압정만 (spec 084)', async () => {
     renderPage()
 
     await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument())
     const pinnedRow = inTable().getByLabelText('고정 공지').closest('tr')
     const normalRow = inTable().getByText('야간 순찰 강화 공지').closest('tr')
-    expect(pinnedRow).toHaveClass('bg-point-bg/50')
+    expect(pinnedRow).not.toHaveClass('bg-point-bg/50')
     expect(normalRow).not.toHaveClass('bg-point-bg/50')
   })
 

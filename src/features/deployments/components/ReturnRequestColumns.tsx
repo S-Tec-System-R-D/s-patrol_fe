@@ -63,7 +63,7 @@ export const returnRequestColumns = (siteSeq: number): ColumnDef<AssignmentReque
     },
     {
       id: 'actions',
-      header: () => <span className="sr-only">처리</span>,
+      header: () => <span className="ml-auto">처리</span>,
       cell: ({ row }) => (
         <DeploymentRequestActions
           kind="return"

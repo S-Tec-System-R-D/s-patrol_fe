@@ -1,4 +1,4 @@
-import { CheckIcon, XIcon } from 'lucide-react'
+import { XIcon } from 'lucide-react'
 
 import AppAlertDialog from '@/components/AppAlertDialog'
 import AppButton from '@/components/app/AppButton'
@@ -50,16 +50,8 @@ const DeploymentRequestActions = ({
 
   return (
     <div className={compact ? 'flex items-center justify-end gap-1.5' : 'flex items-center justify-end gap-2'}>
-      <AppButton
-        icon={compact ? undefined : CheckIcon}
-        iconSize={12}
-        className={buttonClass}
-        onClick={() => process.mutate({ assignmentSeq, userName, approved: true })}
-        disabled={process.isPending}
-        aria-label={`${userName} 승인`}
-      >
-        승인
-      </AppButton>
+      {/* 🔄 `spec 084`(사용자 결정 2026-11-21 — 목업 `10`): **반려(테두리 없는 글자) → 승인(파랑)** 순서 · 아이콘 없음.
+          반려가 덜 눈에 띄어 잘못 누를 일이 줄고, 승인이 줄의 맨 끝에 온다. 대시보드 배치 대기도 같은 부품이다 */}
       <AppAlertDialog
         size="sm"
         icon={XIcon}
@@ -70,16 +62,22 @@ const DeploymentRequestActions = ({
         onAction={() => process.mutate({ assignmentSeq, userName, approved: false })}
       >
         <AppButton
-          icon={compact ? undefined : XIcon}
-          iconSize={12}
-          className={buttonClass}
-          variant="destructive"
+          className={`${buttonClass} bg-transparent text-sub-foreground hover:bg-muted`}
+          variant="soft"
           disabled={process.isPending}
           aria-label={`${userName} 반려`}
         >
           반려
         </AppButton>
       </AppAlertDialog>
+      <AppButton
+        className={buttonClass}
+        onClick={() => process.mutate({ assignmentSeq, userName, approved: true })}
+        disabled={process.isPending}
+        aria-label={`${userName} 승인`}
+      >
+        승인
+      </AppButton>
     </div>
   )
 }

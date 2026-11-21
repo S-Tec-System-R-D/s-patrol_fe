@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { ChevronRightIcon } from 'lucide-react'
+import { ChevronRightIcon, CircleDotIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import { workLabel } from '../lib/userFormat'
@@ -51,15 +51,11 @@ export const workerColumns = (): ColumnDef<UserRow>[] =>
       header: '근무 상태',
       cell: ({ getValue }) => {
         const workYn = getValue<boolean>()
+        // 🔄 `spec 084`(목업 `08`): 작은 점 → 상태 표시(근무 중 = 초록 점 원 · 근무 종료 = 회색 빼기 원). 근무자 상세의 제목 옆과 같다
         return (
-          <div className="flex items-center gap-1.5">
-            <span
-              className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                workYn ? 'bg-success' : 'bg-muted-foreground'
-              }`}
-            />
-            <span>{workLabel(workYn)}</span>
-          </div>
+          <AppBadge variant={workYn ? 'success' : 'muted'} icon={workYn ? CircleDotIcon : undefined}>
+            {workLabel(workYn)}
+          </AppBadge>
         )
       },
     },

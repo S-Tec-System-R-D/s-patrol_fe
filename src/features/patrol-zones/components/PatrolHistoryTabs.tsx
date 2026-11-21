@@ -21,7 +21,7 @@ const tabs: Tab[] = [
  */
 const PatrolHistoryTabs = () => {
   return (
-    <nav className="flex items-center gap-1 border-b border-border">
+    <nav className="flex items-center gap-5 border-b border-border">
       {tabs.map(({ to, icon: Icon, label }) => (
         <NavLink
           key={to}
@@ -29,8 +29,8 @@ const PatrolHistoryTabs = () => {
           end
           className={({ isActive }) =>
             cn(
-              '-mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-3 py-2.5 text-tab font-semibold text-muted-foreground transition-colors hover:text-foreground',
-              isActive && 'border-point font-bold text-foreground'
+              '-mb-px inline-flex h-[34px] items-center gap-1.5 border-b-2 border-transparent text-tab text-muted-foreground transition-colors hover:text-foreground',
+              isActive && 'border-point font-medium text-foreground'
             )
           }
         >

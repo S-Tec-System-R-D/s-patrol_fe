@@ -143,24 +143,14 @@ export const zoneHistoryColumns = (): ColumnDef<CourseHistoryRow>[] =>
       // 🔴 **결과 칸에는 뱃지 하나**(`spec 079` D15 · 사용자 결정 2026-11-17) — 시간초과는 소요 칸, 교대는 순찰자 칸,
       //    특이사항은 제 칸에 있다. `overtimeYn` 은 `status` 와 독립 축이라 하나로 접지 않고 **자리를 나눴다**
       const result = courseResultBadge(row.original.status)
-      return <AppBadge variant={result.variant}>{result.label}</AppBadge>
+      // 🔄 `spec 084`(목업 `02`): `특이사항` 칸을 없애고 결과 옆 **회색 말풍선**으로 — 서버는 `hasMemo` boolean 뿐이라 건수는 못 적는다
+      return (
+        <div className="flex items-center gap-2">
+          <AppBadge variant={result.variant}>{result.label}</AppBadge>
+          {row.original.hasMemo && <MessageSquareTextIcon size={14} className="shrink-0 text-muted-foreground" aria-label="특이사항 있음" />}
+        </div>
+      )
     },
-  },
-  {
-    accessorKey: 'hasMemo',
-    header: '특이사항',
-    // 🔴 **건수가 아니라 아이콘**(사용자 결정) — 서버는 `hasMemo` boolean 뿐이고 건수는
-    //    이력마다 `CheckDetails` 를 열어야 한다(15행이면 15요청)
-    cell: ({ getValue }) =>
-      getValue<boolean>() ? (
-        <MessageSquareTextIcon
-          size={16}
-          className="text-warning-foreground"
-          aria-label="특이사항 있음"
-        />
-      ) : (
-        <span className="text-muted-foreground">-</span>
-      ),
   },
   {
     id: 'open',

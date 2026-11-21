@@ -54,7 +54,7 @@ export const courseColumns = (): ColumnDef<CourseRow>[] => [
       <span className={`tabular-nums text-sub-foreground ${dim(row.original.useYn)}`}>
         {/* 🔴 0개도 그대로 보여준다 — 자동 조치·경고를 하지 않는다(spec 규칙 12).
             의도적으로 비워 둔 코스가 있을 수 있고, "비어 있다 → 잘못됐다" 는 우리 추측이다 */}
-        {row.original.pointCount}
+        {row.original.pointCount}개
       </span>
     ),
   },

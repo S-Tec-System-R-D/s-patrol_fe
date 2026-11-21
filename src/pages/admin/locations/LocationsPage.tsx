@@ -98,7 +98,7 @@ const LocationsPage = () => {
               variant="search"
               placeholder="사업장명·주소 검색"
               aria-label="사업장명·주소 검색"
-              className="w-full xl:w-[260px]"
+              className="w-full xl:w-[240px] xl:shrink-0"
               value={keywordDraft}
               onChange={(event) => {
                 setKeywordDraft(event.target.value)

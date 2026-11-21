@@ -76,7 +76,7 @@ export const pointColumns = (): ColumnDef<PointRow>[] => [
     header: '소속 코스',
     cell: ({ row }) => (
       <span className={`tabular-nums text-sub-foreground ${dim(row.original.useYn)}`}>
-        {row.original.usedCount}
+        {row.original.usedCount}개
       </span>
     ),
   },

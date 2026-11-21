@@ -81,7 +81,8 @@ describe('PatrolZonesPage — 서버 목록', () => {
     expect(inTable().getAllByText('A동 순찰코스').length).toBeGreaterThan(0)
     expect(screen.getByText('지점 인증')).toBeInTheDocument()
     expect(screen.getByText('순찰 결과')).toBeInTheDocument()
-    expect(screen.getByText('특이사항')).toBeInTheDocument()
+    // 🔄 `spec 084`: `특이사항` 칸을 없앴다 — 순찰 결과 옆 말풍선
+    expect(screen.queryByText('특이사항')).not.toBeInTheDocument()
   })
 
   it('🔴 mock 셸이 남아 있지 않다 — 우측 상세 패널과 내보내기 버튼이 없다', async () => {
