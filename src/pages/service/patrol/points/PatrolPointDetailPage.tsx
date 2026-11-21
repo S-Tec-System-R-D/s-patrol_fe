@@ -10,7 +10,6 @@ import { overtimeBadge, pointCheckBadge } from '@/features/course-history/lib/hi
 import PointHistoryInfoCard from '@/features/patrol-points/components/detail/PointHistoryInfoCard'
 import PointHistoryMemoCard from '@/features/patrol-points/components/detail/PointHistoryMemoCard'
 import PointLocationMapCard from '@/features/patrol-points/components/detail/PointLocationMapCard'
-import { isValidCoord } from '@/features/courses/lib/courseCoords'
 import { paths } from '@/router/paths'
 
 /**
@@ -122,9 +121,6 @@ const PatrolPointDetailPage = () => {
   // 🔴 상세는 `overtimeYn`(**소문자 t**) 다 — 코스 상세와 다르다(B-4)
   const overtime = overtimeBadge(data.overtimeYn)
   const hasMemo = data.memoList.length > 0
-  /* 🔄 `spec 078` D5 — 메모가 없어도 좌표까지 없으면 지도를 왼쪽으로 옮기지 않는다. 왼쪽은 `순찰 기록` 빈 상태,
-     오른쪽은 좌표 없음 자리 */
-  const recordFirst = hasMemo || !isValidCoord(data.gpsLat, data.gpsLng)
   const subtitle = [
     data.userName || '순찰자 미지정',
     formatWhen(data.checkDt),
@@ -164,20 +160,19 @@ const PatrolPointDetailPage = () => {
         }
       />
 
-      {/* 🔄 **`spec 078` 시안** — 이 화면의 고유 정보(순찰 기록)를 맨 위로.
-          - 특이사항 있음 · 또는 메모 · 좌표 둘 다 없음: 왼쪽 **순찰 기록**(없으면 빈 상태) / 오른쪽 **지도(없으면 좌표 없음 자리) + 인증 정보** 한 패널
-          - 메모 없음 · 좌표 있음: 왼쪽 **지도**(인증 위치 카드) / 오른쪽 인증 정보
+      {/* 🔄 **배치는 늘 하나다**(사용자 결정 2026-11-21): 왼쪽 **순찰 기록**(메모가 없으면 빈 상태) / 오른쪽 **인증 정보 + 인증 위치**.
+          (전 — `spec 078`: 메모가 없고 좌표가 있으면 지도를 왼쪽 본문으로 옮겼다. 기록마다 화면의 틀이 바뀌어 없앴다.)
           🔄 최근 14일 한 줄은 뺐다(D6 — 머리 `지점 상세` 와 겹친다).
           🔴 `items-start` — 오른쪽이 왼쪽 높이만큼 늘어나지 않게(036). `xl` 미만 1단 — DOM 순서대로 본문이 먼저 */}
       {/* 🔄 `spec 084`(목업 `13`): 영역의 카드 상자를 없애고 두 단 사이 세로 선 — 순찰 상세와 같은 틀 */}
       <div className="grid grid-cols-1 items-start gap-y-7 pt-2 xl:grid-cols-[minmax(0,1fr)_440px] xl:[&>*:first-child]:pr-8 xl:[&>*:nth-child(2)]:border-l xl:[&>*:nth-child(2)]:border-border xl:[&>*:nth-child(2)]:pl-7">
         <section className="min-w-0">
-          {recordFirst ? <PointHistoryMemoCard detail={data} /> : <PointLocationMapCard detail={data} />}
+          <PointHistoryMemoCard detail={data} />
         </section>
         <section className="min-w-0">
           <PointHistoryInfoCard
             detail={data}
-            map={recordFirst ? <PointLocationMapCard detail={data} bare /> : undefined}
+            map={<PointLocationMapCard detail={data} />}
           />
         </section>
       </div>

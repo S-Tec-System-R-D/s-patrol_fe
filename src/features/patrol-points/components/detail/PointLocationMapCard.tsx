@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { CrosshairIcon, MapPinOffIcon } from 'lucide-react'
+import { MapPinOffIcon } from 'lucide-react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -25,7 +25,7 @@ import { AUTH_METHOD, POINT_HISTORY_STATUS, type PointHistoryDetail } from '@/fe
  * 🔴 **좌표가 "인증 시점 위치" 라는 것을 화면이 말한다.** 지점이 등록된 자리가 아니라
  * **근무자가 인증을 찍은 위치**다(`PointHistoryDetail.gpsLat/gpsLng`). 실측상 **완료(4) 행만
  * 값이 있고 미완료(3) 45건은 전부 `null`** 이다. 왼쪽 본문 카드는 좌표가 없으면 그리지 않고,
- * 🔄 오른쪽 패널(`bare`)은 **자리를 두고 `인증 시점 좌표가 없습니다` 를 적는다**(`spec 078` D5 —
+ * 🔄 오른쪽 단은 **자리를 두고 `인증 시점 좌표가 없습니다` 를 적는다**(`spec 078` D5 —
  * 지도가 통째로 사라지면 "어디 갔나" 가 된다).
  *
  * 🔴 **거리·오차를 판정하지 않는다.** 좌표는 **앱이 인증 시점에 채우는 값**이고 범위 밖
@@ -52,10 +52,9 @@ interface PointLocationMapCardProps {
    * 🔄 `spec 078` — 특이사항이 있으면 지도는 **오른쪽 인증 정보 패널 맨 위**로 간다(시안). 그때는 카드 틀 ·
    * 제목 없이 지도와 좌표 한 줄만 그린다(패널이 틀을 갖는다)
    */
-  bare?: boolean
 }
 
-const PointLocationMapCard = ({ detail, bare = false }: PointLocationMapCardProps) => {
+const PointLocationMapCard = ({ detail }: PointLocationMapCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
 
   /* 🔴 **범위 검사를 공유한다** — 순수 함수는 세 지도가 같은 것을 쓴다(B-33 방어) */
@@ -115,7 +114,6 @@ const PointLocationMapCard = ({ detail, bare = false }: PointLocationMapCardProp
   /* 🔄 `spec 078` D5 — 오른쪽 패널은 좌표가 없어도 지도 자리를 둔다. 왼쪽 본문은 페이지가 좌표 있을 때만 쓴다.
      D7 — 미인증(서버 3)은 찍지 않아 위치가 없는 게 맞다 / 완료인데 없으면 값이 빠진 것 — 문구를 나눈다 */
   if (!hasCoord) {
-    if (!bare) return null
     const notChecked = detail.status !== POINT_HISTORY_STATUS.COMPLETED
     return (
       <section className="flex flex-col gap-2.5">
@@ -130,37 +128,16 @@ const PointLocationMapCard = ({ detail, bare = false }: PointLocationMapCardProp
     )
   }
 
-  if (bare) {
-    /* 🔄 `spec 084`(목업 `13`): 오른쪽 단의 한 영역 — 제목 옆에 좌표(전에는 지도 위에 얹은 글자였다) */
-    return (
-      <section className="flex flex-col gap-2.5">
-        <div className="flex flex-wrap items-baseline gap-x-2">
-          <h2 className="text-panel-title font-semibold">인증 위치</h2>
-          <span className="text-caption text-muted-foreground tabular-nums">
-            인증 시점 좌표 · {lat?.toFixed(4)}, {lng?.toFixed(4)}
-          </span>
-        </div>
-        <div ref={containerRef} className="h-[260px] w-full overflow-hidden rounded-[10px] border border-border" />
-      </section>
-    )
-  }
-
+  /* 🔄 `spec 084`(목업 `13`): 오른쪽 단의 한 영역 — 제목 옆에 좌표(전에는 지도 위에 얹은 글자였다) */
   return (
     <section className="flex flex-col gap-2.5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {/* 🔴 제목이 **무엇의 좌표인지** 말한다 — "지점 위치" 라고 쓰면 지점이 등록된 자리로
-            읽히는데, 이 값은 **인증을 찍은 위치**다 */}
+      <div className="flex flex-wrap items-baseline gap-x-2">
         <h2 className="text-panel-title font-semibold">인증 위치</h2>
-        {/* 🔴 아이콘을 **`MapPinOff` 에서 바꿨다**(캡쳐에서 발견 2026-10-20) — 그건 "위치
-            없음" 을 뜻하는 아이콘이라, 좌표가 **있어서 그린 지도** 옆에 붙으니 뜻이 반대였다 */}
-        <span className="inline-flex items-center gap-1 text-caption text-muted-foreground">
-          <CrosshairIcon size={13} aria-hidden />
-          인증 시점 좌표
+        <span className="text-caption text-muted-foreground tabular-nums">
+          인증 시점 좌표 · {lat?.toFixed(4)}, {lng?.toFixed(4)}
         </span>
       </div>
-      {/* 🔴 높이를 고정한다 — 지도는 자기 크기를 모른다(부모가 0이면 타일이 안 뜬다).
-          좌측 2/3 폭으로 옮기며 `HistoryMapCard`(036)와 같은 높이로 맞췄다(050) */}
-      <div ref={containerRef} className="h-[320px] w-full overflow-hidden rounded-[10px] border border-border" />
+      <div ref={containerRef} className="h-[260px] w-full overflow-hidden rounded-[10px] border border-border" />
     </section>
   )
 }

@@ -153,14 +153,14 @@ describe('PatrolPointDetailPage — 인증 1건', () => {
     expect(screen.getByText('메모 2건 · 사진 1장')).toBeInTheDocument()
   })
 
-  it('🔴 메모가 없으면 순찰 기록 카드 대신 지도가 본문이다 (spec 078 시안)', async () => {
+  it('🔄 메모가 없어도 왼쪽은 순찰 기록이다 — 빈 상태를 그린다 (사용자 결정 2026-11-21 · spec 078 의 "지도가 본문" 을 뒤집었다)', async () => {
     seed({ hasMemo: false, memoList: [] })
     renderPage()
 
     await waitDetail()
-    expect(screen.queryByText('순찰 기록')).not.toBeInTheDocument()
-    expect(screen.queryByText('남긴 기록이 없습니다')).not.toBeInTheDocument()
-    expect(screen.getByText('인증 위치')).toBeInTheDocument()
+    expect(screen.getByText('순찰 기록')).toBeInTheDocument()
+    expect(screen.getByText('남긴 기록이 없습니다')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '인증 위치' })).toBeInTheDocument()
   })
 
   it('🔴 최근 14일 한 줄을 두지 않는다 — 머리 `지점 상세` 와 겹친다 (spec 078 D6)', async () => {
@@ -272,12 +272,12 @@ describe('PatrolPointDetailPage — KPI 섹션을 두지 않는다 (2026-10-20)'
 })
 
 describe('PatrolPointDetailPage — 인증 위치 지도 (2026-10-20)', () => {
-  it('메모가 없으면 지도가 왼쪽 본문 맨 위다', async () => {
+  it('🔄 메모가 없어도 지도는 오른쪽 그대로다 — 제목 옆에 좌표 (사용자 결정 2026-11-21)', async () => {
     seed({ hasMemo: false, memoList: [] })
     renderPage()
 
-    expect(await screen.findByText('인증 위치')).toBeInTheDocument()
-    expect(screen.getByText('인증 시점 좌표')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '인증 위치' })).toBeInTheDocument()
+    expect(screen.getByText('인증 시점 좌표 · 37.4936, 127.0286')).toBeInTheDocument()
   })
 
   it('🔄 메모가 있으면 지도는 오른쪽 단의 `인증 위치` 영역 — 제목 옆에 좌표 한 줄 (spec 078 → spec 084: 인증 정보 아래 · 제목이 생겼다)', async () => {
