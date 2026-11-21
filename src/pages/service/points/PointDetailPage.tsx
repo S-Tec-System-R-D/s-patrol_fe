@@ -164,7 +164,7 @@ const PointDetailPage = () => {
             <AppDialog
               open={editOpen}
               onOpenChange={setEditOpen}
-              title="지점 수정"
+              title="지점 편집"
               description="지점 정보를 수정합니다."
               contentClassName="sm:max-w-[520px]"
             >

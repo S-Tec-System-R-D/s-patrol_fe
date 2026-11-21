@@ -52,20 +52,25 @@ const AppAlertDialog = ({
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       {children && <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>}
-      <AlertDialogContent size={size}>
+      {/* 🔄 `spec 084`(목업 `19`): 안쪽 여백 24px · 아이콘은 44px 둥근 타일 · 버튼 줄의 위 선 · 회색 바탕 없음 · 파괴 동작은 진한 빨강 */}
+      <AlertDialogContent size={size} className="p-6 pt-7">
         <AlertDialogHeader>
           {Icon && (
-            <AlertDialogMedia className={`${variantColorStyles[variant]}`}>
-              <Icon size={'28'} strokeWidth={1.5} />
+            <AlertDialogMedia className={`size-11 rounded-full ${variantColorStyles[variant]}`}>
+              <Icon size={20} strokeWidth={1.75} />
             </AlertDialogMedia>
           )}
 
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <AlertDialogDescription className="text-[13px] leading-[1.6]">{description}</AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel className="cursor-pointer">{cancelLabel}</AlertDialogCancel>
-          <AlertDialogAction variant={variant} className={`cursor-pointer`} onClick={onAction}>
+        <AlertDialogFooter className="mx-0 mb-0 rounded-none border-0 bg-transparent p-0 pt-1.5">
+          <AlertDialogCancel className="h-9 cursor-pointer">{cancelLabel}</AlertDialogCancel>
+          <AlertDialogAction
+            variant={variant}
+            className={`h-9 cursor-pointer ${variant === 'destructive' ? 'bg-danger! text-white! hover:bg-danger/90!' : ''}`}
+            onClick={onAction}
+          >
             {actionLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

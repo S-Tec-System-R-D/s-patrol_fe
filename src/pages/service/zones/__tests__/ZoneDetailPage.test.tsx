@@ -132,14 +132,14 @@ describe('ZoneDetailPage', () => {
     expect(screen.getByRole('button', { name: '코스 메뉴' })).toBeInTheDocument()
   })
 
-  it('기본정보 `수정` 이 코스 수정 모달을 연다 — 교대 허용 · 코스 사용 스위치가 있다', async () => {
+  it('기본정보 `편집` 이 코스 편집 모달을 연다 — 교대 허용 · 코스 사용 스위치가 있다', async () => {
     const user = userEvent.setup()
     renderPage('/zones/1')
 
     await screen.findByText('A동 순찰코스')
     await user.click(screen.getByRole('button', { name: '기본정보 편집' }))
 
-    expect(await screen.findByText('코스 수정')).toBeInTheDocument()
+    expect(await screen.findByText('코스 편집')).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: '교대 허용' })).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: '코스 사용' })).toBeInTheDocument()
   })

@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeftIcon, PlusIcon, XIcon } from 'lucide-react'
 
-import AppBadge from '@/components/app/AppBadge'
-import { cardBadge } from '@/components/app/AppBadge.variants'
 import AppButton from '@/components/app/AppButton'
 import AppCheckbox from '@/components/app/AppCheckbox'
 import AppDialog from '@/components/app/AppDialog'
@@ -80,14 +78,15 @@ const FilterChip = ({
     // 🔴 라벨과 숫자가 붙어 `전체3` 으로 읽힌다 — 읽히는 이름을 명시한다
     aria-label={`${label} ${count}건`}
     onClick={onClick}
-    className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-caption transition-colors ${
+    // 🔄 `spec 084`(목업 `23`): 고른 칩은 검정 채움이 아니라 **흰 바탕 + 파란 테두리 + 파란 글자**
+    className={`inline-flex h-[26px] items-center gap-1 rounded-full border px-2.5 text-[12px] transition-colors ${
       active
-        ? 'border-foreground bg-foreground text-background'
-        : 'border-border bg-card text-muted-foreground hover:bg-muted/60'
+        ? 'border-point bg-point-bg/40 font-medium text-point'
+        : 'border-border bg-card text-sub-foreground hover:bg-muted/60'
     }`}
   >
     {label}
-    <span className="tabular-nums opacity-70">{count}</span>
+    <span className="font-semibold tabular-nums">{count}</span>
   </button>
 )
 
@@ -176,6 +175,7 @@ const AddCoursePointDialog = ({
       open={open}
       onOpenChange={(next) => (next ? onOpenChange(true) : close())}
       title={view === 'create' ? '새 지점 만들기' : '지점 추가'}
+      contentClassName="sm:max-w-[520px]"
       /* 🔴 **코스명·사업장명을 넣지 않는다**(목업과 다른 점, T395). 이 모달은 코스 상세
          안에서만 열리고 **페이지 제목이 이미 코스명**이다. 사업장도 선택된 하나뿐이라
          같은 값을 한 화면에 두 번 적는 꼴이 된다.
@@ -259,9 +259,8 @@ const AddCoursePointDialog = ({
             </div>
           ) : (
             <>
-              <p className="text-caption text-muted-foreground">검색결과 {visible.length}개</p>
-
-              <ul className="flex max-h-[320px] min-h-0 flex-col gap-1 overflow-y-auto">
+              {/* 🔄 `spec 084`(목업 `23`): `검색결과 n개` 줄을 없애고(칩의 숫자가 말한다) 줄 사이 선 · 줄 높이 42px */}
+              <ul className="flex max-h-[320px] min-h-0 flex-col overflow-y-auto border-t border-border">
                 {visible.map((point) => {
                   const method = toAuthMethodLabel(point.authMethod)
                   const index = selected.findIndex((item) => item.pointSeq === point.pointSeq)
@@ -271,19 +270,9 @@ const AddCoursePointDialog = ({
                   return (
                     <li
                       key={point.pointSeq}
-                      /* 🔴 고른 행은 **좌측 바**로 표시한다(목업, 사용자 결정 2026-10-13) —
-                         배경 톤만으로는 스크롤 중에 눈에 띄지 않는다.
-                         🔴 바는 `border-l` 이 아니라 **덧대는 요소**다 — 테두리로 그리면 행의
-                         `rounded-sm` 을 따라 **위아래가 둥글어진다**(사용자 지적). 일자 바여야
-                         눈이 세로로 미끄러진다. 행 패딩은 선택 여부와 무관하게 같다 */
-                      className={`relative flex items-center gap-2.5 rounded-sm px-2.5 py-2.5 ${
-                        checked ? 'bg-point/5' : 'hover:bg-muted/60'
-                      }`}
+                      /* 🔄 `spec 084`(목업 `23`): 고른 행의 표시는 **파란 체크 + 오른쪽 끝의 순서 번호** — 전의 왼쪽 파란 바 · 옅은 바탕은 없앴다 */
+                      className="flex h-[42px] items-center gap-2.5 border-b border-border hover:bg-muted/40"
                     >
-                      {checked && (
-                        <span aria-hidden className="absolute inset-y-0 left-0 w-0.5 bg-point" />
-                      )}
-
                       <AppCheckbox
                         id={inputId}
                         checked={checked}
@@ -292,26 +281,17 @@ const AddCoursePointDialog = ({
                       {/* 행 전체를 눌러도 토글된다 — 체크박스 4px 를 조준하게 두지 않는다 */}
                       <label
                         htmlFor={inputId}
-                        className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
+                        className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-2.5"
                       >
-                        <span className="min-w-0 flex-1 truncate text-body">
+                        <span className="min-w-0 flex-1 truncate text-body font-medium text-foreground">
                           <Highlight text={point.pointName} keyword={keyword} />
                         </span>
-                        {/* 🔴 목록 뱃지는 **한 단계 작게**(사용자 지적 2026-10-13) — 기본
-                            `AppBadge` 는 지점명과 글자 크기가 비슷해 둘이 다툰다. 여기서
-                            주인공은 이름이고 인증수단은 곁들이는 정보다 */}
-                        {method && (
-                          <AppBadge
-                            variant="plain"
-                            className={cardBadge}
-                          >
-                            {method}
-                          </AppBadge>
-                        )}
+                        {method && <span className="shrink-0 text-[12px] text-sub-foreground">{method}</span>}
                         {/* 🔴 순번은 **고른 행에만** 붙인다 — 안 고른 행에 번호가 있으면
                             "이미 그 자리에 있다" 로 읽힌다 */}
+                        {!checked && <span aria-hidden className="size-[22px] shrink-0" />}
                         {checked && (
-                          <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-point text-label font-bold text-white tabular-nums">
+                          <span className="grid size-[22px] shrink-0 place-items-center rounded-full border border-point/30 bg-point-bg text-[11px] font-bold text-point tabular-nums">
                             {orderNoOf(assignedPointSeqs.length, index)}
                           </span>
                         )}
@@ -328,7 +308,7 @@ const AddCoursePointDialog = ({
           {candidates.isSuccess && (
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-1.5 rounded-sm border border-dashed border-border py-2 text-body text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+              className="-mt-3 flex h-[42px] w-full items-center gap-2.5 border-b border-border pl-0.5 text-body font-medium text-point transition-colors hover:bg-muted/40"
               onClick={() => setView('create')}
             >
               <PlusIcon size={14} aria-hidden />
@@ -340,16 +320,12 @@ const AddCoursePointDialog = ({
               (선택은 유지된다, T392) 그것을 확인하고 해제할 자리가 없으면 사용자는 무엇을
               골랐는지 알 수 없다 */}
           {selected.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 rounded-sm bg-muted p-2">
-              <span className="text-caption text-muted-foreground">선택 {selected.length}</span>
-              {selected.map((point, index) => (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {selected.map((point) => (
                 <span
                   key={point.pointSeq}
-                  className="inline-flex items-center gap-1 rounded-sm border border-border bg-card px-1.5 py-0.5 text-caption"
+                  className="inline-flex h-[26px] items-center gap-1 rounded-md bg-muted pr-1.5 pl-2.5 text-[12px] text-foreground"
                 >
-                  <span className="tabular-nums text-muted-foreground">
-                    {orderNoOf(assignedPointSeqs.length, index)}
-                  </span>
                   <span className="max-w-[160px] truncate">{point.pointName}</span>
                   <button
                     type="button"
@@ -371,7 +347,7 @@ const AddCoursePointDialog = ({
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-1">
+          <div className="flex justify-end gap-1.5 pt-2">
             <AppButton variant="sub" type="button" onClick={close}>
               취소
             </AppButton>

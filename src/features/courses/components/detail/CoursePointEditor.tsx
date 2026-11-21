@@ -101,11 +101,11 @@ import AddCoursePointDialog from './AddCoursePointDialog'
 /** 번호 동그라미 — 미사용은 자물쇠(경로 카드와 같다) */
 const OrderMark = ({ order, useYn }: { order: number; useYn: boolean }) =>
   useYn ? (
-    <span className="grid size-6 shrink-0 place-items-center rounded-full border border-point/30 bg-point-bg text-[11px] font-bold text-point tabular-nums">
+    <span className="grid size-[22px] shrink-0 place-items-center rounded-full border border-point/30 bg-point-bg text-[11px] font-bold text-point tabular-nums">
       {order}
     </span>
   ) : (
-    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-background text-muted-foreground">
+    <span className="grid size-[22px] shrink-0 place-items-center rounded-full bg-background text-muted-foreground">
       <LockIcon size={12} aria-hidden />
       {/* 🔴 지점별 활성은 **표시만** — 코스에서 바꿀 값이 아니다(B-29 철회) */}
       <span className="sr-only">미사용</span>
@@ -133,7 +133,8 @@ const SortableRow = ({ draft, order, isFirst, isLast, onCourseMinChange, onMove,
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'group relative flex items-center gap-2 border-b border-border px-1.5 py-2.5 last:border-0 sm:gap-3',
+        // 🔄 `spec 084`(목업 `20`): 목록을 감싼 상자를 없애고 줄 사이 선만 · 줄 높이 44px
+        'group relative flex h-11 items-center gap-2 border-b border-border sm:gap-2.5',
         draft.useYn ? 'hover:bg-muted/40' : 'bg-muted/70',
         // 🔴 놓일 자리 — 원래 행은 점선 칸으로 남고 그 칸이 놓일 위치로 움직인다(손에 든 모양은 `DragOverlay`)
         isDragging && 'border border-dashed border-point bg-point-bg/60 [&>*]:invisible'
@@ -162,20 +163,20 @@ const SortableRow = ({ draft, order, isFirst, isLast, onCourseMinChange, onMove,
       <span
         title={draft.pointName}
         className={cn(
-          'min-w-0 flex-1 truncate text-body font-semibold',
+          'min-w-0 flex-1 truncate text-body font-medium',
           draft.useYn ? 'text-foreground' : 'text-muted-foreground'
         )}
       >
         {draft.pointName}
       </span>
       <label className="text-caption text-muted-foreground">
-        <span className="flex h-8 items-center rounded-md border border-border bg-card pr-2 focus-within:border-point">
+        <span className="flex h-[30px] w-[92px] items-center justify-end gap-1.5 rounded-[7px] border border-border bg-card px-2.5 focus-within:border-point">
           <input
             type="number"
             min={0}
             inputMode="numeric"
             aria-label={`${draft.pointName} 구간시간(분)`}
-            className="w-12 bg-transparent px-2 text-right text-body tabular-nums text-foreground focus:outline-none"
+            className="w-full min-w-0 bg-transparent text-right text-body tabular-nums text-foreground focus:outline-none"
             value={draft.courseMin}
             disabled={disabled}
             onChange={(event) => onCourseMinChange(Number(event.target.value))}
@@ -309,8 +310,6 @@ const CoursePointEditor = ({ course, onClose, onDirtyChange }: CoursePointEditor
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="text-caption text-muted-foreground">총 {drafts.length}개</span>
-
       {drafts.length === 0 ? (
         /* 🔴 **경고가 아니다**(규칙 12). 전부 지우고 다시 짜는 것은 정상 작업이고,
            이 상태로 저장하는 것도 막지 않는다 */
@@ -330,7 +329,7 @@ const CoursePointEditor = ({ course, onClose, onDirtyChange }: CoursePointEditor
             items={drafts.map((draft) => draft.key)}
             strategy={verticalListSortingStrategy}
           >
-            <ol className="flex flex-col rounded-md border border-border">
+            <ol className="flex flex-col border-t border-border">
               {drafts.map((draft, index) => (
                 <SortableRow
                   key={draft.key}

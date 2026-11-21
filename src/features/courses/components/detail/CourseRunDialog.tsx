@@ -13,7 +13,7 @@ import type { CheckDetailRow } from '@/features/course-history/types/checkDetail
 import { toAuthMethodLabel } from '@/features/points/lib/authMethod'
 import { paths } from '@/router/paths'
 
-import { checkRatio } from '../../lib/courseRunStats'
+import { cn } from '@/lib/utils'
 
 /**
  * 회차 상세 모달 — `spec 074` T1238(시안 `개선 · 회차 상세 모달`). 최근 순찰 기록 행을 누르면 열린다.
@@ -65,7 +65,7 @@ const PointResult = ({ row }: { row: CheckDetailRow }) => {
     return <span className="tabular-nums text-foreground">{formatDt(row.checkDt, 'HH:mm') ?? '-'}</span>
   }
   if (row.status === POINT_HISTORY_STATUS.INCOMPLETE) {
-    return <span className="font-semibold text-muted-foreground">미인증</span>
+    return <span className="text-muted-foreground">미인증</span>
   }
   const label =
     row.status === POINT_HISTORY_STATUS.EXCLUDED
@@ -76,10 +76,11 @@ const PointResult = ({ row }: { row: CheckDetailRow }) => {
   return <span className="text-muted-foreground">{label}</span>
 }
 
+/** 요약 한 칸 — 이름 위 · 값 아래. 칸 사이는 세로 선(`spec 084` — 목업 `21`) */
 const Summary = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="flex items-center gap-4 text-body">
-    <span className="w-10 shrink-0 text-caption text-muted-foreground">{label}</span>
-    <span className="min-w-0 flex-1">{children}</span>
+  <div className="flex min-w-0 flex-col gap-0.5 border-l border-border py-2.5 pl-4 first:border-l-0 first:pl-0">
+    <span className="text-caption text-muted-foreground">{label}</span>
+    <span className="min-w-0 font-medium text-foreground">{children}</span>
   </div>
 )
 
@@ -98,12 +99,11 @@ const RunBody = ({ row, totalMin }: { row: CourseHistoryRow; totalMin: number })
   const details = useCourseHistoryCheckDetails(row.historySeq)
   const remaining = Math.max(row.pointCount - row.checkedCount, 0)
   const inProgress = row.status === COURSE_HISTORY_STATUS.IN_PROGRESS
-  const ratio = checkRatio(row.checkedCount, row.pointCount) ?? 0
   const points = details.data ?? []
 
   return (
     <div className="flex min-h-0 flex-col gap-4">
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-3 border-y border-border">
         <Summary label="근무자">
           {row.userList.length === 0 ? (
             <span className="text-muted-foreground">근무자 없음</span>
@@ -113,27 +113,24 @@ const RunBody = ({ row, totalMin }: { row: CourseHistoryRow; totalMin: number })
         </Summary>
         <Summary label="소요">
           <span className="tabular-nums">
-            <span className="font-semibold">{formatElapsed(row.actualElapsedTime)}</span>
-            <span className="text-caption text-muted-foreground"> 기준 {totalMin}분</span>
+            <span className={row.overtimeYn ? 'text-danger' : undefined}>{formatElapsed(row.actualElapsedTime)}</span>
+            <span className="text-caption font-normal text-muted-foreground"> 기준 {totalMin}분</span>
           </span>
         </Summary>
         <Summary label="인증">
-          <span className="flex items-center gap-2 tabular-nums">
-            <span aria-hidden className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
-              <span className="block h-full rounded-full bg-point" style={{ width: `${ratio * 100}%` }} />
-            </span>
+          <span className="flex flex-wrap items-baseline gap-x-2 tabular-nums">
             {row.checkedCount}/{row.pointCount}
             {remaining > 0 &&
               (inProgress ? (
-                <span className="text-muted-foreground">남은 지점 {remaining}</span>
+                <span className="text-caption font-normal text-muted-foreground">남은 지점 {remaining}</span>
               ) : (
-                <span className="font-semibold text-muted-foreground">미인증 {remaining}</span>
+                <span className="text-caption font-normal text-muted-foreground">미인증 {remaining}</span>
               ))}
           </span>
         </Summary>
       </div>
 
-      <div className="min-h-0 overflow-y-auto border-t border-border">
+      <div className="min-h-0 overflow-y-auto">
         {details.isPending ? (
           <div className="flex flex-col gap-2 pt-3">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -147,11 +144,20 @@ const RunBody = ({ row, totalMin }: { row: CourseHistoryRow; totalMin: number })
         ) : (
           <ol aria-label="지점별 결과" className="flex flex-col">
             {points.map((point, i) => (
-              <li key={point.detailSeq} className="flex items-center gap-3 border-b border-border py-2.5 last:border-0">
-                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-bold text-muted-foreground">
+              <li key={point.detailSeq} className="flex h-10 items-center gap-3 border-b border-border last:border-0">
+                <span
+                  className={cn(
+                    'grid size-[22px] shrink-0 place-items-center rounded-full text-[11px] font-bold tabular-nums',
+                    point.status === POINT_HISTORY_STATUS.COMPLETED
+                      ? 'bg-success text-white'
+                      : point.status === POINT_HISTORY_STATUS.INCOMPLETE
+                        ? 'border-2 border-muted-foreground/50 bg-card text-muted-foreground'
+                        : 'bg-muted text-muted-foreground'
+                  )}
+                >
                   {i + 1}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-body font-semibold">{point.pointName}</span>
+                <span className="min-w-0 flex-1 truncate text-body text-foreground">{point.pointName}</span>
                 <MethodChip code={point.authMethod} />
                 <span className="w-12 text-right text-body">
                   <PointResult row={point} />
@@ -170,48 +176,58 @@ const CourseRunDialog = ({ rows, index, totalMin, onIndexChange }: CourseRunDial
   const position = index ?? 0
   const hasPrev = position > 0
   const hasNext = position < rows.length - 1
+  /** ← → 로 회차를 넘긴다. 🔴 이전 · 다음 버튼이 제목 줄로 올라가(`spec 084`) 본문 밖에 있으므로 두 곳에 같이 건다 */
+  const handleArrowKeys = (event: React.KeyboardEvent) => {
+    if (event.key === 'ArrowLeft' && hasPrev) onIndexChange(position - 1)
+    if (event.key === 'ArrowRight' && hasNext) onIndexChange(position + 1)
+  }
 
   return (
     <AppDialog
       open={row !== undefined}
       onOpenChange={(open) => !open && onIndexChange(null)}
       title={row ? `${formatDt(row.startDt, 'MM.dd HH:mm')} 순찰` : '순찰'}
-      titleClassName="text-lg font-semibold"
-      titleSuffix={row && <StatusBadges row={row} />}
+      /* 🔄 `spec 084`(목업 `21`): 이전 · 다음 회차를 창 아래 → **제목 줄 오른쪽**으로(닫기 `×` 왼쪽) */
+      titleSuffix={
+        row && (
+          <>
+            <StatusBadges row={row} />
+            <span className="mr-8 ml-auto flex items-center gap-1.5" onKeyDown={handleArrowKeys}>
+              <span className="pr-1 text-caption font-normal text-muted-foreground tabular-nums">
+                {position + 1} / {rows.length}
+              </span>
+              <AppIconButton
+                icon={ChevronLeftIcon}
+                aria-label="이전 회차"
+                className="bg-card"
+                disabled={!hasPrev}
+                onClick={() => onIndexChange(position - 1)}
+              />
+              <AppIconButton
+                icon={ChevronRightIcon}
+                aria-label="다음 회차"
+                className="bg-card"
+                disabled={!hasNext}
+                onClick={() => onIndexChange(position + 1)}
+              />
+            </span>
+          </>
+        )
+      }
       contentClassName="sm:max-w-[560px]"
     >
       {row && (
         <div
           className="flex min-h-0 flex-col gap-4"
-          onKeyDown={(event) => {
-            if (event.key === 'ArrowLeft' && hasPrev) onIndexChange(position - 1)
-            if (event.key === 'ArrowRight' && hasNext) onIndexChange(position + 1)
-          }}
+          onKeyDown={handleArrowKeys}
         >
           <RunBody key={row.historySeq} row={row} totalMin={totalMin} />
 
-          <div className="flex items-center gap-2 border-t border-border pt-3">
-            <AppIconButton
-              icon={ChevronLeftIcon}
-              aria-label="이전 회차"
-              className="bg-card"
-              disabled={!hasPrev}
-              onClick={() => onIndexChange(position - 1)}
-            />
-            <AppIconButton
-              icon={ChevronRightIcon}
-              aria-label="다음 회차"
-              className="bg-card"
-              disabled={!hasNext}
-              onClick={() => onIndexChange(position + 1)}
-            />
-            <span className="text-caption text-muted-foreground tabular-nums">
-              {position + 1} / {rows.length}
-            </span>
+          <div className="flex items-center justify-end">
             {/* 🔴 링크로 둔다(새 탭으로 열 수 있다) — 모양은 `AppLinkButton`(편성 편집 · 수정)과 같다(2026-11-13) */}
             <Link
               to={paths.service.patrolZoneDetail(row.historySeq)}
-              className="ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-meta font-semibold text-point-foreground hover:bg-point-bg"
+              className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-meta font-medium text-point hover:bg-point-bg"
             >
               상세 보기
               <ArrowRightIcon size={13} aria-hidden />

@@ -269,7 +269,7 @@ const ZoneDetailPage = () => {
           <AppDialog
             open={editOpen}
             onOpenChange={setEditOpen}
-            title="코스 수정"
+            title="코스 편집"
             description="코스명 · 설명 · 교대 허용 · 사용 여부를 수정합니다."
             contentClassName="sm:max-w-[520px]"
           >

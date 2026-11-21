@@ -206,7 +206,8 @@ describe('AddCoursePointDialog — 필터 칩 (spec 028)', () => {
     await user.type(screen.getByPlaceholderText('지점 이름 검색'), '정문')
 
     expect(screen.getByRole('button', { name: 'QR 2건' })).toBeInTheDocument()
-    expect(screen.getByText('검색결과 1개')).toBeInTheDocument()
+    // 🔄 `spec 084`: `검색결과 n개` 줄은 없앴다 — 목록의 줄 수로 본다
+    expect(screen.getAllByRole('checkbox')).toHaveLength(1)
   })
 
   it('칩과 검색이 **조합**된다', async () => {
