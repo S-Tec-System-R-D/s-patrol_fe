@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { ChevronDownIcon, FlagIcon, ImageIcon, MessageSquareTextIcon } from 'lucide-react'
+import { ChevronDownIcon, MessageSquareTextIcon } from 'lucide-react'
 
 import AppBadge from '@/components/app/AppBadge'
 import { cardBadge } from '@/components/app/AppBadge.variants'
@@ -13,7 +13,7 @@ import {
 } from '@/features/course-history/types'
 import { cn } from '@/lib/utils'
 
-import { orderLabel, photoCountOf, type RunStep } from '../../lib/runTimeline'
+import { orderLabel, type RunStep } from '../../lib/runTimeline'
 import CheckDetailMemo from './CheckDetailMemo'
 
 /**
@@ -37,13 +37,16 @@ import CheckDetailMemo from './CheckDetailMemo'
  * ⚠️ 지도 핀은 채움 그대로다 — 지도 타일 위에서는 연한 색이 묻힌다(색은 같다).
  */
 const chipClass = (step: RunStep): string => {
-  if (step.row.status === POINT_HISTORY_STATUS.COMPLETED) return 'border-success/50 bg-success-bg text-success-foreground'
-  if (step.row.status === POINT_HISTORY_STATUS.INCOMPLETE) return 'border-muted-foreground/50 bg-muted-foreground/15 text-foreground/75'
+  if (step.row.status === POINT_HISTORY_STATUS.COMPLETED) return 'border-success bg-success text-white'
+  if (step.row.status === POINT_HISTORY_STATUS.INCOMPLETE) return 'border-muted-foreground/50 bg-card text-muted-foreground'
   if (step.isNext) return 'border-point bg-card text-point ring-4 ring-point/15'
   return 'border-dashed border-muted-foreground/60 bg-card text-muted-foreground'
 }
 
 const hhmm = (value: string | null): string | null => (value ? value.slice(11, 16) : null)
+
+/** 줄의 오른쪽 — 시각(44px) + 상태(72px). 시작 · 종료 줄과 지점 줄이 같은 세로 선에 선다 */
+const RIGHT_CLASS = 'ml-auto flex shrink-0 items-center gap-4'
 
 /** 오른쪽 끝 — 인증 시각 · 없으면 대기 / `—` */
 const timeText = (step: RunStep): string => {
@@ -61,69 +64,46 @@ const moveText = (next: RunStep | undefined): string | null => {
   return `${formatDuration(next.moveSeconds)} 이동${from}`
 }
 
-const AuthChip = ({ authMethod }: { authMethod: number | null }) =>
-  authMethod === AUTH_METHOD.QR ? (
-    <AppBadge variant="plain" className={cardBadge}>
-      QR
-    </AppBadge>
-  ) : authMethod === AUTH_METHOD.NFC ? (
-    <AppBadge variant="plain" className={cardBadge}>
-      NFC
-    </AppBadge>
-  ) : null
+/** 인증수단 — 이름 옆 작은 회색 글자(`spec 084` — 전에는 이름 아래 줄의 칩) */
+const authText = (authMethod: number | null): string | null =>
+  authMethod === AUTH_METHOD.QR ? 'QR' : authMethod === AUTH_METHOD.NFC ? 'NFC' : null
 
-/** 한 줄 미리보기 — 메모 첫 줄 · 사진 수 */
-const MemoPreview = ({ row, open, onToggle }: { row: CheckDetailRow; open: boolean; onToggle: () => void }) => {
-  const first = row.memos[0]?.memo.split('\n')[0] ?? ''
-  const photos = photoCountOf(row)
-  return (
-    <button
-      type="button"
-      aria-expanded={open}
-      aria-label={`${row.pointName} 기록 ${open ? '접기' : '펼치기'}`}
-      onClick={onToggle}
-      className="mt-2 flex w-full max-w-[640px] items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-left text-caption hover:bg-muted"
-    >
-      <MessageSquareTextIcon size={13} className="shrink-0 text-warning-foreground" aria-hidden />
-      <span className="min-w-0 flex-1 truncate text-foreground">{first}</span>
-      {row.memos.length > 1 && <span className="shrink-0 text-muted-foreground">메모 {row.memos.length}</span>}
-      {photos > 0 && (
-        <span className="inline-flex shrink-0 items-center gap-0.5 text-muted-foreground tabular-nums">
-          <ImageIcon size={12} aria-hidden />
-          {photos}
-        </span>
-      )}
-      <ChevronDownIcon
-        size={14}
-        aria-hidden
-        className={cn('shrink-0 text-muted-foreground transition-transform', open && 'rotate-180')}
-      />
-    </button>
-  )
-}
+/** 특이사항 펼침 — 시각 왼쪽의 작은 버튼(`spec 084` — 목업 `12`. 전에는 이름 아래의 미리보기 줄이었다) */
+const MemoToggle = ({ row, open, onToggle }: { row: CheckDetailRow; open: boolean; onToggle: () => void }) => (
+  <button
+    type="button"
+    aria-expanded={open}
+    aria-label={`${row.pointName} 기록 ${open ? '접기' : '펼치기'}`}
+    onClick={onToggle}
+    className="relative z-[1] inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-caption text-sub-foreground hover:bg-muted"
+  >
+    <MessageSquareTextIcon size={13} className="shrink-0 text-muted-foreground" aria-hidden />
+    특이사항
+    <ChevronDownIcon size={13} aria-hidden className={cn('shrink-0 text-muted-foreground transition-transform', open && 'rotate-180')} />
+  </button>
+)
 
-/** 시작 · 종료 줄 */
+/** 순찰 시작 · 종료 — 작은 흰 원(`spec 084`. 전에는 검정 원 + 깃발) · 이름 옆에 순찰자 · 오른쪽에 시각 */
 const EdgeRow = ({ label, sub, time, last }: { label: string; sub?: string; time: string; last?: boolean }) => (
   <div className="flex gap-3">
-    <div className="flex shrink-0 flex-col items-center">
-      <span className="grid size-7 place-items-center rounded-full bg-foreground text-background">
-        <FlagIcon size={13} aria-hidden />
-      </span>
+    <div className="flex w-6 shrink-0 flex-col items-center">
+      <span aria-hidden className="mt-[5px] size-[14px] shrink-0 rounded-full border-2 border-foreground bg-card" />
       {!last && <span aria-hidden className="w-px flex-1 bg-border" />}
     </div>
-    <div className="flex min-w-0 flex-1 items-start justify-between gap-3 pt-1">
-      <div className="flex flex-col">
-        <span className="text-body font-semibold">{label}</span>
-        {sub && <span className="text-caption text-muted-foreground">{sub}</span>}
-      </div>
-      <span className="shrink-0 text-body font-semibold tabular-nums">{time}</span>
+    <div className="flex min-h-6 min-w-0 flex-1 items-center gap-2">
+      <span className="text-body font-medium text-foreground">{label}</span>
+      {sub && <span className="text-caption text-muted-foreground">{sub}</span>}
+      <span className={RIGHT_CLASS}>
+        <span className="w-11 text-right text-body text-sub-foreground tabular-nums">{time}</span>
+        <span className="w-[72px]" />
+      </span>
     </div>
   </div>
 )
 
 const Connector = ({ text, tone = 'muted' }: { text: string | null; tone?: 'muted' | 'point' }) => (
   <div className="flex gap-3">
-    <div className="flex w-7 shrink-0 justify-center">
+    <div className="flex w-6 shrink-0 justify-center">
       <span aria-hidden className="w-px bg-border" />
     </div>
     <span className={cn('py-2 text-caption tabular-nums', tone === 'point' ? 'text-point' : 'text-muted-foreground')}>
@@ -160,23 +140,18 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
      행과 어긋난 회차에서 `2 / 3 인증` 아래에 인증 행이 1개뿐인 화면이 된다. 미인증도 행에서 센다 */
   const checked = steps.filter((step) => step.row.status === POINT_HISTORY_STATUS.COMPLETED).length
   const missed = steps.filter((step) => step.row.status === POINT_HISTORY_STATUS.INCOMPLETE).length
-  const rate = steps.length > 0 ? (checked / steps.length) * 100 : 0
   const inProgress = detail.endDt === null
   const startMove = moveText(steps[0])
 
   return (
-    <section className="flex min-w-0 flex-col gap-4 rounded-lg border border-border bg-card p-5">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h3 className="text-panel-title font-semibold">수행 타임라인</h3>
-        <span className="text-body tabular-nums">
-          <span className="font-semibold">{checked}</span>
-          <span className="text-muted-foreground"> / {steps.length} 인증</span>
+    <section className="flex min-w-0 flex-col gap-3">
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-2">
+        <h2 className="text-panel-title font-semibold">수행 타임라인</h2>
+        {/* 🔄 `spec 084`: 막대를 없애고 글자만(`7 / 8 인증 · 미인증 1`) */}
+        <span className="text-caption text-muted-foreground tabular-nums">
+          {checked} / {steps.length} 인증
+          {missed > 0 && ` · 미인증 ${missed}`}
         </span>
-        <span aria-hidden className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
-          {/* 인증 비율 막대는 메인 포인트색 하나(2026-11-16 사용자 결정 — 색 수를 줄인다) */}
-          <span className="block h-full rounded-full bg-point" style={{ width: `${rate}%` }} />
-        </span>
-        {missed > 0 && <span className="text-caption font-semibold text-muted-foreground">미인증 {missed}</span>}
         {memoRows.length > 0 && (
           <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-caption text-muted-foreground">
             <input
@@ -201,11 +176,9 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
           <ol ref={listRef} aria-label="지점 인증 내역" className="flex flex-col">
             {steps.map((step, index) => {
               const { row } = step
-              const badge = pointCheckBadge(row.status, row.memos.length > 0)
-              const plain = row.status === POINT_HISTORY_STATUS.COMPLETED && row.memos.length === 0
-              // 🔴 대기 지점도 뱃지를 달지 않는다 — 오른쪽 끝 `대기` 와 같은 말을 두 번 한다(시안)
-              const quiet = plain || row.status === POINT_HISTORY_STATUS.WAITING
-              const waiting = !plain && row.status !== POINT_HISTORY_STATUS.COMPLETED && row.status !== POINT_HISTORY_STATUS.INCOMPLETE
+              // 🔄 `spec 084`: 상태는 `인증` / `미인증` 만 — 특이사항은 펼침 버튼이 말한다(목록 화면과 같다)
+              const badge = pointCheckBadge(row.status, false)
+              const waiting = row.status !== POINT_HISTORY_STATUS.COMPLETED && row.status !== POINT_HISTORY_STATUS.INCOMPLETE
               const overtime = overtimeBadge(row.overtimeYn)
               const isOpen = expanded.has(row.detailSeq)
               const isSelected = selected === row.detailSeq
@@ -218,11 +191,11 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
               return (
                 <li key={row.detailSeq} data-detail={row.detailSeq}>
                   <div className="flex gap-3">
-                    <div className="flex shrink-0 flex-col items-center">
+                    <div className="flex w-6 shrink-0 flex-col items-center">
                       <span
                         className={cn(
-                          // 🔴 숫자 세로 중앙 — 가운데 정렬(grid)만으로는 Pretendard 숫자가 위로 뜬다. 줄 높이를 안쪽 높이에 맞춘다(`CourseStepper` 와 같은 방법)
-                          'block size-7 rounded-full border-2 text-center text-label font-bold leading-6 tabular-nums',
+                          // 🔴 숫자 세로 중앙 — 가운데 정렬(grid)만으로는 숫자가 위로 뜬다. 줄 높이를 안쪽 높이에 맞춘다
+                          'block size-6 rounded-full border-2 text-center text-[11px] font-bold leading-5 tabular-nums',
                           chipClass(step)
                         )}
                       >
@@ -232,37 +205,49 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
                       <span aria-hidden className="w-px flex-1 bg-border" />
                     </div>
 
-                    <div
-                      className={cn(
-                        'min-w-0 flex-1 rounded-md px-2 py-1 -mx-2 transition-colors',
-                        isSelected && 'bg-point-bg'
-                      )}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => onSelect(row.detailSeq)}
-                        aria-label={`${row.orderNo}. ${row.pointName} 지도에서 보기`}
-                        aria-pressed={isSelected}
-                        className="flex w-full items-start justify-between gap-3 text-left"
+                    <div className="min-w-0 flex-1">
+                      {/* 🔄 `spec 084`(목업 `12`): 한 줄 = 이름 · 순찰자 · 인증수단 | 특이사항 펼침 · 시각 · 상태.
+                          🔴 줄 전체가 "지도에서 보기" 버튼이다 — 버튼을 줄에 깔고(`absolute inset-0`) 특이사항 펼침만 그 위로 올린다
+                          (버튼 안에 버튼을 넣을 수 없다). 고른 줄은 옅은 회색 바탕 */}
+                      <div
+                        className={cn(
+                          'relative -mx-2 flex min-h-6 items-center gap-2 rounded-md px-2 transition-colors',
+                          isSelected && 'bg-muted'
+                        )}
                       >
-                        <span className="flex min-w-0 flex-col gap-1">
-                          <span className="flex flex-wrap items-center gap-1.5">
-                            <span
-                              className={cn(
-                                'text-body font-semibold break-keep',
-                                step.isNext && 'text-point',
-                                waiting && !step.isNext && 'text-muted-foreground'
-                              )}
-                            >
-                              {row.pointName}
-                            </span>
+                        <button
+                          type="button"
+                          onClick={() => onSelect(row.detailSeq)}
+                          aria-label={`${row.orderNo}. ${row.pointName} 지도에서 보기`}
+                          aria-pressed={isSelected}
+                          className="absolute inset-0 rounded-md"
+                        />
+                        <span
+                          className={cn(
+                            'min-w-0 truncate text-body font-medium',
+                            step.isNext ? 'text-point' : waiting ? 'text-muted-foreground' : 'text-foreground'
+                          )}
+                        >
+                          {row.pointName}
+                        </span>
+                        {(row.userName || authText(row.authMethod)) && (
+                          <span className="shrink-0 text-caption text-muted-foreground">
+                            {[row.userName, authText(row.authMethod)].filter(Boolean).join(' · ')}
+                          </span>
+                        )}
+                        <span className={RIGHT_CLASS}>
+                          {row.memos.length > 0 && <MemoToggle row={row} open={isOpen} onToggle={() => onToggle(row.detailSeq)} />}
+                          <span className={cn('w-11 text-right text-body tabular-nums', row.checkDt ? 'text-sub-foreground' : 'text-muted-foreground')}>
+                            {timeText(step)}
+                          </span>
+                          <span className="flex w-[72px] flex-col items-start gap-0.5">
                             {step.isNext ? (
                               <AppBadge variant="point" className={cardBadge}>
                                 다음 지점
                               </AppBadge>
                             ) : (
-                              // 🔴 정상(이상없음) · 대기는 뱃지를 달지 않는다(D2)
-                              !quiet && (
+                              // 🔴 대기 지점은 상태 표시를 달지 않는다 — 왼쪽 시각 자리의 `대기` 와 같은 말을 두 번 한다
+                              !waiting && (
                                 <AppBadge variant={badge.variant} className={cardBadge}>
                                   {badge.label}
                                 </AppBadge>
@@ -274,27 +259,12 @@ const RunTimeline = ({ detail, steps, selected, onSelect, expanded, onToggle, on
                               </AppBadge>
                             )}
                           </span>
-                          {row.authMethod !== null && (
-                            <span>
-                              <AuthChip authMethod={row.authMethod} />
-                            </span>
-                          )}
                         </span>
-                        <span
-                          className={cn(
-                            'shrink-0 pt-0.5 text-body tabular-nums',
-                            row.checkDt ? 'font-semibold' : 'text-muted-foreground'
-                          )}
-                        >
-                          {timeText(step)}
-                        </span>
-                      </button>
+                      </div>
 
-                      {row.memos.length > 0 && (
-                        <MemoPreview row={row} open={isOpen} onToggle={() => onToggle(row.detailSeq)} />
-                      )}
+                      {/* 펼친 내용 — **내용만 흰 상자**(디자인 규칙) */}
                       {isOpen && (
-                        <div className="mt-2 max-w-[640px]">
+                        <div className="mt-2 rounded-lg border border-border bg-card p-3.5">
                           <CheckDetailMemo row={row} photoLimit={3} />
                         </div>
                       )}

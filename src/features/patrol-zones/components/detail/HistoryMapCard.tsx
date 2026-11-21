@@ -157,7 +157,7 @@ const HistoryMapCard = ({ pins, missing, missingPoints = [], selected = null, on
   return (
     <Shell missing={missing} missingPoints={missingPoints}>
       {/* 🔴 높이를 고정한다 — 지도는 자기 크기를 모른다(부모가 0이면 타일이 안 뜬다) */}
-      <div ref={containerRef} className="h-[360px] w-full rounded-sm" />
+      <div ref={containerRef} className="h-[360px] w-full overflow-hidden rounded-[10px] border border-border" />
       <Legend />
     </Shell>
   )
@@ -183,9 +183,9 @@ const Shell = ({
   missingPoints?: { order: number; name: string }[]
   children: React.ReactNode
 }) => (
-  <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
+  <div className="flex flex-col gap-2.5">
     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-      <span className="text-panel-title font-semibold">코스 경로</span>
+      <h2 className="text-panel-title font-semibold">코스 경로</h2>
       <span className="text-caption text-muted-foreground">행 · 핀을 누르면 서로 표시</span>
     </div>
     {children}

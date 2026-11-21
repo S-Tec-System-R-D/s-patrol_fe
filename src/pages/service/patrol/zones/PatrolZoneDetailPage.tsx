@@ -198,16 +198,17 @@ const PatrolZoneDetailPage = () => {
       {/* 🔄 **`spec 077` 2열** — 왼쪽 수행 타임라인(나머지 폭) / 오른쪽 코스 경로 지도 + 교대 이력(D1).
           `xl` 미만 1단 — 타임라인이 먼저(이 화면의 본문), 지도는 그 아래.
           🔴 `items-start` — 오른쪽 열이 왼쪽 높이만큼 늘어나지 않게(036) */}
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_440px]">
+      {/* 🔄 `spec 084`(목업 `12`): 영역의 카드 상자를 없애고 두 단 사이 세로 선 — 코스 · 지점 상세와 같은 틀 */}
+      <div className="grid grid-cols-1 items-start gap-y-7 pt-2 xl:grid-cols-[minmax(0,1fr)_440px] xl:[&>*:first-child]:pr-8 xl:[&>*:nth-child(2)]:border-l xl:[&>*:nth-child(2)]:border-border xl:[&>*:nth-child(2)]:pl-7">
         {checkDetails.isPending ? (
           /* 🔴 로딩을 "없음" 으로 보여주지 않는다 — 인증 행이 0건인 회차가 실재한다 */
-          <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-5">
+          <div className="flex flex-col gap-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-10 animate-pulse rounded-md bg-muted" />
             ))}
           </div>
         ) : checkDetails.isError ? (
-          <div className="rounded-lg border border-border bg-card">
+          <div>
             <AppEmpty
               icon={TriangleAlertIcon}
               title="인증 내역을 불러오지 못했습니다"
@@ -231,13 +232,13 @@ const PatrolZoneDetailPage = () => {
           />
         )}
 
-        <div className="flex min-w-0 flex-col gap-4 xl:sticky xl:top-4">
+        <div className="flex min-w-0 flex-col gap-7 xl:sticky xl:top-4">
           {course.isPending ? (
             /* 🔴 조회 중에는 지도를 그리지 않는다(T523) — 등록 좌표가 없어 핀이 튀어나온다 */
             <div className="h-[420px] animate-pulse rounded-lg bg-muted" />
           ) : course.isError ? (
             /* 🔴 조용히 넘어가면 "좌표가 등록되지 않았다" 로 거짓말을 한다 — 원인이 다르다 */
-            <div className="rounded-lg border border-border bg-card">
+            <div>
               <AppEmpty
                 icon={TriangleAlertIcon}
                 title="코스 좌표를 불러오지 못했습니다"

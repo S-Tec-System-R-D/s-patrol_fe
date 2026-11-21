@@ -51,7 +51,8 @@ interface CheckDetailMemoProps {
 }
 
 const CheckDetailMemo = ({ row, photoLimit }: CheckDetailMemoProps) => (
-  <div className="flex flex-col gap-1.5 rounded-lg bg-muted/60 p-3">
+  /* 🔄 `spec 084`: 회색 바탕 상자를 벗겼다 — 타임라인은 "내용만 흰 상자", 지점 인증 상세는 상자 없이 쓴다(감싸는 쪽이 정한다) */
+  <div className="flex flex-col gap-1.5">
     {/* 값 없음은 하이픈이다(`design-system.md` §4-5A) */}
     <p className="text-caption text-muted-foreground">{row.userName ?? '-'}</p>
 
@@ -89,7 +90,7 @@ const MemoAttaches = ({ memo, limit }: { memo: CheckDetailMemoData; limit?: numb
             type="button"
             onClick={() => setShowAll(true)}
             aria-label={`사진 ${hidden}장 더 보기`}
-            className="grid size-24 place-items-center rounded-md border border-border bg-card text-body font-semibold text-muted-foreground hover:bg-muted"
+            className="grid size-[132px] place-items-center rounded-md border border-border bg-card text-body font-semibold text-muted-foreground hover:bg-muted"
           >
             +{hidden}
           </button>
@@ -120,10 +121,10 @@ export const MemoAttach = ({ attach }: { attach: CheckDetailAttach }) => {
      * ⚠️ **목업의 촬영 시각(`10:24`)은 적을 수 없다** — 첨부에 시각 필드가 없다
      * (`attachSeq`·`imagePath`·`fileName`·`fileExt` 가 전부). 지어내지 않는다(A1).
      */
-    <figure className="flex w-24 flex-col gap-1">
+    <figure className="flex w-[132px] flex-col gap-1">
       {failed ? (
         <div
-          className="flex size-24 flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border bg-card px-1 text-center"
+          className="flex size-[132px] flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border bg-card px-1 text-center"
           /* 🔴 파일명을 `title` 에도 둔다 — 캡션이 잘려도 어느 파일이 실패했는지 알 수 있어야
              백엔드에 전달된다 */
           title={attach.fileName}
@@ -138,7 +139,7 @@ export const MemoAttach = ({ attach }: { attach: CheckDetailAttach }) => {
           src={attach.imagePath}
           alt={attach.fileName}
           loading="lazy"
-          className="size-24 rounded-md border border-border object-cover"
+          className="size-[132px] rounded-md border border-border object-cover"
           // 🔴 404·mixed content·네트워크 실패를 한 분기로 모은다 — 사용자가 할 수 있는 일이 같다
           onError={() => setFailed(true)}
         />

@@ -79,12 +79,12 @@ describe('PatrolZoneDetailPage — 회차 상세 (spec 077)', () => {
     expect(screen.queryByText(/건너뜀/)).not.toBeInTheDocument()
   })
 
-  it('🔴 정상 인증은 뱃지를 달지 않는다 (D2)', async () => {
+  it('🔄 정상 인증 줄에도 `인증` 을 적는다 (spec 084 — 목업 12 · D2 의 "뱃지 없음" 을 뒤집었다)', async () => {
     renderPage(101)
 
     await screen.findByRole('list', { name: '지점 인증 내역' })
-    // 화면 낭독기용 글자는 남는다 — 눈에 보이는 뱃지만 없다
-    expect(inTimeline().queryAllByText('인증').every((el) => el.classList.contains('sr-only'))).toBe(true)
+    // 줄 오른쪽에 눈에 보이는 `인증` 이 있다(화면 낭독기용 글자와 별개)
+    expect(inTimeline().queryAllByText('인증').some((el) => !el.classList.contains('sr-only'))).toBe(true)
     // 🔄 D15 — 옛 이름은 어디에도 없다
     expect(screen.queryByText('이상없음')).not.toBeInTheDocument()
     expect(screen.queryByText('순찰기록')).not.toBeInTheDocument()
@@ -124,8 +124,8 @@ describe('PatrolZoneDetailPage — 회차 상세 (spec 077)', () => {
     renderPage(103)
 
     await screen.findByRole('list', { name: '지점 인증 내역' })
-    expect(screen.getByText('/ 3 인증', { exact: false })).toBeInTheDocument()
-    expect(screen.getByText('미인증 2')).toBeInTheDocument()
+    // 🔄 `spec 084`: 막대 없이 한 줄 글자
+    expect(screen.getByText('1 / 3 인증 · 미인증 2')).toBeInTheDocument()
   })
 
   it('지점 줄을 누르면 고른 상태가 된다 — 지도와 서로 강조 (D3)', async () => {

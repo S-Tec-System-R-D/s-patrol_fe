@@ -18,10 +18,10 @@ const dateLabel = (value: string): string => {
 }
 
 const Cell = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="flex min-w-0 flex-col gap-1 px-4 py-3 xl:px-5 xl:py-4">
+  <div className="flex min-w-0 flex-col gap-0.5 px-4 py-3 xl:px-6">
     <span className="text-caption text-muted-foreground">{label}</span>
     {/* 🔴 `xl` 미만은 **줄바꿈** — 한 줄에 시각 + 날짜(기준)를 우겨 넣으면 좁은 칸에서 잘렸다(사용자 지적 2026-11-13) */}
-    <span className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-lg font-bold tabular-nums xl:flex-nowrap xl:text-xl">
+    <span className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[17px] font-semibold tabular-nums xl:flex-nowrap">
       {children}
     </span>
   </div>
@@ -38,11 +38,11 @@ const RunSummaryStrip = ({ detail, memoRows }: RunSummaryStripProps) => (
   <section
     aria-label="순찰 요약"
     /* `xl` 미만 2×2(가운데 세로선 · 첫 줄 아래 가로선) · `xl` 이상 한 줄 4칸 */
-    className="grid grid-cols-2 rounded-lg border border-border bg-card xl:grid-cols-4 [&>*]:border-border [&>*:nth-child(-n+2)]:border-b xl:[&>*:nth-child(-n+2)]:border-b-0 [&>*:nth-child(odd)]:border-r xl:[&>*:nth-child(2)]:border-r"
+    className="grid grid-cols-2 border-y border-border xl:grid-cols-4 xl:[&>*:first-child]:pl-0 [&>*]:border-border [&>*:nth-child(-n+2)]:border-b xl:[&>*:nth-child(-n+2)]:border-b-0 [&>*:nth-child(odd)]:border-r xl:[&>*:nth-child(2)]:border-r"
   >
     <Cell label="시작">
       {detail.startDt.slice(11, 16)}
-      <span className="text-caption font-medium text-muted-foreground">{dateLabel(detail.startDt)}</span>
+      <span className="text-caption font-normal text-muted-foreground">{dateLabel(detail.startDt)}</span>
     </Cell>
     <Cell label="종료">
       {detail.endDt === null ? (
@@ -51,14 +51,14 @@ const RunSummaryStrip = ({ detail, memoRows }: RunSummaryStripProps) => (
         <>
           {detail.endDt.slice(11, 16)}
           {detail.endDt.slice(0, 10) !== detail.startDt.slice(0, 10) && (
-            <span className="text-caption font-medium text-muted-foreground">{dateLabel(detail.endDt)}</span>
+            <span className="text-caption font-normal text-muted-foreground">{dateLabel(detail.endDt)}</span>
           )}
         </>
       )}
     </Cell>
     <Cell label="소요시간">
       {formatElapsed(detail.elapsedTime)}
-      <span className="text-caption font-medium text-muted-foreground">
+      <span className="text-caption font-normal text-muted-foreground">
         {detail.totalMin > 0 ? `기준 ${detail.totalMin}분` : '기준 미설정'}
       </span>
     </Cell>
@@ -68,7 +68,8 @@ const RunSummaryStrip = ({ detail, memoRows }: RunSummaryStripProps) => (
       ) : memoRows === 0 ? (
         '없음'
       ) : (
-        <span className="text-warning-foreground">{memoRows}건</span>
+        // 🔄 `spec 084`: 주황을 쓰지 않는다 — 건수는 본문색
+        `${memoRows}건`
       )}
     </Cell>
   </section>
