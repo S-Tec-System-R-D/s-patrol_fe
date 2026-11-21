@@ -276,15 +276,17 @@ describe('UserDetailPage — 순찰 기록(회차 단위, spec 079)', () => {
     renderAt('104')
 
     await runButtons()
-    expect(screen.getByText('8회')).toBeInTheDocument()
+    // 🔄 `spec 084`: 상자 없는 한 줄 숫자 — 값과 단위가 따로 그려져 줄 전체의 글자로 본다
+    const stats = screen.getByRole('group', { name: '순찰 요약' })
+    expect(stats).toHaveTextContent('순찰8회')
     expect(screen.getByText('86%')).toBeInTheDocument()
     expect(screen.getByText('31/36')).toBeInTheDocument()
     // 🔄 D13 — 요약에 지점 결과(미인증 지점 수)를 적지 않는다
     expect(screen.queryByText('미인증 지점')).not.toBeInTheDocument()
-    expect(screen.getByText('1회')).toBeInTheDocument()
-    expect(screen.getByText('3회')).toBeInTheDocument()
+    expect(stats).toHaveTextContent('미완료1회')
+    expect(stats).toHaveTextContent('시간초과3회')
     // 🔄 D14 — 특이사항 칸은 뺐다(회차 줄 표시로 옮김)
-    expect(screen.queryByText('2회')).not.toBeInTheDocument()
+    expect(stats).not.toHaveTextContent('특이사항')
     // 🔴 D2 — 시안의 `누락` 은 쓰지 않는다
     expect(screen.queryByText(/누락/)).not.toBeInTheDocument()
   })

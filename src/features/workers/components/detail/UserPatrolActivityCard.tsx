@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { ChevronRightIcon, TriangleAlertIcon } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Bar, BarChart, CartesianGrid, Cell, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
 import AppEmpty from '@/components/app/AppEmpty'
 import { recentRange } from '@/features/course-history/lib/historyRange'
@@ -35,10 +35,9 @@ import UserRunRow from './UserRunRow'
 const DAY_PARAM = 'day'
 
 const COLORS = {
-  completed: 'var(--color-point)',
-  incomplete: 'var(--color-muted-foreground)',
+  completed: 'var(--point)',
+  incomplete: 'var(--muted-foreground)',
 } as const
-const OVERTIME_COLOR = 'var(--color-danger)'
 
 const ChartTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: RunDayBucket }[] }) => {
   if (!active || !payload?.length) return null
@@ -86,18 +85,13 @@ const TipRow = ({
   </p>
 )
 
-const Stat = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="flex flex-col gap-0.5">
-    <span className="text-caption text-muted-foreground">{label}</span>
-    <span className="text-xl font-bold tabular-nums text-foreground">{children}</span>
-  </div>
-)
-
-const Legend = ({ color, label }: { color: string; label: string }) => (
-  <span className="inline-flex items-center gap-1.5">
-    <span className="size-2 rounded-xs" style={{ background: color }} aria-hidden />
+/** 상자 없는 한 줄 숫자의 한 칸 — `이름 **값** 덧말`. 칸 사이는 세로 선(지점 상세와 같은 모양 — `spec 084`) */
+const Stat = ({ label, value, note, danger }: { label: string; value: React.ReactNode; note?: React.ReactNode; danger?: boolean }) => (
+  <div className="flex items-baseline gap-1.5 border-l border-border pr-1 pl-4 text-[12px] text-muted-foreground first:border-l-0 first:pl-0">
     {label}
-  </span>
+    <span className={cn('text-[18px] font-semibold tabular-nums', danger ? 'text-danger' : 'text-foreground')}>{value}</span>
+    {note && <span className="tabular-nums">{note}</span>}
+  </div>
 )
 
 interface UserPatrolActivityCardProps {
@@ -143,34 +137,38 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
   const allHref = `${paths.service.patrolZones}?${new URLSearchParams({ user: userName, from: range.fromDt, to: range.toDt })}`
 
   const onBar = (data: { payload?: RunDayBucket }) => data.payload && selectDay(data.payload.date)
-  const bar = (key: keyof typeof COLORS, top: boolean) => (
+  const bar = (key: keyof typeof COLORS) => (
     <Bar
       dataKey={key}
       stackId="day"
-      maxBarSize={22}
-      radius={top ? [2, 2, 0, 0] : undefined}
+      radius={2}
       className="cursor-pointer"
       onClick={onBar}
       isAnimationActive={false}
     >
       {buckets.map((bucket) => (
-        <Cell key={bucket.date} fill={COLORS[key]} fillOpacity={selected && selected !== bucket.date ? 0.25 : 1} />
+        <Cell
+          key={bucket.date}
+          fill={COLORS[key]}
+          // 옅게 깔고 **고른 날만 진하게**(고르지 않았으면 오늘) — 지점 상세와 같다
+          fillOpacity={bucket.date === (selected ?? todayKey) ? (key === 'completed' ? 1 : 0.6) : key === 'completed' ? 0.35 : 0.4}
+        />
       ))}
 
     </Bar>
   )
 
   return (
-    <section className="flex min-w-0 flex-col gap-4 rounded-lg border border-border bg-card p-5">
-      <div className="flex items-start justify-between gap-4">
+    <section className="flex min-w-0 flex-col gap-3.5">
+      <div className="flex items-baseline justify-between gap-4">
         <span className="flex items-baseline gap-2">
-          <span className="text-panel-title font-semibold text-foreground">순찰 기록</span>
-          <span className="text-caption text-muted-foreground">최근 14일</span>
+          <h2 className="text-panel-title font-semibold text-foreground">순찰 기록</h2>
+          <span className="text-caption text-muted-foreground">최근 14일 · 막대를 누르면 해당 일자만 표시</span>
         </span>
         {/* 코스 순찰이력 — 순찰자 이름 · 같은 기간을 걸어 보낸다(목록은 이름 부분 검색이라 동명이인이 섞일 수 있다) */}
         <Link
           to={allHref}
-          className="inline-flex shrink-0 items-center gap-0.5 text-caption text-muted-foreground hover:text-foreground"
+          className="inline-flex shrink-0 items-center gap-0.5 text-caption font-medium text-point hover:underline"
         >
           전체 기록
           <ChevronRightIcon size={13} aria-hidden />
@@ -187,96 +185,46 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
           description={runs.error?.message}
         />
       ) : runs.runs.length === 0 ? (
-        <AppEmpty
-          illustration="route"
-          title="순찰 기록이 없습니다"
-          description="최근 14일 동안 이 사업장에서 순찰한 회차가 없습니다."
-        />
+        <p className="py-6 text-center text-caption text-muted-foreground">순찰 기록이 없습니다</p>
       ) : (
         <>
-          <div className="flex flex-wrap gap-x-10 gap-y-3">
-            <Stat label="순찰">{summary.runs}회</Stat>
-            <Stat label="미완료">{summary.incomplete}회</Stat>
-            <Stat label="시간초과">
-              <span className={cn(summary.overtime > 0 && 'text-danger')}>{summary.overtime}회</span>
-            </Stat>
-            <Stat label="지점 인증">
-              {rate !== null ? `${rate}%` : '-'}
-              <span className="ml-1.5 text-caption font-semibold text-muted-foreground">
-                {summary.checked}/{summary.points}
-              </span>
-            </Stat>
+          <div role="group" aria-label="순찰 요약" className="flex flex-wrap gap-y-2">
+            <Stat label="순찰" value={summary.runs} note="회" />
+            <Stat label="미완료" value={summary.incomplete} note="회" />
+            <Stat label="시간초과" value={summary.overtime} note="회" danger={summary.overtime > 0} />
+            <Stat label="지점 인증" value={rate !== null ? `${rate}%` : '-'} note={`${summary.checked}/${summary.points}`} />
           </div>
 
           {/* 🔴 막대를 누르면 recharts 가 차트 전체에 포커스 테두리를 그린다 — 막대 색 변화로 충분해 지운다(076) */}
-          <div className="h-[170px] w-full [&_*:focus]:outline-none">
+          <div className="h-[100px] w-full [&_*:focus]:outline-none">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={buckets} margin={{ top: 18, right: 8, bottom: 0, left: -28 }}>
-                <CartesianGrid vertical={false} stroke="var(--color-border)" strokeDasharray="2 4" />
+              <BarChart data={buckets} margin={{ top: 0, right: 0, bottom: 0, left: 0 }} barCategoryGap={4}>
                 <XAxis
                   dataKey="date"
                   interval={0}
                   tickLine={false}
                   axisLine={false}
-                  tickFormatter={(value: string) => format(parseISO(value), 'dd')}
-                  tick={{ fontSize: 10, fill: 'var(--color-muted-foreground)' }}
+                  tickMargin={8}
+                  tickFormatter={(value: string) => (value === todayKey ? '오늘' : `${format(parseISO(value), 'd')}일`)}
+                  fontSize={11}
+                  stroke="var(--muted-foreground)"
                 />
-                <YAxis
-                  allowDecimals={false}
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
-                />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-muted)', opacity: 0.6 }} />
-                {bar('completed', false)}
-                {bar('incomplete', true)}
-                {/* 막대 위 시간초과 수 — 🔴 막대의 `LabelList` 로 그리지 않는다: 높이 0 인 칸(미완료 없는 날)은
-                    라벨이 빠지고 순번이 밀려 다른 날에 찍힌다. 날짜 · 막대 높이 좌표에 직접 찍는다 */}
-                {buckets
-                  .filter((bucket) => bucket.overtime > 0)
-                  .map((bucket) => (
-                    <ReferenceDot
-                      key={bucket.date}
-                      x={bucket.date}
-                      y={bucket.completed + bucket.incomplete}
-                      r={0}
-                      label={{
-                        value: bucket.overtime,
-                        position: 'top',
-                        offset: 4,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        fill: OVERTIME_COLOR,
-                        fillOpacity: selected && selected !== bucket.date ? 0.25 : 1,
-                      }}
-                    />
-                  ))}
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--muted)' }} />
+                {bar('completed')}
+                {bar('incomplete')}
+                {/* 🔄 `spec 084`(목업 `14`): 막대 위 시간초과 수를 없앴다 — 위의 한 줄 숫자와 말풍선이 말한다 */}
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border pb-3 text-caption text-muted-foreground">
-            <Legend color={COLORS.completed} label="완료" />
-            <Legend color={COLORS.incomplete} label="미완료" />
-            <span className="inline-flex items-center gap-1.5">
-              <span className="font-bold tabular-nums text-danger" aria-hidden>
-                n
-              </span>
-              시간초과
-            </span>
-            <span className="ml-auto">
-              {selected ? (
-                <>
-                  {formatRunDay(selected)} 기록 ·{' '}
-                  <button type="button" className="font-medium text-point hover:underline" onClick={() => selectDay(null)}>
-                    전체 보기
-                  </button>
-                </>
-              ) : (
-                '최근 14일 전체 · 막대를 누르면 해당 일자만 표시'
-              )}
-            </span>
-          </div>
+          {selected && (
+            <p className="text-caption text-muted-foreground">
+              {formatRunDay(selected)} 기록 ·{' '}
+              <button type="button" className="font-medium text-point hover:underline" onClick={() => selectDay(null)}>
+                전체 보기
+              </button>
+            </p>
+          )}
 
           {groups.length === 0 ? (
             <p className="py-6 text-center text-body text-muted-foreground">
@@ -286,13 +234,13 @@ const UserPatrolActivityCard = ({ userSeq, userName, siteSeq }: UserPatrolActivi
             <div className="flex flex-col">
               {groups.map((group) => {
                 return (
-                  <section key={group.date} aria-label={`${formatRunDay(group.date)} 기록`} className="border-b border-border/60 last:border-0">
-                    <div className="flex items-center gap-2 pt-3 pb-1">
+                  <section key={group.date} aria-label={`${formatRunDay(group.date)} 기록`} className="mt-3.5 first:mt-0">
+                    <div className="flex h-[30px] items-center gap-2 border-b border-border">
                       {/* 🔴 회차 수 · 예외 수를 적지 않는다(D1 · D5) — 예외는 아래 회차 줄에 있다 */}
-                      <h4 className="text-body font-semibold tabular-nums">{formatRunDay(group.date)}</h4>
+                      <h4 className="text-caption font-normal text-muted-foreground tabular-nums">{formatRunDay(group.date)}</h4>
                       {group.date === todayKey && <span className="text-caption font-medium text-point">오늘</span>}
                     </div>
-                    <ul className="flex flex-col gap-0.5 pb-2">
+                    <ul className="flex flex-col">
                       {group.rows.map((row) => (
                         <UserRunRow
                           key={row.historySeq}

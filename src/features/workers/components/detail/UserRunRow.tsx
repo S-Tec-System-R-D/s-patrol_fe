@@ -9,7 +9,7 @@ import {
   useCourseHistoryHandOvers,
 } from '@/features/course-history/hooks/useCourseHistoryDetail'
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
-import { pointCheckBadge } from '@/features/course-history/lib/historyBadge'
+import { courseResultBadge, pointCheckBadge } from '@/features/course-history/lib/historyBadge'
 import {
   AUTH_METHOD,
   COURSE_HISTORY_STATUS,
@@ -73,8 +73,8 @@ const PointLine = ({ check, me }: { check: CheckDetailRow; me: number }) => {
         )}
       </div>
       {memo && (
-        <div className="ml-7 flex items-start gap-2 rounded-sm bg-warning/10 px-2.5 py-1.5 text-caption">
-          <MessageSquareTextIcon size={13} className="mt-0.5 shrink-0 text-warning-foreground" aria-hidden />
+        <div className="ml-7 flex items-start gap-2 rounded-sm bg-muted px-2.5 py-1.5 text-caption">
+          <MessageSquareTextIcon size={13} className="mt-0.5 shrink-0 text-muted-foreground" aria-hidden />
           <span className="min-w-0 flex-1 whitespace-pre-line">{check.memos.map((item) => item.memo).join('\n')}</span>
           {photos > 0 && (
             <span className="inline-flex shrink-0 items-center gap-1 text-muted-foreground">
@@ -120,7 +120,7 @@ const RunDetail = ({ row, me }: { row: CourseHistoryRow; me: number }) => {
         /* ⚠️ 회차는 있는데 인증 행이 0건인 경우가 실재한다(완료인데 checkedCount 0) */
         <p className="py-2 text-caption text-muted-foreground">지점별 기록이 없습니다.</p>
       ) : (
-        <ul className="flex flex-col rounded-sm border border-border/60 bg-card px-3 py-1">
+        <ul className="flex flex-col">
           {list.map((check) => {
             const turn = turns.find((item) => item.nextOrderNo === check.orderNo)
             return (
@@ -161,6 +161,8 @@ const UserRunRow = ({ row, userSeq, open, onToggle }: UserRunRowProps) => {
   const panelId = useId()
   const ratio = row.pointCount > 0 ? Math.round((row.checkedCount / row.pointCount) * 100) : 0
   const end = hhmm(row.endDt)
+  /** 회차 상태 — 순찰이력 목록과 같은 표시(진행중 · 완료 · 미완료) */
+  const result = courseResultBadge(row.status)
   /* 🔴 접근 이름을 따로 준다 — 칸마다 span 이라 내용으로 셈하면 `14:28– 14:40지하 주차장…` 처럼 붙어 읽힌다 */
   const label = [
     `${hhmm(row.startDt)} – ${end ?? '진행 중'}`,
@@ -176,67 +178,59 @@ const UserRunRow = ({ row, userSeq, open, onToggle }: UserRunRowProps) => {
     .join(' · ')
 
   return (
-    <li className={cn('rounded-md', open && 'bg-muted/40')}>
+    /* 🔄 `spec 084`(목업 `14`): 한 줄 = **코스 · 시각 · 소요 · 막대 + n/N | 교대 · 특이사항 · 상태 · 펼침**(전에는 시각이 맨 앞 · 상태 글자가 막대 왼쪽).
+       줄 사이 선 · 줄 높이 46px. 펼침은 유지한다(사용자 결정 2026-11-21) — 펼친 내용은 "내용만 흰 상자" */
+    <li className="border-b border-border last:border-0">
       <button
         type="button"
         aria-label={label}
         aria-expanded={open}
         aria-controls={panelId}
         onClick={onToggle}
-        className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-md px-2 py-2.5 text-left hover:bg-muted/50"
+        className="flex min-h-[46px] w-full flex-wrap items-center gap-x-4 gap-y-1 py-1.5 text-left hover:bg-muted/50"
       >
-        {/* 🔴 좁은 폭에서는 시각 · 코스명 한 줄, 숫자들은 다음 줄 — 한 줄에 몰면 코스명이 한 글자로 잘렸다(390 캡처) */}
-        <span className="flex min-w-[220px] flex-1 items-center gap-3">
-          <span className="w-[92px] shrink-0 text-body tabular-nums">
-            <span className="font-semibold">{hhmm(row.startDt)}</span>
-            <span className="text-muted-foreground"> – {end ?? '진행 중'}</span>
-          </span>
-          <span className="min-w-0 flex-1 truncate text-body font-semibold">{row.courseName}</span>
+        <span className="w-[200px] min-w-0 shrink-0 truncate font-medium text-foreground">{row.courseName}</span>
+        <span className="w-[130px] shrink-0 text-sub-foreground tabular-nums">
+          {hhmm(row.startDt)} ~ {end ?? ''}
         </span>
-        <span className="ml-auto flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1">
-          {/* 🔴 있다 없다 하는 표시는 막대 왼쪽 — 오른쪽(막대 · 인증 · 소요)은 폭을 고정해 줄마다 세로로 맞춘다(D7) */}
-          {row.status === COURSE_HISTORY_STATUS.INCOMPLETE && (
-            <span className="shrink-0 text-caption font-medium text-muted-foreground">미완료</span>
-          )}
+        <span className={cn('inline-flex w-[110px] shrink-0 items-center gap-1 tabular-nums', row.overtimeYn ? 'text-danger' : 'text-sub-foreground')}>
+          {row.overtimeYn && <ClockIcon size={12} aria-hidden />}
+          {row.overtimeYn && <span className="sr-only">시간초과</span>}
+          {formatElapsed(row.actualElapsedTime)}
+        </span>
+        <span className="flex shrink-0 items-center gap-2">
+          {/* 🔴 비율만 — 지점별 인증 여부는 목록에 없다. 색을 입히지 않는다(분모 미확인, api-spec 15) */}
+          <span className="hidden h-1 w-14 overflow-hidden rounded-full bg-muted sm:block" aria-hidden>
+            <span className="block h-full rounded-full bg-point" style={{ width: `${ratio}%` }} />
+          </span>
+          <span className="text-caption tabular-nums text-muted-foreground">
+            <span className="sr-only">인증 </span>
+            {row.checkedCount}/{row.pointCount}
+          </span>
+        </span>
+        <span className="ml-auto flex shrink-0 items-center gap-2.5">
           {hasHandOver(row) && (
-            <span className="inline-flex shrink-0 items-center gap-1 text-caption font-medium text-point-foreground">
-              <ArrowLeftRightIcon size={12} aria-hidden />
+            <span className="inline-flex shrink-0 items-center gap-1 text-caption text-sub-foreground">
+              <ArrowLeftRightIcon size={12} className="text-muted-foreground" aria-hidden />
               교대
             </span>
           )}
+          <AppBadge variant={result.variant}>{result.label}</AppBadge>
           {row.hasMemo && (
-            <span className="inline-flex shrink-0 items-center gap-1 text-caption font-medium text-warning-foreground">
-              <MessageSquareTextIcon size={12} aria-hidden />
-              특이사항
+            <span className="inline-flex shrink-0">
+              <MessageSquareTextIcon size={14} className="text-muted-foreground" aria-hidden />
+              <span className="sr-only">특이사항</span>
             </span>
           )}
-          {row.overtimeYn && (
-            <span className="inline-flex shrink-0 items-center gap-1 text-caption font-medium text-danger">
-              <ClockIcon size={12} aria-hidden />
-              시간초과
-            </span>
-          )}
-          <span className="flex shrink-0 items-center gap-2">
-            {/* 🔴 비율만 — 지점별 인증 여부는 목록에 없다. 색을 입히지 않는다(분모 미확인, api-spec 15) */}
-            <span className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted sm:block" aria-hidden>
-              <span className="block h-full rounded-full bg-point" style={{ width: `${ratio}%` }} />
-            </span>
-            <span className="w-[60px] text-caption tabular-nums text-muted-foreground">
-              인증 {row.checkedCount}/{row.pointCount}
-            </span>
-          </span>
-          <span className="w-12 shrink-0 text-right text-caption tabular-nums text-muted-foreground">
-            {formatElapsed(row.actualElapsedTime)}
-          </span>
           <ChevronDownIcon
             size={14}
-            className={cn('shrink-0 text-muted-foreground transition-transform', open && 'rotate-180')}
+            className={cn('shrink-0 text-muted-foreground/70 transition-transform', open && 'rotate-180')}
             aria-hidden
           />
         </span>
       </button>
       {open && (
-        <div id={panelId} className="px-2 pt-1 pb-3">
+        <div id={panelId} className="mb-3 rounded-lg border border-border bg-card p-3.5">
           <RunDetail row={row} me={userSeq} />
         </div>
       )}

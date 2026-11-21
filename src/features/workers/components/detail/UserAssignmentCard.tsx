@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { differenceInCalendarDays, parseISO } from 'date-fns'
-import { ArrowLeftRightIcon, TriangleAlertIcon } from 'lucide-react'
+import { TriangleAlertIcon } from 'lucide-react'
 
 import AppButton from '@/components/app/AppButton'
 import AppEmpty from '@/components/app/AppEmpty'
@@ -72,10 +72,11 @@ const UserAssignmentCard = ({ userSeq, homeSiteName }: UserAssignmentCardProps) 
   const today = new Date()
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
-      <div className="flex flex-col gap-1">
-        <h3 className="text-panel-title font-bold text-foreground">배치 이력</h3>
-        <p className="text-caption text-muted-foreground">전체 사업장 배치 기록</p>
+    /* 🔄 `spec 084`(목업 `14`): 카드 상자 · 타임라인 점과 세로 선을 없애고 **줄 사이 선** — 한 줄 = 사업장 · 오른쪽 상태 / 아래 기간 · 날수 */
+    <section className="flex flex-col gap-2.5">
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <h2 className="text-panel-title font-semibold text-foreground">배치 이력</h2>
+        <span className="text-caption text-muted-foreground">전체 사업장 배치 기록</span>
       </div>
 
       {history.isPending ? (
@@ -95,50 +96,31 @@ const UserAssignmentCard = ({ userSeq, homeSiteName }: UserAssignmentCardProps) 
           </div>
         </div>
       ) : rows.length === 0 ? (
-        <AppEmpty
-          icon={ArrowLeftRightIcon}
-          title="배치 이력이 없습니다"
-          description="다른 사업장 배치가 승인되면 여기에 기록됩니다."
-        />
+        /* 한 영역 안의 빈 상태는 글자 한 줄(디자인 규칙) */
+        <p className="py-6 text-center text-caption text-muted-foreground">배치 이력이 없습니다</p>
       ) : (
         <>
           <ul className="flex flex-col">
-            {rows.map((row, index) => {
-              const active = row.status === ASSIGNMENT_STATUS.ACTIVE
+            {rows.map((row) => {
               const duration = durationText(row, today)
               return (
-                <li key={row.assignmentSeq} className="relative flex gap-3 pb-4 last:pb-0">
-                  {/* 타임라인 — 배치중만 채운 점(지금), 나머지는 빈 원 */}
-                  {index < rows.length - 1 && (
-                    <span className="absolute top-4 bottom-0 left-[5.5px] w-px bg-border" aria-hidden />
-                  )}
-                  <span
-                    className={`relative mt-1 size-3 shrink-0 rounded-full ${
-                      active ? 'bg-point ring-3 ring-point-bg' : 'border-2 border-muted-foreground/40 bg-card'
-                    }`}
-                    aria-hidden
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <div className="flex min-w-0 items-center gap-2 text-body">
-                      <span className="min-w-0 truncate">
-                        {homeSiteName && (
-                          <span className="text-muted-foreground">{homeSiteName} → </span>
-                        )}
-                        <span className="font-semibold text-foreground">{row.siteName}</span>
-                      </span>
-                      <AssignmentStatusBadge status={row.status} statusName={row.statusName} />
-                    </div>
-                    <span className="text-meta tabular-nums text-muted-foreground">{periodText(row)}</span>
-                  </div>
-                  {duration && (
-                    <span
-                      className={`shrink-0 text-meta tabular-nums ${
-                        active ? 'font-bold text-foreground' : 'text-muted-foreground'
-                      }`}
-                    >
-                      {duration}
+                <li key={row.assignmentSeq} className="flex flex-col gap-0.5 border-b border-border py-3 last:border-0">
+                  <div className="flex min-w-0 items-center justify-between gap-2">
+                    <span className="min-w-0 truncate">
+                      {homeSiteName && <span className="text-muted-foreground">{homeSiteName} → </span>}
+                      <span className="font-medium text-foreground">{row.siteName}</span>
                     </span>
-                  )}
+                    <AssignmentStatusBadge status={row.status} statusName={row.statusName} />
+                  </div>
+                  <span className="text-caption text-muted-foreground tabular-nums">
+                    <span>{periodText(row)}</span>
+                    {duration && (
+                      <>
+                        {' · '}
+                        <span>{duration}</span>
+                      </>
+                    )}
+                  </span>
                 </li>
               )
             })}

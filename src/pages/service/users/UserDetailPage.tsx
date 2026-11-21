@@ -194,8 +194,9 @@ const UserDetailPage = () => {
 
       {/* 🔄 **`spec 079`**: 왼쪽 **고정 패널**(기본정보 + 배치 이력) / 오른쪽 **순찰 기록**(나머지 폭) — 076 과 같은 틀.
           `xl` 미만 1단 — DOM 순서대로 "누구인가" 가 먼저. 🔴 `items-start` — 짧은 쪽이 긴 쪽 높이로 늘어나지 않게(036) */}
-      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[400px_minmax(0,1fr)]">
-        <div className="flex min-w-0 flex-col gap-4">
+      {/* 🔄 `spec 084`(목업 `14`): 영역의 카드 상자를 없애고 두 단 사이 세로 선 */}
+      <div className="grid grid-cols-1 items-start gap-y-7 pt-2 xl:grid-cols-[400px_minmax(0,1fr)] xl:[&>*:first-child]:pr-7 xl:[&>*:nth-child(2)]:border-l xl:[&>*:nth-child(2)]:border-border xl:[&>*:nth-child(2)]:pl-8">
+        <div className="flex min-w-0 flex-col gap-7">
           <UserInfoCard user={user} />
           {/* 상세 `siteName` 은 소속지다(실측) — 배치 이력의 출발지로 쓴다(`spec 049`) */}
           <UserAssignmentCard userSeq={user.userSeq} homeSiteName={user.siteName} />
