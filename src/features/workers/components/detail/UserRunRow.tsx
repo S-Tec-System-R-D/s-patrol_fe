@@ -47,43 +47,69 @@ const handOverText = (row: HandOverRow, me: number) => {
   return `${row.fromUserName} → ${row.toUserName} 교대`
 }
 
-const PointLine = ({ check, me }: { check: CheckDetailRow; me: number }) => {
+/**
+ * 펼친 내용의 지점 한 줄 — **세로 타임라인**(사용자 결정 2026-11-21 · A안. 순찰이력 상세의 수행 타임라인을 작게 줄인 모양).
+ *
+ * 전에는 번호 · 이름 · 시각이 같은 크기 · 같은 색으로 쌓인 목록이라 밋밋했다 — 상태가 글자에만 있고 순서가 이어져 보이지 않았다.
+ * - 번호를 원 안에 넣고 세로 선으로 잇는다. 인증 = 초록 채움 · 미인증 = 회색 테두리 · 그 밖(대기 등) = 회색 바탕.
+ * - 특이사항은 회색 띠 → **옅은 테두리 상자**로 그 지점 아래에 들여 넣는다(타임라인에서 가지가 나온 모양).
+ */
+const PointLine = ({ check, me, last }: { check: CheckDetailRow; me: number; last: boolean }) => {
   const done = check.status === POINT_HISTORY_STATUS.COMPLETED
+  const missed = check.status === POINT_HISTORY_STATUS.INCOMPLETE
   const badge = pointCheckBadge(check.status, false)
   const other = check.checkUserSeq !== null && check.checkUserSeq !== me ? check.userName : null
   const memo = check.memos[0]
   const photos = check.memos.reduce((sum, item) => sum + (item.attaches?.length ?? 0), 0)
   return (
-    <li className="flex flex-col gap-1 py-1.5">
-      <div className="flex items-center gap-3 text-body">
-        <span className="w-4 shrink-0 text-right text-caption tabular-nums text-muted-foreground">{check.orderNo}</span>
-        <span className={cn('min-w-0 flex-1 truncate', done ? 'font-medium' : 'text-muted-foreground')}>
-          {check.pointName}
-          {other && <span className="ml-1.5 text-caption font-normal text-muted-foreground">{other}</span>}
+    <li className="flex gap-3">
+      <div className="flex w-[22px] shrink-0 flex-col items-center">
+        <span
+          className={cn(
+            'grid size-[22px] shrink-0 place-items-center rounded-full text-[11px] font-bold tabular-nums',
+            done
+              ? 'bg-success text-white'
+              : missed
+                ? 'border-2 border-muted-foreground/50 bg-card text-muted-foreground'
+                : 'bg-muted text-muted-foreground'
+          )}
+        >
+          {check.orderNo}
         </span>
-        {authLabel(check.authMethod) && (
-          <span className="shrink-0 text-caption text-muted-foreground">{authLabel(check.authMethod)}</span>
-        )}
-        {done ? (
-          <span className="w-11 shrink-0 text-right tabular-nums">{hhmm(check.checkDt) ?? '-'}</span>
-        ) : (
-          <AppBadge variant={badge.variant} className={cn('shrink-0', cardBadge)}>
-            {badge.label}
-          </AppBadge>
-        )}
+        {!last && <span aria-hidden className="w-px flex-1 bg-border" />}
       </div>
-      {memo && (
-        <div className="ml-7 flex items-start gap-2 rounded-sm bg-muted px-2.5 py-1.5 text-caption">
-          <MessageSquareTextIcon size={13} className="mt-0.5 shrink-0 text-muted-foreground" aria-hidden />
-          <span className="min-w-0 flex-1 whitespace-pre-line">{check.memos.map((item) => item.memo).join('\n')}</span>
-          {photos > 0 && (
-            <span className="inline-flex shrink-0 items-center gap-1 text-muted-foreground">
-              <CameraIcon size={12} aria-hidden />
-              사진 {photos}
-            </span>
+      <div className={cn('flex min-w-0 flex-1 flex-col gap-1.5', !last && 'pb-3')}>
+        <div className="flex min-h-[22px] items-center gap-3 text-body">
+          <span className={cn('min-w-0 flex-1 truncate', done ? 'font-medium text-foreground' : 'text-muted-foreground')}>
+            {check.pointName}
+            {other && <span className="ml-1.5 text-caption font-normal text-muted-foreground">{other}</span>}
+          </span>
+          {authLabel(check.authMethod) && (
+            <span className="shrink-0 text-caption text-muted-foreground">{authLabel(check.authMethod)}</span>
+          )}
+          {done ? (
+            <span className="w-11 shrink-0 text-right text-sub-foreground tabular-nums">{hhmm(check.checkDt) ?? '-'}</span>
+          ) : (
+            <AppBadge variant={badge.variant} className={cn('shrink-0', cardBadge)}>
+              {badge.label}
+            </AppBadge>
           )}
         </div>
-      )}
+        {memo && (
+          <div className="flex items-start gap-2 rounded-md border border-border px-2.5 py-2 text-caption">
+            <MessageSquareTextIcon size={13} className="mt-0.5 shrink-0 text-muted-foreground" aria-hidden />
+            <span className="min-w-0 flex-1 whitespace-pre-line text-foreground">
+              {check.memos.map((item) => item.memo).join('\n')}
+            </span>
+            {photos > 0 && (
+              <span className="inline-flex shrink-0 items-center gap-1 text-muted-foreground">
+                <CameraIcon size={12} aria-hidden />
+                사진 {photos}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
     </li>
   )
 }
@@ -105,7 +131,7 @@ const RunDetail = ({ row, me }: { row: CourseHistoryRow; me: number }) => {
   const loose = turns.filter((turn) => !list.some((check) => check.orderNo === turn.nextOrderNo))
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {loose.length > 0 && (
         <p className="flex flex-wrap gap-x-2 text-caption font-medium text-point-foreground">
           {loose.map((turn, i) => (
@@ -121,18 +147,24 @@ const RunDetail = ({ row, me }: { row: CourseHistoryRow; me: number }) => {
         <p className="py-2 text-caption text-muted-foreground">지점별 기록이 없습니다.</p>
       ) : (
         <ul className="flex flex-col">
-          {list.map((check) => {
+          {list.map((check, index) => {
             const turn = turns.find((item) => item.nextOrderNo === check.orderNo)
             return (
               <Fragment key={check.detailSeq}>
                 {turn && (
-                  <li className="flex items-center gap-2 py-1 text-caption font-medium text-point-foreground">
-                    <ArrowLeftRightIcon size={12} aria-hidden />
-                    {handOverText(turn, me)}
-                    <span className="flex-1 border-t border-dashed border-point/40" aria-hidden />
+                  /* 교대 — 타임라인의 세로 선은 끊지 않는다(왼쪽에 선 조각을 잇는다) */
+                  <li className="flex gap-3">
+                    <span className="flex w-[22px] shrink-0 justify-center" aria-hidden>
+                      <span className="w-px bg-border" />
+                    </span>
+                    <span className="flex min-w-0 flex-1 items-center gap-2 pb-3 text-caption font-medium text-point">
+                      <ArrowLeftRightIcon size={12} aria-hidden />
+                      {handOverText(turn, me)}
+                      <span className="flex-1 border-t border-dashed border-point/40" aria-hidden />
+                    </span>
                   </li>
                 )}
-                <PointLine check={check} me={me} />
+                <PointLine check={check} me={me} last={index === list.length - 1} />
               </Fragment>
             )
           })}
@@ -140,7 +172,7 @@ const RunDetail = ({ row, me }: { row: CourseHistoryRow; me: number }) => {
       )}
       <Link
         to={paths.service.patrolZoneDetail(row.historySeq)}
-        className="ml-auto inline-flex items-center gap-0.5 text-caption font-medium text-point-foreground hover:underline"
+        className="ml-auto inline-flex items-center gap-0.5 text-caption font-medium text-point hover:underline"
       >
         순찰 이력 상세 보기
         <ChevronRightIcon size={13} aria-hidden />
@@ -180,7 +212,7 @@ const UserRunRow = ({ row, userSeq, open, onToggle }: UserRunRowProps) => {
   return (
     /* 🔄 `spec 084`(목업 `14`): 한 줄 = **코스 · 시각 · 소요 · 막대 + n/N | 교대 · 특이사항 · 상태 · 펼침**(전에는 시각이 맨 앞 · 상태 글자가 막대 왼쪽).
        줄 사이 선 · 줄 높이 46px. 펼침은 유지한다(사용자 결정 2026-11-21) — 펼친 내용은 "내용만 흰 상자" */
-    <li className="border-b border-border last:border-0">
+    <li className="border-b border-border">
       <button
         type="button"
         aria-label={label}
