@@ -50,7 +50,7 @@ const DeploymentRequestActions = ({
 
   return (
     <div className={compact ? 'flex items-center justify-end gap-1.5' : 'flex items-center justify-end gap-2'}>
-      {/* 🔄 `spec 084`(사용자 결정 2026-11-21 — 목업 `10`): **반려(테두리 없는 글자) → 승인(파랑)** 순서 · 아이콘 없음.
+      {/* 🔄 `spec 084`(사용자 결정 2026-11-21 — 목업 `10`): **반려(흰 바탕 + 테두리 — 창의 `취소` 와 같은 모양. 🔄 같은 날 수정: 목업의 "테두리 없는 글자" 는 버튼으로 안 보였고, 회색 채움은 줄에 마우스를 올렸을 때의 회색 바탕에 묻힌다) → 승인(파랑)** 순서 · 아이콘 없음.
           반려가 덜 눈에 띄어 잘못 누를 일이 줄고, 승인이 줄의 맨 끝에 온다. 대시보드 배치 대기도 같은 부품이다 */}
       <AppAlertDialog
         size="sm"
@@ -62,8 +62,8 @@ const DeploymentRequestActions = ({
         onAction={() => process.mutate({ assignmentSeq, userName, approved: false })}
       >
         <AppButton
-          className={`${buttonClass} bg-transparent text-sub-foreground hover:bg-muted`}
-          variant="soft"
+          className={buttonClass}
+          variant="sub"
           disabled={process.isPending}
           aria-label={`${userName} 반려`}
         >
