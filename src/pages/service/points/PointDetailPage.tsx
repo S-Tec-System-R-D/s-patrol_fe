@@ -145,13 +145,9 @@ const PointDetailPage = () => {
             }
           />
 
-          {/* 🔄 **`spec 076` 개선 B**: 왼쪽 **속성 패널**(고정 폭 — 지도 · 기본정보 · 소속 코스 · TAG ID) /
-              오른쪽 **인증 기록**(나머지 폭). `xl` 미만 1단 — DOM 순서대로 패널이 먼저다
-              ("이 지점이 무엇인가" 가 "언제 찍혔나" 보다 앞선다 — 027 의 order 뒤집기와 같은 결론) */}
-          {/* 🔄 `spec 084`: 카드 상자 없이 두 단 — 단 사이 세로 선 */}
-          <div className="grid grid-cols-1 gap-y-7 pt-2 xl:grid-cols-[400px_minmax(0,1fr)] xl:[&>section:first-child]:pr-7 xl:[&>section:nth-child(2)]:border-l xl:[&>section:nth-child(2)]:border-border xl:[&>section:nth-child(2)]:pl-8">
-            <PointDetail point={point} onEdit={() => setEditOpen(true)} />
-
+          {/* 🔄 **`spec 084`(사용자 결정 2026-11-20 — 목업 `07-지점-상세` 배치로)**: 왼쪽 **인증 기록**(넓게) / 오른쪽 **속성 단**
+              340px(위치 · 기본정보) — 코스 상세와 같은 틀이다. `spec 076` 의 "속성 왼쪽" 을 뒤집었다. `xl` 미만 1단은 DOM 순서(기록 먼저) */}
+          <div className="grid grid-cols-1 gap-y-7 pt-2 xl:grid-cols-[minmax(0,1fr)_340px] xl:[&>section:first-child]:pr-8 xl:[&>section:nth-child(2)]:border-l xl:[&>section:nth-child(2)]:border-border xl:[&>section:nth-child(2)]:pl-7">
             <PointActivityCard
               summary={summary}
               sinceLabel={formatSinceLabel(point.lastPatrolDt, today)}
@@ -159,6 +155,8 @@ const PointDetailPage = () => {
               today={today}
               isPending={history.isPending && pointSeq !== null}
             />
+
+            <PointDetail point={point} onEdit={() => setEditOpen(true)} />
 
             {/* 🔴 모달은 페이지가 들고 있다 — 카드는 **열어 달라고 요청만** 한다
                 (코스 상세 `CourseInfo` 와 같은 조립). 성공해야 닫는다 — 먼저 닫으면

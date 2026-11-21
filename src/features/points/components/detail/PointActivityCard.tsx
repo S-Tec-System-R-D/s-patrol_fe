@@ -1,14 +1,8 @@
 import { useState } from 'react'
 import { format, isValid, parseISO } from 'date-fns'
-import {
-  CheckCircle2Icon,
-  ChevronRightIcon,
-  CircleAlertIcon,
-  CircleDashedIcon,
-  CircleMinusIcon,
-} from 'lucide-react'
+import { CheckCircle2Icon, ChevronRightIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
+import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
 import AppBadge from '@/components/app/AppBadge'
 import { cardBadge } from '@/components/app/AppBadge.variants'
@@ -41,15 +35,7 @@ import { formatSinceLabel, groupHistoryByDay, type PatrolDayBucket, type PatrolS
 
 const STATUS = { EXCLUDED: 2, MISSED: 3, DONE: 4 } as const
 
-/** 행 앞 아이콘 — 눈으로 훑는 용도. 이름은 오른쪽 뱃지가 말한다(`pointCheckBadge`) */
-const statusIcon = (row: PointHistoryRow) => {
-  if (row.status === STATUS.DONE) return { icon: CheckCircle2Icon, className: 'text-success' }
-  if (row.status === STATUS.MISSED) return { icon: CircleAlertIcon, className: 'text-muted-foreground' }
-  if (row.status === STATUS.EXCLUDED) return { icon: CircleMinusIcon, className: 'text-muted-foreground' }
-  return { icon: CircleDashedIcon, className: 'text-muted-foreground' }
-}
-
-/** 정상 인증(완료 · 메모 없음) — 뱃지 없이 아이콘만 */
+/** 정상 인증(완료 · 메모 없음) — 뱃지 없이 초록 체크만 */
 const isPlain = (row: PointHistoryRow) => row.status === STATUS.DONE && !row.hasMemo
 
 const timeOf = (row: PointHistoryRow): string => {
@@ -122,13 +108,13 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
       <div className="flex items-baseline justify-between gap-4">
         <span className="flex items-baseline gap-2">
           <h2 className="text-panel-title font-semibold text-foreground">인증 기록</h2>
-          <span className="text-caption text-muted-foreground">최근 14일</span>
+          <span className="text-caption text-muted-foreground">최근 14일 · 막대를 누르면 해당 일자만 표시</span>
         </span>
         <Link
           to={paths.service.patrolPoints}
           className="inline-flex shrink-0 items-center gap-0.5 text-caption font-medium text-point hover:underline"
         >
-          전체 기록
+          지점 순찰이력 전체
           <ChevronRightIcon size={13} aria-hidden />
         </Link>
       </div>
@@ -157,10 +143,9 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
           </div>
 
           {/* 🔴 막대를 누르면 recharts 가 차트 전체에 포커스 테두리를 그린다 — 막대 색 변화로 충분해 지운다 */}
-          <div className="h-[150px] w-full [&_*:focus]:outline-none">
+          <div className="h-[100px] w-full [&_*:focus]:outline-none">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={summary.buckets} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-                <CartesianGrid vertical={false} stroke="var(--border)" />
+              <BarChart data={summary.buckets} margin={{ top: 0, right: 0, bottom: 0, left: 0 }} barCategoryGap={4}>
                 <XAxis
                   dataKey="date"
                   interval={0}
@@ -172,12 +157,12 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                   stroke="var(--muted-foreground)"
                 />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--muted)' }} />
-                {/* 🔴 쌓기 — 인증(파랑) 위에 미인증(주황 — 행 뱃지 · 대시보드와 같은 색). 고른 날 말고는 흐리게 */}
+                {/* 🔴 쌓기 — 인증(파랑) 위에 미인증(회색). 🔄 `spec 084`(목업 대조): 칸을 채우는 넓은 막대 · 옅게 깔고
+                    **고른 날만 진하게**(고르지 않았으면 오늘) */}
                 <Bar
                   dataKey="count"
                   stackId="day"
-                  maxBarSize={22}
-                  radius={[4, 4, 0, 0]}
+                  radius={2}
                   className="cursor-pointer"
                   onClick={(data: { payload?: PatrolDayBucket }) => data.payload && toggle(data.payload.date)}
                   isAnimationActive={false}
@@ -185,16 +170,15 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                   {summary.buckets.map((bucket) => (
                     <Cell
                       key={bucket.date}
-                      fill="var(--color-point)"
-                      fillOpacity={selected && selected !== bucket.date ? 0.25 : 1}
+                      fill="var(--point)"
+                      fillOpacity={bucket.date === (selected ?? todayKey) ? 1 : 0.35}
                     />
                   ))}
                 </Bar>
                 <Bar
                   dataKey="missed"
                   stackId="day"
-                  maxBarSize={22}
-                  radius={[4, 4, 0, 0]}
+                  radius={2}
                   className="cursor-pointer"
                   onClick={(data: { payload?: PatrolDayBucket }) => data.payload && toggle(data.payload.date)}
                   isAnimationActive={false}
@@ -202,8 +186,8 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                   {summary.buckets.map((bucket) => (
                     <Cell
                       key={bucket.date}
-                      fill="var(--color-muted-foreground)"
-                      fillOpacity={selected && selected !== bucket.date ? 0.25 : 1}
+                      fill="var(--muted-foreground)"
+                      fillOpacity={bucket.date === (selected ?? todayKey) ? 0.6 : 0.4}
                     />
                   ))}
                 </Bar>
@@ -211,28 +195,15 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
             </ResponsiveContainer>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-caption text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-xs bg-point" aria-hidden />
-              인증
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-xs bg-muted-foreground" aria-hidden />
-              미인증
-            </span>
-            <span className="ml-auto">
-              {selected ? (
-                <>
-                  {dayLabel(selected)}만 표시 ·{' '}
-                  <button type="button" className="font-medium text-point hover:underline" onClick={() => setSelected(null)}>
-                    전체 보기
-                  </button>
-                </>
-              ) : (
-                '최근 14일 전체 · 막대를 누르면 해당 일자만 표시'
-              )}
-            </span>
-          </div>
+          {/* 범례는 없앴다 — 말풍선이 인증 · 미인증을 적는다. 고른 날이 있을 때만 푸는 줄을 보인다 */}
+          {selected && (
+            <p className="text-caption text-muted-foreground">
+              {dayLabel(selected)}만 표시 ·{' '}
+              <button type="button" className="font-medium text-point hover:underline" onClick={() => setSelected(null)}>
+                전체 보기
+              </button>
+            </p>
+          )}
 
           {groups.length === 0 ? (
             <p className="py-6 text-center text-body text-muted-foreground">이 날은 기록이 없습니다.</p>
@@ -241,35 +212,34 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
               {groups.map((group) => (
                 <section key={group.date} aria-label={`${dayLabel(group.date)} 기록`} className="mt-3.5 first:mt-0">
                   <div className="flex h-[30px] items-center gap-1.5 border-b border-border text-caption text-muted-foreground">
-                    <span className="tabular-nums">{dayLabel(group.date)}</span>
-                    <span>
-                      {weekday(group.date)} · {group.rows.length}회
+                    <span className="tabular-nums">
+                      {group.date === todayKey && '오늘 · '}
+                      {format(parseISO(group.date), 'M월 d일')} {weekday(group.date)} · {group.rows.length}회
                     </span>
                   </div>
                   <ul className="flex flex-col">
                     {group.rows.map((row) => {
-                      const status = statusIcon(row)
                       const badge = pointCheckBadge(row.status, row.hasMemo)
                       return (
                         <li key={row.detailSeq} className="border-b border-border last:border-0">
                           <Link
                             to={paths.service.patrolPointDetail(row.detailSeq)}
-                            className="group flex h-[46px] items-center gap-3 px-1 hover:bg-muted/50"
+                            className="flex h-[46px] items-center hover:bg-muted/50"
                           >
-                            <span className="w-11 shrink-0 font-medium tabular-nums text-foreground">{timeOf(row)}</span>
-                            <status.icon size={14} className={cn('shrink-0', status.className)} aria-hidden />
-                            <span className="flex min-w-0 flex-1 items-baseline gap-2">
-                              <span className="shrink-0 text-sub-foreground">{row.userName || '근무자 없음'}</span>
-                              <span className="min-w-0 truncate text-caption text-muted-foreground">{row.courseName}</span>
+                            <span className="w-20 shrink-0 font-medium tabular-nums text-foreground">{timeOf(row)}</span>
+                            <span className="w-[120px] shrink-0 truncate pr-3 text-sub-foreground">
+                              {row.userName || '근무자 없음'}
                             </span>
+                            <span className="min-w-0 flex-1 truncate text-sub-foreground">{row.courseName}</span>
                             {/* 🔴 **`이상없음` 은 뱃지를 달지 않는다**(사용자 결정 2026-11-13) — 정상이 대부분이라
-                                같은 뱃지가 줄마다 반복되면 뱃지가 아무것도 알리지 못한다. 초록 체크 아이콘이 이미 말한다 */}
-                            {!isPlain(row) && (
+                                같은 뱃지가 줄마다 반복되면 뱃지가 아무것도 알리지 못한다. 초록 체크만 둔다 */}
+                            {isPlain(row) ? (
+                              <CheckCircle2Icon size={14} className="shrink-0 text-success" aria-label="인증" />
+                            ) : (
                               <AppBadge variant={badge.variant} className={cn('shrink-0', cardBadge)}>
                                 {badge.label}
                               </AppBadge>
                             )}
-                            <ChevronRightIcon size={14} className="shrink-0 text-muted-foreground/60 group-hover:text-foreground" aria-hidden />
                           </Link>
                         </li>
                       )

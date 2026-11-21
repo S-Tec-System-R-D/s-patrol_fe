@@ -5,11 +5,10 @@ import { Link } from 'react-router-dom'
 import AppBadge from '@/components/app/AppBadge'
 import { formatElapsed } from '@/features/course-history/lib/elapsed'
 import { courseResultBadge, overtimeBadge } from '@/features/course-history/lib/historyBadge'
-import { HISTORY_DAYS } from '@/features/course-history/lib/historyRange'
 import type { CourseHistoryRow } from '@/features/course-history/types'
+import { cn } from '@/lib/utils'
 import { paths } from '@/router/paths'
 
-import { checkRatio } from '../../lib/courseRunStats'
 
 /**
  * 최근 순찰 기록 (`spec 023` B단 → **`spec 074` T1237 개편**, 시안 `개선 · 코스 상세`).
@@ -64,19 +63,15 @@ const CoursePatrolLog = ({ courseSeq, rows, totalCount, isPending, onSelect }: C
     <section className="flex flex-col gap-2.5">
       <div className="flex flex-wrap items-baseline gap-x-2">
         <h2 className="text-panel-title font-semibold">최근 순찰 기록</h2>
-        <span className="text-caption text-muted-foreground">
-          최근 {HISTORY_DAYS}일 · {totalCount}건 · 행을 누르면 회차 상세
-        </span>
-        {/* 🔄 `spec 084`: 표 아래 가운데 → 영역 제목 줄 오른쪽(대시보드의 `전체 보기` 와 같은 자리 · 같은 색) */}
-        {!isPending && totalCount > preview.length && (
-          <Link
-            to={`${paths.service.patrolZones}?course=${courseSeq}`}
-            className="ml-auto inline-flex items-center gap-0.5 text-caption font-medium text-point hover:underline"
-          >
-            전체 기록 {totalCount}건 보기
-            <ChevronRightIcon size={13} aria-hidden />
-          </Link>
-        )}
+        {/* 🔄 `spec 084`(목업 대조 2026-11-20): 제목 옆은 건수만 · 링크는 늘 보인다(전에는 10건이 넘을 때만 표 아래에 있었다) */}
+        <span className="text-caption text-muted-foreground tabular-nums">{totalCount}</span>
+        <Link
+          to={`${paths.service.patrolZones}?course=${courseSeq}`}
+          className="ml-auto inline-flex items-center gap-0.5 text-caption font-medium text-point hover:underline"
+        >
+          순찰이력 전체
+          <ChevronRightIcon size={13} aria-hidden />
+        </Link>
       </div>
 
       {isPending ? (
@@ -97,13 +92,12 @@ const CoursePatrolLog = ({ courseSeq, rows, totalCount, isPending, onSelect }: C
                   <th className="h-9 pr-3 text-left font-medium">시작</th>
                   <th className="h-9 pr-3 text-left font-medium">근무자</th>
                   <th className="h-9 pr-3 text-left font-medium">인증</th>
-                  <th className="h-9 pr-3 text-right font-medium">소요</th>
+                  <th className="h-9 pr-3 text-left font-medium">소요</th>
                   <th className="h-9 text-left font-medium">상태</th>
                 </tr>
               </thead>
               <tbody>
                 {preview.map((row) => {
-                  const ratio = checkRatio(row.checkedCount, row.pointCount) ?? 0
                   const startLabel = formatStartDt(row.startDt)
                   return (
                     <tr
@@ -128,14 +122,11 @@ const CoursePatrolLog = ({ courseSeq, rows, totalCount, isPending, onSelect }: C
                         )}
                       </td>
                       <td className="pr-3 whitespace-nowrap">
-                        <span className="flex items-center gap-2 tabular-nums">
-                          <span aria-hidden className="hidden h-1 w-24 overflow-hidden rounded-full bg-muted sm:block">
-                            <span className="block h-full rounded-full bg-point" style={{ width: `${ratio * 100}%` }} />
-                          </span>
-                          {row.checkedCount}/{row.pointCount}
+                        <span className="tabular-nums">
+                          {`${row.checkedCount} / ${row.pointCount}`}
                         </span>
                       </td>
-                      <td className="pr-3 text-right whitespace-nowrap tabular-nums">
+                      <td className={cn('pr-3 whitespace-nowrap tabular-nums', row.overtimeYn && 'text-danger')}>
                         {formatElapsed(row.actualElapsedTime)}
                       </td>
                       <td className="whitespace-nowrap">

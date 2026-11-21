@@ -39,10 +39,11 @@ const renderDetail = (point = detail(), onEdit?: () => void) =>
   )
 
 describe('PointDetail — 속성 패널 (spec 076)', () => {
-  it('행 구성 — 인증수단 · 소속 코스 · 사업장 · 설명 · 좌표', () => {
+  it('행 구성 — 인증수단 · 소속 코스 · 사업장 · 설명 (🔄 spec 084: 좌표는 `위치` 제목 옆으로)', () => {
     renderDetail()
 
-    for (const label of ['인증수단', '소속 코스', '사업장', '설명', '좌표']) {
+    expect(screen.getByRole('heading', { name: '위치' })).toBeInTheDocument()
+    for (const label of ['인증수단', '소속 코스', '사업장', '설명']) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
   })
@@ -64,10 +65,10 @@ describe('PointDetail — 속성 패널 (spec 076)', () => {
     expect(onEdit).toHaveBeenCalled()
   })
 
-  it('🔴 좌표가 없으면 행은 `-`, 지도 자리는 빗금 칸에 안내', () => {
+  it('🔴 좌표가 없으면 `위치` 옆에 `좌표 없음`, 지도 자리는 빗금 칸에 안내', () => {
     renderDetail(detail({ gpsLat: null, gpsLng: null }))
 
-    expect(screen.getByText('좌표').parentElement).toHaveTextContent('-')
+    expect(screen.getByText('좌표 없음')).toBeInTheDocument()
     expect(screen.getByText('등록된 좌표가 없습니다')).toBeInTheDocument()
   })
 

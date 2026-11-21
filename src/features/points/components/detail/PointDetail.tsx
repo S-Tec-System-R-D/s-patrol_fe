@@ -1,4 +1,4 @@
-import { ChevronRightIcon, CopyIcon, RouteIcon, SquarePenIcon } from 'lucide-react'
+import { CopyIcon, SquarePenIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import AppDetailRow from '@/components/app/AppDetailRow'
@@ -8,7 +8,6 @@ import { notify } from '@/lib/notify'
 import { paths } from '@/router/paths'
 
 import DetailSection from './DetailSection'
-import AuthMethodDisplay from './AuthMethodDisplay'
 import PointMiniMap from './PointMiniMap'
 import PointQrCode from './PointQrCode'
 import { resolveAuthMethodLabel, toAuthMethodLabel } from '../../lib/authMethod'
@@ -34,7 +33,7 @@ import type { PointDetail as PointDetailData } from '../../types'
  * 소수점 4자리면 **약 11m** 로, 건물 안 지점을 구분하기에 충분하고 읽기도 편하다.
  */
 const formatCoords = ({ gpsLat, gpsLng }: PointDetailData): string =>
-  gpsLat === null || gpsLng === null ? '-' : `${gpsLat.toFixed(4)}, ${gpsLng.toFixed(4)}`
+  gpsLat === null || gpsLng === null ? '좌표 없음' : `${gpsLat.toFixed(4)}, ${gpsLng.toFixed(4)}`
 
 /** TAG ID — 읽기 전용 칸 + `복사`(현장 태그를 맞춰 볼 때 손으로 옮겨 적지 않게) */
 const TagIdValue = ({ tagId }: { tagId: string }) => {
@@ -74,17 +73,14 @@ const CourseListValue = ({ point }: { point: PointDetailData }) =>
   point.courseList.length === 0 ? (
     <span className="text-muted-foreground">소속된 코스가 없습니다</span>
   ) : (
-    <span className="flex flex-col gap-1.5">
-      {point.courseList.map((course) => (
-        <Link
-          key={course.courseSeq}
-          to={paths.service.courseDetail(course.courseSeq)}
-          className="group flex items-center gap-1.5 font-medium hover:text-point"
-        >
-          <RouteIcon size={13} className="shrink-0 text-muted-foreground group-hover:text-point" aria-hidden />
-          <span className="min-w-0 flex-1 truncate">{course.courseName}</span>
-          <ChevronRightIcon size={14} className="shrink-0 text-muted-foreground group-hover:text-point" aria-hidden />
-        </Link>
+    <span className="flex flex-wrap gap-x-1.5">
+      {point.courseList.map((course, index) => (
+        <span key={course.courseSeq}>
+          <Link to={paths.service.courseDetail(course.courseSeq)} className="text-point hover:underline">
+            {course.courseName}
+          </Link>
+          {index < point.courseList.length - 1 && <span className="pl-1.5 text-muted-foreground">·</span>}
+        </span>
       ))}
     </span>
   )
@@ -94,10 +90,12 @@ const PointDetail = ({ point, onEdit }: { point: PointDetailData; onEdit?: () =>
 
   return (
     <section className="flex min-w-0 flex-col gap-7 xl:self-start">
-      {/* 🔄 `spec 084`: 상자가 없어져 지도가 자기 테두리 · 둥근 모서리를 갖는다 */}
-      <div className="overflow-hidden rounded-[10px] border border-border">
-        <PointMiniMap lat={point.gpsLat} lng={point.gpsLng} name={point.name} />
-      </div>
+      {/* 🔄 `spec 084`(목업 대조): `위치` 영역 — 제목 옆에 좌표(전에는 기본정보의 한 줄이었다). 🔴 좌표는 표시만 한다(029 A안 · B-33) */}
+      <DetailSection title="위치" count={formatCoords(point)}>
+        <div className="overflow-hidden rounded-[10px] border border-border">
+          <PointMiniMap lat={point.gpsLat} lng={point.gpsLng} name={point.name} />
+        </div>
+      </DetailSection>
 
       <div>
         <DetailSection
@@ -115,7 +113,7 @@ const PointDetail = ({ point, onEdit }: { point: PointDetailData; onEdit?: () =>
               label="인증수단"
               value={
                 method ? (
-                  <AuthMethodDisplay value={method} />
+                  method
                 ) : (
                   // 9·10 외 미실측 코드 — 추측 라벨을 만들지 않는다(A1)
                   resolveAuthMethodLabel(point.authMethod, point.authMethodName) || '인증수단 정보를 확인할 수 없습니다.'
@@ -126,8 +124,6 @@ const PointDetail = ({ point, onEdit }: { point: PointDetailData; onEdit?: () =>
             {/* 사업장명은 서버 응답이 아니라 **선택 결과**에서 온다(spec 021) */}
             <AppDetailRow label="사업장" value={getSiteName() ?? '-'} />
             <AppDetailRow label="설명" value={point.memo?.trim() || '-'} />
-            {/* 🔴 좌표는 표시만 한다(029 A안) — 서버에 범위 검증이 없다(B-33) */}
-            <AppDetailRow label="좌표" value={formatCoords(point)} />
             {method === 'NFC' && (
               <AppDetailRow
                 label="TAG ID"

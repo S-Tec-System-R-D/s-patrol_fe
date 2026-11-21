@@ -353,7 +353,8 @@ describe('ZoneDetailPage — 순찰 기록·KPI (B단)', () => {
 
     // mock 시드의 historySeq 108 은 45일 전이다. 기간이 안 걸리면 7건이 아니라 8건이 온다
     await screen.findByText('최근 순찰 기록')
-    expect(await screen.findByText(/최근 30일 · 7건/)).toBeInTheDocument()
+    // 🔄 `spec 084`: 제목 옆은 건수만 적는다
+    await waitFor(() => expect(within(cardOf('최근 순찰 기록')).getByText('7')).toBeInTheDocument())
   })
 
   it('🔴 이력이 없는 코스는 빈 상태이고 KPI 가 — 다 — 0 으로 적지 않는다', async () => {

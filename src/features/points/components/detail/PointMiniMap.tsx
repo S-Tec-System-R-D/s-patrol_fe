@@ -58,14 +58,14 @@ const PointMiniMap = ({
 
   if (!TILE_URL || !hasCoord) {
     return (
-      <div className="grid h-[220px] place-items-center bg-[repeating-linear-gradient(45deg,var(--color-muted)_0_10px,transparent_10px_20px)] text-caption text-muted-foreground">
+      <div className="grid h-[170px] place-items-center bg-[repeating-linear-gradient(45deg,var(--color-muted)_0_10px,transparent_10px_20px)] text-caption text-muted-foreground">
         {hasCoord ? '지도를 표시할 수 없습니다' : '등록된 좌표가 없습니다'}
       </div>
     )
   }
 
   // 🔴 높이 고정 — 지도는 자기 크기를 모른다(부모가 0 이면 타일이 안 뜬다)
-  return <div ref={containerRef} className="h-[220px] w-full" />
+  return <div ref={containerRef} className="h-[170px] w-full" />
 }
 
 export default PointMiniMap

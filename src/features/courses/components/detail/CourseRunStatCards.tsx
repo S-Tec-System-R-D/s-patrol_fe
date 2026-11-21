@@ -30,7 +30,7 @@ const Shell = ({ title, meta, children }: { title: string; meta: string; childre
 
 const Pending = () => <div className="h-24 animate-pulse rounded-md bg-muted" />
 
-const HOUR_TICKS = [0, 6, 12, 18, 23]
+const HOUR_TICKS = [0, 6, 12, 18]
 const pad = (hour: number) => String(hour).padStart(2, '0')
 
 const HourTooltip = ({ active, payload }: { active?: boolean; payload?: { payload: { hour: number; count: number } }[] }) => {
@@ -64,7 +64,7 @@ export const CourseHourlyCard = ({ rows, isPending }: CardProps) => {
         <div className="flex flex-col gap-2">
           <div className="h-[130px] [&_*:focus]:outline-none" role="img" aria-label="시작 시각별 회차 수">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={counts.map((count, hour) => ({ hour, count }))} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+              <BarChart data={counts.map((count, hour) => ({ hour, count }))} margin={{ top: 4, right: 0, left: 8, bottom: 0 }}>
                 <CartesianGrid vertical={false} stroke="var(--border)" />
                 <XAxis
                   dataKey="hour"
@@ -107,7 +107,7 @@ export const CourseWorkerCard = ({ rows, isPending }: CardProps) => {
   const stats = workerStats(rows)
 
   return (
-    <Shell title="근무자별" meta={`최근 ${HISTORY_DAYS}일`}>
+    <Shell title="근무자별 순찰" meta={`최근 ${HISTORY_DAYS}일`}>
       {isPending ? (
         <Pending />
       ) : stats.length === 0 ? (

@@ -57,7 +57,7 @@ describe('CoursePatrolLog — 기본', () => {
 
     expect(screen.getByText('10.11 02:40')).toBeInTheDocument()
     expect(screen.getByText('박성민')).toBeInTheDocument()
-    expect(screen.getByText('3/3')).toBeInTheDocument()
+    expect(screen.getByText('3 / 3')).toBeInTheDocument()
     expect(screen.getByText('44분')).toBeInTheDocument()
     expect(screen.getByText('완료')).toBeInTheDocument()
     expect(screen.getAllByRole('columnheader').map((th) => th.textContent)).toEqual([
@@ -72,7 +72,8 @@ describe('CoursePatrolLog — 기본', () => {
   it('최근 30일 건수를 적는다', () => {
     renderLog([row()], 46)
 
-    expect(screen.getByText(/최근 30일 · 46건/)).toBeInTheDocument()
+    // 🔄 `spec 084`: 제목 옆은 건수만
+    expect(screen.getByText('46')).toBeInTheDocument()
   })
 
   it('🔴 앞 10건만 그리고 나머지는 순찰이력 화면 — 코스 필터로 넘긴다', () => {
@@ -80,13 +81,13 @@ describe('CoursePatrolLog — 기본', () => {
     renderLog(rows, 28)
 
     expect(dataRows()).toHaveLength(10)
-    expect(screen.getByRole('link', { name: /전체 기록 28건 보기/ })).toHaveAttribute('href', '/patrol/zones?course=1')
+    expect(screen.getByRole('link', { name: /순찰이력 전체/ })).toHaveAttribute('href', '/patrol/zones?course=1')
   })
 
-  it('다 보이면 전체 보기 링크가 없다', () => {
+  it('🔄 다 보여도 순찰이력 링크는 늘 있다 (spec 084)', () => {
     renderLog([row()])
 
-    expect(screen.queryByRole('link', { name: /전체 기록/ })).toBeNull()
+    expect(screen.getByRole('link', { name: /순찰이력 전체/ })).toHaveAttribute('href', '/patrol/zones?course=1')
   })
 
   it('🔴 행을 누르면 그 회차를 올려 보낸다 — Enter 도 같다', async () => {
@@ -107,7 +108,7 @@ describe('CoursePatrolLog — 🔴 회차 상태 (spec 079 D13)', () => {
     renderLog([row({ historySeq: 1, checkedCount: 1, status: 2, statusName: '미완료' })])
 
     expect(screen.getByText('미완료')).toBeInTheDocument()
-    expect(screen.getByText('1/3')).toBeInTheDocument()
+    expect(screen.getByText('1 / 3')).toBeInTheDocument()
     expect(screen.queryByText('완료')).not.toBeInTheDocument()
     expect(screen.queryByText(/누락|미인증/)).not.toBeInTheDocument()
   })
@@ -125,7 +126,7 @@ describe('CoursePatrolLog — 🔴 실측 예외', () => {
     renderLog([row({ status: 1, statusName: '완료', checkedCount: 0 })])
 
     expect(screen.getByText('완료')).toBeInTheDocument()
-    expect(screen.getByText('0/3')).toBeInTheDocument()
+    expect(screen.getByText('0 / 3')).toBeInTheDocument()
   })
 
   it('🔴 소요시간에 시 단위가 온다 — 분으로 읽으면 2분이 된다', () => {

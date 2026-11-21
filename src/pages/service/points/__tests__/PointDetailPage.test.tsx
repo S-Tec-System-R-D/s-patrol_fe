@@ -256,7 +256,7 @@ describe('PointDetailPage — 인증 기록 (076)', () => {
     await waitFor(() => expect(screen.getAllByRole('region', { name: /기록$/ }).length).toBeGreaterThan(0))
     expect(screen.getAllByText('미인증').length).toBeGreaterThan(0)
     expect(screen.getByText('최근 순찰')).toBeInTheDocument()
-    expect(screen.getByText('최근 14일 전체 · 막대를 누르면 해당 일자만 표시')).toBeInTheDocument()
+    expect(screen.getByText('최근 14일 · 막대를 누르면 해당 일자만 표시')).toBeInTheDocument()
   })
 
   it('🔴 행은 지점 인증 상세로 간다 — 회차 번호(historySeq)가 없어 회차 모달은 못 연다 (D1)', async () => {

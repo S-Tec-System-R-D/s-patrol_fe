@@ -203,7 +203,6 @@ const ZoneDetailPage = () => {
                 points={course.points}
                 pins={coords.pins}
                 missing={coords.missing}
-                runs={rows.length}
                 onEdit={() => setEditingPoints(true)}
               />
 
