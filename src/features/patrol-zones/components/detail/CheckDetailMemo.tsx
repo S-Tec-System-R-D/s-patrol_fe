@@ -109,8 +109,10 @@ const MemoAttaches = ({ memo, limit }: { memo: CheckDetailMemoData; limit?: numb
  * 🔴 **export 한다**(`spec 026` 공지 이미지 카드) — 폴백 썸네일을 두 벌로 만들면 B-40 회신
  * 때 한쪽만 고쳐진다(037 이월 ⑤ 가 예고한 형태: 컴포넌트만 꺼내고 배치는 소비처가 정한다).
  */
-export const MemoAttach = ({ attach }: { attach: CheckDetailAttach }) => {
+/** `wide` — 공지 상세의 큰 미리보기(200 × 140 — `spec 084` 목업 `15`). 기본은 메모 사진(132 정사각) */
+export const MemoAttach = ({ attach, wide = false }: { attach: CheckDetailAttach; wide?: boolean }) => {
   const [failed, setFailed] = useState(false)
+  const box = wide ? 'h-[140px] w-[200px]' : 'size-[132px]'
 
   return (
     /**
@@ -121,10 +123,10 @@ export const MemoAttach = ({ attach }: { attach: CheckDetailAttach }) => {
      * ⚠️ **목업의 촬영 시각(`10:24`)은 적을 수 없다** — 첨부에 시각 필드가 없다
      * (`attachSeq`·`imagePath`·`fileName`·`fileExt` 가 전부). 지어내지 않는다(A1).
      */
-    <figure className="flex w-[132px] flex-col gap-1">
+    <figure className={`flex flex-col gap-1 ${wide ? 'w-[200px]' : 'w-[132px]'}`}>
       {failed ? (
         <div
-          className="flex size-[132px] flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border bg-card px-1 text-center"
+          className={`flex ${box} flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border bg-card px-1 text-center`}
           /* 🔴 파일명을 `title` 에도 둔다 — 캡션이 잘려도 어느 파일이 실패했는지 알 수 있어야
              백엔드에 전달된다 */
           title={attach.fileName}
@@ -139,7 +141,7 @@ export const MemoAttach = ({ attach }: { attach: CheckDetailAttach }) => {
           src={attach.imagePath}
           alt={attach.fileName}
           loading="lazy"
-          className="size-[132px] rounded-md border border-border object-cover"
+          className={`${box} rounded-md border border-border object-cover`}
           // 🔴 404·mixed content·네트워크 실패를 한 분기로 모은다 — 사용자가 할 수 있는 일이 같다
           onError={() => setFailed(true)}
         />
