@@ -195,7 +195,7 @@ describe('PointDetailPage — 수정 모달', () => {
 
     expect(screen.getByRole('button', { name: '지점 메뉴' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '삭제' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '기본정보 수정' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '기본정보 편집' })).toBeInTheDocument()
   })
 
   it('수정 모달은 상세 값이 채워진 폼으로 열린다', async () => {
@@ -203,7 +203,7 @@ describe('PointDetailPage — 수정 모달', () => {
     renderAt('/points/1')
     await screen.findByRole('heading', { name: '정문 입구' })
 
-    await user.click(screen.getByRole('button', { name: '기본정보 수정' }))
+    await user.click(screen.getByRole('button', { name: '기본정보 편집' }))
 
     expect(await screen.findByPlaceholderText('지점명을 입력해주세요')).toHaveValue('정문 입구')
   })
@@ -218,7 +218,7 @@ describe('PointDetailPage — 수정 모달', () => {
     renderAt('/points/1')
     await screen.findByRole('heading', { name: '정문 입구' })
 
-    await user.click(screen.getByRole('button', { name: '기본정보 수정' }))
+    await user.click(screen.getByRole('button', { name: '기본정보 편집' }))
     await user.click(await screen.findByRole('button', { name: '저장' }))
 
     await waitFor(() =>
@@ -236,7 +236,7 @@ describe('PointDetailPage — 수정 모달', () => {
     renderAt('/points/1')
     await screen.findByRole('heading', { name: '정문 입구' })
 
-    await user.click(screen.getByRole('button', { name: '기본정보 수정' }))
+    await user.click(screen.getByRole('button', { name: '기본정보 편집' }))
     const name = await screen.findByPlaceholderText('지점명을 입력해주세요')
     await user.clear(name)
     await user.type(name, '정문 입구(수정)')
@@ -294,8 +294,8 @@ describe('PointDetailPage — 인증 기록 (076)', () => {
       within(group).queryAllByText(/^(특이사항|미인증|순찰제외|진행중|대기중)$/)
     )
     expect(labels.length).toBeGreaterThan(0)
-    // 🔴 정상 인증은 뱃지가 없다 — 줄마다 반복되면 뱃지가 의미를 잃는다(2026-11-13)
-    groups.forEach((group) => expect(within(group).queryByText('인증')).not.toBeInTheDocument())
+    // 🔄 `spec 084`(사용자 지적 2026-11-21): 정상 인증 줄에도 `인증` 을 적는다(2026-11-13 의 "뱃지 없음" 을 뒤집었다)
+    expect(groups.flatMap((group) => within(group).queryAllByText('인증')).length).toBeGreaterThan(0)
     // 🔄 D15 — 옛 이름은 없다
     expect(screen.queryByText('순찰기록')).not.toBeInTheDocument()
     expect(screen.queryByText(/^누락/)).not.toBeInTheDocument()

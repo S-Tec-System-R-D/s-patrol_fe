@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { format, isValid, parseISO } from 'date-fns'
-import { CheckCircle2Icon, ChevronRightIcon } from 'lucide-react'
+import { ChevronRightIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 
@@ -26,8 +26,7 @@ import { formatSinceLabel, groupHistoryByDay, type PatrolDayBucket, type PatrolS
  * - 🔴 **막대를 누르면 그날만** 보인다 — 한 번 더 누르거나 `전체 보기` 로 풀린다.
  * - 🔄 **행 상태는 순찰이력 화면과 같은 뱃지**(`pointCheckBadge` — 이상없음 · 순찰기록 · 미완료 ·
  *   미인증 · 순찰제외 · 진행중 · 대기중, 사용자 결정 2026-11-13). 시안의 `인증/누락` 을 쓰면 같은
- *   기록이 지점 인증 상세에서는 `미완료` 로 보여 화면마다 이름이 달랐다. 미완료 행의
- *   `checkDt` 는 인증 시각이 아니라(OQ-15) 시각 칸을 `—` 로 둔다.
+ *   기록이 지점 인증 상세에서는 `미완료` 로 보여 화면마다 이름이 달랐다. (시각 칸은 미인증 줄에도 적는다 — 아래 timeOf.)
  * - 🔴 **행 → 지점 인증 상세**(D1). 시안의 회차 상세 모달은 `historySeq` 가 없어 못 연다(037 US4).
  * - 코스명은 행마다 옅게 둔다 — 소속 코스가 여러 개일 수 있다(시안은 "반복 제거" 라 했지만
  *   코스가 둘 이상이면 어느 코스 순찰인지 사라진다).
@@ -35,22 +34,16 @@ import { formatSinceLabel, groupHistoryByDay, type PatrolDayBucket, type PatrolS
 
 const STATUS = { EXCLUDED: 2, MISSED: 3, DONE: 4 } as const
 
-/** 정상 인증(완료 · 메모 없음) — 뱃지 없이 초록 체크만 */
-const isPlain = (row: PointHistoryRow) => row.status === STATUS.DONE && !row.hasMemo
-
+/**
+ * 줄의 시각. 🔄 `spec 084`(사용자 지적 2026-11-21): **미인증 줄에도 적는다** — 전에는 "미인증 줄의 `checkDt` 가 인증 시각이 맞는지
+ * 모른다"(OQ-15)며 `—` 로 가렸는데, 그 의문은 2026-10-19 DB 확인으로 풀렸다(지점에 들른 시각이다). 순찰이력 목록도 이미 적는다.
+ */
 const timeOf = (row: PointHistoryRow): string => {
-  // 🔴 인증한 행만 시각을 적는다 — 미완료의 checkDt 는 인증 시각이 아니다(OQ-15)
-  if (row.status !== STATUS.DONE) return '—'
   const parsed = parseISO(row.checkDt)
   return isValid(parsed) ? format(parsed, 'HH:mm') : '—'
 }
 
 const dayLabel = (date: string) => format(parseISO(date), 'MM.dd')
-/** 최근 순찰 칸 — 오늘이 아닐 수 있어 날짜까지 적는다 */
-const dateTimeOf = (row: PointHistoryRow): string => {
-  const parsed = parseISO(row.checkDt)
-  return isValid(parsed) ? format(parsed, 'MM.dd HH:mm') : '—'
-}
 /** 요일 한 글자 — locale 묶음을 들이지 않으려고 직접 고른다 */
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 const weekday = (date: string) => `(${WEEKDAYS[parseISO(date).getDay()]})`
@@ -138,7 +131,8 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
               label="최근 순찰"
               /* 지점의 마지막 순찰 시각이 없으면(또는 읽을 수 없으면) 받은 기록의 가장 최근 인증으로 센다 */
               value={sinceLabel ?? (latest && formatSinceLabel(latest.checkDt, today)) ?? '-'}
-              note={latest && [latest.userName || '근무자 없음', latest.courseName, dateTimeOf(latest)].join(' · ')}
+              /* 🔄 사용자 결정 2026-11-21 — 목업대로 **순찰자 이름만**. 코스 · 일시는 바로 아래 목록 첫 줄에 있다 */
+              note={latest && (latest.userName || '근무자 없음')}
             />
           </div>
 
@@ -221,7 +215,7 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                     {group.rows.map((row) => {
                       const badge = pointCheckBadge(row.status, row.hasMemo)
                       return (
-                        <li key={row.detailSeq} className="border-b border-border last:border-0">
+                        <li key={row.detailSeq} className="border-b border-border">
                           <Link
                             to={paths.service.patrolPointDetail(row.detailSeq)}
                             className="flex h-[46px] items-center hover:bg-muted/50"
@@ -231,15 +225,11 @@ const PointActivityCard = ({ summary, sinceLabel, rows, today, isPending }: Poin
                               {row.userName || '근무자 없음'}
                             </span>
                             <span className="min-w-0 flex-1 truncate text-sub-foreground">{row.courseName}</span>
-                            {/* 🔴 **`이상없음` 은 뱃지를 달지 않는다**(사용자 결정 2026-11-13) — 정상이 대부분이라
-                                같은 뱃지가 줄마다 반복되면 뱃지가 아무것도 알리지 못한다. 초록 체크만 둔다 */}
-                            {isPlain(row) ? (
-                              <CheckCircle2Icon size={14} className="shrink-0 text-success" aria-label="인증" />
-                            ) : (
-                              <AppBadge variant={badge.variant} className={cn('shrink-0', cardBadge)}>
-                                {badge.label}
-                              </AppBadge>
-                            )}
+                            {/* 🔄 `spec 084`(사용자 지적 2026-11-21 — 목업대로): 정상 인증 줄에도 **초록 체크 + `인증`** 을 적는다.
+                                (2026-11-13 에는 "같은 뱃지가 줄마다 반복된다"며 체크만 남겼었다.) 상태 이름은 순찰이력 화면과 같은 함수다 */}
+                            <AppBadge variant={badge.variant} className={cn('shrink-0', cardBadge)}>
+                              {badge.label}
+                            </AppBadge>
                           </Link>
                         </li>
                       )

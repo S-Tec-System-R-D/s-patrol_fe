@@ -91,7 +91,7 @@ describe('CourseInfo — 읽기 전용 (spec 074)', () => {
     render(<CourseInfo onEdit={onEdit} course={course()} />)
 
     expect(screen.queryByRole('switch')).toBeNull()
-    await userEvent.click(screen.getByRole('button', { name: '수정' }))
+    await userEvent.click(screen.getByRole('button', { name: '기본정보 편집' }))
     expect(onEdit).toHaveBeenCalledTimes(1)
   })
 

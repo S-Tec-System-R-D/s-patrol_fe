@@ -119,7 +119,7 @@ const HealthCheckCard = ({ detail }: { detail: SiteDetail }) => {
           {on && (
             <span className="hidden xl:flex">
               <AppLinkButton icon={SquarePenIcon} onClick={() => setFormOpen(true)}>
-                수정
+                편집
               </AppLinkButton>
             </span>
           )}

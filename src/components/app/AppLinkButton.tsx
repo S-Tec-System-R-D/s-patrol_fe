@@ -9,7 +9,9 @@ import type { ButtonHTMLAttributes } from 'react'
  * (`AppBadge.variants.ts` 와 같은 함정). 같은 이유로 `AppButton` 의 variant 로도 넣지 않았다.
  */
 const linkClass =
-  'inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-meta font-semibold text-point-foreground hover:bg-point-bg ' +
+  // 🔄 `spec 084`(사용자 지적 2026-11-21): 글자색 · 굵기를 영역 제목 줄의 이동 링크(`순찰이력 전체 ›`)와 같게 — 한 화면에 파랑이 두 가지였다.
+  // 모양은 다르게 둔다: 연필 아이콘 = 창이 뜨는 동작 · 오른쪽 화살표 = 다른 화면으로 이동
+  'inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-meta font-medium text-point hover:bg-point-bg ' +
   // 글자만 있는 버튼은 흐리게만 하면 막힌 줄 모른다 — 회색으로 바꾼다
   'disabled:cursor-not-allowed disabled:text-muted-foreground disabled:hover:bg-transparent'
 

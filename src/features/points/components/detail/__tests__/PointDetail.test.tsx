@@ -61,7 +61,7 @@ describe('PointDetail — 속성 패널 (spec 076)', () => {
     const onEdit = vi.fn()
     renderDetail(detail(), onEdit)
 
-    await user.click(screen.getByRole('button', { name: '기본정보 수정' }))
+    await user.click(screen.getByRole('button', { name: '기본정보 편집' }))
     expect(onEdit).toHaveBeenCalled()
   })
 

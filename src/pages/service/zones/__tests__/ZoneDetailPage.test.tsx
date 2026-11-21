@@ -126,8 +126,7 @@ describe('ZoneDetailPage', () => {
 
     await screen.findByText('A동 순찰코스')
     expect(within(cardOf('순찰 경로')).getByRole('button', { name: '지점 편성 편집' })).toBeInTheDocument()
-    expect(within(cardOf('기본정보')).getByRole('button', { name: '수정' })).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: '수정' })).toHaveLength(1)
+    expect(within(cardOf('기본정보')).getByRole('button', { name: '기본정보 편집' })).toBeInTheDocument()
     // 삭제는 `⋯` 메뉴 안 — 화면에 바로 보이지 않는다
     expect(screen.queryByRole('button', { name: '삭제' })).toBeNull()
     expect(screen.getByRole('button', { name: '코스 메뉴' })).toBeInTheDocument()
@@ -138,7 +137,7 @@ describe('ZoneDetailPage', () => {
     renderPage('/zones/1')
 
     await screen.findByText('A동 순찰코스')
-    await user.click(screen.getByRole('button', { name: '수정' }))
+    await user.click(screen.getByRole('button', { name: '기본정보 편집' }))
 
     expect(await screen.findByText('코스 수정')).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: '교대 허용' })).toBeInTheDocument()
@@ -293,7 +292,7 @@ describe('ZoneDetailPage — 변경계 조립 (Phase 4)', () => {
     renderPage('/zones/1')
 
     await screen.findByText('A동 순찰코스')
-    await user.click(screen.getByRole('button', { name: '수정' }))
+    await user.click(screen.getByRole('button', { name: '기본정보 편집' }))
     await user.click(await screen.findByRole('switch', { name: '코스 사용' }))
     // 스위치만으로는 저장되지 않는다
     expect(captured).toHaveLength(0)

@@ -26,8 +26,9 @@ const CourseInfo = ({ course, onEdit }: { course: CourseDetail; onEdit: () => vo
     <section className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-panel-title font-semibold">기본정보</h2>
-        <AppLinkButton icon={SquarePenIcon} onClick={onEdit}>
-          수정
+        {/* 🔄 `spec 084`(사용자 결정 2026-11-21): `수정` → `편집` — 영역 제목 줄의 버튼 이름을 하나로(순찰 경로도 `편집`) */}
+        <AppLinkButton icon={SquarePenIcon} aria-label="기본정보 편집" onClick={onEdit}>
+          편집
         </AppLinkButton>
       </div>
 

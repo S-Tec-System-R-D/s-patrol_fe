@@ -102,8 +102,8 @@ const PointDetail = ({ point, onEdit }: { point: PointDetailData; onEdit?: () =>
           title="기본정보"
           action={
             onEdit && (
-              <AppLinkButton icon={SquarePenIcon} aria-label="기본정보 수정" onClick={onEdit}>
-                수정
+              <AppLinkButton icon={SquarePenIcon} aria-label="기본정보 편집" onClick={onEdit}>
+                편집
               </AppLinkButton>
             )
           }

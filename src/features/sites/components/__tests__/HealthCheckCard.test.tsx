@@ -52,7 +52,7 @@ const toggle = () => screen.getByRole('switch', { name: '헬스체크 사용' })
 const setTime = (input: HTMLElement, value: string) => fireEvent.change(input, { target: { value } })
 
 const openEdit = async (user: ReturnType<typeof userEvent.setup>) => {
-  await user.click(screen.getByRole('button', { name: '수정' }))
+  await user.click(screen.getByRole('button', { name: '편집' }))
   return within(await screen.findByRole('dialog'))
 }
 
@@ -83,7 +83,7 @@ describe('HealthCheckCard — 표시', () => {
     renderCard(9)
     expect(await screen.findByText('미사용')).toBeInTheDocument()
     expect(screen.getByTestId('health-check-values')).toHaveClass('opacity-50')
-    expect(screen.queryByRole('button', { name: '수정' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '편집' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '설정 수정' })).not.toBeInTheDocument()
     expect(within(screen.getByTestId('health-check-values')).getAllByText('-')).toHaveLength(4)
   })

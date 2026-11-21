@@ -48,7 +48,7 @@ const CourseRouteCard = ({ points, pins, missing, onEdit }: CourseRouteCardProps
           )}
         </span>
         <AppLinkButton icon={SquarePenIcon} aria-label="지점 편성 편집" onClick={onEdit}>
-          편성 편집
+          편집
         </AppLinkButton>
       </div>
 

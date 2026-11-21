@@ -25,13 +25,13 @@ test('S1 지점 설명 바꾸기 → 지우기', async ({ page }) => {
   await page.getByRole('link', { name: '지점', exact: true }).click()
   await openFirstRow(page)
 
-  await page.getByRole('button', { name: '기본정보 수정' }).click()
+  await page.getByRole('button', { name: '기본정보 편집' }).click()
   await dialog(page, '지점 수정').getByLabel('설명').fill(memo)
   await submitAndClose(page, '지점 수정', '저장')
   await expect(page.getByText(memo)).toBeVisible()
 
   // 058 — 설명을 비우면 실제로 비워진다(B-15 해소)
-  await page.getByRole('button', { name: '기본정보 수정' }).click()
+  await page.getByRole('button', { name: '기본정보 편집' }).click()
   await dialog(page, '지점 수정').getByLabel('설명').fill('')
   await submitAndClose(page, '지점 수정', '저장')
   await expect(page.getByText(memo)).toHaveCount(0)
@@ -42,8 +42,8 @@ test('S2 코스 이름 바꾸기', async ({ page }) => {
   await goMenu(page, '코스/지점')
   await openFirstRow(page)
 
-  // 074 — 코스 상세 `수정` 은 기본정보 카드 제목 줄(머리에는 `⋯` 만)
-  await page.getByRole('button', { name: '수정', exact: true }).click()
+  // 074 — 코스 상세의 기본정보 `편집`(🔄 084: `수정` → `편집`)은 기본정보 영역 제목 줄(머리에는 `⋯` 만)
+  await page.getByRole('button', { name: '기본정보 편집' }).click()
   await dialog(page, '코스 수정').getByLabel('코스명').fill(name)
   await submitAndClose(page, '코스 수정', '저장')
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()

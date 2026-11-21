@@ -101,7 +101,7 @@ import AddCoursePointDialog from './AddCoursePointDialog'
 /** 번호 동그라미 — 미사용은 자물쇠(경로 카드와 같다) */
 const OrderMark = ({ order, useYn }: { order: number; useYn: boolean }) =>
   useYn ? (
-    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-foreground text-[11px] font-bold text-background tabular-nums">
+    <span className="grid size-6 shrink-0 place-items-center rounded-full border border-point/30 bg-point-bg text-[11px] font-bold text-point tabular-nums">
       {order}
     </span>
   ) : (
