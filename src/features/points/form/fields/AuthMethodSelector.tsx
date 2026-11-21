@@ -12,7 +12,7 @@ interface Props {
 const AuthMethodSelector = ({ value, onChange, error, required }: Props) => {
   return (
     <div className="flex flex-col gap-1 w-full">
-      <label className="text-sm font-medium text-text-primary">
+      <label className="text-[12px] font-medium text-sub-foreground">
         인증수단
         {required && <span className="text-danger ml-1">*</span>}
       </label>

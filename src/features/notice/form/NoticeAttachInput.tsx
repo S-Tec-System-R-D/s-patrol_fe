@@ -53,7 +53,7 @@ const NoticeAttachInput = ({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground">첨부</span>
+        <span className="text-[12px] font-medium text-sub-foreground">첨부</span>
         <AppButton
           type="button"
           variant="sub"

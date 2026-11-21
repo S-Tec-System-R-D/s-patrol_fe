@@ -57,7 +57,7 @@ const AppTimeInput = forwardRef<HTMLInputElement, AppTimeInputProps>(
     return (
       <div className="flex w-full flex-col gap-1">
         {label && (
-          <label htmlFor={id} className="text-sm font-medium text-foreground">
+          <label htmlFor={id} className="text-[12px] font-medium text-sub-foreground">
             {label}
             {required && <span className="ml-1 text-danger">*</span>}
           </label>

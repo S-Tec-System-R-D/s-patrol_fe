@@ -41,8 +41,9 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
       /* 🔴 검색 칸의 `className`(폭)은 **감싼 요소**에 건다(`spec 084`) — 입력 칸에만 걸면 감싼 요소가 `w-full` 로
          줄의 남는 폭을 다 차지해 옆의 필터가 오른쪽 끝으로 밀렸다(목업은 검색 바로 옆) */
       <div className={cn('flex flex-col gap-1 w-full', isSearch && className)}>
+        {/* 🔄 `spec 084`(목업 `09`): 라벨 12px · 진한 회색 — 입력한 값보다 앞서 보이지 않게 */}
         {label && (
-          <label htmlFor={id} className="text-sm font-medium text-foreground">
+          <label htmlFor={id} className="text-[12px] font-medium text-sub-foreground">
             {label}
             {required && <span className="text-danger ml-1">*</span>}
           </label>
@@ -67,7 +68,8 @@ const AppInput = forwardRef<HTMLInputElement, InputProps>(
               isSearch ? 'h-[30px] text-[12px]' : 'h-[34px] text-[13px]',
               'placeholder:text-muted-foreground',
               'focus:outline-none focus:border-point focus:ring-2 focus:ring-point/20',
-              'disabled:cursor-not-allowed disabled:opacity-50',
+              // 🔄 `spec 084`(목업 `09`): 고칠 수 없는 칸은 흐리게 하지 않고 **옅은 회색 바탕 + 진한 회색 글자** — 값은 읽혀야 한다
+              'disabled:cursor-not-allowed disabled:bg-muted disabled:text-sub-foreground',
               isSearch && 'pl-9', // 왼쪽 아이콘 자리 확보
               isPassword && 'pr-9', // 오른쪽 아이콘 자리 확보
               error && 'border-danger focus:ring-danger',

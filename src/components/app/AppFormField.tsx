@@ -45,7 +45,7 @@ export const AppFormField = ({
     <FormFieldContext.Provider value={{ id, describedBy: helper ? helperId : undefined, invalid: Boolean(error) }}>
       <div className={cn('flex flex-col gap-1 w-full', className)}>
         {label && (
-          <label htmlFor={id} className="text-sm font-medium text-text-primary">
+          <label htmlFor={id} className="text-[12px] font-medium text-sub-foreground">
             {label}
             {required && <span className="text-danger ml-1">*</span>}
           </label>

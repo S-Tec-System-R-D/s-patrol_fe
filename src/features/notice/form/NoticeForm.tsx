@@ -112,7 +112,7 @@ const NoticeForm = ({ notice, onSuccess }: NoticeFormProps) => {
       />
 
       <div className="flex w-full flex-col gap-1">
-        <label className="text-sm font-medium text-foreground">
+        <label className="text-[12px] font-medium text-sub-foreground">
           본문
           <span className="ml-1 text-danger">*</span>
         </label>

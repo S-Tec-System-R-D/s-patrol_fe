@@ -86,7 +86,7 @@ const HealthCheckForm = ({ defaultValues, pending, onSubmit, onCancel }: HealthC
 
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline gap-2">
-          <span className="text-sm font-medium text-foreground">예외 시간</span>
+          <span className="text-[12px] font-medium text-sub-foreground">예외 시간</span>
           <span className="text-caption text-muted-foreground">이 시간에는 확인하지 않습니다</span>
         </div>
         {exceptions.fields.map((field, index) => (
